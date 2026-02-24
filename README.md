@@ -15,3 +15,4 @@ dps decide no discord qlq coisa \
 se tiver ios deixa q eu (messi) faço, bom p aprender \
 a api a gnt vai vendo oq for precisando e vai dividindo \
 caue faz a parte de android, qnd ler isso ai ve oq acha \
+Dá pra fazer em flutter, q compila tanto pra android quanto pra ios, ai é trabalho a menos
