@@ -12,3 +12,6 @@ ios swift \
 BD, provavel q sql msm, analisando só, se for necessario keys, nesse caso acho q n pra refresh, usar o redis em conjunto \
 eu facilitaria e faria tudo em java e deixava o ios p uma das 3 msm \
 dps decide no discord qlq coisa \
+se tiver ios deixa q eu (messi) faço, bom p aprender \
+a api a gnt vai vendo oq for precisando e vai dividindo \
+caue faz a parte de android, qnd ler isso ai ve oq acha \
