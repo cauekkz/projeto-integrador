@@ -19,3 +19,6 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  flyway:
+    enabled: false #mudar para true quando começar as migrations.
