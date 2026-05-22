@@ -18,13 +18,13 @@ public class Contract {
     private String partyAType;
 
     @Column(name = "party_a_id")
-    private Long partyAId;
+    private UUID partyAId;
 
     @Column(name = "party_b_type")
     private String partyBType;
 
     @Column(name = "party_b_id")
-    private Long partyBId;
+    private UUID partyBId;
 
     @Column(length = 100)
     private String periodicity;
@@ -58,11 +58,11 @@ public class Contract {
         this.partyAType = partyAType;
     }
 
-    public Long getPartyAId() {
+    public UUID getPartyAId() {
         return partyAId;
     }
 
-    public void setPartyAId(Long partyAId) {
+    public void setPartyAId(UUID partyAId) {
         this.partyAId = partyAId;
     }
 
@@ -74,11 +74,11 @@ public class Contract {
         this.partyBType = partyBType;
     }
 
-    public Long getPartyBId() {
+    public UUID getPartyBId() {
         return partyBId;
     }
 
-    public void setPartyBId(Long partyBId) {
+    public void setPartyBId(UUID partyBId) {
         this.partyBId = partyBId;
     }
 
