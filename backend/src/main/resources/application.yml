@@ -12,7 +12,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
 
     show-sql: true
 
@@ -21,4 +21,4 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   flyway:
-    enabled: false #mudar para true quando começar as migrations.
+    enabled: true #mudar para true quando começar as migrations.

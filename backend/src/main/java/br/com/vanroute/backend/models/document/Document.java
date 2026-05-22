@@ -22,7 +22,7 @@ public class Document {
     private Integer version;
 
     @Column(name = "entity_id")
-    private Long entityId;
+    private UUID entityId;
 
     @Enumerated(EnumType.STRING)
     @Column()
@@ -67,11 +67,11 @@ public class Document {
         this.version = version;
     }
 
-    public Long getEntityId() {
+    public UUID getEntityId() {
         return entityId;
     }
 
-    public void setEntityId(Long entityId) {
+    public void setEntityId(UUID entityId) {
         this.entityId = entityId;
     }
 
