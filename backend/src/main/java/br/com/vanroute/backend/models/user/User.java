@@ -35,6 +35,7 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private UserStatus status;
 
+
     private Set<RolesEntity> roles = new HashSet<>();
 
     public UUID getId() {
