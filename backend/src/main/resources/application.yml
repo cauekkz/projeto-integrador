@@ -1,14 +1,14 @@
-server:
-  port: 9090
+#server:
+#port: 9090
 
 spring:
   application:
     name: backend
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/pi
-    username: postgres
-    password: 123456
+    url: jdbc:postgresql://localhost:5432/${DATABASE_NAME}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
 
   jpa:
     hibernate:
@@ -19,6 +19,8 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-
+  jwt:
+    expiration: ${JWT_EXPIRATION:900000} #15 minutos
+    key: ${JWT_KEY:4QcYHiOKv6R1GIost25MwdDJNLayEubr3kj9nW8AxZqSFX0gfmhUTepCBPlV7z}
   flyway:
     enabled: true #mudar para true quando começar as migrations.
