@@ -3,6 +3,7 @@ package br.com.vanroute.backend.services;
 import br.com.vanroute.backend.dtos.user.DriverRequestDTO;
 import br.com.vanroute.backend.dtos.user.IcpExtractedInfo;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
+import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.repositories.DriverRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,6 @@ public class DriverService {
     private final DriverRepository driverRepository;
     private final UserService userService;
 
-    @Autowired
     public DriverService(DriverRepository driverRepository, UserService userService) {
         this.driverRepository = driverRepository;
         this.userService = userService;
@@ -29,9 +29,9 @@ public class DriverService {
         UserCreateDTO userDto = new UserCreateDTO();
         userDto.setName(icpInfo.getName());
         userDto.setCpf(icpInfo.getCpf());
-        userDto.setPassword(driverDto.getPassword());
+        userDto.setPasswordHash(driverDto.getPassword());
+        userDto.setRole(RoleTypeEnum.ROLE_DRIVER);
         this.userService.createUser(userDto);
-
         /*
             @Column(name = "cnh_number", nullable = false, unique = true)
     private String cnhNumber;
@@ -41,11 +41,6 @@ public class DriverService {
 
  */
         //testar se a classe pra verificar e extrair cnh funciona, dps extrair os dados da cnh criar o driverCreateDTO, dps criar o driver
-
-
-
-      
-
         return null;
     }
 }
