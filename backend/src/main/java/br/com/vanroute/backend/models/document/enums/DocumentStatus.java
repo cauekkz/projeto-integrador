@@ -1,8 +1,8 @@
 package br.com.vanroute.backend.models.document.enums;
 
 public enum DocumentStatus {
-    PENDENTE,
-    APROVADO,
-    REJEITADO,
-    EXPIRADO
+    PENDING, // Pendente
+    APPROVED, // Aprovado
+    REJECTED, // Rejeitado
+    EXPIRED // Expirado
 }

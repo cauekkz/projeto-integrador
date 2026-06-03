@@ -1,8 +1,8 @@
 package br.com.vanroute.backend.models.trip.enums;
 
 public enum OccurrenceStatus {
-    ABERTA,
-    EM_ANALISE,
-    RESOLVIDA,
-    CANCELADA
+    OPEN, // Aberta
+    UNDER_ANALYSIS, // Em Análise
+    RESOLVED, // Resolvida
+    CANCELED // Cancelada
 }
