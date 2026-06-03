@@ -1,11 +1,11 @@
 package br.com.vanroute.backend.models.trip.enums;
 
 public enum TripStatus {
-    AGENDADA,
-    INICIADA,
-    EM_ANDAMENTO,
-    PAUSADA,
-    FINALIZADA,
-    CANCELADA,
-    FALHA
+    SCHEDULED, // Agendada
+    STARTED, // Iniciada
+    IN_PROGRESS, // Em Andamento
+    PAUSED, // Pausada
+    FINISHED, // Finalizada
+    CANCELED, // Cancelada
+    FAILED // Falha
 }

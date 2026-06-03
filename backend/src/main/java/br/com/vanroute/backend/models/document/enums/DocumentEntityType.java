@@ -1,12 +1,12 @@
 package br.com.vanroute.backend.models.document.enums;
 
 public enum DocumentEntityType {
-    USUARIO,
-    MOTORISTA,
-    RESPONSAVEL,
-    EMPRESA,
-    ESCOLA,
-    ALUNO,
-    CONTRATO,
-    VEICULO
+    USER, // Usuario
+    DRIVER, // Motorista
+    RESPONSIBLE, // Responsavel
+    COMPANY, // Empresa
+    SCHOOL, // Escola
+    STUDENT, // Aluno
+    CONTRACT, // Contrato
+    VEHICLE // Veiculo
 }
