@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.models.contract;
 
+import br.com.vanroute.backend.models.contract.enums.ContractPeriodicity;
 import br.com.vanroute.backend.models.contract.enums.ContractStatus;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
@@ -14,20 +15,9 @@ public class Contract {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "party_a_type")
-    private String partyAType;
-
-    @Column(name = "party_a_id")
-    private UUID partyAId;
-
-    @Column(name = "party_b_type")
-    private String partyBType;
-
-    @Column(name = "party_b_id")
-    private UUID partyBId;
-
-    @Column(length = 100)
-    private String periodicity;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ContractPeriodicity periodicity;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal value;
@@ -49,44 +39,11 @@ public class Contract {
     public void setId(UUID id) {
         this.id = id;
     }
-
-    public String getPartyAType() {
-        return partyAType;
-    }
-
-    public void setPartyAType(String partyAType) {
-        this.partyAType = partyAType;
-    }
-
-    public UUID getPartyAId() {
-        return partyAId;
-    }
-
-    public void setPartyAId(UUID partyAId) {
-        this.partyAId = partyAId;
-    }
-
-    public String getPartyBType() {
-        return partyBType;
-    }
-
-    public void setPartyBType(String partyBType) {
-        this.partyBType = partyBType;
-    }
-
-    public UUID getPartyBId() {
-        return partyBId;
-    }
-
-    public void setPartyBId(UUID partyBId) {
-        this.partyBId = partyBId;
-    }
-
-    public String getPeriodicity() {
+    public ContractPeriodicity getPeriodicity() {
         return periodicity;
     }
 
-    public void setPeriodicity(String periodicity) {
+    public void setPeriodicity(ContractPeriodicity periodicity) {
         this.periodicity = periodicity;
     }
 

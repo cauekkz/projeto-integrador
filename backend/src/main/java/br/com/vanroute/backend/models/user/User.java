@@ -23,6 +23,12 @@ public class User {
     @Column(nullable = false, unique = true, length = 11)
     private String cpf;
 
+    @Column(nullable = false, unique = true)
+    private String email;
+    
+    @Column(nullable = false, unique = true)
+    private String phone;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -45,6 +51,20 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getEmail(){
+        return this.email;
+    }
+    public void setEmail(String email){
+        this.email = email;
+    }
+   
+    public String getPhone(){
+        return this.phone;
+    }
+    public void setPhone(String phone){
+        this.phone = phone;
     }
 
     public String getPasswordHash() {
