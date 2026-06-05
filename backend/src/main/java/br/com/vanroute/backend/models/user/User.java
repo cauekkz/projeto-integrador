@@ -23,7 +23,7 @@ public class User implements UserDetails {
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
-
+    // VARCHAR evita conflito no ddl-auto validate (CHAR/bpchar do Postgres != String do Hibernate)
     @Column(nullable = false, unique = true, length = 11)
     private String cpf;
 

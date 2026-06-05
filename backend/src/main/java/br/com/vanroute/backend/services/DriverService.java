@@ -30,7 +30,9 @@ public class DriverService {
         userDto.setName(icpInfo.getName());
         userDto.setCpf(icpInfo.getCpf());
         userDto.setPasswordHash(driverDto.getPassword());
+        userDto.setEmail(driverDto.getEmail());
         userDto.setRole(RoleTypeEnum.ROLE_DRIVER);
+
         this.userService.createUser(userDto);
         /*
             @Column(name = "cnh_number", nullable = false, unique = true)
@@ -39,7 +41,7 @@ public class DriverService {
     @Column(name = "cnh_expiration")
     private LocalDate cnhExpiration;
 
- */
+ */                                                                                                     
         //testar se a classe pra verificar e extrair cnh funciona, dps extrair os dados da cnh criar o driverCreateDTO, dps criar o driver
         return null;
     }
