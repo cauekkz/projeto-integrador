@@ -13,7 +13,10 @@ public class DriverRequestDTO {
     private MultipartFile documentPdf;
 
 
-      @Email(message = "E-mail inválido")
+    @NotBlank(message = "O nome é obrigatório")
+    private String name;
+
+    @Email(message = "E-mail inválido")
     @NotBlank(message = "O e-mail é obrigatório")
     private String email;
 
@@ -26,6 +29,12 @@ public class DriverRequestDTO {
     @NotBlank(message = "O telefone é obrigatório")
     private String phone;
 
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
     public String getEmail() {
         return email;
     }

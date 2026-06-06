@@ -1,29 +1,5 @@
-// PURA IA SO JOGUEI O CODIGO QUE TINHA FEITO EM PYTHON E FALEI PRA TRANSFORMAR EM JAVA AINDA TEM QUE TESTAR ALGUNS CASOS, MAS ATÉ ENTÃO FUNCIONAL
-
 package br.com.vanroute.backend.services;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.security.MessageDigest;
-import java.security.Security;
-import java.security.Signature;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Date;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.pdfbox.Loader;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
+//IA PURA TEM Q ANALIZA
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.ASN1UTCTime;
@@ -48,46 +24,87 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import br.com.vanroute.backend.dtos.user.IcpExtractedInfo;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.security.MessageDigest;
+import java.security.Security;
+import java.security.Signature;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
-public class IcpService {
+public class IcpValidationService {
 
     private static final Pattern BYTE_RANGE_PATTERN = Pattern.compile(
             "/ByteRange\\s*\\[\\s*(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s*\\]"
     );
-    private static final Pattern FORMATTED_CPF_PATTERN = Pattern.compile(
-            "^\\d{3}\\.\\d{3}\\.\\d{3}-\\d{2}$"
-    );
+    private static final Pattern CNH_DOCUMENT_MARKER = Pattern.compile("(?i)CNH\\s+DIGITAL");
+    private static final Pattern CRLV_DOCUMENT_MARKER = Pattern.compile("(?i)CRLV\\s+DIGITAL");
 
     private final X509Certificate rootCertificate;
     private final X500Name rootSubject;
     private final JcaX509CertificateConverter certificateConverter;
 
-    public IcpService() {
+    public IcpValidationService() {
         Security.addProvider(new BouncyCastleProvider());
         this.certificateConverter = new JcaX509CertificateConverter().setProvider("BC");
         this.rootCertificate = loadRootCertificate();
         this.rootSubject = subjectName(rootCertificate);
     }
 
-    public void validateDocumentSignature(MultipartFile pdfFile) {
+    public void validateCnhSignature(MultipartFile pdfFile) {
         try {
-            validateDocumentSignature(pdfFile.getBytes());
+            byte[] pdfBytes = pdfFile.getBytes();
+            assertCnhDocument(pdfBytes);
+            validateSignature(pdfBytes);
         } catch (Exception e) {
-            throw new RuntimeException("Falha ao validar a assinatura digital ICP-Brasil: " + e.getMessage(), e);
+            throw new RuntimeException("Falha ao validar a assinatura digital ICP-Brasil da CNH: " + e.getMessage(), e);
         }
     }
 
-    public IcpExtractedInfo extractDataFromDocument(MultipartFile pdfFile) {
+    public void validateCrlvSignature(MultipartFile pdfFile) {
         try {
-            return extractFromPdfText(pdfFile.getBytes());
+            byte[] pdfBytes = pdfFile.getBytes();
+            assertCrlvDocument(pdfBytes);
+            validateSignature(pdfBytes);
         } catch (Exception e) {
-            throw new RuntimeException("Falha ao extrair dados do documento ICP-Brasil: " + e.getMessage(), e);
+            throw new RuntimeException("Falha ao validar a assinatura digital ICP-Brasil do CRLV: " + e.getMessage(), e);
         }
     }
 
-    private void validateDocumentSignature(byte[] pdfBytes) throws Exception {
+    private void assertCnhDocument(byte[] pdfBytes) throws Exception {
+        String raw = new String(pdfBytes, "ISO-8859-1");
+        if (!CNH_DOCUMENT_MARKER.matcher(raw).find()) {
+            throw new Exception("O arquivo enviado não é uma CNH digital");
+        }
+        if (CRLV_DOCUMENT_MARKER.matcher(raw).find()) {
+            throw new Exception("O arquivo enviado não é uma CNH digital");
+        }
+    }
+
+    private void assertCrlvDocument(byte[] pdfBytes) throws Exception {
+        String raw = new String(pdfBytes, "ISO-8859-1");
+        if (!CRLV_DOCUMENT_MARKER.matcher(raw).find()) {
+            throw new Exception("O arquivo enviado não é um CRLV digital");
+        }
+        if (CNH_DOCUMENT_MARKER.matcher(raw).find()) {
+            throw new Exception("O arquivo enviado não é um CRLV digital");
+        }
+    }
+
+    private void validateSignature(byte[] pdfBytes) throws Exception {
         int[] byteRange = extractByteRange(pdfBytes);
         byte[] signedContent = buildSignedContent(pdfBytes, byteRange);
         byte[] pkcs7Bytes = extractPkcs7FromPdf(pdfBytes, byteRange);
@@ -101,100 +118,6 @@ public class IcpService {
         List<X509Certificate> chain = buildChain(signerCert, new ArrayList<>(embeddedCerts));
         validateChain(chain, signingDate);
         verifyPdfIntegrity(signer, signerCert, signedContent);
-    }
-
-    private IcpExtractedInfo extractFromPdfText(byte[] pdfBytes) throws Exception {
-        List<String> lines = extractTextLines(pdfBytes);
-
-        int cpfLineIndex = -1;
-        String cpf = null;
-        for (int i = 0; i < lines.size(); i++) {
-            String normalized = normalizeCpf(lines.get(i));
-            if (normalized != null && isFormattedCpfLine(lines.get(i))) {
-                cpf = normalized;
-                cpfLineIndex = i;
-                break;
-            }
-        }
-
-        if (cpf == null) {
-            for (int i = 0; i < lines.size(); i++) {
-                String normalized = normalizeCpf(lines.get(i));
-                if (normalized != null) {
-                    cpf = normalized;
-                    cpfLineIndex = i;
-                    break;
-                }
-            }
-        }
-
-        if (cpf == null) {
-            throw new Exception(
-                    "CPF não encontrado no texto do PDF. Alguns PDFs de CNH exportados só trazem foto/dados "
-                            + "como imagem, sem camada de texto; use CRLV-e ou exporte novamente pelo app oficial."
-            );
-        }
-
-        String name = findNameNearCpf(lines, cpfLineIndex);
-        if (name == null) {
-            throw new Exception("Nome não encontrado no texto do PDF");
-        }
-
-        return new IcpExtractedInfo(name, cpf);
-    }
-
-    private List<String> extractTextLines(byte[] pdfBytes) throws Exception {
-        try (PDDocument document = Loader.loadPDF(pdfBytes)) {
-            String text = new PDFTextStripper().getText(document);
-            return Arrays.stream(text.split("\\R"))
-                    .map(String::trim)
-                    .filter(line -> !line.isEmpty())
-                    .toList();
-        }
-    }
-
-    private boolean isFormattedCpfLine(String line) {
-        return FORMATTED_CPF_PATTERN.matcher(line.trim()).matches();
-    }
-
-    private String findNameNearCpf(List<String> lines, int cpfLineIndex) {
-        for (int i = cpfLineIndex - 1; i >= Math.max(0, cpfLineIndex - 5); i--) {
-            if (looksLikePersonName(lines.get(i))) {
-                return lines.get(i);
-            }
-        }
-        for (int i = cpfLineIndex + 1; i < Math.min(lines.size(), cpfLineIndex + 3); i++) {
-            if (looksLikePersonName(lines.get(i))) {
-                return lines.get(i);
-            }
-        }
-        return null;
-    }
-
-    private boolean looksLikePersonName(String line) {
-        if (line == null || line.length() < 4 || line.length() > 120) {
-            return false;
-        }
-        String upper = line.toUpperCase();
-        if (upper.equals("NOME") || upper.startsWith("CPF") || upper.contains("DETRAN")
-                || upper.contains("SENATRAN") || upper.contains("REPÚBLICA") || upper.contains("QR")) {
-            return false;
-        }
-        if (line.matches(".*\\d.*")) {
-            return false;
-        }
-        return line.matches("^[\\p{L}][\\p{L}\\s'.-]+$");
-    }
-
-    private String normalizeCpf(String value) {
-        if (value == null) {
-            return null;
-        }
-        String digits = value.replaceAll("\\D", "");
-        if (digits.length() == 11) {
-            return digits;
-        }
-        return null;
     }
 
     private Date extractSigningDate(SignerInformation signer) {

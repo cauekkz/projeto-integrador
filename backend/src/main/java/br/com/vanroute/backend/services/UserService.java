@@ -28,7 +28,7 @@ public class UserService {
         this.rolesRepository = rolesRepository;
     }
 
-    public void createUser(UserCreateDTO userCreateDTO) {
+    public User createUser(UserCreateDTO userCreateDTO) {
         if (findByCpf(userCreateDTO.getCpf()).isPresent()) {
             throw new RuntimeException("Usuario ja cadastrado");
         }
@@ -41,11 +41,14 @@ public class UserService {
 
         User user = new User();
         user.setName(userCreateDTO.getName());
+        user.setEmail(userCreateDTO.getEmail());
+        user.setPhone(userCreateDTO.getPhone());          
         user.setCpf(userCreateDTO.getCpf());
         user.setPasswordHash(passwordEncoder.encode(userCreateDTO.getPasswordHash()));
         user.setRoles(java.util.Set.of(roles));
         user.setStatus(UserStatus.ACTIVE);
-        userRepository.save(user);
+        User userSaved = userRepository.save(user);
+        return userSaved;
     }
 
     public Optional<User> findById(UUID id) {
