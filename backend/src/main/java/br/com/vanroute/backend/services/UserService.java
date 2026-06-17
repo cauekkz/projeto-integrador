@@ -47,8 +47,8 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(userCreateDTO.getPasswordHash()));
         user.setRoles(java.util.Set.of(roles));
         user.setStatus(UserStatus.ACTIVE);
-        User userSaved = userRepository.save(user);
-        return userSaved;
+         return userRepository.save(user);
+
     }
 
     public Optional<User> findById(UUID id) {
