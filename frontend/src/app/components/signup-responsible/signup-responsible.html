@@ -1,0 +1,50 @@
+<div class="signup-container">
+
+  <div class="header">
+
+
+    <button class="back-button" (click)="voltar()">
+      <img src="/Back.png" alt="">
+    </button>
+
+    <h1>Suas informações</h1>
+
+  </div>
+
+  <form class="form">
+
+    <div class="field">
+      <label>Nome completo</label>
+      <input
+        type="text"
+        placeholder="Digite seu nome completo">
+    </div>
+
+    <div class="field">
+      <label>CPF do responsável</label>
+      <input
+        type="text"
+        placeholder="Digite seu CPF">
+    </div>
+
+    <div class="field">
+      <label>Senha</label>
+      <input
+        type="password"
+        placeholder="Digite sua senha">
+    </div>
+
+    <div class="field">
+      <label>Confirmar senha</label>
+      <input
+        type="password"
+        placeholder="Digite a senha novamente">
+    </div>
+
+  </form>
+
+  <button class="btn-submit" (click)="concluir()">
+    Pronto
+  </button>
+
+</div>
