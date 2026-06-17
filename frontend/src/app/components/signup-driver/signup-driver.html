@@ -1,0 +1,157 @@
+@if (etapa === 1) {
+
+  <div class="form-container">
+    <div class="header">
+      <button
+        class="back-button"
+        (click)="goBack()">
+        <img src="/Back.png" alt="">
+      </button>
+      <h1>Informações de endereço</h1>
+    </div>
+
+    <form class="form">
+      <div class="field">
+        <label>CEP</label>
+        <input
+          type="text"
+          placeholder="Digite seu CEP">
+      </div>
+
+      <div class="row">
+        <div class="field flex-3">
+          <label>Logradouro</label>
+          <input
+            type="text"
+            placeholder="Digite o logradouro">
+        </div>
+
+        <div class="field flex-1">
+          <label>Número</label>
+          <input
+            type="text"
+            placeholder="000">
+        </div>
+
+      </div>
+
+      <div class="row">
+        <div class="field flex-3">
+          <label>Cidade</label>
+          <input
+            type="text"
+            placeholder="Cidade">
+        </div>
+
+        <div class="field flex-1">
+          <label>Estado</label>
+          <input
+            type="text"
+            placeholder="UF">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Bairro</label>
+        <input
+          type="text"
+          placeholder="Digite seu bairro">
+      </div>
+
+      <div class="field">
+        <label>Complemento</label>
+        <input
+          type="text"
+          placeholder="Digite o complemento">
+      </div>
+
+      <label class="checkbox-container">
+        <input type="checkbox">
+        <span>Sem complemento</span>
+      </label>
+    </form>
+    <button
+      class="btn-primary"
+      (click)="proximaEtapa()">
+      Próxima etapa
+    </button>
+  </div>
+}
+
+
+
+@if (etapa === 2) {
+
+  <div class="form-container">
+    <div class="header">
+
+      <button
+        class="back-button"
+        (click)="voltarEtapa()">
+        <img src="/Back.png" alt="">
+      </button>
+      <h1>Suas informações</h1>
+    </div>
+    <form class="form">
+
+      <div class="field">
+        <label>Nome do motorista</label>
+        <input
+          type="text"
+          placeholder="Nome vem da CNH">
+      </div>
+
+      <div class="field">
+        <label>Email do motorista</label>
+        <input
+          type="email"
+          placeholder="Digite seu email">
+      </div>
+
+      <div class="field">
+        <label>Data de nascimento</label>
+        <input
+          type="text"
+          placeholder="Data nasc vem da CNH">
+      </div>
+
+      <div class="field">
+        <label>CPF do motorista</label>
+        <input
+          type="text"
+          placeholder="CPF vem da CNH">
+      </div>
+
+      <div class="field">
+        <label>Telefone do motorista</label>
+        <input
+          type="text"
+          placeholder="11 99999-9999">
+      </div>
+
+      <div class="field">
+        <label>Senha</label>
+        <input
+          type="password"
+          placeholder="Digite sua senha">
+      </div>
+
+      <div class="field">
+        <label>Confirmar senha</label>
+        <input
+          type="password"
+          placeholder="Digite a senha novamente">
+      </div>
+
+    </form>
+
+    <button
+      class="btn-primary"
+      (click)="finalizarCadastro()">
+
+      Finalizar cadastro
+
+    </button>
+
+  </div>
+}

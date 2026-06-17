@@ -1,0 +1,51 @@
+<div class="login-container">
+  <div class="header">
+    <button class="back-button" (click)="voltar()">
+      <img src="/Back.png" alt="">
+    </button>
+    <h1>Suas informações</h1>
+  </div>
+
+  <div class="content">
+
+    @if (tipoUsuario === 'motorista') {
+      <h2>Olá, que bom que você voltou!</h2>
+      <label>CPF do motorista</label>
+      <input
+        type="text"
+        placeholder="Digite seu CPF"
+      />
+    }
+
+    @if (tipoUsuario === 'responsavel') {
+      <h2>Olá, que bom que você voltou!</h2>
+
+      <label>CPF do responsável</label>
+      <input
+        type="text"
+        placeholder="Digite seu CPF"
+      />
+    }
+
+    <label>Senha</label>
+
+    <input
+      type="password"
+      placeholder="Digite sua senha"
+    />
+
+    <button class="btn-login">
+      Entrar
+    </button>
+
+    <button class="btn-forgot">
+      Esqueceu sua senha?
+    </button>
+
+  </div>
+
+  <button class="btn-signup" (click)="irParaCadastro()">
+    Criar uma conta
+  </button>
+
+</div>
