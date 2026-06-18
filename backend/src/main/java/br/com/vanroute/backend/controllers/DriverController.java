@@ -1,4 +1,5 @@
 package br.com.vanroute.backend.controllers;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,9 +25,7 @@ public class DriverController {
     private final DocumentOcrExtractionService documentOcrExtractionService;
 
     @Autowired
-    public DriverController(                                                                                                                
-            DriverService driverService,
-            IcpValidationService icpValidationService,
+    public DriverController(DriverService driverService, IcpValidationService icpValidationService,
             DocumentOcrExtractionService documentOcrExtractionService) {
         this.driverService = driverService;
         this.icpValidationService = icpValidationService;
@@ -39,14 +38,16 @@ public class DriverController {
             icpValidationService.validateCnhSignature(dto.getDocumentPdf());
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "A CNH não passou na auditoria digital.");
-        }
+        }                                                                                       
 
         String cpf = documentOcrExtractionService.extractFromCnh(dto.getDocumentPdf());
 
         Driver savedDriver = driverService.createDriver(dto, cpf);
-                                                                                    
+
         return ResponseEntity.status(HttpStatus.CREATED).body(savedDriver);
 
-
     }
+
+    
+
 }
