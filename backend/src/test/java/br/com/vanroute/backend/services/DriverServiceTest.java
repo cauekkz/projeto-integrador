@@ -37,7 +37,7 @@ class DriverServiceTest {
         dto.setEmail("harry@example.com");
         dto.setPassword("england123!");
         dto.setPhone("11999999999");
-        dto.setDriverType("OWNER");
+        //dto.setDriverType("OWNER");
         return dto;
     }
 
