@@ -20,7 +20,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/{id}")                 
+    @GetMapping("/{id}")
     @Valid
     public ResponseEntity<User> getUserById(@PathVariable UUID id) {
         return userService.findById(id)

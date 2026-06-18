@@ -55,16 +55,13 @@ public class AuthenticationService {
                 .orElseGet(() -> rolesRepository.save(RolesEntity.builder()
                         .nome(roleName).build()));
 
-        User newUser = new User();
-        newUser.setName(userCreateDTO.getName());
-        newUser.setCpf(userCreateDTO.getCpf());
-        newUser.setRoles(Set.of(roles));
-        newUser.setStatus(UserStatus.ACTIVE);
-        newUser.setPasswordHash(passwordEncoder.encode(userCreateDTO.getPasswordHash()));
-        newUser.setEmail(userCreateDTO.getEmail());
-        newUser.setPhone(userCreateDTO.getPhone());
-
-        userRepository.save(newUser);
+        User userSaved = new User();
+        userSaved.setName(userCreateDTO.getName());
+        userSaved.setCpf(userCreateDTO.getCpf());
+        userSaved.setRoles(Set.of(roles));
+        userSaved.setStatus(UserStatus.ACTIVE);
+        userSaved.setPasswordHash(passwordEncoder.encode(userCreateDTO.getPasswordHash()));
+        userRepository.save(userSaved);
     }
 
     public ResponseEntity<TokenResponseDTO> login(LoginRequestDTO loginRequestDTO) throws Exception {
