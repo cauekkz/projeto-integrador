@@ -1,4 +1,5 @@
 import { Component, EventEmitter, Output } from '@angular/core';
+import { RegisterService } from '../../services/register.service';
 
 @Component({
   selector: 'app-signup-cnh-form',
@@ -11,6 +12,7 @@ export class SignupCnhForm {
   @Output() prontoEvent = new EventEmitter<void>();
   @Output() voltarEvent = new EventEmitter<void>();
 
+  constructor(protected registerService: RegisterService) {}
   mostrarBottomSheet = false;
 
   abrirBottomSheet() {
@@ -27,10 +29,30 @@ export class SignupCnhForm {
   }
 
   pronto() {
+    if (this.registerService.selectedFile == null){
+      return
+    }
     this.prontoEvent.emit();
   }
 
   voltar() {
     this.voltarEvent.emit();
   }
+
+
+
+onFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement;
+
+  if (input.files?.length) {
+    this.registerService.selectedFile = input.files[0];
+    console.log(this.registerService.selectedFile)
+  }
+}
+
+delete() {
+  this.registerService.selectedFile = null;
+}
+
+
 }

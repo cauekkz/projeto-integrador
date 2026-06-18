@@ -8,12 +8,17 @@
 
   <div class="content">
 
+    <form (ngSubmit)="login()">
+
     @if (tipoUsuario === 'motorista') {
       <h2>Olá, que bom que você voltou!</h2>
       <label>CPF do motorista</label>
       <input
         type="text"
         placeholder="Digite seu CPF"
+        name="nome"
+        [(ngModel)]="enteredCPF"
+        required
       />
     }
 
@@ -21,9 +26,12 @@
       <h2>Olá, que bom que você voltou!</h2>
 
       <label>CPF do responsável</label>
-      <input
+       <input
         type="text"
         placeholder="Digite seu CPF"
+        name="nome"
+        [(ngModel)]="enteredCPF"
+        required
       />
     }
 
@@ -32,6 +40,9 @@
     <input
       type="password"
       placeholder="Digite sua senha"
+      name="senha"
+      [(ngModel)]="enteredPass"
+      required
     />
 
     <button class="btn-login">
@@ -41,7 +52,7 @@
     <button class="btn-forgot">
       Esqueceu sua senha?
     </button>
-
+    </form>
   </div>
 
   <button class="btn-signup" (click)="irParaCadastro()">
