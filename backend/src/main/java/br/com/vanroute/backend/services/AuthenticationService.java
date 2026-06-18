@@ -47,7 +47,6 @@ public class AuthenticationService {
         if(user != null){
             throw new BadRequestException("Usuario ja cadastrado");
         }
-        // Seleciona a role informada no DTO, ou usa RESPONSIBLE por padrão caso não informado
         RoleTypeEnum selectedRole = userCreateDTO.getRole() != null ? userCreateDTO.getRole() : RoleTypeEnum.ROLE_RESPONSIBLE;
         String roleName = selectedRole.name();
 
