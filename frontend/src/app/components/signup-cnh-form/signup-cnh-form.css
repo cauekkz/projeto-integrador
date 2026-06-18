@@ -125,6 +125,21 @@
   box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
 }
 
+.btn-delete{
+  width: 100%;
+  max-width: 600px;
+  height: 56px;
+  margin: 220px auto 20px;
+  border: none;
+  border-radius: 14px;
+  background: #e61212;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
+}
+
 /* Overlay */
 .overlay {
   position: fixed;
@@ -156,7 +171,7 @@
 
 .sheet-options {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
   max-width: 400px;
   margin: 0 auto;

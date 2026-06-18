@@ -6,45 +6,25 @@
     <h1>Validação de CNH</h1>
   </div>
 
+
   <!-- card de upload — clique abre o bottom sheet -->
   <div class="upload-card" (click)="abrirBottomSheet()">
     <div class="upload-content">
       <div class="upload-icon">
         <img src="/AddFile.png" alt="">
       </div>
+
+      
+  @if (registerService.selectedFile) {
+      <p>{{ registerService.selectedFile.name }}</p>
+  } @else {
       <p>Envie sua CNH para validação</p>
+  }
+      
     </div>
   </div>
 
-  <div class="divider">
-    <span>Problemas em enviar?</span>
-  </div>
-
-  <form class="form">
-    <div class="field">
-      <label>Número de registro</label>
-      <input type="text" placeholder="Número de registro da CNH">
-    </div>
-    <div class="double-field">
-      <div class="field">
-        <label>Número do Espelho (Cédula)</label>
-        <input type="text" placeholder="Cédula">
-      </div>
-      <div class="field">
-        <label>Categoria</label>
-        <select>
-          <option selected disabled>Selecione a categoria</option>
-          <option>A</option>
-          <option>B</option>
-          <option>AB</option>
-          <option>C</option>
-          <option>D</option>
-          <option>E</option>
-        </select>
-      </div>
-    </div>
-  </form>
-
+   <button class="btn-delete" (click)="delete()" >Excluir PDF</button>
   <button class="btn-submit" (click)="pronto()">Pronto</button>
 </div>
 
@@ -54,14 +34,25 @@
   <div class="bottom-sheet">
     <h2>Selecione de onde vem sua CNH</h2>
     <div class="sheet-options">
-      <button class="sheet-btn" (click)="onUploadConcluido()">
-        <img src="/AddFile.png" alt="">
-        Enviar PDF
-      </button>
-      <button class="sheet-btn" (click)="onUploadConcluido()">
+      <button class="sheet-btn" (click)="fileInput.click()">
+  <img src="/AddFile.png" alt="">
+  Enviar PDF
+</button>
+
+    <input
+    #fileInput
+  type="file"
+  accept=".pdf"
+  hidden
+  (change)="onFileSelected($event)"
+>
+
+
+      <!-- <button class="sheet-btn" (click)="onUploadConcluido()">
         <img src="/Camera.png" alt="">
         Tirar com a câmera
-      </button>
+      </button> -->
     </div>
+   
   </div>
 }
