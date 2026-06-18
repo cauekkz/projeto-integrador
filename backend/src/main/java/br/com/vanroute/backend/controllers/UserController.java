@@ -30,6 +30,7 @@ public class UserController {
 
   
     //nao sei se vai usar isso so pra teste
+    // deixa o deleteUser ser feliz
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         userService.deleteById(id);
