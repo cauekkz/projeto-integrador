@@ -33,7 +33,14 @@
         [(ngModel)]="enteredCPF"
         required
       />
+
     }
+
+    @if(cpfInvalido){
+      <p class="error-message"> O CPF é obrigatótio!</p>  
+    }
+    
+   
 
     <label>Senha</label>
 
@@ -45,13 +52,20 @@
       required
     />
 
+    @if(passInvalido){
+      <p class="error-message"> A senha é obrigatótia!</p>  
+    }
+    
+
     <button class="btn-login">
       Entrar
     </button>
 
-    <button class="btn-forgot">
+    <!-- <button class="btn-forgot">
       Esqueceu sua senha?
-    </button>
+    </button> 
+    inutil por enquanto, ent vou deixar comentado
+    -->
     </form>
   </div>
 

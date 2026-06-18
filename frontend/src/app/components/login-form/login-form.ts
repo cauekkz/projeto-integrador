@@ -1,4 +1,4 @@
-import { Component, Input, signal } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
@@ -12,10 +12,16 @@ import { AuthService } from '../../services/auth.service';
 })
 export class LoginForm {
   @Input() tipoUsuario: string = '';
- 
+  cpfInvalido: boolean = false;
+  passInvalido: boolean = false;
 
-  constructor(private router: Router,
-    private authService: AuthService
+  verification(value: string): boolean {
+    return value.trim() === '';
+  }
+
+  constructor(
+    private router: Router,
+    private authService: AuthService,
   ) {}
 
   irParaCadastro() {
@@ -25,20 +31,25 @@ export class LoginForm {
     this.router.navigate(['/']);
   }
 
-
-  enteredCPF = ""
-  enteredPass = ""
+  enteredCPF = '';
+  enteredPass = '';
 
   login() {
-  this.authService
-    .login(this.enteredCPF, this.enteredPass)
-    .subscribe({
+    this.cpfInvalido = this.verification(this.enteredCPF);
+    this.passInvalido = this.verification(this.enteredPass);
+
+    if (this.cpfInvalido || this.passInvalido) {
+      return;
+    }
+
+    this.authService.login(this.enteredCPF, this.enteredPass).subscribe({
       next: (response) => {
-        console.log(response)
+        // router e get user, pegar token e user
+        console.log(response);
       },
       error: (err) => {
-        console.error(err)
-      }
+        console.error(err);
+      },
     });
-}
+  }
 }
