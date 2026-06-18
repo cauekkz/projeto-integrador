@@ -4,7 +4,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.web.multipart.MultipartFile;
-
+import br.com.vanroute.backend.validators.password.PasswordMatch;
+@PasswordMatch
 public class DriverRequestDTO {
     @NotBlank(message = "O tipo do motorista é obrigatório")
     private String driverType;
