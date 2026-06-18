@@ -41,7 +41,7 @@
 .content h2 {
   font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 60px;
+  margin-bottom: 30px;
 }
 
 label {
@@ -56,8 +56,15 @@ input {
   border: 1px solid #d6dce5;
   border-radius: 14px;
   padding: 0 16px;
-  margin-bottom: 24px;
+  margin-bottom: 13px;
   font-size: 1rem;
+}
+
+.error-message {
+  margin: 0 0 16px 0;
+  color: #e61212;
+  font-size: 0.85rem;
+  padding-left: 4px;
 }
 
 .btn-login {
@@ -86,7 +93,7 @@ input {
 .btn-signup {
   width: 300px;
   height: 56px;
-  margin: -20px auto 20px;
+  margin: -40px auto 20px;
   border-radius: 14px;
   border: 1px solid #1565d8;
   background: white;

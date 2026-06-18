@@ -74,6 +74,13 @@
   box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
 }
 
+.error-message {
+  margin-top: 4px;
+  margin-bottom: 12px;
+  color: #e61212;
+  font-size: 0.85rem;
+}
+
 @media (max-width: 480px) {
 
   .signup-container {
