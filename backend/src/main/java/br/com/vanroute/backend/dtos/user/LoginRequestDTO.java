@@ -8,14 +8,6 @@ public class LoginRequestDTO {
     @NotBlank
     private String passwordHash;
 
-    public LoginRequestDTO() {
-    }
-
-    public LoginRequestDTO(String cpf, String passwordHash) {
-        this.cpf = cpf;
-        this.passwordHash = passwordHash;
-    }
-
     public String getCpf() {
         return cpf;
     }

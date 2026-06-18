@@ -10,10 +10,6 @@ public class UserCreateDTO {
     @NotBlank(message = "O cpf é obrigatório")
     private String cpf;
     @NotBlank(message = "A senha é obrigatória")
-    private String email;
-    @NotBlank(message = "O telefone é obrigatório")
-    private String phone;
-    @NotBlank(message = "O email é obrigatório")                           
     private String passwordHash;
     @NotNull(message = "O tipo de usuário (role) é obrigatório")
     private RoleTypeEnum role;
@@ -32,19 +28,6 @@ public class UserCreateDTO {
 
     public void setCpf(String cpf) {
         this.cpf = cpf;
-    }
-    public String getEmail() {
-        return email;
-    }
-    public String getPhone() {
-        return phone;
-    }
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
     }
 
     public String getPasswordHash() {
