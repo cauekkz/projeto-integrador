@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.RolesEntity;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
@@ -30,7 +31,7 @@ public class UserService {
 
     public User createUser(UserCreateDTO userCreateDTO) {
         if (findByCpf(userCreateDTO.getCpf()).isPresent()) {
-            throw new RuntimeException("Usuario ja cadastrado");
+            throw new UserOrDriverOrResponsibleAlreadyRegisteredException("Usuario ja cadastrado");
         }
 
         RoleTypeEnum selectedRole = userCreateDTO.getRole() != null ? userCreateDTO.getRole() : RoleTypeEnum.ROLE_RESPONSIBLE;
