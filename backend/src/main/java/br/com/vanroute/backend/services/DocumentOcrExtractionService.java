@@ -42,7 +42,7 @@ public class DocumentOcrExtractionService {
             tesseract.setOcrEngineMode(1);
 
         } catch (IOException e) {
-            throw new IllegalStateException("Erro ao inicializar OCR", e);
+            throw new IllegalStateException("Erro ao inicializar OCR");
         }
     }
 

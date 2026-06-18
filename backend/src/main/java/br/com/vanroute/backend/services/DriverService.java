@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
 import org.springframework.stereotype.Service;
 
 import br.com.vanroute.backend.dtos.user.DriverRequestDTO;
@@ -25,7 +26,7 @@ public class DriverService {
     public Driver createDriver(DriverRequestDTO driverRequestDto, String cpf) {
 
         if (userService.findByCpf((cpf)).isPresent()) {
-            throw new RuntimeException("Usuario/Motorista já cadastrado");
+            throw new UserOrDriverOrResponsibleAlreadyRegisteredException("Usuario/Motorista já cadastrado");
         }
 
         UserCreateDTO userDto = new UserCreateDTO();
