@@ -22,10 +22,10 @@ public class AuthController {
         this.authenticationService = authenticationService;
     }
 
-    @PostMapping("/register")
-    public void register(@RequestBody @Valid UserCreateDTO userCreateDTO) throws BadRequestException {
-        authenticationService.register(userCreateDTO);
-    }
+//    @PostMapping("/register")
+//    public void register(@RequestBody @Valid UserCreateDTO userCreateDTO) throws BadRequestException {
+//        authenticationService.register(userCreateDTO);
+//    }
 
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@RequestBody @Valid LoginRequestDTO loginRequestDTO) throws Exception {
