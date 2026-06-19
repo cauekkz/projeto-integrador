@@ -67,7 +67,7 @@ export class SignupDriver {
     }
 
     const data = {
-      driverType: 'n sei',
+      /* driverType: 'tipo do motorista retornar dps', */
       documentPdf: this.registerService.selectedFile,
       name: this.enteredName,
       email: this.enteredEmail,

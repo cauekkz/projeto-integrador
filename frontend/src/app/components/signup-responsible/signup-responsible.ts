@@ -67,8 +67,8 @@ export class SignupResponsible {
       cpf: this.enteredCpf,
       email: this.enteredEmail,
       phone: this.enteredPhone,
-      passwordHash: this.enteredPass,
-      role: 'ROLE_RESPONSIBLE',
+      password: this.enteredPass,
+      confirmPassword: this.enteredConfirmPass,
     };
 
     this.authService.createUser(data).subscribe({
