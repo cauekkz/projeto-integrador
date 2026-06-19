@@ -6,19 +6,22 @@ spring:
     name: backend
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/pi
-    username: postgres
-    password: 123456
+    url: jdbc:postgresql://localhost:5432/${DATABASE_NAME:vanroute_db}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:123456}
 
   jpa:
     hibernate:
-      ddl-auto: none
-
+      ddl-auto: validate
     show-sql: true
-
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   flyway:
-    enabled: true #mudar para true quando começar as migrations.
+    enabled: true
+    locations: classpath:db/migration
+
+  jwt:
+    expiration: ${JWT_EXPIRATION:900000}
+    key: ${JWT_KEY:4QcYHiOKv6R1GIost25MwdDJNLayEubr3kj9nW8AxZqSFX0gfmhUTepCBPlV7z}

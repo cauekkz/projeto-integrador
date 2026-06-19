@@ -1,8 +1,8 @@
 package br.com.vanroute.backend.models.contract.enums;
 
 public enum PaymentStatus {
-    PENDENTE,
-    PAGO,
-    ATRASADO,
-    CANCELADO
+    PENDING, // Pendente
+    PAID, // Pago
+    OVERDUE, // Atrasado
+    CANCELED // Cancelado
 }

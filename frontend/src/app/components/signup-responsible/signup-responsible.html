@@ -1,0 +1,85 @@
+<div class="signup-container">
+  <div class="header">
+    <button class="back-button" (click)="voltar()">
+      <img src="/Back.png" alt="" />
+    </button>
+
+    <h1>Suas informações</h1>
+  </div>
+
+  <form class="form" (ngSubmit)="signup()">
+    <div class="field">
+      <label>Nome completo</label>
+      <input
+        type="text"
+        placeholder="Digite seu nome completo"
+        [(ngModel)]="enteredName"
+        name="name"
+      />
+
+      @if (nameInvalido) {
+        <p class="error-message">O nome é obrigatório!</p>
+      }
+    </div>
+
+    <div class="field">
+      <label>CPF do responsável</label>
+      <input type="text" placeholder="Digite seu CPF" [(ngModel)]="enteredCpf" name="cpf" />
+
+      @if (cpfInvalido) {
+        <p class="error-message">O CPF é obrigatório!</p>
+      }
+    </div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="email" placeholder="Digite seu email" [(ngModel)]="enteredEmail" name="email" />
+
+      @if (emailInvalido) {
+        <p class="error-message">O email é obrigatório!</p>
+      }
+    </div>
+
+    <div class="field">
+      <label>Telefone</label>
+      <input type="text" placeholder="11 99999-9999" [(ngModel)]="enteredPhone" name="phone" />
+
+      @if (phoneInvalido) {
+        <p class="error-message">O telefone é obrigatório!</p>
+      }
+    </div>
+
+    <div class="field">
+      <label>Senha</label>
+      <input
+        type="password"
+        placeholder="Digite sua senha"
+        [(ngModel)]="enteredPass"
+        name="password"
+      />
+
+      @if (passInvalido) {
+        <p class="error-message">A senha é obrigatória!</p>
+      }
+    </div>
+
+    <div class="field">
+      <label>Confirmar senha</label>
+      <input
+        type="password"
+        placeholder="Digite a senha novamente"
+        [(ngModel)]="enteredConfirmPass"
+        name="confirmPassword"
+      />
+
+      @if (confirmPassInvalido) {
+        <p class="error-message">Confirme sua senha!</p>
+      }
+
+      @if (passwordsDontMatch) {
+        <p class="error-message">As senhas não são iguais!</p>
+      }
+    </div>
+    <button class="btn-submit" type="submit">Pronto</button>
+  </form>
+</div>

@@ -1,9 +1,9 @@
 package br.com.vanroute.backend.models.vehicle.enums;
 
 public enum VehicleStatus {
-    ATIVO,
-    INATIVO,
-    EM_MANUTENCAO,
-    BLOQUEADO,
-    DOCUMENTACAO_PENDENTE
+    ACTIVE, // Ativo
+    INACTIVE, // Inativo
+    UNDER_MAINTENANCE, // Em manutencao
+    BLOCKED, // Bloqueado
+    PENDING_DOCUMENTATION // Documentacao pendente
 }

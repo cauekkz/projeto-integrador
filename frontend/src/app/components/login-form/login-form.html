@@ -1,0 +1,76 @@
+<div class="login-container">
+  <div class="header">
+    <button class="back-button" (click)="voltar()">
+      <img src="/Back.png" alt="">
+    </button>
+    <h1>Suas informações</h1>
+  </div>
+
+  <div class="content">
+
+    <form (ngSubmit)="login()">
+
+    @if (tipoUsuario === 'motorista') {
+      <h2>Olá, que bom que você voltou!</h2>
+      <label>CPF do motorista</label>
+      <input
+        type="text"
+        placeholder="Digite seu CPF"
+        name="nome"
+        [(ngModel)]="enteredCPF"
+        required
+      />
+    }
+
+    @if (tipoUsuario === 'responsavel') {
+      <h2>Olá, que bom que você voltou!</h2>
+
+      <label>CPF do responsável</label>
+       <input
+        type="text"
+        placeholder="Digite seu CPF"
+        name="nome"
+        [(ngModel)]="enteredCPF"
+        required
+      />
+
+    }
+
+    @if(cpfInvalido){
+      <p class="error-message"> O CPF é obrigatótio!</p>  
+    }
+    
+   
+
+    <label>Senha</label>
+
+    <input
+      type="password"
+      placeholder="Digite sua senha"
+      name="senha"
+      [(ngModel)]="enteredPass"
+      required
+    />
+
+    @if(passInvalido){
+      <p class="error-message"> A senha é obrigatótia!</p>  
+    }
+    
+
+    <button class="btn-login">
+      Entrar
+    </button>
+
+    <!-- <button class="btn-forgot">
+      Esqueceu sua senha?
+    </button> 
+    inutil por enquanto, ent vou deixar comentado
+    -->
+    </form>
+  </div>
+
+  <button class="btn-signup" (click)="irParaCadastro()">
+    Criar uma conta
+  </button>
+
+</div>
