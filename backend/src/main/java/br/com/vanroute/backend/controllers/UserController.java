@@ -16,12 +16,11 @@ public class UserController {
 
     private final UserService userService;
 
-    @Autowired
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id}")                 
     @Valid
     public ResponseEntity<User> getUserById(@PathVariable UUID id) {
         return userService.findById(id)
@@ -31,6 +30,7 @@ public class UserController {
 
   
     //nao sei se vai usar isso so pra teste
+    // deixa o deleteUser ser feliz
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         userService.deleteById(id);

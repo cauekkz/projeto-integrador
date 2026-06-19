@@ -3,12 +3,16 @@ package br.com.vanroute.backend.models.user;
 import br.com.vanroute.backend.models.user.enums.UserStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.*;
+
 import org.hibernate.annotations.CreationTimestamp;
+import org.jspecify.annotations.Nullable;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Entity
 @Table(name = "users")
-public class User {
+public class User implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -19,9 +23,16 @@ public class User {
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
-
+    
+    // VARCHAR evita conflito no ddl-auto validate (CHAR/bpchar do Postgres != String do Hibernate)
     @Column(nullable = false, unique = true, length = 11)
     private String cpf;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+    
+    @Column(nullable = false, unique = true)
+    private String phone;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
@@ -30,6 +41,15 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status;
+
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_roles",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<RolesEntity> roles = new HashSet<>();
 
     public UUID getId() {
         return id;
@@ -45,6 +65,20 @@ public class User {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getEmail(){
+        return this.email;
+    }
+    public void setEmail(String email){
+        this.email = email;
+    }
+   
+    public String getPhone(){
+        return this.phone;
+    }
+    public void setPhone(String phone){
+        this.phone = phone;
     }
 
     public String getPasswordHash() {
@@ -79,4 +113,26 @@ public class User {
         this.status = status;
     }
 
+    public Set<RolesEntity> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<RolesEntity> roles) {
+        this.roles = roles;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return roles;
+    }
+
+    @Override
+    public @Nullable String getPassword() {
+        return passwordHash;
+    }
+
+    @Override
+    public String getUsername() {
+        return cpf;
+    }
 }

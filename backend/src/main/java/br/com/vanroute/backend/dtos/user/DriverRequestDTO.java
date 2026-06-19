@@ -3,21 +3,32 @@ package br.com.vanroute.backend.dtos.user;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.web.multipart.MultipartFile;
-
+import br.com.vanroute.backend.validators.password.PasswordMatch;
+@PasswordMatch
 public class DriverRequestDTO {
-    @NotBlank(message = "O tipo do motorista é obrigatório")
-    private String driverType;
+    //@NotBlank(message = "O tipo do motorista é obrigatório")
+    //private String driverType;
 
     @NotNull(message = "O documento PDF é obrigatório")
     private MultipartFile documentPdf;
 
 
-      @Email(message = "E-mail inválido")
+    @NotBlank(message = "O nome é obrigatório")
+    private String name;
+
+    @Email(message = "E-mail inválido")
     @NotBlank(message = "O e-mail é obrigatório")
     private String email;
 
     @NotBlank(message = "A senha é obrigatória")
+    @Size(min = 8, message = "A senha deve ter no mínimo 8 caracteres")
+    @Pattern(
+    regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,}$",
+    message = "A senha deve conter letra maiúscula, minúscula, número e caractere especial"
+)
     private String password;
 
     @NotBlank(message = "A confirmação de senha é obrigatória")
@@ -26,6 +37,12 @@ public class DriverRequestDTO {
     @NotBlank(message = "O telefone é obrigatório")
     private String phone;
 
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
     public String getEmail() {
         return email;
     }
@@ -50,8 +67,7 @@ public class DriverRequestDTO {
     public void setPhone(String phone) {
         this.phone = phone;
     }   
-
-
+/* 
     public String getDriverType() {
         return driverType;
     }
@@ -59,7 +75,7 @@ public class DriverRequestDTO {
     public void setDriverType(String driverType) {
         this.driverType = driverType;
     }
-
+*/
     public MultipartFile getDocumentPdf() {
         return documentPdf;
     }

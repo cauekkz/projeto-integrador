@@ -1,8 +1,8 @@
 package br.com.vanroute.backend.models.user.enums;
 
 public enum UserStatus {
-    ACTIVE,
-    INACTIVE,
-    SUSPENDED,
-    BLOCKED
+    ACTIVE, // Ativo
+    INACTIVE, // Inativo
+    SUSPENDED, // Suspenso
+    BLOCKED // Bloqueado
 }
