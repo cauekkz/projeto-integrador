@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import br.com.vanroute.backend.dtos.user.DriverRequestDTO;
@@ -25,14 +26,20 @@ public class DriverController {
     private final DocumentOcrExtractionService documentOcrExtractionService;
 
     @Autowired
+<<<<<<< HEAD
     public DriverController(DriverService driverService, IcpValidationService icpValidationService,
+=======
+    public DriverController(
+            DriverService driverService,
+            IcpValidationService icpValidationService,
+>>>>>>> 2fddedc (feat: add CNH digital verification endpoint)
             DocumentOcrExtractionService documentOcrExtractionService) {
         this.driverService = driverService;
         this.icpValidationService = icpValidationService;
         this.documentOcrExtractionService = documentOcrExtractionService;
     }
 
-    @PostMapping(value = "/signup", consumes = { "multipart/form-data" })
+    @PostMapping(value = "/signup", consumes = {"multipart/form-data"})
     public ResponseEntity<?> createDriver(@Valid @ModelAttribute DriverRequestDTO dto) {
         try {
             icpValidationService.validateCnhSignature(dto.getDocumentPdf());
@@ -46,8 +53,19 @@ public class DriverController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(savedDriver);
 
+
     }
 
+    @PostMapping(value = "/verifyCNH", consumes = {"multipart/form-data"})
+    public ResponseEntity<?> verifyCNH(@Valid MultipartFile documentPdf) {
+        try {
+            icpValidationService.validateCnhSignature(documentPdf);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "A CNH não passou na auditoria digital.");
+        }
+
+        return ResponseEntity.ok().build();
+    }
     
 
 }

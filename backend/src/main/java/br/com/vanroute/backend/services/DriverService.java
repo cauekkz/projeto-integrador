@@ -7,10 +7,9 @@ import br.com.vanroute.backend.dtos.user.DriverRequestDTO;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.models.user.User;
+import br.com.vanroute.backend.models.user.enums.DriverApprovalStatus;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.repositories.DriverRepository;
-import br.com.vanroute.backend.models.user.enums.DriverApprovalStatus;
-import br.com.vanroute.backend.models.user.enums.DriverType;
 
 @Service
 public class DriverService {
@@ -46,4 +45,5 @@ public class DriverService {
         return driver;
 
     }
+     
 }
