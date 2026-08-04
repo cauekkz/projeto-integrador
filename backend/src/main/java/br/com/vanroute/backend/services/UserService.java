@@ -14,6 +14,9 @@ import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Random;
 
 @Service
 public class UserService {
@@ -21,12 +24,15 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RolesRepository rolesRepository;
+    private final EmailService emailService;
+    private final Map<String, String> emailCodeCache = new ConcurrentHashMap<>();
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RolesRepository rolesRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RolesRepository rolesRepository, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.rolesRepository = rolesRepository;
+        this.emailService = emailService;
     }
 
     public User createUser(UserCreateDTO userCreateDTO) {
@@ -47,8 +53,12 @@ public class UserService {
         user.setCpf(userCreateDTO.getCpf());
         user.setPasswordHash(passwordEncoder.encode(userCreateDTO.getPasswordHash()));
         user.setRoles(java.util.Set.of(roles));
-        user.setStatus(UserStatus.ACTIVE);
-         return userRepository.save(user);
+        user.setStatus(UserStatus.CHECK_EMAIL);
+        User savedUser = userRepository.save(user);
+        
+        generateAndCacheCode(savedUser.getEmail());
+        
+        return savedUser;
 
     }
 
@@ -62,5 +72,27 @@ public class UserService {
 
     public Optional<User> findByCpf(String cpf) {
         return userRepository.findByCpf(cpf);
+    }
+    
+    private void generateAndCacheCode(String email) {
+        String code = String.format("%06d", new Random().nextInt(999999));
+        emailCodeCache.put(email, code);
+        //System.out.println("E-mail enviado para: " + email + " com o código: " + code);
+        this.emailService.sendEmail(email,"Código de verificação - VanRoute", "Seu código de verificação é: " + code);
+
+    }
+    
+    public void verifyEmailCode(String email, String code) {
+        String cachedCode = emailCodeCache.get(email);
+        if (cachedCode == null || !cachedCode.equals(code)) {
+            throw new IllegalArgumentException("Código incorreto ou expirado.");
+        }
+        
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado."));
+                
+        user.setStatus(UserStatus.ACTIVE);
+        userRepository.save(user);
+        emailCodeCache.remove(email);
     }
 }

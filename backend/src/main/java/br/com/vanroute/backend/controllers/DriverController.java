@@ -18,7 +18,7 @@ import br.com.vanroute.backend.services.IcpValidationService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/drivers")
+@RequestMapping("/api/driver")
 public class DriverController {
 
     private final DriverService driverService;
@@ -26,13 +26,9 @@ public class DriverController {
     private final DocumentOcrExtractionService documentOcrExtractionService;
 
     @Autowired
-<<<<<<< HEAD
-    public DriverController(DriverService driverService, IcpValidationService icpValidationService,
-=======
     public DriverController(
             DriverService driverService,
             IcpValidationService icpValidationService,
->>>>>>> 2fddedc (feat: add CNH digital verification endpoint)
             DocumentOcrExtractionService documentOcrExtractionService) {
         this.driverService = driverService;
         this.icpValidationService = icpValidationService;
@@ -51,7 +47,7 @@ public class DriverController {
 
         Driver savedDriver = driverService.createDriver(dto, cpf);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedDriver);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Motorista criado com sucesso");
 
 
     }
