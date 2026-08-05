@@ -15,6 +15,7 @@ import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.services.DocumentOcrExtractionService;
 import br.com.vanroute.backend.services.DriverService;
 import br.com.vanroute.backend.services.IcpValidationService;
+import br.com.vanroute.backend.services.EmailVerificationService;
 import jakarta.validation.Valid;
 
 @RestController
@@ -24,15 +25,18 @@ public class DriverController {
     private final DriverService driverService;
     private final IcpValidationService icpValidationService;
     private final DocumentOcrExtractionService documentOcrExtractionService;
+    private final EmailVerificationService emailVerificationService;
 
     @Autowired
     public DriverController(
             DriverService driverService,
             IcpValidationService icpValidationService,
-            DocumentOcrExtractionService documentOcrExtractionService) {
+            DocumentOcrExtractionService documentOcrExtractionService,
+            EmailVerificationService emailVerificationService) {
         this.driverService = driverService;
         this.icpValidationService = icpValidationService;
         this.documentOcrExtractionService = documentOcrExtractionService;
+        this.emailVerificationService = emailVerificationService;
     }
 
     @PostMapping(value = "/signup", consumes = {"multipart/form-data"})
@@ -46,9 +50,10 @@ public class DriverController {
         String cpf = documentOcrExtractionService.extractFromCnh(dto.getDocumentPdf());
 
         Driver savedDriver = driverService.createDriver(dto, cpf);
+        
+        emailVerificationService.generateAndSendCode("verificationEmail:email:" + savedDriver.getUser().getEmail(), savedDriver.getUser().getEmail());
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Motorista criado com sucesso");
-
 
     }
 
