@@ -81,7 +81,7 @@ public class UserService {
         this.emailService.sendEmail(email,"Código de verificação - VanRoute", "Seu código de verificação é: " + code);
 
     }
-    
+    //faze um vai se fuder bglh pra exclui do bd quando o tempo expirar, e tbm ve o tempo de duração desse cache, 
     public void verifyEmailCode(String email, String code) {
         String cachedCode = emailCodeCache.get(email);
         if (cachedCode == null || !cachedCode.equals(code)) {
