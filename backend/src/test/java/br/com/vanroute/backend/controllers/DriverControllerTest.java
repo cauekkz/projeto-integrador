@@ -48,27 +48,26 @@ public class DriverControllerTest {
                 "documentPdf",
                 "cnh.pdf",
                 MediaType.APPLICATION_PDF_VALUE,
-                "There should be a law.".getBytes()
-        );
+                "There should be a law.".getBytes());
     }
 
     @Test
     void shouldCreateDriverSuccessfully() throws Exception {
         doNothing().when(icpValidationService).validateCnhSignature(any());
         when(documentOcrExtractionService.extractFromCnh(any())).thenReturn("12345678901");
-        
+
         Driver mockedDriver = new Driver();
         when(driverService.createDriver(any(), anyString())).thenReturn(mockedDriver);
 
         mockMvc.perform(multipart("/api/drivers/signup")
-                        .file(documentPdf)
-                        .param("name", "Neymar Junior")
-                        .param("email", "neymar@teste.com")
-                        .param("password", "Hexa2026123!")
-                        .param("confirmPassword", "Hexa2026123!")
-                        .param("phone", "11999999999")
-                        //.param("driverType", "B")
-                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .file(documentPdf)
+                .param("name", "Neymar Junior")
+                .param("email", "neymar@teste.com")
+                .param("password", "Hexa2026123!")
+                .param("confirmPassword", "Hexa2026123!")
+                .param("phone", "11999999999")
+                // .param("driverType", "B")
+                .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isCreated());
 
         verify(icpValidationService, times(1)).validateCnhSignature(any());
@@ -81,21 +80,20 @@ public class DriverControllerTest {
         doThrow(new RuntimeException("Assinatura inválida")).when(icpValidationService).validateCnhSignature(any());
 
         mockMvc.perform(multipart("/api/drivers/signup")
-                        .file(documentPdf)
-                        .param("name", "Neymar Junior")
-                        .param("email", "neymar@teste.com")
-                        .param("cnhNumber", "123456789")
-                        .param("password", "Hexa2026123!")
-                        .param("confirmPassword", "Hexa2026123!")
-                        .param("phone", "11999999999")
-                        //.param("driverType", "B")
-                        .contentType(MediaType.MULTIPART_FORM_DATA))
+                .file(documentPdf)
+                .param("name", "Neymar Junior")
+                .param("email", "neymar@teste.com")
+                .param("cnhNumber", "123456789")
+                .param("password", "Hexa2026123!")
+                .param("confirmPassword", "Hexa2026123!")
+                .param("phone", "11999999999")
+                // .param("driverType", "B")
+                .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isUnprocessableEntity());
 
         verify(icpValidationService, times(1)).validateCnhSignature(any());
         verify(documentOcrExtractionService, never()).extractFromCnh(any());
         verify(driverService, never()).createDriver(any(), anyString());
     }
-
 
 }

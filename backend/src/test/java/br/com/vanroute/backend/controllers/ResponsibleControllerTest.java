@@ -3,6 +3,7 @@ package br.com.vanroute.backend.controllers;
 import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
 import br.com.vanroute.backend.models.user.RolesEntity;
 import br.com.vanroute.backend.models.user.enums.FinancialStatus;
+import br.com.vanroute.backend.services.EmailVerificationService;
 import br.com.vanroute.backend.services.ResponsibleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,9 @@ class ResponsibleControllerTest {
 
     @Mock
     private ResponsibleService responsibleService;
+
+    @Mock
+    private EmailVerificationService emailVerificationService;
 
     @InjectMocks
     private ResponsibleController responsibleController;
