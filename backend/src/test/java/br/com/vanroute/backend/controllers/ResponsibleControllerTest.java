@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -80,6 +81,10 @@ class ResponsibleControllerTest {
                         """));
 
         verify(responsibleService, times(1)).createResponsible(any());
+        verify(emailVerificationService, times(1)).generateAndSendCode(
+                eq("verificationEmail:email:carolina@example.com"),
+                eq("carolina@example.com")
+        );
     }
 }
 

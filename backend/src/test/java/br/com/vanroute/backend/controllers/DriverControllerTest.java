@@ -1,8 +1,10 @@
 package br.com.vanroute.backend.controllers;
 
 import br.com.vanroute.backend.models.user.Driver;
+import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.services.DocumentOcrExtractionService;
 import br.com.vanroute.backend.services.DriverService;
+import br.com.vanroute.backend.services.EmailVerificationService;
 import br.com.vanroute.backend.services.IcpValidationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -34,6 +37,9 @@ public class DriverControllerTest {
 
     @Mock
     private DocumentOcrExtractionService documentOcrExtractionService;
+
+    @Mock
+    private EmailVerificationService emailVerificationService;
 
     @InjectMocks
     private DriverController driverController;
@@ -56,10 +62,13 @@ public class DriverControllerTest {
         doNothing().when(icpValidationService).validateCnhSignature(any());
         when(documentOcrExtractionService.extractFromCnh(any())).thenReturn("12345678901");
 
+        User user = new User();
+        user.setEmail("neymar@teste.com");
         Driver mockedDriver = new Driver();
+        mockedDriver.setUser(user);
         when(driverService.createDriver(any(), anyString())).thenReturn(mockedDriver);
 
-        mockMvc.perform(multipart("/api/drivers/signup")
+        mockMvc.perform(multipart("/api/driver/signup")
                 .file(documentPdf)
                 .param("name", "Neymar Junior")
                 .param("email", "neymar@teste.com")
@@ -73,13 +82,17 @@ public class DriverControllerTest {
         verify(icpValidationService, times(1)).validateCnhSignature(any());
         verify(documentOcrExtractionService, times(1)).extractFromCnh(any());
         verify(driverService, times(1)).createDriver(any(), anyString());
+        verify(emailVerificationService, times(1)).generateAndSendCode(
+                eq("verificationEmail:email:neymar@teste.com"),
+                eq("neymar@teste.com")
+        );
     }
 
     @Test
     void shouldReturnUnprocessableEntityWhenSignatureIsInvalid() throws Exception {
         doThrow(new RuntimeException("Assinatura inválida")).when(icpValidationService).validateCnhSignature(any());
 
-        mockMvc.perform(multipart("/api/drivers/signup")
+        mockMvc.perform(multipart("/api/driver/signup")
                 .file(documentPdf)
                 .param("name", "Neymar Junior")
                 .param("email", "neymar@teste.com")
@@ -94,6 +107,7 @@ public class DriverControllerTest {
         verify(icpValidationService, times(1)).validateCnhSignature(any());
         verify(documentOcrExtractionService, never()).extractFromCnh(any());
         verify(driverService, never()).createDriver(any(), anyString());
+        verify(emailVerificationService, never()).generateAndSendCode(any(), any());
     }
 
 }
