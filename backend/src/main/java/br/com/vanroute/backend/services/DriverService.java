@@ -1,15 +1,15 @@
-package br.com.vanroute.backend.services;
+    package br.com.vanroute.backend.services;
 
-import org.springframework.stereotype.Service;
+    import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
+    import org.springframework.stereotype.Service;
 
-import br.com.vanroute.backend.dtos.user.DriverRequestDTO;
-import br.com.vanroute.backend.dtos.user.UserCreateDTO;
-import br.com.vanroute.backend.models.user.Driver;
-import br.com.vanroute.backend.models.user.User;
-import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
-import br.com.vanroute.backend.repositories.DriverRepository;
-import br.com.vanroute.backend.models.user.enums.DriverApprovalStatus;
-import br.com.vanroute.backend.models.user.enums.DriverType;
+    import br.com.vanroute.backend.dtos.user.DriverRequestDTO;
+    import br.com.vanroute.backend.dtos.user.UserCreateDTO;
+    import br.com.vanroute.backend.models.user.Driver;
+    import br.com.vanroute.backend.models.user.User;
+    import br.com.vanroute.backend.models.user.enums.DriverApprovalStatus;
+    import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
+    import br.com.vanroute.backend.repositories.DriverRepository;
 
 @Service
 public class DriverService {
@@ -25,7 +25,7 @@ public class DriverService {
     public Driver createDriver(DriverRequestDTO driverRequestDto, String cpf) {
 
         if (userService.findByCpf((cpf)).isPresent()) {
-            throw new RuntimeException("Usuario/Motorista já cadastrado");
+            throw new UserOrDriverOrResponsibleAlreadyRegisteredException("Usuario/Motorista já cadastrado");
         }
 
         UserCreateDTO userDto = new UserCreateDTO();
@@ -45,4 +45,5 @@ public class DriverService {
         return driver;
 
     }
+     
 }

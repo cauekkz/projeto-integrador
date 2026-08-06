@@ -17,7 +17,7 @@ export class AuthService {
   }
 
   createDriver(data: {
-    driverType: string;
+    /* driverType: string; */
     documentPdf: File;
     name: string;
     email: string;
@@ -29,7 +29,7 @@ export class AuthService {
 
     // esse drivertype ta inutil por enquanto
     // no signup-driver to enviando nd util do drivertype
-    formData.append('driverType', data.driverType);
+    /* formData.append('driverType', data.driverType); */
     formData.append('documentPdf', data.documentPdf);
     formData.append('name', data.name);
     formData.append('email', data.email);
@@ -42,19 +42,19 @@ export class AuthService {
 
   createUser(data: {
     name: string;
-    cpf: string;
     email: string;
+    password: string;
+    confirmPassword: string;
+    cpf: string;
     phone: string;
-    passwordHash: string;
-    role: string;
   }) {
-    return this.http.post(`${this.apiUrl}/auth/register`, {
+    return this.http.post(`${this.apiUrl}/responsible/signup`, {
       name: data.name,
-      cpf: data.cpf,
       email: data.email,
+      password: data.password,
+      confirmPassword: data.confirmPassword,
+      cpf: data.cpf,
       phone: data.phone,
-      passwordHash: data.passwordHash,
-      role: data.role,
     });
   }
 
