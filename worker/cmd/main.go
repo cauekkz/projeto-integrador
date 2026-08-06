@@ -5,6 +5,7 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
 	"worker/db"
 	repository "worker/internal/repository"
@@ -20,7 +21,15 @@ func main() {
 	}
 
 	defer conn.Close(ctx)
-	repository.CleanupUsers(ctx, &conn)
+
+	// nunca usei ticker, mas ele é um alarme, a cada 48 horas vai rodar e executar a query
+	// com o time.sleep ele aumentaria com o tempo da query ent uma hr ia ficar mais de 48hrs
+	ticker := time.NewTicker(48 * time.Hour)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		repository.CleanupUsers(ctx, &conn)
+	}
 }
 
 /*

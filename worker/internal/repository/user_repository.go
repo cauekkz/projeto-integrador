@@ -9,10 +9,11 @@ import (
 
 func CleanupUsers(ctx context.Context, conn *pgx.Conn) {
 	//adicionar um intervalo de tempo do created_at para nao remover registros mt recentes
+	
 	query := `
 		DELETE FROM users
 		WHERE status = 'CHECK_EMAIL'
-		AND created_at < NOW() 
+		AND created_at <= NOW() - INTERVAL '48 hours' 
 	`
 
 	result, err := conn.Exec(ctx, query)
