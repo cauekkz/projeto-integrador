@@ -40,6 +40,7 @@ export class AuthService {
   }
 
   createUser(data: {
+
     name: string;
     email: string;
     password: string;

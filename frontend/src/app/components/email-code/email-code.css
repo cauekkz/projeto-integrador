@@ -17,7 +17,7 @@
   justify-content: center;
   min-height: 100vh;
   padding: 40px 24px;
-  gap: 30px;
+  gap: 20px;
 }
 .instrucao {
   text-align: center;
@@ -99,4 +99,13 @@
   left: 24px;
   right: 24px;
   width: calc(100% - 48px);
+}
+
+@keyframes slideUp {
+  0%   { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0);   opacity: 1; }
+}
+
+.code-input.animate {
+  animation: slideUp 0.15s ease-out;
 }

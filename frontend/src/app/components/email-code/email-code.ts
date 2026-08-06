@@ -19,6 +19,11 @@ export class EmailCode {
 
   onInput(event: Event, index: number) {
     const input = event.target as HTMLInputElement;
+
+    input.classList.remove('animate');
+    void input.offsetWidth;
+    input.classList.add('animate');
+
     if (input.value.length === 1) {
       const inputs = document.querySelectorAll('.code-input');
       const next = inputs[index + 1] as HTMLInputElement;
