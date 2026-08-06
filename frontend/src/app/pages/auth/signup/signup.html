@@ -1,18 +1,31 @@
-@if (!cadastroConcluido) {
+@if (!cadastroConcluido && !mostrarCodigo) {
 
   @if (tipoUsuario === 'motorista') {
     @if (etapa === 'cnh') {
-      <app-signup-cnh-form (prontoEvent)="irParaDriver()" (voltarEvent)="voltar()" />
+      <app-signup-cnh-form
+        (prontoEvent)="irParaDriver()"
+        (voltarEvent)="voltar()" />
     }
+
     @if (etapa === 'driver') {
-      <app-signup-driver (cadastroConcluidoEvent)="concluirCadastro()" (voltarEvent)="voltar()" />
+      <app-signup-driver
+        (cadastroConcluidoEvent)="mostrarTelaCodigo($event)"
+        (voltarEvent)="voltar()" />
     }
   }
 
   @if (tipoUsuario === 'responsavel') {
-    <app-signup-responsible (cadastroConcluidoEvent)="concluirCadastro()" (voltarEvent)="voltar()" />
+    <app-signup-responsible
+      (cadastroConcluidoEvent)="mostrarTelaCodigo($event)"
+      (voltarEvent)="voltar()" />
   }
 
+}
+
+@if (mostrarCodigo) {
+  <app-email-code
+    [email]="email"
+    (verificadoEvent)="concluirCadastro()" />
 }
 
 @if (cadastroConcluido) {
@@ -22,8 +35,11 @@
       <div class="check-circle">
         <svg viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="26" cy="26" r="26" fill="#4CAF50"/>
-          <path d="M14 26L22 34L38 18" stroke="white" stroke-width="3.5"
-                stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M14 26L22 34L38 18"
+                stroke="white"
+                stroke-width="3.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"/>
         </svg>
       </div>
       <p class="sucesso-texto">Cadastro finalizado</p>
@@ -37,4 +53,3 @@
 
   </div>
 }
-
