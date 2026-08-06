@@ -3,6 +3,7 @@ package br.com.vanroute.backend.controllers;
 import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
 import br.com.vanroute.backend.models.user.RolesEntity;
 import br.com.vanroute.backend.models.user.enums.FinancialStatus;
+import br.com.vanroute.backend.services.EmailVerificationService;
 import br.com.vanroute.backend.services.ResponsibleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -29,6 +31,9 @@ class ResponsibleControllerTest {
 
     @Mock
     private ResponsibleService responsibleService;
+
+    @Mock
+    private EmailVerificationService emailVerificationService;
 
     @InjectMocks
     private ResponsibleController responsibleController;
@@ -76,6 +81,10 @@ class ResponsibleControllerTest {
                         """));
 
         verify(responsibleService, times(1)).createResponsible(any());
+        verify(emailVerificationService, times(1)).generateAndSendCode(
+                eq("verificationEmail:email:carolina@example.com"),
+                eq("carolina@example.com")
+        );
     }
 }
 

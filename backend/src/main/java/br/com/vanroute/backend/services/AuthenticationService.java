@@ -68,6 +68,13 @@ public class AuthenticationService {
 //    }
 
     public ResponseEntity<TokenResponseDTO> login(LoginRequestDTO loginRequestDTO) throws Exception {
+        User user = userRepository.findByCpf(loginRequestDTO.getCpf())
+            .orElseThrow(() -> new InvalidCredentialsException("Credenciais inválidas."));
+            
+        if (user.getStatus() == UserStatus.CHECK_EMAIL) {
+            throw new BadRequestException("Verifique seu e-mail antes de fazer login.");
+        }
+
         try {
             Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                     loginRequestDTO.getCpf(),
