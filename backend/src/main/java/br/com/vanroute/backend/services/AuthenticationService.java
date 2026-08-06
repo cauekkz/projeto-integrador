@@ -4,6 +4,7 @@ import br.com.vanroute.backend.config.TokenProvider;
 import br.com.vanroute.backend.dtos.user.LoginRequestDTO;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.dtos.user.token.TokenResponseDTO;
+import br.com.vanroute.backend.exceptions.InvalidCredentialsException;
 import br.com.vanroute.backend.models.user.RolesEntity;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
@@ -41,33 +42,39 @@ public class AuthenticationService {
         this.tokenProvider = tokenProvider;
     }
 
-    public void register(UserCreateDTO userCreateDTO) throws BadRequestException {
-        User user = userRepository.findByCpf(userCreateDTO.getCpf())
-                .orElse(null);
-        if(user != null){
-            throw new BadRequestException("Usuario ja cadastrado");
-        }
-        // Seleciona a role informada no DTO, ou usa RESPONSIBLE por padrão caso não informado
-        RoleTypeEnum selectedRole = userCreateDTO.getRole() != null ? userCreateDTO.getRole() : RoleTypeEnum.ROLE_RESPONSIBLE;
-        String roleName = selectedRole.name();
-
-        RolesEntity roles = rolesRepository.findByNome(roleName)
-                .orElseGet(() -> rolesRepository.save(RolesEntity.builder()
-                        .nome(roleName).build()));
-
-        User newUser = new User();
-        newUser.setName(userCreateDTO.getName());
-        newUser.setCpf(userCreateDTO.getCpf());
-        newUser.setRoles(Set.of(roles));
-        newUser.setStatus(UserStatus.ACTIVE);
-        newUser.setPasswordHash(passwordEncoder.encode(userCreateDTO.getPasswordHash()));
-        newUser.setEmail(userCreateDTO.getEmail());
-        newUser.setPhone(userCreateDTO.getPhone());
-
-        userRepository.save(newUser);
-    }
+//    public void register(UserCreateDTO userCreateDTO) throws BadRequestException {
+//        User user = userRepository.findByCpf(userCreateDTO.getCpf())
+//                .orElse(null);
+//        if(user != null){
+//            throw new BadRequestException("Usuario ja cadastrado");
+//        }
+//        RoleTypeEnum selectedRole = userCreateDTO.getRole() != null ? userCreateDTO.getRole() : RoleTypeEnum.ROLE_RESPONSIBLE;
+//        String roleName = selectedRole.name();
+//
+//        RolesEntity roles = rolesRepository.findByNome(roleName)
+//                .orElseGet(() -> rolesRepository.save(RolesEntity.builder()
+//                        .nome(roleName).build()));
+//
+//        User newUser = new User();
+//        newUser.setName(userCreateDTO.getName());
+//        newUser.setCpf(userCreateDTO.getCpf());
+//        newUser.setRoles(Set.of(roles));
+//        newUser.setStatus(UserStatus.ACTIVE);
+//        newUser.setPasswordHash(passwordEncoder.encode(userCreateDTO.getPasswordHash()));
+//        newUser.setEmail(userCreateDTO.getEmail());
+//        newUser.setPhone(userCreateDTO.getPhone());
+//
+//        userRepository.save(newUser);
+//    }
 
     public ResponseEntity<TokenResponseDTO> login(LoginRequestDTO loginRequestDTO) throws Exception {
+        User user = userRepository.findByCpf(loginRequestDTO.getCpf())
+            .orElseThrow(() -> new InvalidCredentialsException("Credenciais inválidas."));
+            
+        if (user.getStatus() == UserStatus.CHECK_EMAIL) {
+            throw new BadRequestException("Verifique seu e-mail antes de fazer login.");
+        }
+
         try {
             Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                     loginRequestDTO.getCpf(),
@@ -76,7 +83,7 @@ public class AuthenticationService {
             String token = tokenProvider.generateToken(auth);
             return ResponseEntity.ok(new TokenResponseDTO(token, expirationTime));
         }catch (Exception e){
-            throw new Exception("Credenciais inválidas.");
+            throw new InvalidCredentialsException("Credenciais inválidas.");
         }
     }
 

@@ -1,1 +1,3 @@
 .idea
+./pom_dependency_check.sh
+backend/src/main/resources/application-local.properties

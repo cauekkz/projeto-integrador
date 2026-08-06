@@ -1,4 +1,5 @@
 package br.com.vanroute.backend.services;
+
 //IA PURA TEM Q ANALIZA
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1OctetString;
@@ -48,10 +49,10 @@ import java.util.regex.Pattern;
 public class IcpValidationService {
 
     private static final Pattern BYTE_RANGE_PATTERN = Pattern.compile(
-            "/ByteRange\\s*\\[\\s*(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s*\\]"
-    );
+            "/ByteRange\\s*\\[\\s*(\\d+)\\s+(\\d+)\\s+(\\d+)\\s+(\\d+)\\s*\\]");
     private static final Pattern CNH_DOCUMENT_MARKER = Pattern.compile("(?i)CNH\\s+DIGITAL");
     private static final Pattern CRLV_DOCUMENT_MARKER = Pattern.compile("(?i)CRLV\\s+DIGITAL");
+    
 
     private final X509Certificate rootCertificate;
     private final X500Name rootSubject;
@@ -70,7 +71,7 @@ public class IcpValidationService {
             assertCnhDocument(pdfBytes);
             validateSignature(pdfBytes);
         } catch (Exception e) {
-            throw new RuntimeException("Falha ao validar a assinatura digital ICP-Brasil da CNH: " + e.getMessage(), e);
+            throw new RuntimeException("Falha ao validar a assinatura digital ICP-Brasil da CNH: " + e.getMessage());
         }
     }
 
@@ -80,10 +81,11 @@ public class IcpValidationService {
             assertCrlvDocument(pdfBytes);
             validateSignature(pdfBytes);
         } catch (Exception e) {
-            throw new RuntimeException("Falha ao validar a assinatura digital ICP-Brasil do CRLV: " + e.getMessage(), e);
+            throw new RuntimeException("Falha ao validar a assinatura digital ICP-Brasil do CRLV: " + e.getMessage());
         }
     }
 
+    //aqui é pra verificar se o tipo do arquivo é realmente CNH ou CRLV
     private void assertCnhDocument(byte[] pdfBytes) throws Exception {
         String raw = new String(pdfBytes, "ISO-8859-1");
         if (!CNH_DOCUMENT_MARKER.matcher(raw).find()) {
@@ -91,10 +93,10 @@ public class IcpValidationService {
         }
         if (CRLV_DOCUMENT_MARKER.matcher(raw).find()) {
             throw new Exception("O arquivo enviado não é uma CNH digital");
-        }
+        }                       
     }
 
-    private void assertCrlvDocument(byte[] pdfBytes) throws Exception {
+    private void assertCrlvDocument(byte[] pdfBytes) throws Exception {                                                                                 
         String raw = new String(pdfBytes, "ISO-8859-1");
         if (!CRLV_DOCUMENT_MARKER.matcher(raw).find()) {
             throw new Exception("O arquivo enviado não é um CRLV digital");
@@ -104,6 +106,7 @@ public class IcpValidationService {
         }
     }
 
+    
     private void validateSignature(byte[] pdfBytes) throws Exception {
         int[] byteRange = extractByteRange(pdfBytes);
         byte[] signedContent = buildSignedContent(pdfBytes, byteRange);
@@ -165,7 +168,7 @@ public class IcpValidationService {
         if (!matcher.find()) {
             throw new Exception("ByteRange não encontrado");
         }
-        return new int[]{
+        return new int[] {
                 Integer.parseInt(matcher.group(1)),
                 Integer.parseInt(matcher.group(2)),
                 Integer.parseInt(matcher.group(3)),
@@ -194,8 +197,7 @@ public class IcpValidationService {
         String hex = new String(hexSignature, "ISO-8859-1").replaceAll("[<>\\x00]", "").trim();
         byte[] pkcs7 = new byte[hex.length() / 2];
         for (int i = 0; i < hex.length(); i += 2) {
-            pkcs7[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4)
-                    + Character.digit(hex.charAt(i + 1), 16));
+            pkcs7[i / 2] = (byte) ((Character.digit(hex.charAt(i), 16) << 4) + Character.digit(hex.charAt(i + 1), 16));
         }
         return pkcs7;
     }
@@ -394,7 +396,6 @@ public class IcpValidationService {
                 }
             }
         } catch (Exception ignored) {
-            // sem AIA utilizável
         }
         return urls;
     }
@@ -413,7 +414,6 @@ public class IcpValidationService {
             }
             certs.addAll(parsePkcs7OrDerCertificates(response.body()));
         } catch (Exception ignored) {
-            // falha no download não interrompe outras URLs
         }
         return certs;
     }
@@ -429,7 +429,6 @@ public class IcpValidationService {
                 return certs;
             }
         } catch (Exception ignored) {
-            // tenta outros formatos
         }
 
         try {
@@ -438,7 +437,6 @@ public class IcpValidationService {
                 certs.add((X509Certificate) certificate);
             }
         } catch (Exception ignored) {
-            // formato não reconhecido
         }
         return certs;
     }
