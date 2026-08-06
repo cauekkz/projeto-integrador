@@ -7,20 +7,19 @@
   </div>
 
 
-  <!-- card de upload — clique abre o bottom sheet -->
   <div class="upload-card" (click)="abrirBottomSheet()">
     <div class="upload-content">
       <div class="upload-icon">
         <img src="/AddFile.png" alt="">
       </div>
 
-      
+
   @if (registerService.selectedFile) {
       <p>{{ registerService.selectedFile.name }}</p>
   } @else {
       <p>Envie sua CNH para validação</p>
   }
-      
+
     </div>
   </div>
 
@@ -47,12 +46,11 @@
   (change)="onFileSelected($event)"
 >
 
-
       <!-- <button class="sheet-btn" (click)="onUploadConcluido()">
         <img src="/Camera.png" alt="">
         Tirar com a câmera
       </button> -->
     </div>
-   
+
   </div>
 }
