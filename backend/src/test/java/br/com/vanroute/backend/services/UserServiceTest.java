@@ -4,6 +4,8 @@ import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.models.user.RolesEntity;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
+import br.com.vanroute.backend.models.user.enums.UserStatus;
+import org.mockito.ArgumentCaptor;
 import br.com.vanroute.backend.repositories.RolesRepository;
 import br.com.vanroute.backend.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,17 +57,15 @@ public class UserServiceTest {
         when(rolesRepository.findByNome(anyString())).thenReturn(Optional.of(RolesEntity.builder().nome("ROLE_RESPONSIBLE").build()));
         when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");
         
-        User savedUser = new User();
-        savedUser.setCpf("12345678901");
-        savedUser.setName("Mbappé");
-        
-        when(userRepository.save(any(User.class))).thenReturn(savedUser);
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        when(userRepository.save(userCaptor.capture())).thenAnswer(invocation -> invocation.getArgument(0));
 
         User result = userService.createUser(defaultUserCreateDTO);
 
         assertNotNull(result);
         assertEquals("12345678901", result.getCpf());
         assertEquals("Mbappé", result.getName());
+        assertEquals(UserStatus.CHECK_EMAIL, userCaptor.getValue().getStatus());
         
         verify(userRepository, times(1)).findByCpf(anyString());
         verify(userRepository, times(1)).save(any(User.class));

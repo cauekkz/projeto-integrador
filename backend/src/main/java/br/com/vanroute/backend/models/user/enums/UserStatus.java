@@ -4,5 +4,6 @@ public enum UserStatus {
     ACTIVE, // Ativo
     INACTIVE, // Inativo
     SUSPENDED, // Suspenso
-    BLOCKED // Bloqueado
+    BLOCKED, // Bloqueado
+    CHECK_EMAIL // Verificar email
 }
