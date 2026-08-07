@@ -15,8 +15,8 @@ public class EmailVerificationService {
 
     @Autowired
     public EmailVerificationService(RedisTemplate<String, String> redisTemplate, EmailService emailService) {
-        this.redisTemplate = redisTemplate;
-        this.emailService = emailService;
+            this.redisTemplate = redisTemplate;
+            this.emailService = emailService;
     }
 
    

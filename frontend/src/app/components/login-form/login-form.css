@@ -130,11 +130,21 @@ input {
 
   .btn-login {
     height: 52px;
+    position: fixed;
+    bottom: 24px;
+    left: 24px;
+    right: 24px;
+    width: calc(100% - 48px);
   }
 
   .btn-signup {
     width: 100%;
     max-width: 340px;
+    position: fixed;
+    bottom: 80px;
+    left: 24px;
+    right: 24px;
+    width: calc(100% - 48px);
   }
 
   .btn-forgot {

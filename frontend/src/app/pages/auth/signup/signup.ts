@@ -4,11 +4,12 @@ import { Location } from '@angular/common';
 import { SignupResponsible } from '../../../components/signup-responsible/signup-responsible';
 import { SignupDriver } from '../../../components/signup-driver/signup-driver';
 import { SignupCnhForm } from '../../../components/signup-cnh-form/signup-cnh-form';
+import { EmailCode } from '../../../components/email-code/email-code';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [SignupResponsible, SignupDriver, SignupCnhForm],
+  imports: [SignupResponsible, SignupDriver, SignupCnhForm, EmailCode],
   templateUrl: './signup.html',
   styleUrl: './signup.css',
 })
@@ -16,6 +17,7 @@ export class Signup implements OnInit {
   tipoUsuario = '';
   etapa: 'cnh' | 'driver' = 'cnh';
   cadastroConcluido = false;
+  email = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -32,6 +34,7 @@ export class Signup implements OnInit {
   }
 
   concluirCadastro() {
+    this.mostrarCodigo = false;
     this.cadastroConcluido = true;
   }
 
@@ -49,5 +52,12 @@ export class Signup implements OnInit {
     } else {
       this.location.back();
     }
+  }
+
+  mostrarCodigo = false;
+
+  mostrarTelaCodigo(email: string) {
+    this.email = email;
+    this.mostrarCodigo = true;
   }
 }

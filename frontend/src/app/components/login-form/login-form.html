@@ -23,7 +23,7 @@
     }
 
     @if (tipoUsuario === 'responsavel') {
-      <h2>Olá, que bom que você voltou!</h2>
+      <h2>Olá, que om que você voltou!</h2>
 
       <label>CPF do responsável</label>
        <input
@@ -37,10 +37,10 @@
     }
 
     @if(cpfInvalido){
-      <p class="error-message"> O CPF é obrigatótio!</p>  
+      <p class="error-message"> O CPF é obrigatótio!</p>
     }
-    
-   
+
+
 
     <label>Senha</label>
 
@@ -53,9 +53,9 @@
     />
 
     @if(passInvalido){
-      <p class="error-message"> A senha é obrigatótia!</p>  
+      <p class="error-message"> A senha é obrigatótia!</p>
     }
-    
+
 
     <button class="btn-login">
       Entrar
@@ -63,7 +63,7 @@
 
     <!-- <button class="btn-forgot">
       Esqueceu sua senha?
-    </button> 
+    </button>
     inutil por enquanto, ent vou deixar comentado
     -->
     </form>

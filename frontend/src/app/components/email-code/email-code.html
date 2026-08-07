@@ -1,0 +1,67 @@
+<div class="code-container">
+  <div class="header">
+    <button class="back-button">
+      <img src="/Back.png" alt="" />
+    </button>
+  </div>
+
+  <p class="instrucao">Por favor, digite o código que enviamos agora para:</p>
+  <p class="email">{{ email }}</p>
+
+  <div class="inputs">
+    <input
+      class="code-input"
+      type="text"
+      maxlength="1"
+      [(ngModel)]="codes[0]"
+      (input)="onInput($event, 0)"
+      (keydown)="onKeydown($event, 0)"
+    />
+    <input
+      class="code-input"
+      type="text"
+      maxlength="1"
+      [(ngModel)]="codes[1]"
+      (input)="onInput($event, 1)"
+      (keydown)="onKeydown($event, 1)"
+    />
+    <input
+      class="code-input"
+      type="text"
+      maxlength="1"
+      [(ngModel)]="codes[2]"
+      (input)="onInput($event, 2)"
+      (keydown)="onKeydown($event, 2)"
+    />
+    <input
+      class="code-input"
+      type="text"
+      maxlength="1"
+      [(ngModel)]="codes[3]"
+      (input)="onInput($event, 3)"
+      (keydown)="onKeydown($event, 3)"
+    />
+    <input
+      class="code-input"
+      type="text"
+      maxlength="1"
+      [(ngModel)]="codes[4]"
+      (input)="onInput($event, 4)"
+      (keydown)="onKeydown($event, 4)"
+    />
+    <input
+      class="code-input"
+      type="text"
+      maxlength="1"
+      [(ngModel)]="codes[5]"
+      (input)="onInput($event, 5)"
+      (keydown)="onKeydown($event, 5)"
+    />
+  </div>
+
+  <p class="nao-encontrou">Não encontrou? Confira a <em>Caixa de entrada</em> do seu e-mail</p>
+
+  <button class="btn-reenviar" (click)="resend()">Reenviar código</button>
+
+  <button class="btn-verificar" (click)="onSend()">Verificar</button>
+</div>
