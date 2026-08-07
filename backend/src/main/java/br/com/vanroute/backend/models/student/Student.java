@@ -1,10 +1,18 @@
 package br.com.vanroute.backend.models.student;
 
-import br.com.vanroute.backend.models.school.School;
-import br.com.vanroute.backend.models.school.SchoolClass;
-import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.UUID;
+
+import br.com.vanroute.backend.models.school.School;
+import br.com.vanroute.backend.models.school.SchoolClass;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "students")
@@ -17,15 +25,18 @@ public class Student {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(nullable = false)
+    private String name;
+
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
     @ManyToOne
-    @JoinColumn(name = "school_id", nullable = false)
+    @JoinColumn(name = "school_id", nullable = true)
     private School school;
 
     @ManyToOne
-    @JoinColumn(name = "class_id", nullable = false)
+    @JoinColumn(name = "class_id", nullable = true)
     private SchoolClass schoolClass;
 
     public UUID getId() {
@@ -68,4 +79,10 @@ public class Student {
         this.schoolClass = schoolClass;
     }
 
+    public void setName(String name){
+        this.name = name;
+    }
+    public String getName(){
+        return this.name;
+    }
 }
