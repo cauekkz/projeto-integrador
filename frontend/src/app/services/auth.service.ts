@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-
 @Injectable({
   providedIn: 'root',
 })
@@ -37,10 +36,11 @@ export class AuthService {
     formData.append('confirmPassword', data.confirmPassword);
     formData.append('phone', data.phone);
 
-    return this.http.post(`${this.apiUrl}/drivers/signup`, formData);
+    return this.http.post(`${this.apiUrl}/driver/signup`, formData);
   }
 
   createUser(data: {
+
     name: string;
     email: string;
     password: string;
@@ -64,5 +64,28 @@ export class AuthService {
 
   deleteUser(id: string) {
     return this.http.delete(`${this.apiUrl}/users/${id}`);
+  }
+
+
+  // dps ve se isso vai ser usado
+  verifyCNH(data: { documentPDF: File }) {
+    const formData = new FormData();
+    formData.append('documentPdf', data.documentPDF);
+
+    return this.http.post(`${this.apiUrl}/driver/verifyCNH`, formData);
+  }
+
+  sendCode(email: string ) {
+    return this.http.post(
+      `${this.apiUrl}/auth/send-verification-code?email=${encodeURIComponent(email)}`,
+      {},
+    );
+  }
+
+  verifyEmail(data: { email: string; code: string }) {
+    return this.http.post(
+      `${this.apiUrl}/auth/verify-email?email=${encodeURIComponent(data.email)}&code=${encodeURIComponent(data.code)}`,
+      {},
+    );
   }
 }

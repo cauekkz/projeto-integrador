@@ -11,6 +11,7 @@ import { AuthService } from '../../services/auth.service';
 })
 export class SignupResponsible {
   @Output() voltarEvent = new EventEmitter<void>();
+  @Output() cadastroConcluidoEvent = new EventEmitter<string>();
 
   constructor(private authService: AuthService) {}
 
@@ -74,6 +75,7 @@ export class SignupResponsible {
     this.authService.createUser(data).subscribe({
       next: (response) => {
         // router e get user, pegar token e user
+        this.cadastroConcluidoEvent.emit(this.enteredEmail);
         console.log(response);
       },
       error: (err) => {
