@@ -22,13 +22,18 @@ func main() {
 
 	defer conn.Close(ctx)
 
-	// nunca usei ticker, mas ele é um alarme, a cada 48 horas vai rodar e executar a query
-	// com o time.sleep ele aumentaria com o tempo da query ent uma hr ia ficar mais de 48hrs
+	repository.CleanupUsers(ctx, &conn)
 	ticker := time.NewTicker(48 * time.Hour)
 	defer ticker.Stop()
 
 	for range ticker.C {
-		repository.CleanupUsers(ctx, &conn)
+		removed, err := repository.CleanupUsers(ctx, &conn)
+		if err != nil {
+			log.Println("Erro ao limpar usuários:", err)
+			return
+		}
+
+		log.Printf("Usuários removidos: %d\n", removed)
 	}
 }
 

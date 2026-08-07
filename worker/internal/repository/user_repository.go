@@ -2,25 +2,21 @@ package repository
 
 import (
 	"context"
-	"log"
 
 	"github.com/jackc/pgx/v5"
 )
 
-func CleanupUsers(ctx context.Context, conn *pgx.Conn) {
-	//adicionar um intervalo de tempo do created_at para nao remover registros mt recentes
-	
+func CleanupUsers(ctx context.Context, conn *pgx.Conn) (int64, error) {
 	query := `
 		DELETE FROM users
 		WHERE status = 'CHECK_EMAIL'
-		AND created_at <= NOW() - INTERVAL '48 hours' 
+		AND created_at <= NOW() - INTERVAL '48 hours'
 	`
 
 	result, err := conn.Exec(ctx, query)
 	if err != nil {
-		log.Println("Erro ao limpar usuários:", err)
-		return
+		return 0, err
 	}
 
-	log.Printf("Usuários removidos: %d\n", result.RowsAffected())
+	return result.RowsAffected(), nil
 }
