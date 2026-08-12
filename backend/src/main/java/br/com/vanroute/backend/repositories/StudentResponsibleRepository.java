@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.UUID;
 
 public interface StudentResponsibleRepository extends JpaRepository<StudentResponsible, UUID> {
+    //danke chat
+    boolean existsByResponsible_User_CpfAndStudent_IdAndIsAdminTrue(String cpf, UUID studentId);
 }
