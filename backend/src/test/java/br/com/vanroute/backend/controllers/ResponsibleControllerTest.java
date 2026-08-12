@@ -57,7 +57,7 @@ class ResponsibleControllerTest {
 
         when(responsibleService.createResponsible(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/responsible/signup")
+        mockMvc.perform(post("/api/responsible/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
