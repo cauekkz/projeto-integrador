@@ -16,9 +16,9 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Optional;
 
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -55,43 +55,77 @@ class AuthControllerTest {
         user.setEmail(EMAIL);
         user.setStatus(UserStatus.CHECK_EMAIL);
 
-        doNothing().when(emailVerificationService).verifyCode(REDIS_KEY, "123456");
-        when(userService.findByEmail(EMAIL)).thenReturn(Optional.of(user));
+        doNothing()
+                .when(emailVerificationService)
+                .verifyCode(REDIS_KEY, "123456");
+
+        when(userService.findByEmail(EMAIL))
+                .thenReturn(Optional.of(user));
 
         mockMvc.perform(post("/api/auth/verify-email")
-                        .param("email", EMAIL)
-                        .param("code", "123456"))
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                            {
+                                "email": "carolina@example.com",
+                                "code": "123456"
+                            }
+                        """))
                 .andExpect(status().isOk())
                 .andExpect(content().string("E-mail verificado com sucesso!"));
 
-        verify(emailVerificationService, times(1)).verifyCode(REDIS_KEY, "123456");
-        verify(userService, times(1)).findByEmail(EMAIL);
-        verify(userService, times(1)).saveUser(user);
+        verify(emailVerificationService, times(1))
+                .verifyCode(REDIS_KEY, "123456");
+
+        verify(userService, times(1))
+                .findByEmail(EMAIL);
+
+        verify(userService, times(1))
+                .saveUser(user);
+
         assertEquals(UserStatus.ACTIVE, user.getStatus());
     }
 
     @Test
     void shouldReturnBadRequestWhenVerificationCodeIsInvalid() throws Exception {
-        doThrow(new IllegalArgumentException("Código incorreto ou expirado. Envie um novo código para verificar seu e-mail."))
-                .when(emailVerificationService).verifyCode(REDIS_KEY, "000000");
+        doThrow(new IllegalArgumentException(
+                "Código incorreto ou expirado. Envie um novo código para verificar seu e-mail."
+        ))
+                .when(emailVerificationService)
+                .verifyCode(REDIS_KEY, "000000");
 
         mockMvc.perform(post("/api/auth/verify-email")
-                        .param("email", EMAIL)
-                        .param("code", "000000"))
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                            {
+                                "email": "carolina@example.com",
+                                "code": "000000"
+                            }
+                        """))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Código incorreto ou expirado. Envie um novo código para verificar seu e-mail."));
+                .andExpect(content().string(
+                        "Código incorreto ou expirado. Envie um novo código para verificar seu e-mail."
+                ));
 
         verify(userService, never()).saveUser(any());
     }
 
     @Test
     void shouldReturnBadRequestWhenUserNotFoundOnVerifyEmail() throws Exception {
-        doNothing().when(emailVerificationService).verifyCode(REDIS_KEY, "123456");
-        when(userService.findByEmail(EMAIL)).thenReturn(Optional.empty());
+        doNothing()
+                .when(emailVerificationService)
+                .verifyCode(REDIS_KEY, "123456");
+
+        when(userService.findByEmail(EMAIL))
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/auth/verify-email")
-                        .param("email", EMAIL)
-                        .param("code", "123456"))
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                            {
+                                "email": "carolina@example.com",
+                                "code": "123456"
+                            }
+                        """))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Usuário não encontrado."));
 
@@ -102,27 +136,40 @@ class AuthControllerTest {
     void shouldResendVerificationCode() throws Exception {
         User user = new User();
         user.setEmail(EMAIL);
-        when(userService.findByEmail(EMAIL)).thenReturn(Optional.of(user));
-        when(emailVerificationService.generateAndSendCode(REDIS_KEY, EMAIL)).thenReturn("654321");
+
+        when(userService.findByEmail(EMAIL))
+                .thenReturn(Optional.of(user));
+
+        when(emailVerificationService.generateAndSendCode(REDIS_KEY, EMAIL))
+                .thenReturn("654321");
 
         mockMvc.perform(post("/api/auth/send-verification-code")
                         .param("email", EMAIL))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Código de verificação enviado com sucesso!"));
+                .andExpect(content().string(
+                        "Código de verificação enviado com sucesso!"
+                ));
 
-        verify(userService, times(1)).findByEmail(EMAIL);
-        verify(emailVerificationService, times(1)).generateAndSendCode(REDIS_KEY, EMAIL);
+        verify(userService, times(1))
+                .findByEmail(EMAIL);
+
+        verify(emailVerificationService, times(1))
+                .generateAndSendCode(REDIS_KEY, EMAIL);
     }
 
     @Test
     void shouldReturnBadRequestWhenResendingCodeForUnknownEmail() throws Exception {
-        when(userService.findByEmail(EMAIL)).thenReturn(Optional.empty());
+        when(userService.findByEmail(EMAIL))
+                .thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/auth/send-verification-code")
                         .param("email", EMAIL))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string("Usuário não encontrado."));
+                .andExpect(content().string(
+                        "Usuário não encontrado."
+                ));
 
-        verify(emailVerificationService, never()).generateAndSendCode(any(), any());
+        verify(emailVerificationService, never())
+                .generateAndSendCode(any(), any());
     }
 }
