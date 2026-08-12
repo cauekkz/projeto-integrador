@@ -6,7 +6,15 @@ import jakarta.persistence.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "student_responsibles")
+@Table(
+    name = "student_responsibles",
+    uniqueConstraints = {
+        @UniqueConstraint(
+            name = "uk_student_responsible",
+            columnNames = {"student_id", "responsible_id"}
+        )
+    }
+)
 public class StudentResponsible {
 
     @Id
@@ -24,6 +32,16 @@ public class StudentResponsible {
     @ManyToOne
     @JoinColumn(name = "responsible_id", nullable = false)
     private Responsible responsible;
+
+
+    @Column(name = "is_admin", nullable = false)
+    private boolean isAdmin = false;
+
+
+
+
+
+
 
     public UUID getId() {
         return id;
@@ -56,5 +74,13 @@ public class StudentResponsible {
     public void setResponsible(Responsible responsible) {
         this.responsible = responsible;
     }
+    
+    public boolean isAdmin() {
+        return isAdmin; 
+    }                                                               
+
+public void setAdmin(boolean admin) {
+    isAdmin = admin;
+}
 
 }
