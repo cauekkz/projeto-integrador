@@ -29,7 +29,7 @@ public class    Student {
 //
 //    @ManyToOne
 //    @JoinColumn(name = "school_id", nullable = true)
-//    private School school;
+//    private School school;                                                                            
 //
 //    @ManyToOne
 //    @JoinColumn(name = "class_id", nullable = true)
