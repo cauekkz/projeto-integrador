@@ -1,6 +1,7 @@
 package br.com.vanroute.backend.controllers;
 
 import br.com.vanroute.backend.dtos.user.LoginRequestDTO;
+import br.com.vanroute.backend.dtos.verifyEmail.VerifyEmailRequestDTO;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.dtos.user.token.TokenResponseDTO;
 import br.com.vanroute.backend.services.AuthenticationService;
@@ -42,7 +43,9 @@ public class AuthController {
     }
 
     @PostMapping("/verify-email")
-    public ResponseEntity<?> verifyEmail(@RequestParam String email, @RequestParam String code) {
+    public ResponseEntity<?> verifyEmail(@RequestBody VerifyEmailRequestDTO verifyEmailRequestDTO) {
+        String email = verifyEmailRequestDTO.email();
+        String code = verifyEmailRequestDTO.code();
         try {
             emailVerificationService.verifyCode("verificationEmail:email:" + email, code);
             User user = userService.findByEmail(email)

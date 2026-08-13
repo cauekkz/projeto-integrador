@@ -14,8 +14,8 @@ import br.com.vanroute.backend.dtos.user.DriverRequestDTO;
 import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.services.DocumentOcrExtractionService;
 import br.com.vanroute.backend.services.DriverService;
-import br.com.vanroute.backend.services.IcpValidationService;
 import br.com.vanroute.backend.services.EmailVerificationService;
+import br.com.vanroute.backend.services.IcpValidationService;
 import jakarta.validation.Valid;
 
 @RestController
@@ -39,7 +39,7 @@ public class DriverController {
         this.emailVerificationService = emailVerificationService;
     }
 
-    @PostMapping(value = "/signup", consumes = {"multipart/form-data"})
+    @PostMapping(value = "/auth/signup", consumes = {"multipart/form-data"})
     public ResponseEntity<?> createDriver(@Valid @ModelAttribute DriverRequestDTO dto) {
         try {
             icpValidationService.validateCnhSignature(dto.getDocumentPdf());
@@ -50,14 +50,14 @@ public class DriverController {
         String cpf = documentOcrExtractionService.extractFromCnh(dto.getDocumentPdf());
 
         Driver savedDriver = driverService.createDriver(dto, cpf);
-        
+        // fazer um try alguma coisa mais limpa possivel pra se isso nao funciona rmanda uma msg pro usuario reenviar o codigo no momento aparece uma msg de Redis nao funcionando (pq eu nem ligue) mas nao sei nem onde ta essa menssagem no fluxo 
         emailVerificationService.generateAndSendCode("verificationEmail:email:" + savedDriver.getUser().getEmail(), savedDriver.getUser().getEmail());
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Motorista criado com sucesso");
 
     }
 
-    @PostMapping(value = "/verifyCNH", consumes = {"multipart/form-data"})
+    @PostMapping(value = "/auth/verify-CNH", consumes = {"multipart/form-data"})
     public ResponseEntity<?> verifyCNH(@Valid MultipartFile documentPdf) {
         try {
             icpValidationService.validateCnhSignature(documentPdf);

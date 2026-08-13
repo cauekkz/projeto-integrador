@@ -68,7 +68,7 @@ public class DriverControllerTest {
         mockedDriver.setUser(user);
         when(driverService.createDriver(any(), anyString())).thenReturn(mockedDriver);
 
-        mockMvc.perform(multipart("/api/driver/signup")
+        mockMvc.perform(multipart("/api/driver/auth/signup")
                 .file(documentPdf)
                 .param("name", "Neymar Junior")
                 .param("email", "neymar@teste.com")
@@ -92,7 +92,7 @@ public class DriverControllerTest {
     void shouldReturnUnprocessableEntityWhenSignatureIsInvalid() throws Exception {
         doThrow(new RuntimeException("Assinatura inválida")).when(icpValidationService).validateCnhSignature(any());
 
-        mockMvc.perform(multipart("/api/driver/signup")
+        mockMvc.perform(multipart("/api/driver/auth/signup")
                 .file(documentPdf)
                 .param("name", "Neymar Junior")
                 .param("email", "neymar@teste.com")
