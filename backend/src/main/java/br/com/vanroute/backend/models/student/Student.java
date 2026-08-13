@@ -3,15 +3,11 @@ package br.com.vanroute.backend.models.student;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import br.com.vanroute.backend.models.school.School;
-import br.com.vanroute.backend.models.school.SchoolClass;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -30,14 +26,14 @@ public class Student {
 
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
-
-    @ManyToOne
-    @JoinColumn(name = "school_id", nullable = true)
-    private School school;
-
-    @ManyToOne
-    @JoinColumn(name = "class_id", nullable = true)
-    private SchoolClass schoolClass;
+//
+//    @ManyToOne
+//    @JoinColumn(name = "school_id", nullable = true)
+//    private School school;                                                                            
+//
+//    @ManyToOne
+//    @JoinColumn(name = "class_id", nullable = true)
+//    private SchoolClass schoolClass;
 
     public UUID getId() {
         return id;
@@ -63,21 +59,21 @@ public class Student {
         this.birthDate = birthDate;
     }
 
-    public School getSchool() {
-        return school;
-    }
-
-    public void setSchool(School school) {
-        this.school = school;
-    }
-
-    public SchoolClass getSchoolClass() {
-        return schoolClass;
-    }
-
-    public void setSchoolClass(SchoolClass schoolClass) {
-        this.schoolClass = schoolClass;
-    }
+//    public School getSchool() {
+//        return school;
+//    }
+//
+//    public void setSchool(School school) {
+//        this.school = school;
+//    }
+//
+//    public SchoolClass getSchoolClass() {
+//        return schoolClass;
+//    }
+//
+//    public void setSchoolClass(SchoolClass schoolClass) {
+//        this.schoolClass = schoolClass;
+//    }
 
     public void setName(String name){
         this.name = name;
