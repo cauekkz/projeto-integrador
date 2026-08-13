@@ -1,1 +1,38 @@
-<p>home-screen works!</p>
+<div class="screen">
+
+    <div class="topbar">
+        <div class="user-info">
+            <div class="notif-wrapper">
+                <img src="/avatar.png" class="avatar" alt="">
+                <span class="badge"></span>
+            </div>
+            <span class="user-name"></span>
+        </div>
+        <div class="role-info">
+            <img src="/avatar-group.png" class="avatar" alt="">
+            <span class="role">Responsavel</span>
+        </div>
+    </div>
+
+    <div class="content">
+        <p class="empty-text">Nenhum dependente cadastrado ainda.</p>
+    </div>
+
+    <div class="bottombar">
+        <button class="tab active">
+            <img src="/HomeIcon.png" alt="">
+        </button>
+        <button class="tab" (click)="abrirAddStudent()">
+            <img src="/HomeIcon.png" alt="">
+        </button>
+        <button class="tab">
+            <img src="/SettingsIcon.png" alt="">
+        </button>
+    </div>
+
+</div>
+
+@if (mostrarAddStudent) {
+<div class="overlay" (click)="fecharAddStudent()"></div>
+<app-add-student (fecharEvent)="fecharAddStudent()" />
+}
