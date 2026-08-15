@@ -88,6 +88,9 @@ input {
   border: 1px solid #bfc6d1;
   border-radius: 14px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-signup {
@@ -139,7 +142,6 @@ input {
 
   .btn-signup {
     width: 100%;
-    max-width: 340px;
     position: fixed;
     bottom: 80px;
     left: 24px;

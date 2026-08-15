@@ -1,40 +1,57 @@
 <div class="add-container">
 
-    <div class="header">
-        <button class="back-button" (click)="voltar()">
-            <img src="/Back.png" alt="">
-        </button>
-        <h1>Suas informacoes</h1>
+  <div class="header">
+    <button class="back-button" (click)="voltar()">
+      <img src="/Back.png" alt="">
+    </button>
+    <h1>Suas informacoes</h1>
+  </div>
+
+  <div class="photo-card" (click)="abrirBottomSheet()">
+    <div class="photo-content">
+      <img src="/Camera.png" alt="" class="camera-icon">
+      <p>Coloque uma foto de seu dependente</p>
+    </div>
+  </div>
+
+  <form class="form" (ngSubmit)="pronto()">
+    <div class="field">
+      <label>Nome do dependente</label>
+      <input type="text" placeholder="Nome do dependente" [(ngModel)]="enteredName" name="name">
     </div>
 
-    <div class="photo-card">
-        <div class="photo-content">
-            <img src="/Camera.png" alt="" class="camera-icon">
-            <p>Coloque uma foto de seu dependente</p>
-        </div>
+    <div class="field">
+      <label>Data de nascimento</label>
+      <input type="text" placeholder="00/00/0000" [(ngModel)]="enteredBirthdate" name="birthdate">
     </div>
 
-    <form class="form" (ngSubmit)="pronto()">
-        <div class="field">
-            <label>Nome do dependente</label>
-            <input type="text" placeholder="Nome do dependente" [(ngModel)]="enteredName" name="name">
-        </div>
-
-        <div class="field">
-            <label>Data de nascimento</label>
-            <input type="text" placeholder="00/00/0000" [(ngModel)]="enteredBirthdate" name="birthdate">
-        </div>
-
-        <div class="field">
-            <label>Observacoes</label>
-            <textarea
-                placeholder="Coloque aqui informacoes necessarias que o motorista precise saber sobre seu dependente. Ex: Auxilio para subir na van, Tomar remedios."
-                [(ngModel)]="enteredObservacoes" name="observacoes" maxlength="1200">
+    <div class="field">
+      <label>Observacoes</label>
+      <textarea
+        placeholder="Coloque aqui informacoes necessarias que o motorista precise saber sobre seu dependente. Ex: Auxilio para subir na van, Tomar remedios."
+        [(ngModel)]="enteredObservacoes" name="observacoes" maxlength="1200">
       </textarea>
-            <span class="counter">{{ enteredObservacoes.length }}/{{ maxObs }}</span>
-        </div>
+      <span class="counter">{{ enteredObservacoes.length }}/{{ maxObs }}</span>
+    </div>
 
-        <button class="btn-submit" type="submit">Pronto</button>
-    </form>
+    <button class="btn-submit" type="submit">Pronto</button>
+  </form>
 
 </div>
+
+@if (mostrarBottomSheet) {
+  <div class="overlay" (click)="fecharBottomSheet()"></div>
+  <div class="bottom-sheet">
+    <h2>Selecione de onde vem a foto</h2>
+    <div class="sheet-options">
+      <button class="sheet-btn">
+        <img src="/Add%20Image.svg" alt="">
+        Galeria
+      </button>
+      <button class="sheet-btn">
+        <img src="/Camera.png" alt="">
+        Tirar com a camera
+      </button>
+    </div>
+  </div>
+}

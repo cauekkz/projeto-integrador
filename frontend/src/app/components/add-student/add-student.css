@@ -110,3 +110,57 @@
     box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
     margin-top: 8px;
 }
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 102;
+}
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  padding: 32px 24px;
+  z-index: 103;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.bottom-sheet h2 {
+  text-align: center;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 28px;
+}
+
+.sheet-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.sheet-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: white;
+  font-size: 0.95rem;
+  color: #1f2937;
+  cursor: pointer;
+}
+
+.sheet-btn img {
+  width: 40px;
+  height: 40px;
+}

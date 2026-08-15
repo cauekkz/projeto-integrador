@@ -15,13 +15,22 @@ export class AddStudent {
   enteredBirthdate = '';
   enteredObservacoes = '';
   maxObs = 1200;
+  mostrarBottomSheet = false;
 
-  fechar() { this.fecharEvent.emit(); }
-
-  voltar() { this.fecharEvent.emit(); }
-
-  pronto() {
-    // logica depois
+  fechar() {
     this.fecharEvent.emit();
+  }
+  voltar() {
+    this.fecharEvent.emit();
+  }
+  pronto() {
+    this.fecharEvent.emit();
+  }
+
+  abrirBottomSheet() {
+    this.mostrarBottomSheet = true;
+  }
+  fecharBottomSheet() {
+    this.mostrarBottomSheet = false;
   }
 }
