@@ -1,0 +1,69 @@
+<div class="screen">
+
+  <div class="topbar">
+    <button class="back-button" (click)="voltar()">
+      <img src="/Back.png" alt="">
+    </button>
+    <div class="user-info">
+      <img src="/testee.jpg" class="avatar" alt="">
+      <span class="user-name">Gustavo Gomez</span>
+    </div>
+    <span class="role">Motorista</span>
+  </div>
+
+  <div class="mapa">
+    <img src="/mapa-placeholder.png" alt="Mapa" class="mapa-img">
+  </div>
+
+  <div class="listas">
+
+    <div class="lista-card">
+      <button class="lista-header" (click)="toggleEsperando()">
+        <i class="bi bi-people"></i>
+        <span class="lista-titulo">Alunos Esperando</span>
+        <span class="lista-count">{{ alunosEsperando.length }}</span>
+        @if (alunosEmbarcadosAberto) {
+          <img src="/Back.svg" class="chevron-icon">
+        } @else {
+          <img src="/up.svg" class="chevron-icon">
+        }
+      </button>
+      @if (alunosEsperandoAberto) {
+        @for (aluno of alunosEsperando; track aluno.nome) {
+          <div class="aluno-item">
+            <img src="/avatar.png" class="aluno-avatar" alt="">
+            <div class="aluno-info">
+              <span class="aluno-nome">{{ aluno.nome }}</span>
+              <span class="aluno-end">{{ aluno.endereco }}</span>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <div class="lista-card">
+      <button class="lista-header" (click)="toggleEmbarcados()">
+        <i class="bi bi-people"></i>
+        <span class="lista-titulo">Alunos Embarcados</span>
+        <span class="lista-count">{{ alunosEmbarcados.length }}</span>
+        @if (alunosEmbarcadosAberto) {
+          <img src="/Back.svg" class="chevron-icon">
+        } @else {
+          <img src="/up.svg" class="chevron-icon">
+        }
+      </button>
+      @if (alunosEmbarcadosAberto) {
+        @for (aluno of alunosEmbarcados; track aluno.nome) {
+          <div class="aluno-item">
+            <img src="/avatar.png" class="aluno-avatar" alt="">
+            <div class="aluno-info">
+              <span class="aluno-nome">{{ aluno.nome }}</span>
+              <span class="aluno-end">{{ aluno.endereco }}</span>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+  </div>
+</div>

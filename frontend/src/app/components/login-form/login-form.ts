@@ -2,11 +2,12 @@ import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { ForgotPassword } from '../forgot-password/forgot-password';
 
 @Component({
   selector: 'app-login-form',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ForgotPassword],
   templateUrl: './login-form.html',
   styleUrl: './login-form.css',
 })
@@ -14,6 +15,7 @@ export class LoginForm {
   @Input() tipoUsuario: string = '';
   cpfInvalido: boolean = false;
   passInvalido: boolean = false;
+  mostrarForgotPassword = false;
 
   verification(value: string): boolean {
     return value.trim() === '';
@@ -27,6 +29,7 @@ export class LoginForm {
   irParaCadastro() {
     this.router.navigate(['/signup', this.tipoUsuario]);
   }
+
   voltar() {
     this.router.navigate(['/']);
   }
@@ -44,7 +47,6 @@ export class LoginForm {
 
     this.authService.login(this.enteredCPF, this.enteredPass).subscribe({
       next: (response) => {
-        // router e get user, pegar token e user
         console.log(response);
       },
       error: (err) => {
