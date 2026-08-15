@@ -1,8 +1,10 @@
 package br.com.vanroute.backend.models.contract.enums;
 
 public enum ContractStatus {
+    PENDING, //pendente
     ACTIVE, // Ativo
-    ENDED, // Encerrado
+    INACTIVE, // Inativo
     CANCELED, // Cancelado
-    SUSPENDED // Suspenso
+    SUSPENDED, // Suspenso
+    OVERDUE // Atrasado
 }
