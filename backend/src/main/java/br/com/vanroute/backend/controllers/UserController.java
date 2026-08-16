@@ -48,7 +48,7 @@ public class UserController {
   
     //nao sei se vai usar isso so pra teste
     // deixa o deleteUser ser feliz
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}/{code}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id, @PathVariable String code) {
         userService.deleteById(id, code);
         return ResponseEntity.noContent().build();
