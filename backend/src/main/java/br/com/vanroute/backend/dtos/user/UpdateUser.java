@@ -3,7 +3,7 @@ package br.com.vanroute.backend.dtos.user;
 import jakarta.validation.constraints.NotBlank;
 
 public class UpdateUser {
-    @NotBlank(message = "A senha é obrigatória")
+    @NotBlank(message = "O email é obrigatória")
     private String email;
     @NotBlank(message = "O telefone é obrigatório")
     private String phone;
