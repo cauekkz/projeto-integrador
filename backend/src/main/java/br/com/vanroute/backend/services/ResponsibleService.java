@@ -8,6 +8,7 @@ import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.repositories.ResponsibleRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,12 +16,15 @@ public class ResponsibleService {
 
     private final ResponsibleRepository responsibleRepository;
     private final UserService userService;
+    private final EmailVerificationService emailVerificationService;
 
-    public ResponsibleService(ResponsibleRepository responsibleRepository, UserService userService) {
+    public ResponsibleService(ResponsibleRepository responsibleRepository, UserService userService, EmailVerificationService emailVerificationService) {
         this.responsibleRepository = responsibleRepository;
         this.userService = userService;
+        this.emailVerificationService = emailVerificationService;
     }
 
+    @Transactional
     public ResponsibleResponseDTO createResponsible(ResponsibleRequestDTO responsibleRequestDTO){
         UserCreateDTO userDto = new UserCreateDTO();
         userDto.setName(responsibleRequestDTO.getName());
@@ -35,6 +39,13 @@ public class ResponsibleService {
         responsible.setUser(user);
         responsible.setFinancialStatus(FinancialStatus.PENDING);
         Responsible newResponsible = responsibleRepository.save(responsible);
+        String redisKey = "verificationEmail:email:" + user.getEmail();
+
+        emailVerificationService.generateAndSendCode(
+                redisKey,
+                user.getEmail()
+        );
+
         return new ResponsibleResponseDTO(
                 newResponsible.getUser().getName(),
                 newResponsible.getUser().getEmail(),
