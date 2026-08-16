@@ -21,6 +21,9 @@ import java.util.UUID;
 @Service
 public class UserService {
 
+        private static final String REDIS_KEY = "User:SendCodeUser";
+
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RolesRepository rolesRepository;
@@ -62,16 +65,13 @@ public class UserService {
         User user = userRepository.findByCpf(cpf)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         String userEmail = user.getEmail();
-        String redisKey = "User:SendCodeToUpdate:" + cpf;
-        emailVerificationService.generateAndSendCode(redisKey, userEmail);
+        emailVerificationService.generateAndSendCode(REDIS_KEY, userEmail);
     }
 
     public String updateUser(UpdateUser updateUser, String cpf){
         User user = userRepository.findByCpf(cpf)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        String redisKey = "User:SendCodeToUpdate:" + cpf;
-
-        emailVerificationService.verifyCode(redisKey, updateUser.getCode());
+        emailVerificationService.verifyCode(REDIS_KEY, updateUser.getCode());
         if(updateUser.getEmail() != null){
             user.setEmail(updateUser.getEmail());
         }
@@ -86,7 +86,8 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public void deleteById(UUID id) {
+    public void deleteById(UUID id, String code) {
+        emailVerificationService.verifyCode(REDIS_KEY, code);
         userRepository.deleteById(id);
     }
 
