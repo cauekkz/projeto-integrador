@@ -58,13 +58,12 @@ public class UserService {
 
     }
 
-    public String sendCodeToUpdate(String cpf){
+    public void sendCodeToUser(String cpf){
         User user = userRepository.findByCpf(cpf)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         String userEmail = user.getEmail();
         String redisKey = "User:SendCodeToUpdate:" + cpf;
         emailVerificationService.generateAndSendCode(redisKey, userEmail);
-        return "Code sent in " + userEmail;
     }
 
     public String updateUser(UpdateUser updateUser, String cpf){
