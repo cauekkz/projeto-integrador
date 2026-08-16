@@ -3,15 +3,11 @@ package br.com.vanroute.backend.models.student;
 import java.time.LocalDate;
 import java.util.UUID;
 
-import br.com.vanroute.backend.models.school.School;
-import br.com.vanroute.backend.models.school.SchoolClass;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -33,7 +29,7 @@ public class Student {
 //
 //    @ManyToOne
 //    @JoinColumn(name = "school_id", nullable = true)
-//    private School school;
+//    private School school;                                                                            
 //
 //    @ManyToOne
 //    @JoinColumn(name = "class_id", nullable = true)
