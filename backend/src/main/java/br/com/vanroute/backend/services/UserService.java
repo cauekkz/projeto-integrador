@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.dtos.user.UpdateUser;
 import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.RolesEntity;
@@ -9,6 +10,7 @@ import br.com.vanroute.backend.repositories.RolesRepository;
 import br.com.vanroute.backend.repositories.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
@@ -22,12 +24,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RolesRepository rolesRepository;
+    private final EmailVerificationService emailVerificationService;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RolesRepository rolesRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RolesRepository rolesRepository, EmailVerificationService emailVerificationService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.rolesRepository = rolesRepository;
+        this.emailVerificationService = emailVerificationService;
     }
 
     public User createUser(UserCreateDTO userCreateDTO) {
@@ -52,6 +56,31 @@ public class UserService {
         user.setStatus(UserStatus.CHECK_EMAIL);
         return userRepository.save(user);
 
+    }
+
+    public String sendCodeToUpdate(String cpf){
+        User user = userRepository.findByCpf(cpf)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        String userEmail = user.getEmail();
+        String redisKey = "User:SendCodeToUpdate:" + cpf;
+        emailVerificationService.generateAndSendCode(redisKey, userEmail);
+        return "Code sent in " + userEmail;
+    }
+
+    public String updateUser(UpdateUser updateUser, String cpf){
+        User user = userRepository.findByCpf(cpf)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        String redisKey = "User:SendCodeToUpdate:" + cpf;
+
+        emailVerificationService.verifyCode(redisKey, updateUser.getCode());
+        if(updateUser.getEmail() != null){
+            user.setEmail(updateUser.getEmail());
+        }
+        if(updateUser.getPhone() != null){
+            user.setPhone(updateUser.getPhone());
+        }
+         userRepository.save(user);
+        return "User updated successfully";
     }
 
     public Optional<User> findById(UUID id) {
