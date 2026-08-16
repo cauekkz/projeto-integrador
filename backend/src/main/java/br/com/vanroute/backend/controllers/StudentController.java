@@ -1,7 +1,6 @@
 package br.com.vanroute.backend.controllers;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
-import org.apache.commons.lang3.ObjectUtils.Null;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import br.com.vanroute.backend.dtos.student.StudentLinkRequestDTO;
-import br.com.vanroute.backend.dtos.student.studentCodeRequestDTO;
+import br.com.vanroute.backend.dtos.student.StudentCodeRequestDTO;
 import br.com.vanroute.backend.dtos.student.AllStudentsFilterRequestDTO;
 import br.com.vanroute.backend.dtos.user.StudentRequestDTO;
 import br.com.vanroute.backend.models.student.StudentResponsible;
@@ -49,12 +48,12 @@ public class StudentController {
     }
 
     @PostMapping("/confirm-link")
-    public ResponseEntity<?> createRelationWithStudent(@Valid @RequestBody studentCodeRequestDTO code,
+    public ResponseEntity<Void> createRelationWithStudent(@Valid @RequestBody StudentCodeRequestDTO code,
             Authentication authentication) {
         String cpf = authentication.getName();
         studentLinkService.createStudentResponsibleRelation(code.code(), cpf);
 
-        // dps bota aql .created() que retorna uma uri que pega os dado do fiot
+        // TODO: usar .created(uri) apontando pro recurso criado
         return ResponseEntity.status(201).build();
     }
 

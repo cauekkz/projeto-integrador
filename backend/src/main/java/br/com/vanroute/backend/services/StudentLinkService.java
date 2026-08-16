@@ -17,28 +17,27 @@ import br.com.vanroute.backend.repositories.ResponsibleRepository;
 import br.com.vanroute.backend.repositories.StudentRepository;
 
 import br.com.vanroute.backend.repositories.StudentResponsibleRepository;
+import br.com.vanroute.backend.utils.CodeGenerator;
 
 @Service
 public class StudentLinkService {
 
-    private static final String CHARACTERS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
     private static final String REDIS_KEY_PREFIX = "student:link:";
 
-    private static final int CODE_LENGTH = 9;
 
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
-    private final SecureRandom secureRandom;
+    private final CodeGenerator codeGenerator;
 
     private final StudentResponsibleRepository studentResponsibleRepository;
     private final StudentRepository studentRepository;
 private final ResponsibleRepository responsibleRepository;
 
-    public StudentLinkService(RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper, StudentResponsibleRepository studentResponsibleRepository, StudentRepository studentRepository,ResponsibleRepository responsibleRepository) {
+    public StudentLinkService(RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper, StudentResponsibleRepository studentResponsibleRepository, StudentRepository studentRepository,ResponsibleRepository responsibleRepository, CodeGenerator codeGenerator) {
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
-        this.secureRandom = new SecureRandom();
+        this.codeGenerator = codeGenerator;
         this.studentResponsibleRepository = studentResponsibleRepository;
         this.studentRepository = studentRepository;
         this.responsibleRepository = responsibleRepository;
@@ -55,7 +54,7 @@ private final ResponsibleRepository responsibleRepository;
         try {
             String json = objectMapper.writeValueAsString(dto);
             while (true) {
-                code = generateCode();
+                code = codeGenerator.generateCode();
                 // alias eu nao lembro se fiz essa verificação no bglh de envia email dps tem q
                 // ver. é que é do Redis ne ai quem me ensino foi o brabo
                 Boolean result = redisTemplate.opsForValue().setIfAbsent(
@@ -110,23 +109,5 @@ private final ResponsibleRepository responsibleRepository;
 
     }
 
-    private String generateCode() {
-
-        // ta gerando pique xxxxxxxxx mas no front eé melhor mostra pique xxx-xxx-xxx
-        // mas ai na hora de manda de volta nao pode se burro e manda com - tem que
-        // manda de volta xxxxxxxxx
-        // mas tbm ja é 2 da manha e ainda falta o check ent vou nem testa mas vou da PR
-        // pra geral atualiza ne e mazei nao da bronca
-        StringBuilder code = new StringBuilder(CODE_LENGTH);
-
-        for (int i = 0; i < CODE_LENGTH; i++) {
-
-            int index = secureRandom.nextInt(CHARACTERS.length());
-
-            code.append(CHARACTERS.charAt(index));
-        }
-
-        return code.toString();
-    }
 
 }

@@ -1,7 +1,7 @@
 package br.com.vanroute.backend.dtos.student;
 import jakarta.validation.constraints.NotBlank;
 
-public record studentCodeRequestDTO(
+public record StudentCodeRequestDTO(
         @NotBlank(message = "O código é obrigatório")
         String code
 ) {}

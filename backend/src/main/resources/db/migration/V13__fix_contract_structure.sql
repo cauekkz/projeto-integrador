@@ -18,3 +18,25 @@ ALTER TABLE user_driver_contracts
 --indice pq provavelmente vamo chama isso pro motorista ver os fiots que tao ativo etcc
 CREATE INDEX idx_udc_student ON user_driver_contracts (student_id);
 
+ALTER TABLE drivers
+ADD COLUMN link_code CHAR(9) NOT NULL UNIQUE;
+
+
+CREATE TABLE chats (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_one_id uuid NOT NULL REFERENCES users(id),
+    user_two_id uuid NOT NULL REFERENCES users(id),
+    created_at timestamp NOT NULL DEFAULT now(),
+
+    CONSTRAINT chk_chat_ordered CHECK (user_one_id < user_two_id),
+    CONSTRAINT uq_chat_pair UNIQUE (user_one_id, user_two_id)
+);
+
+CREATE TABLE chat_messages (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    chat_id uuid NOT NULL REFERENCES chats(id),
+    sender_user_id uuid NOT NULL REFERENCES users(id),
+    content text NOT NULL,
+    sent_at timestamp NOT NULL DEFAULT now(),
+    read_at timestamp
+);
