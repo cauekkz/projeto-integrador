@@ -2,7 +2,6 @@ package br.com.vanroute.backend.dtos.user;
 
 import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.br.CPF;
-import org.springframework.web.multipart.MultipartFile;
 
 public class ResponsibleRequestDTO {
 

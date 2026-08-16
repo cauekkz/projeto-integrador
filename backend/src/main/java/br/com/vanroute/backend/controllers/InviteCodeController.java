@@ -10,6 +10,8 @@ import br.com.vanroute.backend.services.InviteCodeService;
 import br.com.vanroute.backend.dtos.inviteCode.InviteCodeRequestDTO;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.RequestBody;
+
+import java.net.URI;
 import java.util.UUID;
 
 @RestController
@@ -25,6 +27,8 @@ public class InviteCodeController {
     @PostMapping("/redeem")
     public ResponseEntity<UUID> redeem(@Valid @RequestBody InviteCodeRequestDTO inviteCodeRequestDTO, Authentication authentication) {
         String cpf = authentication.getName();
-        return ResponseEntity.ok(inviteCodeService.redeem(inviteCodeRequestDTO.inviteCode(), cpf));
+        UUID chatId = inviteCodeService.redeem(inviteCodeRequestDTO.inviteCode(), cpf);
+        return ResponseEntity.created(URI.create("/api/chats/" + chatId+ "/messages")).body(chatId);
     }
+    
 }

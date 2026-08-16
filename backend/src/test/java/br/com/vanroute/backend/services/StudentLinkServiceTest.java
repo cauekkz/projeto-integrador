@@ -28,6 +28,7 @@ import br.com.vanroute.backend.models.user.Responsible;
 import br.com.vanroute.backend.repositories.ResponsibleRepository;
 import br.com.vanroute.backend.repositories.StudentRepository;
 import br.com.vanroute.backend.repositories.StudentResponsibleRepository;
+import br.com.vanroute.backend.utils.CodeGenerator;
 
 @ExtendWith(MockitoExtension.class)
 public class StudentLinkServiceTest {
@@ -50,6 +51,9 @@ public class StudentLinkServiceTest {
     @Mock
     private ResponsibleRepository responsibleRepository;
 
+    @Mock
+    private CodeGenerator codeGenerator;
+
     @InjectMocks
     private StudentLinkService studentLinkService;
 
@@ -62,14 +66,15 @@ public class StudentLinkServiceTest {
     void testGenerateStudentCodeToLink_Success() throws JsonProcessingException {
         UUID studentId = UUID.randomUUID();
         StudentLinkRequestDTO dto = new StudentLinkRequestDTO(studentId, RelationType.FINANCIAL);
-        
+
         when(studentResponsibleRepository.existsByResponsible_User_CpfAndStudent_IdAndIsAdminTrue("12345678901", studentId))
                 .thenReturn(true);
+        when(codeGenerator.generateCode()).thenReturn("ABC123XYZ");
         when(objectMapper.writeValueAsString(dto)).thenReturn("json_string");
         when(valueOperations.setIfAbsent(anyString(), eq("json_string"), any(Duration.class))).thenReturn(true);
 
         String code = studentLinkService.generateStudentCodeToLink(dto, "12345678901");
-        
+
         assertNotNull(code);
         assertEquals(9, code.length());
         verify(valueOperations, times(1)).setIfAbsent(anyString(), eq("json_string"), any(Duration.class));
@@ -79,7 +84,7 @@ public class StudentLinkServiceTest {
     void testGenerateStudentCodeToLink_NotAdmin() {
         UUID studentId = UUID.randomUUID();
         StudentLinkRequestDTO dto = new StudentLinkRequestDTO(studentId, RelationType.LEGAL);
-        
+
         when(studentResponsibleRepository.existsByResponsible_User_CpfAndStudent_IdAndIsAdminTrue("123", studentId))
                 .thenReturn(false);
 
@@ -91,17 +96,17 @@ public class StudentLinkServiceTest {
     void testCreateStudentResponsibleRelation_Success() throws JsonProcessingException {
         UUID studentId = UUID.randomUUID();
         StudentLinkRequestDTO dto = new StudentLinkRequestDTO(studentId, RelationType.LEGAL);
-        
+
         Student student = new Student();
         Responsible responsible = new Responsible();
-        
+
         when(valueOperations.get("student:link:CODE123")).thenReturn("saved_json");
         when(objectMapper.readValue("saved_json", StudentLinkRequestDTO.class)).thenReturn(dto);
         when(studentRepository.getReferenceById(studentId)).thenReturn(student);
         when(responsibleRepository.findByUserCpf("12345678901")).thenReturn(Optional.of(responsible));
-        
+
         studentLinkService.createStudentResponsibleRelation("CODE123", "12345678901");
-        
+
         verify(studentResponsibleRepository, times(1)).save(any(StudentResponsible.class));
         verify(redisTemplate, times(1)).delete("student:link:CODE123");
     }
@@ -109,11 +114,11 @@ public class StudentLinkServiceTest {
     @Test
     void testCreateStudentResponsibleRelation_InvalidCode() {
         when(valueOperations.get("student:link:INVALID")).thenReturn(null);
-        
+
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
             studentLinkService.createStudentResponsibleRelation("INVALID", "123");
         });
-        
+
         assertEquals("Código incorreto ou expirado.", exception.getMessage());
     }
 }
