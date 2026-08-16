@@ -36,8 +36,7 @@ public class Driver {
     public UUID getUserId() {
         return userId;
     }
-
-    @Column(name = "link_code", unique = true, nullable = false)
+    @Column(name = "link_code", length = 9, nullable = false, unique = true)
     private String linkCode;
 
     public String getLinkCode() {

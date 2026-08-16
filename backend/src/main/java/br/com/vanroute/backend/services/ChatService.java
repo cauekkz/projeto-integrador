@@ -34,4 +34,11 @@ public class ChatService {
                     return chatRepository.save(newChat);
                 });
     }
+
+    public void validateChatAccess(UUID chatId, String cpf) {
+        UUID userId = userRepository.findByCpf(cpf).orElseThrow(() -> new RuntimeException("Usuário não encontrado")).getId();
+        if (!chatRepository.existsByChatIdAndUserId(chatId, userId)) {
+            throw new IllegalArgumentException("Você não tem acesso a este chat.");
+        }
+    }
 }

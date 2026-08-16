@@ -19,7 +19,7 @@ ALTER TABLE user_driver_contracts
 CREATE INDEX idx_udc_student ON user_driver_contracts (student_id);
 
 ALTER TABLE drivers
-ADD COLUMN link_code CHAR(9) NOT NULL UNIQUE;
+ADD COLUMN link_code VARCHAR(9) NOT NULL UNIQUE;
 
 
 CREATE TABLE chats (
@@ -40,3 +40,14 @@ CREATE TABLE chat_messages (
     sent_at timestamp NOT NULL DEFAULT now(),
     read_at timestamp
 );
+
+
+ALTER TABLE chat_messages
+  ADD COLUMN attachment_url text,
+  ADD COLUMN attachment_type text;
+
+ALTER TABLE chat_messages ALTER COLUMN content DROP NOT NULL;
+
+ALTER TABLE chat_messages
+  ADD CONSTRAINT chk_message_has_content
+  CHECK (content IS NOT NULL OR attachment_url IS NOT NULL);

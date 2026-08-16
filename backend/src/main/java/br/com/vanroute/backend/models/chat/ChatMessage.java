@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.models.chat;
 
+import br.com.vanroute.backend.models.chat.enums.AttachmentType;
 import br.com.vanroute.backend.models.user.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -21,8 +22,15 @@ public class ChatMessage {
     @JoinColumn(name = "sender_user_id", nullable = false)
     private User sender;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String content;
+
+    @Column(name = "attachment_url")
+    private String attachmentUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "attachment_type")
+    private AttachmentType attachmentType;
 
     @Column(name = "sent_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false, updatable = false)
     private LocalDateTime sentAt = LocalDateTime.now();
@@ -60,6 +68,22 @@ public class ChatMessage {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getAttachmentUrl() {
+        return attachmentUrl;
+    }
+
+    public void setAttachmentUrl(String attachmentUrl) {
+        this.attachmentUrl = attachmentUrl;
+    }
+
+    public AttachmentType getAttachmentType() {
+        return attachmentType;
+    }
+
+    public void setAttachmentType(AttachmentType attachmentType) {
+        this.attachmentType = attachmentType;
     }
 
     public LocalDateTime getSentAt() {

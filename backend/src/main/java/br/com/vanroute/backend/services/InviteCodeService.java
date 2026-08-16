@@ -6,6 +6,7 @@ import br.com.vanroute.backend.repositories.ResponsibleRepository;
 import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.models.user.Responsible;
 import java.util.UUID;
+import br.com.vanroute.backend.models.chat.Chat;
 import org.springframework.transaction.annotation.Transactional;
 @Service
 public class InviteCodeService {
@@ -28,7 +29,7 @@ public class InviteCodeService {
         UUID driverId = driver.getUserId();
         UUID responsibleId = responsible.getUserId();
         
-        br.com.vanroute.backend.models.chat.Chat chat = chatService.createOrGetChat(driverId, responsibleId);
+        Chat chat = chatService.createOrGetChat(driverId, responsibleId);
 
         return chat.getId();
     }
