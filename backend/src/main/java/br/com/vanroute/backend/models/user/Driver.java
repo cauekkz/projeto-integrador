@@ -37,6 +37,17 @@ public class Driver {
         return userId;
     }
 
+    @Column(name = "link_code", unique = true, nullable = false)
+    private String linkCode;
+
+    public String getLinkCode() {
+        return linkCode;
+    }
+
+    public void setLinkCode(String linkCode) {
+        this.linkCode = linkCode;
+    }
+
     public void setUserId(UUID userId) {
         this.userId = userId;
     }
