@@ -23,7 +23,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/{id}")                 
+    @GetMapping("/{id}")
     @Valid
     public ResponseEntity<User> getUserById(@PathVariable UUID id) {
         return userService.findById(id)
@@ -38,14 +38,14 @@ public class UserController {
      return ResponseEntity.ok().build();
     }
 
-    @PutMapping("update-user")
+    @PutMapping("/update-user")
     public ResponseEntity<User> updateUser(@RequestBody UpdateUser updateUser, Authentication authentication){
         String cpf = authentication.getName();
         userService.updateUser(updateUser, cpf);
         return ResponseEntity.ok().build();
     }
 
-  
+
     //nao sei se vai usar isso so pra teste
     // deixa o deleteUser ser feliz
     @DeleteMapping("/{id}/{code}")
