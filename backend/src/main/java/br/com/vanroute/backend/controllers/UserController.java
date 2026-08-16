@@ -32,9 +32,9 @@ public class UserController {
     }
 
     @PostMapping("/send-code-updateUser")
-    public ResponseEntity<Void>  sendCodeToUpdate(Authentication authentication){
+    public ResponseEntity<Void>  sendCodeToUser(Authentication authentication){
      String cpf = authentication.getName();
-     userService.sendCodeToUpdate(cpf);
+     userService.sendCodeToUser(cpf);
      return ResponseEntity.ok().build();
     }
 
