@@ -2,61 +2,45 @@
 
   <div class="header">
     <button class="back-button">
-      <img src="/Back.png" alt="Voltar">
+      <img src="/Back.png" alt="">
     </button>
+    <h1>Dependentes</h1>
+
   </div>
 
   <div class="content">
 
-    <h1>Digite seu código</h1>
+    <h1>Digite seu código para vincular ao seu responsavel</h1>
 
     <p class="description">
-      Digite o código de estudante que foi enviado para você.
+      Digite o código de estudante que foi gerado para seu responsavel.
     </p>
 
     <div class="inputs">
 
-      <input
-        class="code-input"
-        type="text"
-        maxlength="1"
-        inputmode="numeric"
-      />
 
-      <input
-        class="code-input"
-        type="text"
-        maxlength="1"
-        inputmode="numeric"
-      />
-
-      <input
-        class="code-input"
-        type="text"
-        maxlength="1"
-        inputmode="numeric"
-      />
-
-      <input
-        class="code-input"
-        type="text"
-        maxlength="1"
-        inputmode="numeric"
-      />
-
-      <input
-        class="code-input"
-        type="text"
-        maxlength="1"
-        inputmode="numeric"
-      />
-
-      <input
-        class="code-input"
-        type="text"
-        maxlength="1"
-        inputmode="numeric"
-      />
+      <div class="inputs">
+        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 0)"
+          (keydown)="onKeydown($event, 0)" />
+        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 1)"
+          (keydown)="onKeydown($event, 1)" />
+        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 2)"
+          (keydown)="onKeydown($event, 2)" />
+        <label class="separador"> - </label>
+        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 3)"
+          (keydown)="onKeydown($event, 3)" />
+        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 4)"
+          (keydown)="onKeydown($event, 4)" />
+        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 5)"
+          (keydown)="onKeydown($event, 5)" />
+        <label class="separador"> - </label>
+        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 6)"
+          (keydown)="onKeydown($event, 6)" />
+        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 7)"
+          (keydown)="onKeydown($event, 7)" />
+        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 8)"
+          (keydown)="onKeydown($event, 8)" />
+      </div>
 
     </div>
 
