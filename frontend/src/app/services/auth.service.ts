@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { jwtDecode } from 'jwt-decode';
+import { User } from '../models/user.model';
+import { Observable } from 'rxjs';
 
 interface TokenResponse {
   token: string;
@@ -15,7 +17,6 @@ export class AuthService {
     if (!token) return null;
 
     try {
-
       const decoded: any = jwtDecode(token);
       return decoded.id || decoded.sub || null;
     } catch (error) {
@@ -77,8 +78,8 @@ export class AuthService {
     });
   }
 
-  getUserByID(id: string) {
-    return this.http.get(`${this.apiUrl}/users/${id}`);
+  getUserByID(id: string): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/users/${id}`);
   }
 
   deleteUser(id: string) {
