@@ -1,76 +1,45 @@
 <div class="login-container">
-  <div class="header">
-    <button class="back-button" (click)="voltar()">
-      <img src="/Back.png" alt="">
-    </button>
-    <h1>Suas informações</h1>
-  </div>
+  <app-header titulo="Suas informações" (voltarEvent)="voltar()" />
 
   <div class="content">
-
     <form (ngSubmit)="login()">
 
-    @if (tipoUsuario === 'motorista') {
-      <h2>Olá, que bom que você voltou!</h2>
-      <label>CPF do motorista</label>
-      <input
-        type="text"
-        placeholder="Digite seu CPF"
-        name="nome"
-        [(ngModel)]="enteredCPF"
-        required
-      />
-    }
+      @if (tipoUsuario === 'motorista') {
+        <h2>Ola, que bom que voce voltou!</h2>
+        <label>CPF do motorista</label>
+        <input type="text" placeholder="Digite seu CPF" name="nome" [(ngModel)]="enteredCPF" required />
+      }
 
-    @if (tipoUsuario === 'responsavel') {
-      <h2>Olá, que om que você voltou!</h2>
+      @if (tipoUsuario === 'responsavel') {
+        <h2>Ola, que bom que voce voltou!</h2>
+        <label>CPF do responsavel</label>
+        <input type="text" placeholder="Digite seu CPF" name="nome" [(ngModel)]="enteredCPF" required />
+      }
 
-      <label>CPF do responsável</label>
-       <input
-        type="text"
-        placeholder="Digite seu CPF"
-        name="nome"
-        [(ngModel)]="enteredCPF"
-        required
-      />
+      @if (cpfInvalido) {
+        <p class="error-message">O CPF e obrigatorio!</p>
+      }
 
-    }
+      <label>Senha</label>
+      <input type="password" placeholder="Digite sua senha" name="senha" [(ngModel)]="enteredPass" required />
 
-    @if(cpfInvalido){
-      <p class="error-message"> O CPF é obrigatótio!</p>
-    }
+      @if (passInvalido) {
+        <p class="error-message">A senha e obrigatoria!</p>
+      }
 
+      <button class="btn-login" type="submit">Entrar</button>
 
+      <button class="btn-forgot" type="button" (click)="mostrarForgotPassword = true">
+        Esqueceu sua senha?
+      </button>
 
-    <label>Senha</label>
-
-    <input
-      type="password"
-      placeholder="Digite sua senha"
-      name="senha"
-      [(ngModel)]="enteredPass"
-      required
-    />
-
-    @if(passInvalido){
-      <p class="error-message"> A senha é obrigatótia!</p>
-    }
-
-
-    <button class="btn-login">
-      Entrar
-    </button>
-
-    <!-- <button class="btn-forgot">
-      Esqueceu sua senha?
-    </button>
-    inutil por enquanto, ent vou deixar comentado
-    -->
     </form>
   </div>
 
   <button class="btn-signup" (click)="irParaCadastro()">
     Criar uma conta
   </button>
-
 </div>
+@if (mostrarForgotPassword) {
+  <app-forgot-password (voltarEvent)="mostrarForgotPassword = false" />
+}

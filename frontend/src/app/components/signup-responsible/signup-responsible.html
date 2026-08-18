@@ -1,11 +1,5 @@
 <div class="signup-container">
-  <div class="header">
-    <button class="back-button" (click)="voltar()">
-      <img src="/Back.png" alt="" />
-    </button>
-
-    <h1>Suas informações</h1>
-  </div>
+  <app-header titulo="Validacao de CNH" (voltarEvent)="voltar()" />
 
   <form class="form" (ngSubmit)="signup()">
     <div class="field">

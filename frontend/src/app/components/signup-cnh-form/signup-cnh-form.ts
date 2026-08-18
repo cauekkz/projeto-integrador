@@ -1,10 +1,11 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { RegisterService } from '../../services/register.service';
+import { Header } from '../header/header';
 
 @Component({
   selector: 'app-signup-cnh-form',
   standalone: true,
-  imports: [],
+  imports: [Header],
   templateUrl: './signup-cnh-form.html',
   styleUrl: './signup-cnh-form.css',
 })
@@ -13,12 +14,12 @@ export class SignupCnhForm {
   @Output() voltarEvent = new EventEmitter<void>();
 
   constructor(protected registerService: RegisterService) {}
+
   mostrarBottomSheet = false;
 
   abrirBottomSheet() {
     this.mostrarBottomSheet = true;
   }
-
   fecharBottomSheet() {
     this.mostrarBottomSheet = false;
   }
@@ -29,9 +30,7 @@ export class SignupCnhForm {
   }
 
   pronto() {
-    if (this.registerService.selectedFile == null){
-      return
-    }
+    if (this.registerService.selectedFile == null) return;
     this.prontoEvent.emit();
   }
 
@@ -39,20 +38,14 @@ export class SignupCnhForm {
     this.voltarEvent.emit();
   }
 
-
-
-onFileSelected(event: Event) {
-  const input = event.target as HTMLInputElement;
-
-  if (input.files?.length) {
-    this.registerService.selectedFile = input.files[0];
-    console.log(this.registerService.selectedFile)
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files?.length) {
+      this.registerService.selectedFile = input.files[0];
+    }
   }
-}
 
-delete() {
-  this.registerService.selectedFile = null;
-}
-
-
+  delete() {
+    this.registerService.selectedFile = null;
+  }
 }

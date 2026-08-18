@@ -111,10 +111,12 @@
 }
 
 .btn-submit {
-  width: 100%;
-  max-width: 600px;
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
+  width: calc(100% - 48px);
   height: 56px;
-  margin: auto auto 20px;
   border: none;
   border-radius: 14px;
   background: #1565d8;
@@ -125,21 +127,24 @@
   box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
 }
 
-.btn-delete{
+.btn-delete {
   width: 100%;
   max-width: 600px;
   height: 56px;
-  margin: 220px auto 20px;
-  border: none;
+  margin: auto auto 12px;
+  border: 1px solid #e61212;
   border-radius: 14px;
-  background: #e61212;
-  color: white;
+  background: transparent;
+  color: #e61212;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
+  position: fixed;
+  bottom: 88px;
+  left: 24px;
+  right: 24px;
+  width: calc(100% - 48px);
 }
-
 /* Overlay */
 .overlay {
   position: fixed;
