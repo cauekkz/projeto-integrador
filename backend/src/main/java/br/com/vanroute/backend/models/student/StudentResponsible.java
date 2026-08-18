@@ -38,7 +38,8 @@ public class StudentResponsible {
     @Column(name = "is_admin", nullable = false)
     private boolean isAdmin = false;
 
-
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+    private LocalDateTime createdAt;
 
 
 
@@ -82,6 +83,14 @@ public class StudentResponsible {
 
 public void setAdmin(boolean admin) {
     isAdmin = admin;
+}
+
+public LocalDateTime getCreatedAt() {
+    return createdAt;
+}
+
+public void setCreatedAt(LocalDateTime createdAt) {
+    this.createdAt = createdAt;
 }
 
 }
