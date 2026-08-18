@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Header } from '../header/header';
+import { StudentService } from '../../services/student.service';
 
 @Component({
   selector: 'app-add-student',
@@ -16,13 +17,17 @@ export class AddStudent {
   enteredName = '';
   enteredBirthdate = '';
   enteredObservacoes = '';
+  enteredRelationType = '';
   maxObs = 1200;
   mostrarBottomSheet = false;
 
   codigoGerado = '';
   copiado = false;
 
-  constructor(private router: Router) {}
+  constructor(
+    private StudentService: StudentService,
+    private router: Router,
+  ) {}
 
   voltar() {
     if (this.etapa === 'code') {
@@ -34,7 +39,28 @@ export class AddStudent {
   }
 
   pronto() {
-    this.etapa = 'code';
+    const data = {
+      name: this.enteredName,
+      notes: this.enteredObservacoes,
+      birthDate: this.enteredBirthdate,
+      relationType: this.enteredRelationType,
+    };
+
+    this.StudentService.createStudent(data).subscribe({
+      next: (studentResponsible) => {
+        const studentId = studentResponsible.student.id;
+
+        this.StudentService.generateStudentLink({
+          id: studentId,
+          relationType: data.relationType,
+        }).subscribe({
+          next: (codigo) => {
+            this.codigoGerado = codigo;
+            this.etapa = 'code';
+          },
+        });
+      },
+    });
   }
 
   copiarCodigo() {

@@ -1,12 +1,16 @@
 <div class="dependentes-container">
   <app-header titulo="Dependentes" (voltarEvent)="fechar()"></app-header>
 
-  <button class="btn-add" (click)="adicionarDependente()">
-    Adicionar dependente
-  </button>
+  <select [(ngModel)]="filtroRelationType" (change)="carregarDependentes()">
+    <option value="">Todos</option>
+    <option value="LEGAL">Legal</option>
+    <option value="FINANCIAL">Financeiro</option>
+    <option value="WITHDRAWAL">Retirada</option>
+  </select>
+
+  <button class="btn-add" (click)="adicionarDependente()">Adicionar dependente</button>
 
   <div class="lista-dependentes">
-
     @if (carregando) {
       <p class="estado-vazio">Carregando...</p>
     }
@@ -18,9 +22,13 @@
     @for (dep of dependentes; track dep.id) {
       <div class="dependente-card">
         <div class="dependente-linha" (click)="toggleDependente(dep)">
-          <img class="dependente-avatar" [src]="dep.photoUrl || '/testee.jpg'" alt="">
+          <img class="dependente-avatar" [src]="dep.photoUrl || '/testee.jpg'" alt="" />
           <span class="dependente-nome">{{ dep.name }}</span>
-          <i class="bi" [class.bi-chevron-up]="dep.aberto" [class.bi-chevron-down]="!dep.aberto"></i>
+          <i
+            class="bi"
+            [class.bi-chevron-up]="dep.aberto"
+            [class.bi-chevron-down]="!dep.aberto"
+          ></i>
         </div>
 
         @if (dep.aberto) {
@@ -32,7 +40,7 @@
               <p><strong>Responsáveis:</strong></p>
               @for (resp of dep.responsibles; track resp.id) {
                 <div class="responsavel-linha">
-                  <img class="dependente-avatar-sm" [src]="resp.photoUrl || '/testee.jpg'" alt="">
+                  <img class="dependente-avatar-sm" [src]="resp.photoUrl || '/testee.jpg'" alt="" />
                   <span>{{ resp.name }}</span>
                 </div>
               }
@@ -41,6 +49,5 @@
         }
       </div>
     }
-
   </div>
 </div>

@@ -1,6 +1,7 @@
 import { Component, ElementRef, QueryList, ViewChildren } from '@angular/core';
 import { Router } from '@angular/router';
 import { Header } from '../../components/header/header';
+import { StudentService } from '../../services/student.service';
 
 @Component({
   selector: 'app-student-code',
@@ -15,7 +16,10 @@ export class StudentCode {
 
   codigo: string[] = ['', '', '', '', '', '', '', '', ''];
 
-  constructor(private router: Router) {}
+  constructor(
+    private StudentService: StudentService,
+    private router: Router,
+  ) {}
 
   /**
    * Volta para a tela anterior.
@@ -138,9 +142,6 @@ export class StudentCode {
     return this.codigoCompleto.length === 9;
   }
 
-  /**
-   * Confirma o código digitado.
-   */
   confirmar(): void {
     if (!this.codigoValido) {
       return;
@@ -148,14 +149,13 @@ export class StudentCode {
 
     const codigo = this.codigoCompleto;
 
-    console.log('Código do estudante:', codigo);
-    console.log('Código formatado:', this.codigoFormatado);
-
-    /*
-     * Aqui futuramente você pode chamar o backend
-     * para validar/vincular o estudante.
-     */
-
-    this.router.navigate(['/home-screen']);
+    this.StudentService.confirmCode(codigo).subscribe({
+      next: () => {
+        this.router.navigate(['/home-screen']);
+      },
+      error: (err: any) => {
+        console.error('Erro ao confirmar código:', err);
+      },
+    });
   }
 }

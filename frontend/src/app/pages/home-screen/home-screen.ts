@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AddStudent } from '../../components/add-student/add-student';
 import { Dependentes } from '../../components/dependentes/dependentes';
-import { AddStudentService } from '../../services/addStudent.service';
+import { AddStudentService } from '../../services/student.service';
 
 @Component({
   selector: 'app-home-screen',
