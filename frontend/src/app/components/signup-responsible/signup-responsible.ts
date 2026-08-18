@@ -6,13 +6,15 @@ import { Header } from '../../components/header/header';
 @Component({
   selector: 'app-signup-responsible',
   standalone: true,
-  imports: [FormsModule,Header],
+  imports: [FormsModule, Header],
   templateUrl: './signup-responsible.html',
   styleUrl: './signup-responsible.css',
 })
 export class SignupResponsible {
   @Output() voltarEvent = new EventEmitter<void>();
-  @Output() cadastroConcluidoEvent = new EventEmitter<string>();
+  @Output() cadastroConcluidoEvent = new EventEmitter<{
+    email: string;
+  }>();
 
   constructor(private authService: AuthService) {}
 
@@ -76,7 +78,9 @@ export class SignupResponsible {
     this.authService.createUser(data).subscribe({
       next: (response) => {
         // router e get user, pegar token e user
-        this.cadastroConcluidoEvent.emit(this.enteredEmail);
+        this.cadastroConcluidoEvent.emit({
+          email: this.enteredEmail,
+        });
         console.log(response);
       },
       error: (err) => {
