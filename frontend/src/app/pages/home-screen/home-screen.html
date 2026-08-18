@@ -1,29 +1,24 @@
 <div class="screen">
-
   <div class="topbar">
-
     <div class="user-info">
-
       <div class="notif-wrapper">
         <div class="avatar notification">
           <i class="bi bi-bell"></i>
         </div>
       </div>
 
-      <div class="user-name ">
-        <img src="/testee.jpg" alt="Foto do usuário">
-        <span>Andreas Pereira</span>
+      <div class="user-name">
+        <img [src]="usuarioLogado?.photoUrl || '/testee.jpg'" alt="Foto do usuário" />
+        <span>{{ usuarioLogado?.name || 'num foi' }}</span>
       </div>
-
     </div>
 
     <div class="role-info" (click)="abrirFluxoDependente()">
       <div class="avatar avatar1">
-        <img src="/addStudent.svg" alt="Adicionar estudante">
+        <img src="/addStudent.svg" alt="Adicionar estudante" />
       </div>
       <span class="role">Responsável</span>
     </div>
-
   </div>
 
   <div class="content">
@@ -33,14 +28,13 @@
 
     @for (dep of meusDependentes; track dep.id) {
       <div class="dependente-foto">
-        <img [src]="dep.photoUrl || '/testee.jpg'" alt="{{ dep.name }}">
+        <img [src]="dep.photoUrl || '/testee.jpg'" alt="{{ dep.name }}" />
         <span>{{ dep.name }}</span>
       </div>
     }
   </div>
 
   <div class="bottombar">
-
     <button class="tab active">
       <i class="down bi bi-house-door-fill"></i>
     </button>
@@ -52,16 +46,11 @@
     <button class="tab">
       <i class="down bi bi-gear-wide-connected"></i>
     </button>
-
-
   </div>
-
 </div>
 
 @if (mostrarAddStudent) {
-
   <div class="overlay" (click)="fecharAddStudent()"></div>
 
   <app-add-student (fecharEvent)="fecharAddStudent()"></app-add-student>
-
 }
