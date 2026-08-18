@@ -27,7 +27,7 @@ public class StudentService {
         this.studentRepository = studentRepository;
         this.responsibleRepository = responsibleRepository;
         this.studentResponsibleRepository = studentResponsibleRepository;
-
+        
     }
 
         public StudentResponsible createStudentWithRelation(StudentRequestDTO dto, String cpf){
@@ -36,7 +36,7 @@ public class StudentService {
             student.setNotes(dto.notes());
             student.setBirthDate(dto.birthDate());
             studentRepository.save(student);
-
+            
             StudentResponsible studentResponsible = new StudentResponsible();
             studentResponsible.setStudent(student);
             studentResponsible.setRelationType(dto.relationType());
@@ -47,17 +47,20 @@ public class StudentService {
                     .orElseThrow(() -> new RuntimeException("Responsible not found"));
             studentResponsible.setResponsible(responsible);
         return studentResponsibleRepository.save(studentResponsible);
-        }
+        }    
 
-        public Page<Student> getAllStudentsResponsible(AllStudentsFilterRequestDTO filter,Pageable pageable,String cpf) {
+        public Page<Student> getAllStudentsResponsible(AllStudentsFilterRequestDTO filter,Pageable pageable,String cpf){
             Specification<StudentResponsible> specification = StudentResponsibleSpecification.withFilters(cpf, filter);
-            Page<StudentResponsible> result = studentResponsibleRepository.findAll(specification, pageable);
+            Page<StudentResponsible> result =  studentResponsibleRepository.findAll(specification, pageable);
             return result.map(StudentResponsible::getStudent);
-        }
+        }                                                                                                  
+
+
+
 
 
     //ns se a melhor coisa é fazer isso nesse service mas fds nao consigo pensa num service diferente pra isso, talvez um especifico pra isso mas nao sei
-
+    
 
 
 }

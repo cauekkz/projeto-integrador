@@ -1,0 +1,63 @@
+<div class="screen">
+
+  <div class="topbar">
+    <div class="notif-wrapper">
+      <div class="bell-btn">
+        <i class="bi bi-bell"></i>
+      </div>
+<!--      <span class="badge">99</span>-->
+    </div>
+
+    <div class="user-info">
+      <img src="/testee.jpg" class="avatar" alt="">
+      <span class="name">Gustavo Gomez</span>
+    </div>
+
+    <span class="role">Motorista</span>
+  </div>
+
+  <div class="content">
+    @if (temRota) {
+      <div class="rota-card" (click)="irParaRota()">
+        <div class="rota-status">
+          <span class="dot"></span>
+          <span class="status-text">Em rota</span>
+        </div>
+        <p class="rota-label">teste</p>
+        <p class="rota-titulo">teste</p>
+        <div class="rota-info">
+          <div class="info-item">
+            <i class="bi bi-people"></i>
+            <span>x</span>
+          </div>
+          <div class="info-item">
+            <i class="bi bi-geo-alt"></i>
+            <span>x</span>
+          </div>
+          <div class="info-item">
+            <i class="bi bi-clock"></i>
+            <span>x</span>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="bottombar">
+
+    <button class="tab active">
+      <i class="down bi bi-house-door-fill"></i>
+    </button>
+
+    <button class="tab">
+      <i class="down bi bi-house-door-fill"></i>
+    </button>
+
+    <button class="tab">
+      <i class="down bi bi-gear-wide-connected"></i>
+    </button>
+
+  </div>
+
+
+</div>
