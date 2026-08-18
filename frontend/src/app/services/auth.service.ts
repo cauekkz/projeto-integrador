@@ -1,5 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+
+interface TokenResponse {
+  token: string;
+  expiresIn: number;
+}
 @Injectable({
   providedIn: 'root',
 })
@@ -9,9 +14,9 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   login(cpf: string, password: string) {
-    return this.http.post(`${this.apiUrl}/auth/login`, {
+    return this.http.post<TokenResponse>(`${this.apiUrl}/login`, {
       cpf,
-      passwordHash: password,
+      password,
     });
   }
 
@@ -40,7 +45,6 @@ export class AuthService {
   }
 
   createUser(data: {
-
     name: string;
     email: string;
     password: string;
@@ -66,7 +70,6 @@ export class AuthService {
     return this.http.delete(`${this.apiUrl}/users/${id}`);
   }
 
-
   // dps ve se isso vai ser usado
   verifyCNH(data: { documentPDF: File }) {
     const formData = new FormData();
@@ -75,7 +78,7 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/driver/verifyCNH`, formData);
   }
 
-  sendCode(email: string ) {
+  sendCode(email: string) {
     return this.http.post(
       `${this.apiUrl}/auth/send-verification-code?email=${encodeURIComponent(email)}`,
       {},
@@ -83,9 +86,6 @@ export class AuthService {
   }
 
   verifyEmail(data: { email: string; code: string }) {
-    return this.http.post(
-      `${this.apiUrl}/auth/verify-email?email=${encodeURIComponent(data.email)}&code=${encodeURIComponent(data.code)}`,
-      {},
-    );
+    return this.http.post(`${this.apiUrl}/verify-email`, data, { responseType: 'text' });
   }
 }

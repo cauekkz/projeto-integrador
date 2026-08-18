@@ -5,11 +5,10 @@ import { AuthService } from '../../services/auth.service';
 import { ForgotPassword } from '../forgot-password/forgot-password';
 import { Header } from '../../components/header/header';
 
-
 @Component({
   selector: 'app-login-form',
   standalone: true,
-  imports: [FormsModule, ForgotPassword,Header],
+  imports: [FormsModule, ForgotPassword, Header],
   templateUrl: './login-form.html',
   styleUrl: './login-form.css',
 })
@@ -49,7 +48,8 @@ export class LoginForm {
 
     this.authService.login(this.enteredCPF, this.enteredPass).subscribe({
       next: (response) => {
-        console.log(response);
+        localStorage.setItem('token', response.token);
+        this.router.navigate(['/home-screen']);
       },
       error: (err) => {
         console.error(err);

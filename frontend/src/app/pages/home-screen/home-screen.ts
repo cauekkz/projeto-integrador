@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AddStudent } from '../../components/add-student/add-student';
 import { Dependentes } from '../../components/dependentes/dependentes';
-import { AddStudentService } from '../../services/student.service';
+import { StudentService } from '../../services/student.service';
 
 @Component({
   selector: 'app-home-screen',
@@ -15,7 +15,7 @@ export class HomeScreen implements OnInit {
   mostrarDependentes = false;
   meusDependentes: any[] = [];
 
-  constructor(private addStudentService: AddStudentService) {}
+  constructor(private addStudentService: StudentService) {}
 
   ngOnInit() {
     this.carregarDependentes();

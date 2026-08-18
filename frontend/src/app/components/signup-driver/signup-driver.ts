@@ -7,12 +7,14 @@ import { Header } from '../../components/header/header';
 @Component({
   selector: 'app-signup-driver',
   standalone: true,
-  imports: [FormsModule,Header],
+  imports: [FormsModule, Header],
   templateUrl: './signup-driver.html',
   styleUrl: './signup-driver.css',
 })
 export class SignupDriver {
-  @Output() cadastroConcluidoEvent = new EventEmitter<string>();
+  @Output() cadastroConcluidoEvent = new EventEmitter<{
+    email: string;
+  }>();
   @Output() voltarEvent = new EventEmitter<void>();
   constructor(
     protected registerService: RegisterService,
@@ -79,7 +81,10 @@ export class SignupDriver {
 
     this.authService.createDriver(data).subscribe({
       next: (response) => {
-        this.cadastroConcluidoEvent.emit(this.enteredEmail);
+        this.cadastroConcluidoEvent.emit({
+          email: this.enteredEmail,
+        });
+
         console.log(response);
       },
       error: (err) => {
