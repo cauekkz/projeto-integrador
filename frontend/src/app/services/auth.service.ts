@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { jwtDecode } from 'jwt-decode';
 
 interface TokenResponse {
   token: string;
@@ -9,6 +10,20 @@ interface TokenResponse {
   providedIn: 'root',
 })
 export class AuthService {
+  getUserIdFromToken(): string | null {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+
+      const decoded: any = jwtDecode(token);
+      return decoded.id || decoded.sub || null;
+    } catch (error) {
+      console.error('Erro ao decodificar o token:', error);
+      return null;
+    }
+  }
+
   private apiUrl = 'http://localhost:9090/api';
 
   constructor(private http: HttpClient) {}
