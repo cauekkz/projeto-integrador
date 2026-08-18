@@ -28,10 +28,10 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(cpf: string, password: string) {
-    return this.http.post<TokenResponse>(`${this.apiUrl}/login`, {
+  login(cpf: string, passwordHash: string) {
+    return this.http.post<TokenResponse>(`${this.apiUrl}/auth/login`, {
       cpf,
-      password,
+      passwordHash,
     });
   }
 
@@ -67,7 +67,7 @@ export class AuthService {
     cpf: string;
     phone: string;
   }) {
-    return this.http.post(`${this.apiUrl}/responsible/signup`, {
+    return this.http.post(`${this.apiUrl}/responsible/auth/signup`, {
       name: data.name,
       email: data.email,
       password: data.password,
@@ -101,6 +101,6 @@ export class AuthService {
   }
 
   verifyEmail(data: { email: string; code: string }) {
-    return this.http.post(`${this.apiUrl}/verify-email`, data, { responseType: 'text' });
+    return this.http.post(`${this.apiUrl}/auth/verify-email`, data, { responseType: 'text' });
   }
 }
