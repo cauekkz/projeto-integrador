@@ -23,10 +23,10 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{cpf}")
     @Valid
-    public ResponseEntity<User> getUserById(@PathVariable UUID id) {
-        return userService.findById(id)
+    public ResponseEntity<User> getUserById(@PathVariable String cpf) {
+        return userService.findByCpf(cpf)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
