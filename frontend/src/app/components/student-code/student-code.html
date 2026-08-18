@@ -1,52 +1,152 @@
 <div class="student-code-container">
 
-  <div class="header">
-    <button class="back-button">
-      <img src="/Back.png" alt="">
-    </button>
-    <h1>Dependentes</h1>
-
-  </div>
+  <app-header titulo="Dependentes"></app-header>
 
   <div class="content">
 
-    <h1>Digite seu código para vincular ao seu responsavel</h1>
+    <h1>
+      Digite seu código para vincular ao seu responsável
+    </h1>
 
     <p class="description">
-      Digite o código de estudante que foi gerado para seu responsavel.
+      Digite o código de estudante que foi gerado para seu responsável.
     </p>
 
     <div class="inputs">
 
+      <!-- 1 -->
+      <input
+        #codeInput
+        class="code-input"
+        type="text"
+        inputmode="text"
+        autocomplete="one-time-code"
+        maxlength="1"
+        [value]="codigo[0]"
+        (input)="onInput($event, 0)"
+        (keydown)="onKeydown($event, 0)"
+        aria-label="Primeiro caractere do código"
+      />
 
-      <div class="inputs">
-        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 0)"
-          (keydown)="onKeydown($event, 0)" />
-        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 1)"
-          (keydown)="onKeydown($event, 1)" />
-        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 2)"
-          (keydown)="onKeydown($event, 2)" />
-        <label class="separador"> - </label>
-        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 3)"
-          (keydown)="onKeydown($event, 3)" />
-        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 4)"
-          (keydown)="onKeydown($event, 4)" />
-        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 5)"
-          (keydown)="onKeydown($event, 5)" />
-        <label class="separador"> - </label>
-        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 6)"
-          (keydown)="onKeydown($event, 6)" />
-        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 7)"
-          (keydown)="onKeydown($event, 7)" />
-        <input class="code-input" type="text" maxlength="1" (input)="onInput($event, 8)"
-          (keydown)="onKeydown($event, 8)" />
-      </div>
+      <!-- 2 -->
+      <input
+        #codeInput
+        class="code-input"
+        type="text"
+        inputmode="text"
+        maxlength="1"
+        [value]="codigo[1]"
+        (input)="onInput($event, 1)"
+        (keydown)="onKeydown($event, 1)"
+        aria-label="Segundo caractere do código"
+      />
+
+      <!-- 3 -->
+      <input
+        #codeInput
+        class="code-input"
+        type="text"
+        inputmode="text"
+        maxlength="1"
+        [value]="codigo[2]"
+        (input)="onInput($event, 2)"
+        (keydown)="onKeydown($event, 2)"
+        aria-label="Terceiro caractere do código"
+      />
+
+      <span class="separador">-</span>
+
+      <!-- 4 -->
+      <input
+        #codeInput
+        class="code-input"
+        type="text"
+        inputmode="text"
+        maxlength="1"
+        [value]="codigo[3]"
+        (input)="onInput($event, 3)"
+        (keydown)="onKeydown($event, 3)"
+        aria-label="Quarto caractere do código"
+      />
+
+      <!-- 5 -->
+      <input
+        #codeInput
+        class="code-input"
+        type="text"
+        inputmode="text"
+        maxlength="1"
+        [value]="codigo[4]"
+        (input)="onInput($event, 4)"
+        (keydown)="onKeydown($event, 4)"
+        aria-label="Quinto caractere do código"
+      />
+
+      <!-- 6 -->
+      <input
+        #codeInput
+        class="code-input"
+        type="text"
+        inputmode="text"
+        maxlength="1"
+        [value]="codigo[5]"
+        (input)="onInput($event, 5)"
+        (keydown)="onKeydown($event, 5)"
+        aria-label="Sexto caractere do código"
+      />
+
+      <span class="separador">-</span>
+
+      <!-- 7 -->
+      <input
+        #codeInput
+        class="code-input"
+        type="text"
+        inputmode="text"
+        maxlength="1"
+        [value]="codigo[6]"
+        (input)="onInput($event, 6)"
+        (keydown)="onKeydown($event, 6)"
+        aria-label="Sétimo caractere do código"
+      />
+
+      <!-- 8 -->
+      <input
+        #codeInput
+        class="code-input"
+        type="text"
+        inputmode="text"
+        maxlength="1"
+        [value]="codigo[7]"
+        (input)="onInput($event, 7)"
+        (keydown)="onKeydown($event, 7)"
+        aria-label="Oitavo caractere do código"
+      />
+
+      <!-- 9 -->
+      <input
+        #codeInput
+        class="code-input"
+        type="text"
+        inputmode="text"
+        maxlength="1"
+        [value]="codigo[8]"
+        (input)="onInput($event, 8)"
+        (keydown)="onKeydown($event, 8)"
+        aria-label="Nono caractere do código"
+      />
 
     </div>
 
   </div>
 
-  <button class="btn-confirmar">
+  <button
+    class="btn-confirmar"
+    type="button"
+    [disabled]="!codigoValido"
+    [class.disabled]="!codigoValido"
+    (click)="confirmar()"
+  >
     Confirmar
   </button>
 

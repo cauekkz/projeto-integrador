@@ -2,11 +2,12 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { RegisterService } from '../../services/register.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { Header } from '../../components/header/header';
 
 @Component({
   selector: 'app-signup-driver',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule,Header],
   templateUrl: './signup-driver.html',
   styleUrl: './signup-driver.css',
 })
@@ -38,7 +39,7 @@ export class SignupDriver {
   proximaEtapa() {
     this.etapa = 2;
   }
-  voltarEtapa() {
+  voltar() {
     this.etapa = 1;
   }
 
