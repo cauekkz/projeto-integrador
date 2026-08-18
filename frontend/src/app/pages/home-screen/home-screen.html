@@ -6,7 +6,6 @@
           <i class="bi bi-bell"></i>
         </div>
       </div>
-
       <div class="user-name">
         <img [src]="usuarioLogado?.photoUrl || '/testee.jpg'" alt="Foto do usuário" />
         <span>{{ usuarioLogado?.name || 'num foi' }}</span>
@@ -14,43 +13,38 @@
     </div>
 
     <div class="role-info" (click)="abrirFluxoDependente()">
-      <div class="avatar avatar1">
-        <img src="/addStudent.svg" alt="Adicionar estudante" />
-      </div>
-      <span class="role">Responsável</span>
+
+      @if (meusDependentes.length == 0) {
+        <div class="avatar avatar1">
+          <img src="/addStudent.svg" alt="Adicionar estudante" />
+        </div>
+        <span class="role">Responsável</span>
+      } @else {
+        <div class="avatar avatar1">
+          <img alt="Estudante" />
+        </div>
+        <span class="role">Responsável</span>
+      }
+
     </div>
   </div>
 
   <div class="content">
-    @if (meusDependentes.length === 0) {
-      <p class="empty-text">Nenhum dependente cadastrado ainda.</p>
-    }
 
-    @for (dep of meusDependentes; track dep.id) {
-      <div class="dependente-foto">
-        <img [src]="dep.photoUrl || '/testee.jpg'" alt="{{ dep.name }}" />
-        <span>{{ dep.name }}</span>
-      </div>
-    }
+    <p class="empty-text">Nenhum dependente cadastrado ainda.</p>
+
+
   </div>
 
   <div class="bottombar">
     <button class="tab active">
       <i class="down bi bi-house-door-fill"></i>
     </button>
-
     <button class="tab">
       <i class="down bi bi-house-door-fill"></i>
     </button>
-
     <button class="tab">
       <i class="down bi bi-gear-wide-connected"></i>
     </button>
   </div>
 </div>
-
-@if (mostrarAddStudent) {
-  <div class="overlay" (click)="fecharAddStudent()"></div>
-
-  <app-add-student (fecharEvent)="fecharAddStudent()"></app-add-student>
-}

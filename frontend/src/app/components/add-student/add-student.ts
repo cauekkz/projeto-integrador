@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Header } from '../header/header';
@@ -25,50 +25,48 @@ export class AddStudent {
   copiado = false;
 
   constructor(
-    private StudentService: StudentService,
+    private studentService: StudentService,
     private router: Router,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   voltar() {
-    if (this.etapa === 'code') {
-      this.etapa = 'form';
-      return;
-    }
-
     this.router.navigate(['/home-screen']);
   }
 
   pronto() {
+    const [dia, mes, ano] = this.enteredBirthdate.split('/');
+    const birthDate = `${ano}-${mes}-${dia}`;
     const data = {
       name: this.enteredName,
       notes: this.enteredObservacoes,
-      birthDate: this.enteredBirthdate,
+      birthDate: birthDate,
       relationType: this.enteredRelationType,
     };
 
-    this.StudentService.createStudent(data).subscribe({
+    this.studentService.createStudent(data).subscribe({
       next: (studentResponsible) => {
         const studentId = studentResponsible.student.id;
-
-        this.StudentService.generateStudentLink({
-          id: studentId,
-          relationType: data.relationType,
-        }).subscribe({
-          next: (codigo) => {
-            this.codigoGerado = codigo;
-            this.etapa = 'code';
-          },
-        });
+        this.studentService
+          .generateStudentLink({
+            id: studentId,
+            relationType: data.relationType,
+          })
+          .subscribe({
+            next: (codigo) => {
+              this.codigoGerado = codigo;
+              this.etapa = 'code';
+              this.cdr.detectChanges();
+            },
+          });
       },
     });
   }
 
   copiarCodigo() {
     if (!this.codigoGerado) return;
-
     navigator.clipboard.writeText(this.codigoGerado).then(() => {
       this.copiado = true;
-
       setTimeout(() => {
         this.copiado = false;
       }, 2000);
@@ -76,13 +74,12 @@ export class AddStudent {
   }
 
   concluir() {
-    this.router.navigate(['/home-screen']);
+    this.router.navigate(['/dependentes']);
   }
 
   abrirBottomSheet() {
     this.mostrarBottomSheet = true;
   }
-
   fecharBottomSheet() {
     this.mostrarBottomSheet = false;
   }

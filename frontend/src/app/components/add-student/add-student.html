@@ -9,7 +9,7 @@
       </div>
     </div>
 
-    <form class="form" (ngSubmit)="pronto()">
+    <form class="form" >
       <div class="field">
         <label>Nome do dependente</label>
         <input type="text" placeholder="Nome do dependente" [(ngModel)]="enteredName" name="name" />
@@ -41,14 +41,14 @@
         <label for="relationType">Tipo de relação</label>
 
         <select id="relationType" [(ngModel)]="enteredRelationType" name="relationType" required>
-          <option value="" disabled>Selecione uma opção</option>
+          <option value="" disabled class="">Selecione uma opção</option>
           <option value="FINANCIAL">Financeiro</option>
           <option value="LEGAL">Legal</option>
           <option value="WITHDRAWAL">Retirada</option>
         </select>
       </div>
 
-      <button class="btn-submit" type="submit">Pronto</button>
+      <button class="btn-submit" type="button" (click)="pronto()">Pronto</button>
     </form>
   }
 

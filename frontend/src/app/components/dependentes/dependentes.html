@@ -1,5 +1,5 @@
 <div class="dependentes-container">
-  <app-header titulo="Dependentes" (voltarEvent)="fechar()"></app-header>
+  <app-header titulo="Dependentes" (voltarEvent)="voltar()"></app-header>
 
   <select [(ngModel)]="filtroRelationType" (change)="carregarDependentes()">
     <option value="">Todos</option>
@@ -24,11 +24,7 @@
         <div class="dependente-linha" (click)="toggleDependente(dep)">
           <img class="dependente-avatar" [src]="dep.photoUrl || '/testee.jpg'" alt="" />
           <span class="dependente-nome">{{ dep.name }}</span>
-          <i
-            class="bi"
-            [class.bi-chevron-up]="dep.aberto"
-            [class.bi-chevron-down]="!dep.aberto"
-          ></i>
+          <i class="bi" [class.bi-chevron-up]="dep.aberto" [class.bi-chevron-down]="!dep.aberto"></i>
         </div>
 
         @if (dep.aberto) {

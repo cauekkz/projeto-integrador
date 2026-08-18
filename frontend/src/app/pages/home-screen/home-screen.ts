@@ -1,13 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { AddStudent } from '../../components/add-student/add-student';
-import { Dependentes } from '../../components/dependentes/dependentes';
+import { User } from '../../models/user.model';
 import { StudentService } from '../../services/student.service';
 import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-home-screen',
   standalone: true,
-  imports: [AddStudent],
+  imports: [],
   templateUrl: './home-screen.html',
   styleUrl: './home-screen.css',
 })
@@ -15,33 +16,34 @@ export class HomeScreen implements OnInit {
   mostrarAddStudent = false;
   mostrarDependentes = false;
   meusDependentes: any[] = [];
-
-  usuarioLogado: any = null;
+  usuarioLogado: User | null = null;
 
   constructor(
     private authService: AuthService,
-    private StudentService: StudentService,
+    private studentService: StudentService,
+    private cdr: ChangeDetectorRef,
+    private router: Router,
   ) {}
 
   ngOnInit() {
-    const idUsuario = this.authService.getUserIdFromToken();
-
-    if (idUsuario) {
-      this.authService.getUserByID(idUsuario).subscribe({
+    const cpfUsuario = this.authService.getUserIdFromToken();
+    if (cpfUsuario) {
+      this.authService.getUserByID(cpfUsuario).subscribe({
         next: (user) => {
           this.usuarioLogado = user;
+          this.cdr.detectChanges();
         },
-        error: (err) => {
-          console.error('Erro ao buscar usuário pelo ID do token:', err);
-        },
+        error: (err) => console.error('Erro ao buscar usuário:', err),
       });
     }
+    this.carregarDependentes();
   }
 
   carregarDependentes() {
-    this.StudentService.getMyChildren().subscribe({
+
+    this.studentService.getMyChildren().subscribe({
       next: (resposta: any) => {
-        this.meusDependentes = resposta?.content ?? resposta ?? [];
+        this.meusDependentes = resposta?.content ?? resposta ?? []
       },
       error: () => {
         this.meusDependentes = [];
@@ -51,12 +53,11 @@ export class HomeScreen implements OnInit {
 
   abrirFluxoDependente() {
     if (this.meusDependentes.length === 0) {
-      this.mostrarAddStudent = true;
+      this.router.navigate(['/add-student']);
     } else {
-      this.mostrarDependentes = true;
+      this.router.navigate(['/dependentes']);
     }
   }
-
   fecharAddStudent() {
     this.mostrarAddStudent = false;
     this.carregarDependentes();

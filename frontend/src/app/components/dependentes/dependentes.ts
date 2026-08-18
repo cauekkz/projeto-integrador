@@ -1,8 +1,9 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Header } from '../header/header';
 import { StudentService } from '../../services/student.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dependentes',
@@ -12,33 +13,33 @@ import { StudentService } from '../../services/student.service';
   styleUrl: './dependentes.css',
 })
 export class Dependentes implements OnInit {
-  @Output() fecharEvent = new EventEmitter<void>();
-  @Output() adicionarEvent = new EventEmitter<void>();
-
   dependentes: any[] = [];
   carregando = true;
+  filtroRelationType = '';
 
-  constructor(private addStudentService: StudentService) {}
+  constructor(
+    private studentService: StudentService,
+    private router: Router,
+  ) {}
 
   ngOnInit() {
     this.carregarDependentes();
   }
 
-  filtroRelationType = '';
-
   carregarDependentes() {
     this.carregando = true;
-
-    this.addStudentService
+    this.studentService
       .getMyChildren({
         relationType: this.filtroRelationType || undefined,
       })
       .subscribe({
         next: (resposta: any) => {
+          console.log('resposta:', resposta); // vê o que chega
           this.dependentes = resposta?.content ?? resposta ?? [];
           this.carregando = false;
         },
-        error: () => {
+        error: (err) => {
+          console.error('erro:', err);
           this.dependentes = [];
           this.carregando = false;
         },
@@ -49,11 +50,11 @@ export class Dependentes implements OnInit {
     dep.aberto = !dep.aberto;
   }
 
-  fechar() {
-    this.fecharEvent.emit();
+  voltar() {
+    this.router.navigate(['/home-screen']);
   }
 
   adicionarDependente() {
-    this.adicionarEvent.emit();
+    this.router.navigate(['/add-student']);
   }
 }
