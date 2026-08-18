@@ -1,7 +1,8 @@
 package br.com.vanroute.backend.models.contract;
 
+import br.com.vanroute.backend.models.student.Student;
 import br.com.vanroute.backend.models.user.Driver;
-import br.com.vanroute.backend.models.user.User;
+import br.com.vanroute.backend.models.user.Responsible;
 import jakarta.persistence.*;
 import java.util.UUID;
 
@@ -14,8 +15,12 @@ public class UserDriverContract {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "responsible_id", nullable = false)
+    private Responsible responsible;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", nullable = false)
+    private Student student;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "driver_id", nullable = false)
@@ -33,12 +38,20 @@ public class UserDriverContract {
         this.id = id;
     }
 
-    public User getUser() {
-        return user;
+    public Responsible getResponsible() {
+        return responsible;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setResponsible(Responsible responsible) {
+        this.responsible = responsible;
+    }
+
+    public Student getStudent() {
+        return student;
+    }
+
+    public void setStudent(Student student) {
+        this.student = student;
     }
 
     public Driver getDriver() {
