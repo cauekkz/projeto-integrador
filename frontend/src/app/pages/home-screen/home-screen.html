@@ -17,20 +17,26 @@
 
     </div>
 
-    <div class="role-info" (click)="abrirAddStudent()">
-
+    <div class="role-info" (click)="abrirFluxoDependente()">
       <div class="avatar avatar1">
         <img src="/addStudent.svg" alt="Adicionar estudante">
       </div>
-
       <span class="role">Responsável</span>
-
     </div>
 
   </div>
 
   <div class="content">
+    @if (meusDependentes.length === 0) {
+      <p class="empty-text">Nenhum dependente cadastrado ainda.</p>
+    }
 
+    @for (dep of meusDependentes; track dep.id) {
+      <div class="dependente-foto">
+        <img [src]="dep.photoUrl || '/testee.jpg'" alt="{{ dep.name }}">
+        <span>{{ dep.name }}</span>
+      </div>
+    }
   </div>
 
   <div class="bottombar">
@@ -46,6 +52,7 @@
     <button class="tab">
       <i class="down bi bi-gear-wide-connected"></i>
     </button>
+
 
   </div>
 

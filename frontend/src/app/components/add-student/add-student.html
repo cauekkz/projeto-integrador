@@ -1,12 +1,11 @@
 <div class="add-container">
 
   @if (etapa === 'form') {
-    <div class="header">
-      <button class="back-button" (click)="voltar()">
-        <img src="/Back.png" alt="">
-      </button>
-      <h1>Suas informacoes</h1>
-    </div>
+    <app-header
+      titulo="Suas informações"
+      (voltarEvent)="voltar()">
+    </app-header>
+
 
     <div class="photo-card" (click)="abrirBottomSheet()">
       <div class="photo-content">
@@ -40,12 +39,8 @@
   }
 
   @if (etapa === 'code') {
-    <div class="header">
-      <button class="back-button" (click)="voltar()">
-        <img src="/Back.png" alt="">
-      </button>
-      <h1>Codigo gerado</h1>
-    </div>
+    <app-header titulo="Suas informaçoes" (voltarEvent)="voltar()" />
+
 
     <div class="code-result">
       <p class="code-instrucao">

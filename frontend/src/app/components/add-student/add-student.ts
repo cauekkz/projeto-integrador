@@ -1,17 +1,16 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { Header } from '../header/header';
 
 @Component({
   selector: 'app-add-student',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, Header],
   templateUrl: './add-student.html',
   styleUrl: './add-student.css',
 })
 export class AddStudent {
-  @Output() fecharEvent = new EventEmitter<void>();
-
-  // controla qual "tela" aparece dentro do componente
   etapa: 'form' | 'code' = 'form';
 
   enteredName = '';
@@ -23,38 +22,41 @@ export class AddStudent {
   codigoGerado = '';
   copiado = false;
 
-  fechar() {
-    this.fecharEvent.emit();
-  }
+  constructor(private router: Router) {}
 
   voltar() {
     if (this.etapa === 'code') {
       this.etapa = 'form';
       return;
     }
-    this.fecharEvent.emit();
+
+    this.router.navigate(['/home-screen']);
   }
 
   pronto() {
-    // aqui depois entra a chamada pro back pra pegar o codigoGerado de verdade
     this.etapa = 'code';
   }
 
   copiarCodigo() {
     if (!this.codigoGerado) return;
+
     navigator.clipboard.writeText(this.codigoGerado).then(() => {
       this.copiado = true;
-      setTimeout(() => (this.copiado = false), 2000);
+
+      setTimeout(() => {
+        this.copiado = false;
+      }, 2000);
     });
   }
 
   concluir() {
-    this.fecharEvent.emit();
+    this.router.navigate(['/home-screen']);
   }
 
   abrirBottomSheet() {
     this.mostrarBottomSheet = true;
   }
+
   fecharBottomSheet() {
     this.mostrarBottomSheet = false;
   }
