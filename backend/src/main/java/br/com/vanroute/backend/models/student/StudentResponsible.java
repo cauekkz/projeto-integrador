@@ -3,6 +3,7 @@ package br.com.vanroute.backend.models.student;
 import br.com.vanroute.backend.models.student.enums.RelationType;
 import br.com.vanroute.backend.models.user.Responsible;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
