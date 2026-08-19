@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.dtos.user.ForgotPasswordRequest;
 import br.com.vanroute.backend.dtos.user.UpdateUser;
 import br.com.vanroute.backend.models.user.User;//sem DTO por enquanto
 import br.com.vanroute.backend.services.UserService;
@@ -46,9 +47,9 @@ public class UserController {
     }
 
     @PutMapping("/forgot-password")
-    public String forgetPassword(@RequestBody String password, @RequestBody String code, Authentication authentication) {
+    public String forgetPassword(@RequestBody ForgotPasswordRequest forgotPasswordRequest, Authentication authentication) {
         String cpf = authentication.getName();
-        return userService.forgetPassword(cpf, password, code);
+        return userService.forgetPassword(cpf, forgotPasswordRequest);
     }
 
         //nao sei se vai usar isso so pra teste
