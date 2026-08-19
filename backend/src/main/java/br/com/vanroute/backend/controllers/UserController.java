@@ -45,8 +45,13 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/forgot-password")
+    public String forgetPassword(@RequestBody String password, @RequestBody String code, Authentication authentication) {
+        String cpf = authentication.getName();
+        return userService.forgetPassword(cpf, password, code);
+    }
 
-    //nao sei se vai usar isso so pra teste
+        //nao sei se vai usar isso so pra teste
     // deixa o deleteUser ser feliz
     @DeleteMapping("/{id}/{code}")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id, @PathVariable String code) {
