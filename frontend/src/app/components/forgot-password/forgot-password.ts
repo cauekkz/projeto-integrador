@@ -1,10 +1,12 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CodeInput } from '../code-input/code-input';
+import { Header } from '../../components/header/header';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, CodeInput,Header],
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.css',
 })
@@ -61,10 +63,9 @@ export class ForgotPassword {
     }
   }
 
-  enviarCodigo() {
-    this.enteredCode = this.codigoCampos.join('');
-    this.codeInvalido = this.enteredCode.length < 6;
-    if (!this.codeInvalido) this.etapa = 3;
+  enviarCodigo(codigo: string) {
+    this.enteredCode = codigo;
+    this.etapa = 3;
   }
 
   novaSenha() {

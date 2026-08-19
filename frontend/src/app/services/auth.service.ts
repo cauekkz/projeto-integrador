@@ -1,17 +1,38 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { jwtDecode } from 'jwt-decode';
+import { User } from '../models/user.model';
+import { Observable } from 'rxjs';
+
+interface TokenResponse {
+  token: string;
+  expiresIn: number;
+}
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+  getUserIdFromToken(): string | null {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+      const decoded: any = jwtDecode(token);
+      return decoded.id || decoded.sub || null;
+    } catch (error) {
+      console.error('Erro ao decodificar o token:', error);
+      return null;
+    }
+  }
+
   private apiUrl = 'http://localhost:9090/api';
 
   constructor(private http: HttpClient) {}
 
-  login(cpf: string, password: string) {
-    return this.http.post(`${this.apiUrl}/auth/login`, {
+  login(cpf: string, passwordHash: string) {
+    return this.http.post<TokenResponse>(`${this.apiUrl}/auth/login`, {
       cpf,
-      passwordHash: password,
+      passwordHash,
     });
   }
 
@@ -40,7 +61,6 @@ export class AuthService {
   }
 
   createUser(data: {
-
     name: string;
     email: string;
     password: string;
@@ -48,7 +68,7 @@ export class AuthService {
     cpf: string;
     phone: string;
   }) {
-    return this.http.post(`${this.apiUrl}/responsible/signup`, {
+    return this.http.post(`${this.apiUrl}/responsible/auth/signup`, {
       name: data.name,
       email: data.email,
       password: data.password,
@@ -58,14 +78,13 @@ export class AuthService {
     });
   }
 
-  getUserByID(id: string) {
-    return this.http.get(`${this.apiUrl}/users/${id}`);
+  getUserByID(id: string): Observable<User> {
+    return this.http.get<User>(`${this.apiUrl}/users/${id}`);
   }
 
   deleteUser(id: string) {
     return this.http.delete(`${this.apiUrl}/users/${id}`);
   }
-
 
   // dps ve se isso vai ser usado
   verifyCNH(data: { documentPDF: File }) {
@@ -75,7 +94,7 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/driver/verifyCNH`, formData);
   }
 
-  sendCode(email: string ) {
+  sendCode(email: string) {
     return this.http.post(
       `${this.apiUrl}/auth/send-verification-code?email=${encodeURIComponent(email)}`,
       {},
@@ -83,9 +102,6 @@ export class AuthService {
   }
 
   verifyEmail(data: { email: string; code: string }) {
-    return this.http.post(
-      `${this.apiUrl}/auth/verify-email?email=${encodeURIComponent(data.email)}&code=${encodeURIComponent(data.code)}`,
-      {},
-    );
+    return this.http.post(`${this.apiUrl}/auth/verify-email`, data, { responseType: 'text' });
   }
 }

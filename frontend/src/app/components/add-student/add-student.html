@@ -1,42 +1,76 @@
 <div class="add-container">
+  @if (etapa === 'form') {
+    <app-header titulo="Suas informações" (voltarEvent)="voltar()"> </app-header>
 
-  <div class="header">
-    <button class="back-button" (click)="voltar()">
-      <img src="/Back.png" alt="">
-    </button>
-    <h1>Suas informacoes</h1>
-  </div>
-
-  <div class="photo-card" (click)="abrirBottomSheet()">
-    <div class="photo-content">
-      <img src="/Camera.png" alt="" class="camera-icon">
-      <p>Coloque uma foto de seu dependente</p>
-    </div>
-  </div>
-
-  <form class="form" (ngSubmit)="pronto()">
-    <div class="field">
-      <label>Nome do dependente</label>
-      <input type="text" placeholder="Nome do dependente" [(ngModel)]="enteredName" name="name">
+    <div class="photo-card" (click)="abrirBottomSheet()">
+      <div class="photo-content">
+        <img src="/Camera.png" alt="" class="camera-icon" />
+        <p>Coloque uma foto de seu dependente</p>
+      </div>
     </div>
 
-    <div class="field">
-      <label>Data de nascimento</label>
-      <input type="text" placeholder="00/00/0000" [(ngModel)]="enteredBirthdate" name="birthdate">
+    <form class="form" >
+      <div class="field">
+        <label>Nome do dependente</label>
+        <input type="text" placeholder="Nome do dependente" [(ngModel)]="enteredName" name="name" />
+      </div>
+
+      <div class="field">
+        <label>Data de nascimento</label>
+        <input
+          type="text"
+          placeholder="00/00/0000"
+          [(ngModel)]="enteredBirthdate"
+          name="birthdate"
+        />
+      </div>
+
+      <div class="field">
+        <label>Observacoes</label>
+        <textarea
+          placeholder="Coloque aqui informacoes necessarias que o motorista precise saber sobre seu dependente. Ex: Auxilio para subir na van, Tomar remedios."
+          [(ngModel)]="enteredObservacoes"
+          name="observacoes"
+          maxlength="1200"
+        >
+        </textarea>
+        <span class="counter">{{ enteredObservacoes.length }}/{{ maxObs }}</span>
+      </div>
+
+      <div class="field">
+        <label for="relationType">Tipo de relação</label>
+
+        <select id="relationType" [(ngModel)]="enteredRelationType" name="relationType" required>
+          <option value="" disabled class="">Selecione uma opção</option>
+          <option value="FINANCIAL">Financeiro</option>
+          <option value="LEGAL">Legal</option>
+          <option value="WITHDRAWAL">Retirada</option>
+        </select>
+      </div>
+
+      <button class="btn-submit" type="button" (click)="pronto()">Pronto</button>
+    </form>
+  }
+
+  @if (etapa === 'code') {
+    <app-header titulo="Suas informaçoes" (voltarEvent)="voltar()" />
+
+    <div class="code-result">
+      <p class="code-instrucao">
+        Envie este codigo para o motorista vincular o dependente <strong>{{ enteredName }}</strong
+        >:
+      </p>
+
+      <div class="code-box">
+        <span>{{ codigoGerado }}</span>
+        <button type="button" class="btn-copy" (click)="copiarCodigo()">
+          {{ copiado ? 'Copiado!' : 'Copiar' }}
+        </button>
+      </div>
+
+      <button class="btn-submit" type="button" (click)="concluir()">Concluir</button>
     </div>
-
-    <div class="field">
-      <label>Observacoes</label>
-      <textarea
-        placeholder="Coloque aqui informacoes necessarias que o motorista precise saber sobre seu dependente. Ex: Auxilio para subir na van, Tomar remedios."
-        [(ngModel)]="enteredObservacoes" name="observacoes" maxlength="1200">
-      </textarea>
-      <span class="counter">{{ enteredObservacoes.length }}/{{ maxObs }}</span>
-    </div>
-
-    <button class="btn-submit" type="submit">Pronto</button>
-  </form>
-
+  }
 </div>
 
 @if (mostrarBottomSheet) {
@@ -44,12 +78,12 @@
   <div class="bottom-sheet">
     <h2>Selecione de onde vem a foto</h2>
     <div class="sheet-options">
-      <button class="sheet-btn">
-        <img src="/Add%20Image.svg" alt="">
+      <button class="sheet-btn" (click)="fecharBottomSheet()">
+        <img src="/Add%20Image.svg" alt="" />
         Galeria
       </button>
-      <button class="sheet-btn">
-        <img src="/Camera.png" alt="">
+      <button class="sheet-btn" (click)="fecharBottomSheet()">
+        <img src="/Camera.png" alt="" />
         Tirar com a camera
       </button>
     </div>

@@ -7,6 +7,8 @@ import { HomeScreen } from './pages/home-screen/home-screen';
 import { AddStudent } from './components/add-student/add-student';
 import { DriverHome } from './pages/driver-home/driver-home';
 import { DriverRoute } from './pages/driver-route/driver-route';
+import { StudentCode } from './components/student-code/student-code';
+import { Dependentes } from './components/dependentes/dependentes';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -17,4 +19,6 @@ export const routes: Routes = [
   { path: 'add-student', component: AddStudent },
   { path: 'driver-home', component: DriverHome },
   { path: 'driver-route', component: DriverRoute },
+  { path: 'student-code', component: StudentCode },
+  { path: 'dependentes', component: Dependentes },
 ];
