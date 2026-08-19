@@ -40,7 +40,7 @@ public class StudentService {
             StudentResponsible studentResponsible = new StudentResponsible();
             studentResponsible.setStudent(student);
             studentResponsible.setRelationType(dto.relationType());
-            studentResponsible.setAdmin(true)   ;
+            studentResponsible.setAdmin(true);
 
             //obrigado felipe já ia fica maluco
             Responsible responsible = responsibleRepository.findByUserCpf(cpf)
