@@ -1,56 +1,35 @@
 <div class="cnh-container">
-  <div class="header">
-    <button class="back-button" (click)="voltar()">
-      <img src="/Back.png" alt="">
-    </button>
-    <h1>Validação de CNH</h1>
-  </div>
 
+  <app-header titulo="Validacao de CNH" (voltarEvent)="voltar()" />
 
   <div class="upload-card" (click)="abrirBottomSheet()">
     <div class="upload-content">
       <div class="upload-icon">
         <img src="/AddFile.png" alt="">
       </div>
-
-
-  @if (registerService.selectedFile) {
-      <p>{{ registerService.selectedFile.name }}</p>
-  } @else {
-      <p>Envie sua CNH para validação</p>
-  }
-
+      @if (registerService.selectedFile) {
+        <p>{{ registerService.selectedFile.name }}</p>
+      } @else {
+        <p>Envie sua CNH para validação</p>
+      }
     </div>
   </div>
 
-   <button class="btn-delete" (click)="delete()" >Excluir PDF</button>
+  <button class="btn-delete" (click)="delete()">Excluir PDF</button>
   <button class="btn-submit" (click)="pronto()">Pronto</button>
+
 </div>
 
-<!-- Bottom Sheet -->
 @if (mostrarBottomSheet) {
   <div class="overlay" (click)="fecharBottomSheet()"></div>
   <div class="bottom-sheet">
     <h2>Selecione de onde vem sua CNH</h2>
     <div class="sheet-options">
       <button class="sheet-btn" (click)="fileInput.click()">
-  <img src="/AddFile.png" alt="">
-  Enviar PDF
-</button>
-
-    <input
-    #fileInput
-  type="file"
-  accept=".pdf"
-  hidden
-  (change)="onFileSelected($event)"
->
-
-      <!-- <button class="sheet-btn" (click)="onUploadConcluido()">
-        <img src="/Camera.png" alt="">
-        Tirar com a câmera
-      </button> -->
+        <img src="/AddFile.png" alt="">
+        Enviar PDF
+      </button>
+      <input #fileInput type="file" accept=".pdf" hidden (change)="onFileSelected($event)">
     </div>
-
   </div>
 }

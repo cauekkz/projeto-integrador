@@ -24,8 +24,7 @@ public class ResponsibleController {
 
     @PostMapping("/auth/signup")
     public ResponsibleResponseDTO signUp(@RequestBody ResponsibleRequestDTO responsibleRequestDTO){
-        ResponsibleResponseDTO response = responsibleService.createResponsible(responsibleRequestDTO);
-        emailVerificationService.generateAndSendCode("verificationEmail:email:" + response.email(), response.email());
-        return response;
+        return responsibleService.createResponsible(responsibleRequestDTO);
+
     }
 }

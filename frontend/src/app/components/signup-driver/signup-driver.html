@@ -1,11 +1,6 @@
 @if (etapa === 1) {
   <div class="form-container">
-    <div class="header">
-      <button class="back-button" (click)="goBack()">
-        <img src="/Back.png" alt="" />
-      </button>
-      <h1>Suas informações</h1>
-    </div>
+    <app-header titulo="Suas informações" (voltarEvent)="voltar()" />
     <form class="form" (ngSubmit)="signup()">
       <div class="field">
         <label>Nome do motorista</label>
