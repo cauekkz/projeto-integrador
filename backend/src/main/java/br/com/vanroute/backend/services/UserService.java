@@ -86,7 +86,9 @@ public class UserService {
         User user = userRepository.findByCpf(cpf)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         emailVerificationService.verifyCode(REDIS_KEY, code);
-        user.setPasswordHash(passwordEncoder.encode(password));
+        if(password != null){
+            user.setPasswordHash(passwordEncoder.encode(password));
+        }
         userRepository.save(user);
         return "Password changed";
     }
