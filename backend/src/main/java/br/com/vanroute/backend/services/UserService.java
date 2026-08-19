@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.dtos.user.ForgotPasswordRequest;
 import br.com.vanroute.backend.dtos.user.UpdateUser;
 import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
 import br.com.vanroute.backend.models.user.User;
@@ -82,12 +83,12 @@ public class UserService {
         return "User updated successfully";
     }
 
-    public String forgetPassword(String cpf, String password, String code){
+    public String forgetPassword(String cpf, ForgotPasswordRequest forgotPasswordRequest){
         User user = userRepository.findByCpf(cpf)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        emailVerificationService.verifyCode(REDIS_KEY, code);
-        if(password != null){
-            user.setPasswordHash(passwordEncoder.encode(password));
+        emailVerificationService.verifyCode(REDIS_KEY, forgotPasswordRequest.getCode());
+        if(forgotPasswordRequest.getNewPassword() != null){
+            user.setPasswordHash(passwordEncoder.encode(forgotPasswordRequest.getNewPassword()));
         }
         userRepository.save(user);
         return "Password changed";
