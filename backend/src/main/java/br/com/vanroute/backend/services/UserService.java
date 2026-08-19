@@ -82,6 +82,16 @@ public class UserService {
         return "User updated successfully";
     }
 
+    public String forgetPassword(String cpf, String password, String code){
+        User user = userRepository.findByCpf(cpf)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        emailVerificationService.verifyCode(REDIS_KEY, code);
+        user.setPasswordHash(passwordEncoder.encode(password));
+        userRepository.save(user);
+        return "Password changed";
+    }
+
+
     public Optional<User> findById(UUID id) {
         return userRepository.findById(id);
     }
