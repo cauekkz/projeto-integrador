@@ -1,6 +1,5 @@
 package br.com.vanroute.backend.models.route;
 
-import br.com.vanroute.backend.models.route.enums.RouteShift;
 import jakarta.persistence.*;
 import java.util.UUID;
 
@@ -15,9 +14,6 @@ public class Route {
     @Column(nullable = false)
     private String name;
 
-    @Enumerated(EnumType.STRING)
-    @Column()
-    private RouteShift shift;
 
     public UUID getId() {
         return id;
@@ -35,12 +31,6 @@ public class Route {
         this.name = name;
     }
 
-    public RouteShift getShift() {
-        return shift;
-    }
-
-    public void setShift(RouteShift shift) {
-        this.shift = shift;
-    }
+  
 
 }
