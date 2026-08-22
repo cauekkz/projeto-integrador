@@ -25,3 +25,9 @@ spring:
   jwt:
     expiration: ${JWT_EXPIRATION:900000}
     key: ${JWT_KEY:4QcYHiOKv6R1GIost25MwdDJNLayEubr3kj9nW8AxZqSFX0gfmhUTepCBPlV7z}
+  
+  data:
+    web:
+      pageable:
+        default-page-size: 10
+        max-page-size: 100
