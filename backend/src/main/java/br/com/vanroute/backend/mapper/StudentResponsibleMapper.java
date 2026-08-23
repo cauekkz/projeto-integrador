@@ -6,7 +6,6 @@ import br.com.vanroute.backend.dtos.student.StudentResponsibleResponseDTO;
 import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
 import br.com.vanroute.backend.models.address.Address;
 import br.com.vanroute.backend.models.student.Student;
-import br.com.vanroute.backend.models.student.StudentAddress;
 import br.com.vanroute.backend.models.user.Responsible;
 import org.springframework.stereotype.Component;
 
@@ -15,16 +14,20 @@ public class StudentResponsibleMapper {
 
     public StudentResponsibleResponseDTO toResponse(
             Student student,
+            br.com.vanroute.backend.models.student.StudentAddress studentAddress,
             Responsible responsible
     ) {
+
         return new StudentResponsibleResponseDTO(
-                toStudentResponse(student),
+                toStudentResponse(student, studentAddress),
                 toResponsibleResponse(responsible)
         );
     }
-    private StudentResponseDTO toStudentResponse(Student student) {
 
-        StudentAddress studentAddress = student.getStudentAddress();
+    private StudentResponseDTO toStudentResponse(
+            Student student,
+            br.com.vanroute.backend.models.student.StudentAddress studentAddress
+    ) {
 
         StudentAddressResponseDTO addressResponse = null;
 
@@ -42,7 +45,7 @@ public class StudentResponsibleMapper {
     }
 
     private StudentAddressResponseDTO toStudentAddressResponse(
-            StudentAddress studentAddress
+            br.com.vanroute.backend.models.student.StudentAddress studentAddress
     ) {
 
         Address address = studentAddress.getAddress();

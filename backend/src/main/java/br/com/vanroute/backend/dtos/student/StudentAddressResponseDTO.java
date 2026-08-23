@@ -2,7 +2,7 @@ package br.com.vanroute.backend.dtos.student;
 
 import java.util.UUID;
 
-public record AddressResponseDTO(
+public record StudentAddressResponseDTO(
         UUID id,
         String weekdays,
         String street,
