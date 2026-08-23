@@ -1,9 +1,12 @@
 package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.models.chat.Chat;
+import br.com.vanroute.backend.dtos.chat.ChatResponseDTO;
 import br.com.vanroute.backend.repositories.ChatRepository;
 import br.com.vanroute.backend.repositories.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 @Service
@@ -40,5 +43,16 @@ public class ChatService {
         if (!chatRepository.existsByChatIdAndUserId(chatId, userId)) {
             throw new IllegalArgumentException("Você não tem acesso a este chat.");
         }
+    }
+
+    public Chat getChatById(UUID chatId) {
+        return chatRepository.findById(chatId)
+            .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Chat não encontrado"));
+    }
+    
+    public Page<ChatResponseDTO> getUserChats(String cpf, Pageable pageable) {
+        UUID userId = userRepository.findByCpf(cpf).orElseThrow(() -> new RuntimeException("Usuário não encontrado")).getId();
+        return chatRepository.findChatsByUserIdOrderByRecentMessage(userId, pageable)
+                .map(chat -> ChatResponseDTO.from(chat, cpf));
     }
 }

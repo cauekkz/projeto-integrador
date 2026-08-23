@@ -1,5 +1,5 @@
 package br.com.vanroute.backend.models.chat;
-
+import br.com.vanroute.backend.models.chat.enums.MessageType;
 import br.com.vanroute.backend.models.chat.enums.AttachmentType;
 import br.com.vanroute.backend.models.user.User;
 import jakarta.persistence.*;
@@ -37,6 +37,13 @@ public class ChatMessage {
 
     @Column(name = "read_at")
     private LocalDateTime readAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "message_type")
+    private MessageType messageType;
+
+    @Column(columnDefinition = "jsonb")
+    private String payload;
 
     public UUID getId() {
         return id;
@@ -100,5 +107,21 @@ public class ChatMessage {
 
     public void setReadAt(LocalDateTime readAt) {
         this.readAt = readAt;
+    }
+
+    public MessageType getMessageType() {
+        return messageType;
+    }
+
+    public void setMessageType(MessageType messageType) {
+        this.messageType = messageType;
+    }
+
+    public String getPayload() {
+        return payload;
+    }
+
+    public void setPayload(String payload) {
+        this.payload = payload;
     }
 }
