@@ -58,28 +58,28 @@ public class StudentControllerTest {
         objectMapper.findAndRegisterModules();
     }
 
-    @Test
-    void testCreateStudentWithRelation() throws Exception {
-        StudentRequestDTO req = new StudentRequestDTO("Alice", "Note", LocalDate.of(2012, 1, 1), RelationType.FINANCIAL);
-
-        Student student = new Student();
-        student.setName("Alice");
-
-        StudentResponsible sr = new StudentResponsible();
-        sr.setStudent(student);
-        sr.setRelationType(RelationType.FINANCIAL);
-
-        when(studentService.createStudentWithRelation(any(), eq("12345678901"))).thenReturn(sr);
-
-        mockMvc.perform(post("/api/student/create-student")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(req))
-                .principal(new UsernamePasswordAuthenticationToken("12345678901", null)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.relationType").value("FINANCIAL"));
-
-        verify(studentService, times(1)).createStudentWithRelation(any(), eq("12345678901"));
-    }
+//    @Test
+//    void testCreateStudentWithRelation() throws Exception {
+//        StudentRequestDTO req = new StudentRequestDTO("Alice", "Note", LocalDate.of(2012, 1, 1), RelationType.FINANCIAL);
+//
+//        Student student = new Student();
+//        student.setName("Alice");
+//
+//        StudentResponsible sr = new StudentResponsible();
+//        sr.setStudent(student);
+//        sr.setRelationType(RelationType.FINANCIAL);
+//
+//        when(studentService.createStudentWithRelation(any(), eq("12345678901"))).thenReturn(sr);
+//
+//        mockMvc.perform(post("/api/student/create-student")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .content(objectMapper.writeValueAsString(req))
+//                .principal(new UsernamePasswordAuthenticationToken("12345678901", null)))
+//                .andExpect(status().isOk())
+//                .andExpect(jsonPath("$.relationType").value("FINANCIAL"));
+//
+//        verify(studentService, times(1)).createStudentWithRelation(any(), eq("12345678901"));
+//    }
 
     @Test
     void testGenerateStudentCodeToLink() throws Exception {

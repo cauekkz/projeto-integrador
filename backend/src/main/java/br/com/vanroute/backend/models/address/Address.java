@@ -28,10 +28,13 @@ public class Address {
     @Column(length = 50)
     private String state;
 
-    @Column(columnDefinition = "POINT")
-    private String coordinates;
+    @Column
+    private Double latitude;
 
-    public UUID getId() {
+    @Column
+    private Double longitude;
+
+        public UUID getId() {
         return id;
     }
 
@@ -87,11 +90,19 @@ public class Address {
         this.state = state;
     }
 
-    public String getCoordinates() {
-        return coordinates;
+    public Double getLatitude() {
+        return latitude;
     }
 
-    public void setCoordinates(String coordinates) {
-        this.coordinates = coordinates;
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }

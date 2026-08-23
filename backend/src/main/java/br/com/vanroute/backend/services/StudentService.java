@@ -1,5 +1,9 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.dtos.student.StudentResponsibleResponseDTO;
+import br.com.vanroute.backend.models.address.Address;
+import br.com.vanroute.backend.models.student.StudentAddress;
+import br.com.vanroute.backend.repositories.StudentAddressRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,32 +25,47 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final ResponsibleRepository responsibleRepository;
     private final StudentResponsibleRepository studentResponsibleRepository;
+    private final AddressService addressService;
+    private final StudentAddressRepository studentAddressRepository;
+    private final br.com.vanroute.backend.mappers.StudentResponsibleMapper studentResponsibleMapper;
 
 
-    public StudentService(StudentRepository studentRepository, ResponsibleRepository responsibleRepository, StudentResponsibleRepository studentResponsibleRepository       ) {
+    public StudentService(StudentRepository studentRepository, ResponsibleRepository responsibleRepository, StudentResponsibleRepository studentResponsibleRepository, AddressService addressService, StudentAddressRepository studentAddressRepository, br.com.vanroute.backend.mappers.StudentResponsibleMapper studentResponsibleMapper) {
         this.studentRepository = studentRepository;
         this.responsibleRepository = responsibleRepository;
         this.studentResponsibleRepository = studentResponsibleRepository;
-        
+        this.addressService = addressService;
+        this.studentAddressRepository = studentAddressRepository;
+        this.studentResponsibleMapper = studentResponsibleMapper;
     }
 
-        public StudentResponsible createStudentWithRelation(StudentRequestDTO dto, String cpf){
+        public StudentResponsibleResponseDTO createStudentWithRelation(StudentRequestDTO dto, String cpf){
             Student student = new Student();
             student.setName(dto.name());
             student.setNotes(dto.notes());
             student.setBirthDate(dto.birthDate());
             studentRepository.save(student);
-            
+            Address address = addressService.addAddress(dto.address());
+            StudentAddress studentAddress = new StudentAddress();
+            studentAddress.setAddress(address);
+            studentAddress.setStudent(student);
+            studentAddress.setWeekdays(dto.weekdays());
+            studentAddressRepository.save(studentAddress);
+
             StudentResponsible studentResponsible = new StudentResponsible();
             studentResponsible.setStudent(student);
             studentResponsible.setRelationType(dto.relationType());
-            studentResponsible.setAdmin(true)   ;
+            studentResponsible.setAdmin(true);
 
             //obrigado felipe já ia fica maluco
             Responsible responsible = responsibleRepository.findByUserCpf(cpf)
                     .orElseThrow(() -> new RuntimeException("Responsible not found"));
             studentResponsible.setResponsible(responsible);
-        return studentResponsibleRepository.save(studentResponsible);
+            return studentResponsibleMapper.toResponse(
+                    student,
+                    studentAddress,
+                    responsible
+            );
         }    
 
         public Page<Student> getAllStudentsResponsible(AllStudentsFilterRequestDTO filter,Pageable pageable,String cpf){

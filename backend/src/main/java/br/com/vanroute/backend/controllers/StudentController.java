@@ -1,4 +1,5 @@
 package br.com.vanroute.backend.controllers;
+import br.com.vanroute.backend.dtos.student.StudentResponsibleResponseDTO;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -34,8 +35,8 @@ public class StudentController {
     }
 
     @PostMapping("/create-student")
-    public StudentResponsible createStudentWithRelation(@Valid @RequestBody StudentRequestDTO studentRequestDTO,
-            Authentication authentication) {
+    public StudentResponsibleResponseDTO createStudentWithRelation(@Valid @RequestBody StudentRequestDTO studentRequestDTO,
+                                                                   Authentication authentication) {
         String cpf = authentication.getName();
         return studentService.createStudentWithRelation(studentRequestDTO, cpf);
     }

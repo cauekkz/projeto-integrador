@@ -1,4 +1,9 @@
 package br.com.vanroute.backend.dtos.student;
 
-public class StudentResponsibleResponseDTO {
+import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
+
+public record StudentResponsibleResponseDTO(
+        StudentResponseDTO studentResponseDTO,
+        ResponsibleResponseDTO responsibleResponseDTO
+) {
 }
