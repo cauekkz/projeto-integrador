@@ -11,7 +11,7 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './signup-driver.css',
 })
 export class SignupDriver {
-  @Output() cadastroConcluidoEvent = new EventEmitter<void>();
+  @Output() cadastroConcluidoEvent = new EventEmitter<string>();
   @Output() voltarEvent = new EventEmitter<void>();
   constructor(
     protected registerService: RegisterService,
@@ -78,7 +78,7 @@ export class SignupDriver {
 
     this.authService.createDriver(data).subscribe({
       next: (response) => {
-        // router e get user, pegar token e user
+        this.cadastroConcluidoEvent.emit(this.enteredEmail);
         console.log(response);
       },
       error: (err) => {
