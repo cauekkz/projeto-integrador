@@ -1,6 +1,5 @@
 package br.com.vanroute.backend.services;
 
-import java.security.SecureRandom;
 import java.time.Duration;
 
 import org.springframework.data.redis.core.RedisTemplate;

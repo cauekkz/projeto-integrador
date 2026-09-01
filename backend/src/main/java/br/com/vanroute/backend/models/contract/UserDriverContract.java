@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.models.contract;
 
+import br.com.vanroute.backend.models.school.School;
 import br.com.vanroute.backend.models.student.Student;
 import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.models.user.Responsible;
@@ -25,6 +26,10 @@ public class UserDriverContract {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "driver_id", nullable = false)
     private Driver driver;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "school_id", nullable = false)
+    private School school;
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "contract_id", nullable = false)
@@ -69,4 +74,12 @@ public class UserDriverContract {
     public void setContract(Contract contract) {
         this.contract = contract;
     }
+        public School getSchool() {
+        return school;
+    }
+
+    public void setSchool(School school) {
+        this.school = school;
+    }
+
 }
