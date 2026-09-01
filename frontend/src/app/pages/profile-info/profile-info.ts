@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
@@ -14,7 +14,17 @@ import { Header } from '../../components/header/header';
 export class ProfileInfo implements OnInit {
   tipoUsuario = '';
   modoEdicao = false;
-  usuario: any = null;
+
+  // INICIALIZE COMO OBJETO VAZIO em vez de 'null'
+  // Isso impede que o [(ngModel)] trave a renderização do template
+  usuario: any = {
+    name: '',
+    document: '',
+    email: '',
+    phone: '',
+    address: '',
+    photoUrl: '',
+  };
 
   enteredName = '';
   enteredEmail = '';
@@ -32,10 +42,10 @@ export class ProfileInfo implements OnInit {
     if (id) {
       this.authService.getUserByID(id).subscribe({
         next: (user) => {
-          this.usuario = user;
-          this.enteredName = user.name || '';
-          this.enteredEmail = user.email || '';
-          this.enteredPhone = user.phone || '';
+          this.usuario = user || {};
+          this.enteredName = user?.name || '';
+          this.enteredEmail = user?.email || '';
+          this.enteredPhone = user?.phone || '';
         },
         error: (err) => console.error(err),
       });

@@ -46,9 +46,11 @@
           <option value="LEGAL">Legal</option>
           <option value="WITHDRAWAL">Retirada</option>
         </select>
-      </div>
-
+      </div >
+      <div class="bottom-actions">
       <app-button texto="Pronto" tipo="primary" (clickEvent)="pronto()"></app-button>
+      <app-button texto="Tenho um Codigo" tipo="secondary" (clickEvent)="vincularDependente()"></app-button>
+      </div>
     </form>
   }
 
@@ -69,6 +71,7 @@
       </div>
 
       <app-button texto="Concluir" tipo="primary" (clickEvent)="concluir()"></app-button>
+
     </div>
   }
 </div>
