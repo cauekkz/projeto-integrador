@@ -30,40 +30,10 @@
 }
 
 .button-group {
-  margin-top: 60px;
-  width: 100%;
-  max-width: 500px;
 
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.btn {
-  height: 60px;
-  border-radius: 14px;
-  font-size: 1.1rem;
-  cursor: pointer;
-  box-shadow:
-    0 2px 8px rgba(0, 0, 0, 0.08),
-    0 6px 20px rgba(0, 0, 0, 0.06);
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 
-.btn-primary {
-  background: #1f6ae5;
-  color: #fff;
-  border: none;
-}
-
-.btn-secondary {
-  background: #fff;
-  color: #1f6ae5;
-  border: 1px solid #1f6ae5;
-}
 @media (max-width: 480px) {
 
   .container {
@@ -96,20 +66,13 @@
   }
 
   .button-group {
-    margin-top: auto; /* joga os botões para baixo */
+    margin-top: auto;
 
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+
   }
 
-  .btn {
-    width: 100%;
-    height: 54px;
 
-    border-radius: 14px;
-    font-size: 1rem;
-    font-weight: 500;
-  }
 }

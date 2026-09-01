@@ -8,32 +8,6 @@
   padding: 24px;
 }
 
-.header {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-header p {
-  text-align: right;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1f2937;
-  margin-right: 0;
-}
-
-.back-button {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-}
-
-.back-button img {
-  width: 35px;
-  height: 35px;
-  object-fit: contain;
-}
 
 .content {
   flex: 1;
@@ -96,29 +70,6 @@ header p {
   border-bottom-color: #1565d8;
 }
 
-.btn-confirmar {
-  width: 100%;
-  height: 56px;
-
-  border: none;
-  border-radius: 14px;
-
-  background: #1565d8;
-  color: #ffffff;
-
-  font-size: 1rem;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
-
-  margin-top: auto;
-}
-
-.btn-confirmar:hover {
-  background: #0d56c7;
-}
 
 
 /* Responsivo para telas menores */

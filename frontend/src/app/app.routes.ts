@@ -9,6 +9,8 @@ import { DriverHome } from './pages/driver-home/driver-home';
 import { DriverRoute } from './pages/driver-route/driver-route';
 import { StudentCode } from './components/student-code/student-code';
 import { Dependentes } from './components/dependentes/dependentes';
+import { Chat } from './pages/chat/chat';
+import { ProfileInfo } from './pages/profile-info/profile-info';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -21,4 +23,6 @@ export const routes: Routes = [
   { path: 'driver-route', component: DriverRoute },
   { path: 'student-code', component: StudentCode },
   { path: 'dependentes', component: Dependentes },
+  { path: 'chat', component: Chat },
+  { path: 'profile-info/:tipo', component: ProfileInfo },
 ];

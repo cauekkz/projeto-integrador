@@ -2,11 +2,12 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CodeInput } from '../code-input/code-input';
 import { Header } from '../../components/header/header';
+import { Button } from '../button/button';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [FormsModule, CodeInput,Header],
+  imports: [FormsModule, CodeInput, Header, Button],
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.css',
 })

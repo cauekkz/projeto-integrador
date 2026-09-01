@@ -1,0 +1,12 @@
+<div [ngClass]="['btn-wrapper', 'pos-' + posicao]">
+  <button
+    [ngClass]="['btn', 'btn-' + tipo]"
+    [disabled]="disabled"
+    (click)="onClick()">
+    <ng-content></ng-content>
+    @if (texto) {
+      {{ texto }}
+    }
+  </button>
+</div>
+

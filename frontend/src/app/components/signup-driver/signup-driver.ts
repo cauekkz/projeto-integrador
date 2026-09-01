@@ -3,11 +3,12 @@ import { RegisterService } from '../../services/register.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Header } from '../../components/header/header';
+import { Button } from '../../components/button/button';
 
 @Component({
   selector: 'app-signup-driver',
   standalone: true,
-  imports: [FormsModule, Header],
+  imports: [FormsModule, Header, Button],
   templateUrl: './signup-driver.html',
   styleUrl: './signup-driver.css',
 })

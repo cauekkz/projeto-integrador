@@ -1,6 +1,6 @@
 @if (etapa === 1) {
   <div class="form-container">
-    <app-header titulo="Suas informações" (voltarEvent)="voltar()" />
+    <app-header titulo="Cadsatro motoristas" (voltarEvent)="voltar()" />
     <form class="form" (ngSubmit)="signup()">
       <div class="field">
         <label>Nome do motorista</label>
@@ -61,7 +61,13 @@
           <p class="error-message">Confirme sua senha!</p>
         }
       </div>
-      <button class="btn-primary" type="submit">Finalizar cadastro</button>
+      <app-button
+        texto="Finalizar cadastro"
+        tipo="primary"
+        posicao="bottom">
+      </app-button>
+
+      <!--      <button class="btn-primary" type="submit">Finalizar cadastro</button>-->
     </form>
   </div>
 }

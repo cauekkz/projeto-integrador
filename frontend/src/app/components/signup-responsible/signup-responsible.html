@@ -1,5 +1,5 @@
 <div class="signup-container">
-  <app-header titulo="Validacao de CNH" (voltarEvent)="voltar()" />
+  <app-header titulo="Cadastrar responsavel" (voltarEvent)="voltar()" />
 
   <form class="form" (ngSubmit)="signup()">
     <div class="field">
@@ -74,6 +74,12 @@
         <p class="error-message">As senhas não são iguais!</p>
       }
     </div>
-    <button class="btn-submit" type="submit">Pronto</button>
+
+    <app-button
+      texto="Criar uma conta"
+      tipo="primary"
+      posicao="bottom">
+    </app-button>
+<!--    <button class="btn-submit" type="submit">Pronto</button>-->
   </form>
 </div>

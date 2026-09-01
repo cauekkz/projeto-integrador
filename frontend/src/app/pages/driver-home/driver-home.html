@@ -1,14 +1,12 @@
 <div class="screen">
-
   <div class="topbar">
     <div class="notif-wrapper">
       <div class="bell-btn">
         <i class="bi bi-bell"></i>
       </div>
-<!--      <span class="badge">99</span>-->
     </div>
 
-    <div class="user-info">
+    <div class="user-info" (click)="irParaPerfil()">
       <img src="/testee.jpg" class="avatar" alt="">
       <span class="name">Gustavo Gomez</span>
     </div>
@@ -17,47 +15,60 @@
   </div>
 
   <div class="content">
-    @if (temRota) {
-      <div class="rota-card" (click)="irParaRota()">
-        <div class="rota-status">
-          <span class="dot"></span>
-          <span class="status-text">Em rota</span>
+    <div class="driver-card-wrapper">
+      <div class="status-top">
+        <span class="dot"></span>
+        <span class="status-text">Em rota</span>
+      </div>
+
+      <div class="rota-card">
+        <div class="mapa-preview">
+          <img
+            src="/mapa-placeholder.jpg"
+            alt="Mapa da rota"
+            class="mapa-img"
+          />
         </div>
-        <p class="rota-label">teste</p>
-        <p class="rota-titulo">teste</p>
-        <div class="rota-info">
-          <div class="info-item">
-            <i class="bi bi-people"></i>
-            <span>x</span>
+
+        <div class="rota-footer">
+          <p class="rota-titulo">Indo para casa de Adreas Pereira</p>
+          <p class="rota-subtitulo">você tem 3 passageiros</p>
+        </div>
+
+        <div class="metrics-card">
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <i class="bi bi-people-fill"></i>
+              <span>3</span>
+            </div>
+
+            <div class="metric-box">
+              <i class="bi bi-geo-alt-fill"></i>
+              <span>6 km</span>
+            </div>
+
+            <div class="metric-box">
+              <i class="bi bi-clock-fill"></i>
+              <span>22 min</span>
+            </div>
           </div>
-          <div class="info-item">
-            <i class="bi bi-geo-alt"></i>
-            <span>x</span>
-          </div>
-          <div class="info-item">
-            <i class="bi bi-clock"></i>
-            <span>x</span>
+
+          <div class="chat-btn">
+            <i class="bi bi-chat-dots-fill"></i>
+            <span class="chat-badge">1</span>
           </div>
         </div>
       </div>
-    }
+    </div>
   </div>
 
-  <div class="bottombar">
-
-    <button class="tab active">
-      <i class="down bi bi-house-door-fill"></i>
-    </button>
-
-    <button class="tab">
-      <i class="down bi bi-house-door-fill"></i>
-    </button>
-
-    <button class="tab">
-      <i class="down bi bi-gear-wide-connected"></i>
-    </button>
-
-  </div>
-
-
+  <app-footer tipoUsuario="motorista" abaAtiva="home"></app-footer>
 </div>
+
+@if (mostrarPerfil) {
+  <app-profile-select
+    tipoUsuario="motorista"
+    [usuario]="usuarioLogado"
+    (fecharEvent)="fecharPerfil()"
+  />
+}

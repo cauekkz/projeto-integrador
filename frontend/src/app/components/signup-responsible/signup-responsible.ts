@@ -2,11 +2,13 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Header } from '../../components/header/header';
+import { Button } from '../button/button';
+import { CommonModule} from '@angular/common';
 
 @Component({
   selector: 'app-signup-responsible',
   standalone: true,
-  imports: [FormsModule, Header],
+  imports: [FormsModule, Header, Button, CommonModule],
   templateUrl: './signup-responsible.html',
   styleUrl: './signup-responsible.css',
 })

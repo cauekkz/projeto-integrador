@@ -2,13 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Header } from '../header/header';
+import { Button } from '../button/button';
 import { StudentService } from '../../services/student.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-dependentes',
   standalone: true,
-  imports: [CommonModule, Header, FormsModule],
+  imports: [CommonModule, Header, Button, FormsModule],
   templateUrl: './dependentes.html',
   styleUrl: './dependentes.css',
 })

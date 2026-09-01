@@ -27,19 +27,30 @@
         <p class="error-message">A senha e obrigatoria!</p>
       }
 
-      <button class="btn-login" type="submit">Entrar</button>
+      <app-button
+        texto="Entrar"
+        tipo="primary"
+        (clickEvent)="login()">
+      </app-button>
 
-      <button class="btn-forgot" type="button" (click)="mostrarForgotPassword = true">
-        Esqueceu sua senha?
-      </button>
+      <app-button
+        texto="Esqueceu sua senha?"
+        tipo="secondary"
+        (clickEvent)="mostrarForgotPassword = true">
+      </app-button>
 
     </form>
   </div>
 
-  <button class="btn-signup" (click)="irParaCadastro()">
-    Criar uma conta
-  </button>
+  <div class="bottom-container">
+    <app-button
+      texto="Criar uma conta"
+      tipo="secondary"
+      (clickEvent)="irParaCadastro()">
+    </app-button>
+  </div>
 </div>
+
 @if (mostrarForgotPassword) {
   <app-forgot-password (voltarEvent)="mostrarForgotPassword = false" />
 }

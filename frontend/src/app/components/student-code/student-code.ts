@@ -2,11 +2,12 @@ import { Component, ElementRef, QueryList, ViewChildren } from '@angular/core';
 import { Router } from '@angular/router';
 import { Header } from '../../components/header/header';
 import { StudentService } from '../../services/student.service';
+import { Button } from '../button/button';
 
 @Component({
   selector: 'app-student-code',
   standalone: true,
-  imports: [Header],
+  imports: [Header, Button],
   templateUrl: './student-code.html',
   styleUrl: './student-code.css',
 })

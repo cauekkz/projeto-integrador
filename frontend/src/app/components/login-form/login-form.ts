@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { ForgotPassword } from '../forgot-password/forgot-password';
 import { Header } from '../../components/header/header';
+import { Button } from '../../components/button/button';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login-form',
   standalone: true,
-  imports: [FormsModule, ForgotPassword, Header],
+  imports: [FormsModule, ForgotPassword, Header, Button, CommonModule],
   templateUrl: './login-form.html',
   styleUrl: './login-form.css',
 })

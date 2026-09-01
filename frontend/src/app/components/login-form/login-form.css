@@ -13,6 +13,15 @@
   gap: 20px;
 }
 
+.bottom-container {
+  margin-top: auto;
+  padding-top: 24px;
+  padding-bottom: 16px;
+  width: 100%;
+  max-width: 500px;
+  align-self: center;
+}
+
 .header h1 {
   flex: 1;
   text-align: center;
@@ -67,50 +76,13 @@ input {
   padding-left: 4px;
 }
 
-.btn-login {
-  width: 100%;
-  height: 56px;
-  border: none;
-  border-radius: 14px;
-  background: #1565d8;
-  color: white;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
-}
 
-.btn-forgot {
-  width: 220px;
-  height: 50px;
-  margin: 24px auto 0;
-  background: white;
-  border: 1px solid #bfc6d1;
-  border-radius: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.btn-signup {
-  width: 300px;
-  height: 56px;
-  margin: -40px auto 20px;
-  border-radius: 14px;
-  border: 1px solid #1565d8;
-  background: white;
-  color: #1565d8;
-  font-size: 1rem;
-  font-weight: 500;
-  box-shadow: 0 4px 12px rgba(21, 101, 216, 0.15);
-  cursor: pointer;
-}
 
 @media (max-width: 480px) {
 
   .login-container {
     padding: 24px 14px;
+    height: 100vh;
   }
 
   .header h1 {
@@ -131,25 +103,5 @@ input {
     height: 52px;
   }
 
-  .btn-login {
-    height: 52px;
-    position: fixed;
-    bottom: 24px;
-    left: 24px;
-    right: 24px;
-    width: calc(100% - 48px);
-  }
 
-  .btn-signup {
-    width: 100%;
-    position: fixed;
-    bottom: 80px;
-    left: 24px;
-    right: 24px;
-    width: calc(100% - 48px);
-  }
-
-  .btn-forgot {
-    width: 180px;
-  }
 }
