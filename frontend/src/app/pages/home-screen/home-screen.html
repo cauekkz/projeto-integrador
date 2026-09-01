@@ -5,46 +5,104 @@
         <div class="avatar notification">
           <i class="bi bi-bell"></i>
         </div>
+        <span class="badge">99</span>
       </div>
-      <div class="user-name">
-        <img [src]="usuarioLogado?.photoUrl || '/testee.jpg'" alt="Foto do usuário" />
-        <span>{{ usuarioLogado?.name || 'num foi' }}</span>
+
+      <div class="user-name" (click)="irParaPerfil()">
+        <img
+          [src]="usuarioLogado?.photoUrl || '/testee.jpg'"
+          alt="Foto do usuário"
+        />
+        <span>
+          {{ usuarioLogado?.name || 'num foi' }}
+        </span>
       </div>
     </div>
 
     <div class="role-info" (click)="abrirFluxoDependente()">
-
-      @if (meusDependentes.length == 0) {
+      @if (meusDependentes.length === 0) {
         <div class="avatar avatar1">
-          <img src="/addStudent.svg" alt="Adicionar estudante" />
+          <img
+            src="/addStudent.svg"
+            alt="Adicionar estudante"
+          />
         </div>
-        <span class="role">Responsável</span>
+        <span class="role">
+          Responsável
+        </span>
       } @else {
         <div class="avatar avatar1">
-          <img alt="Estudante" />
+          <img
+            src="/addStudent.svg"
+            alt="Estudante"
+          />
         </div>
-        <span class="role">Responsável</span>
+        <span class="role">
+          Responsável
+        </span>
       }
-
     </div>
   </div>
 
   <div class="content">
+    <div class="rota-card">
+      <div class="rota-header">
+        <span class="dot"></span>
+        <span class="status-text">
+          O motorista está chegando
+        </span>
+      </div>
 
-    <p class="empty-text">Nenhum dependente cadastrado ainda.</p>
+      <div class="mapa-preview">
+        <img
+          src="/mapa-placeholder.jpg"
+          alt="Mapa da rota"
+          class="mapa-img"
+        />
+      </div>
 
+      <div class="rota-footer">
+        <p class="rota-titulo">
+          Gustavo está a 22 minutos de você
+        </p>
+      </div>
 
+      <div class="van-card">
+        <img
+          src="/van.jpg"
+          class="van-img"
+          alt="Van"
+        />
+
+        <div class="van-info">
+          <p class="van-placa">
+            AVT-1914
+          </p>
+          <p class="van-desc">
+            Van com detalhe amarelo
+          </p>
+        </div>
+
+        <div class="van-notif">
+          <i class="bi bi-chat-fill"></i>
+          <span class="van-badge">
+            1
+          </span>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="bottombar">
-    <button class="tab active">
-      <i class="down bi bi-house-door-fill"></i>
-    </button>
-    <button class="tab">
-      <i class="down bi bi-house-door-fill"></i>
-    </button>
-    <button class="tab">
-      <i class="down bi bi-gear-wide-connected"></i>
-    </button>
-  </div>
+  <app-footer
+    tipoUsuario="responsavel"
+    abaAtiva="home">
+  </app-footer>
 </div>
+
+@if (mostrarPerfil) {
+  <app-profile-select
+    tipoUsuario="responsavel"
+    [usuario]="usuarioLogado"
+    (fecharEvent)="fecharPerfil()">
+  </app-profile-select>
+}

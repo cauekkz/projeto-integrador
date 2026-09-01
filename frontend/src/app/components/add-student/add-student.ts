@@ -2,12 +2,13 @@ import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Header } from '../header/header';
+import { Button } from '../button/button';
 import { StudentService } from '../../services/student.service';
 
 @Component({
   selector: 'app-add-student',
   standalone: true,
-  imports: [FormsModule, Header],
+  imports: [FormsModule, Header, Button],
   templateUrl: './add-student.html',
   styleUrl: './add-student.css',
 })

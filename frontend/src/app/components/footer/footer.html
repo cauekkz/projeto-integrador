@@ -1,0 +1,47 @@
+<div class="bottombar">
+  @if (tipoUsuario === 'responsavel') {
+    <button
+      class="tab"
+      [class.active]="abaAtiva === 'home'"
+      (click)="clicarHome()">
+      <i class="down bi bi-house-door-fill"></i>
+    </button>
+
+    <button
+      class="tab"
+      [class.active]="abaAtiva === 'meio'"
+      (click)="selecionarAba('meio')">
+      <i class="bi bi-chat-left-dots-fill"></i>
+    </button>
+
+    <button
+      class="tab"
+      [class.active]="abaAtiva === 'config'"
+      (click)="selecionarAba('config')">
+      <i class="down bi bi-gear-wide-connected"></i>
+    </button>
+  }
+
+  @if (tipoUsuario === 'motorista') {
+    <button
+      class="tab"
+      [class.active]="abaAtiva === 'home'"
+      (click)="clicarHome()">
+      <i class="down bi bi-house-door-fill"></i>
+    </button>
+
+    <button
+      class="tab"
+      [class.active]="abaAtiva === 'meio'"
+      (click)="selecionarAba('meio')">
+      <i class="down bi bi-map-fill"></i>
+    </button>
+
+    <button
+      class="tab"
+      [class.active]="abaAtiva === 'config'"
+      (click)="selecionarAba('config')">
+      <i class="down bi bi-gear-wide-connected"></i>
+    </button>
+  }
+</div>

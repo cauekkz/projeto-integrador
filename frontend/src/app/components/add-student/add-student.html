@@ -48,7 +48,7 @@
         </select>
       </div>
 
-      <button class="btn-submit" type="button" (click)="pronto()">Pronto</button>
+      <app-button texto="Pronto" tipo="primary" (clickEvent)="pronto()"></app-button>
     </form>
   }
 
@@ -68,7 +68,7 @@
         </button>
       </div>
 
-      <button class="btn-submit" type="button" (click)="concluir()">Concluir</button>
+      <app-button texto="Concluir" tipo="primary" (clickEvent)="concluir()"></app-button>
     </div>
   }
 </div>

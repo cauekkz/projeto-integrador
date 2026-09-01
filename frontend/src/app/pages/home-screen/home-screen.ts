@@ -1,20 +1,22 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { AddStudent } from '../../components/add-student/add-student';
 import { User } from '../../models/user.model';
 import { StudentService } from '../../services/student.service';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
+import { Footer } from '../../components/footer/footer';
+import { ProfileSelect } from '../../components/profile-select/profile-select';
 
 @Component({
   selector: 'app-home-screen',
   standalone: true,
-  imports: [],
+  imports: [Footer, ProfileSelect],
   templateUrl: './home-screen.html',
   styleUrl: './home-screen.css',
 })
 export class HomeScreen implements OnInit {
   mostrarAddStudent = false;
   mostrarDependentes = false;
+  mostrarPerfil = false;
   meusDependentes: any[] = [];
   usuarioLogado: User | null = null;
 
@@ -40,10 +42,9 @@ export class HomeScreen implements OnInit {
   }
 
   carregarDependentes() {
-
     this.studentService.getMyChildren().subscribe({
       next: (resposta: any) => {
-        this.meusDependentes = resposta?.content ?? resposta ?? []
+        this.meusDependentes = resposta?.content ?? resposta ?? [];
       },
       error: () => {
         this.meusDependentes = [];
@@ -58,6 +59,15 @@ export class HomeScreen implements OnInit {
       this.router.navigate(['/dependentes']);
     }
   }
+
+  irParaPerfil() {
+    this.mostrarPerfil = true;
+  }
+
+  fecharPerfil() {
+    this.mostrarPerfil = false;
+  }
+
   fecharAddStudent() {
     this.mostrarAddStudent = false;
     this.carregarDependentes();

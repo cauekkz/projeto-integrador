@@ -97,19 +97,7 @@
     color: #94a3b8;
 }
 
-.btn-submit {
-    width: 100%;
-    height: 56px;
-    border: none;
-    border-radius: 14px;
-    background: #1565d8;
-    color: white;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
-    margin-top: 8px;
-}
+
 
 .overlay {
   position: fixed;

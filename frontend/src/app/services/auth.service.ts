@@ -104,4 +104,8 @@ export class AuthService {
   verifyEmail(data: { email: string; code: string }) {
     return this.http.post(`${this.apiUrl}/auth/verify-email`, data, { responseType: 'text' });
   }
+
+  logout() {
+    localStorage.removeItem('token');
+  }
 }

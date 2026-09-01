@@ -15,8 +15,19 @@
     </div>
   </div>
 
-  <button class="btn-delete" (click)="delete()">Excluir PDF</button>
-  <button class="btn-submit" (click)="pronto()">Pronto</button>
+  <div class="bottom-actions">
+    <app-button
+      texto="Excluir PDF"
+      tipo="danger"
+      (clickEvent)="delete()">
+    </app-button>
+
+    <app-button
+      texto="Confirmar"
+      tipo="primary"
+      (clickEvent)="pronto()">
+    </app-button>
+  </div>
 
 </div>
 

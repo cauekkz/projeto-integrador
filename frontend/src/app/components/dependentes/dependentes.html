@@ -8,7 +8,7 @@
     <option value="WITHDRAWAL">Retirada</option>
   </select>
 
-  <button class="btn-add" (click)="adicionarDependente()">Adicionar dependente</button>
+  <app-button texto="Adicionar dependente" tipo="primary" (clickEvent)="adicionarDependente()"></app-button>
 
   <div class="lista-dependentes">
     @if (carregando) {

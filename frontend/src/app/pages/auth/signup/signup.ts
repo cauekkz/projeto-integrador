@@ -6,11 +6,12 @@ import { SignupResponsible } from '../../../components/signup-responsible/signup
 import { SignupDriver } from '../../../components/signup-driver/signup-driver';
 import { SignupCnhForm } from '../../../components/signup-cnh-form/signup-cnh-form';
 import { EmailCode } from '../../../components/email-code/email-code';
+import { Button } from '../../../components/button/button';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [SignupResponsible, SignupDriver, SignupCnhForm, EmailCode],
+  imports: [SignupResponsible, SignupDriver, SignupCnhForm, EmailCode, Button],
   templateUrl: './signup.html',
   styleUrl: './signup.css',
 })

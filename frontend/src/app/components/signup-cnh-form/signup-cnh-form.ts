@@ -1,11 +1,12 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { RegisterService } from '../../services/register.service';
 import { Header } from '../header/header';
+import { Button } from '../button/button';
 
 @Component({
   selector: 'app-signup-cnh-form',
   standalone: true,
-  imports: [Header],
+  imports: [Header, Button],
   templateUrl: './signup-cnh-form.html',
   styleUrl: './signup-cnh-form.css',
 })
