@@ -23,6 +23,9 @@ import br.com.vanroute.backend.services.ChatService;
 import jakarta.validation.Valid;
 import org.springframework.data.redis.core.RedisTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import br.com.vanroute.backend.dtos.contract.ContractProposalRequestDTO;
+import br.com.vanroute.backend.services.StudentResponsibleService;
+import br.com.vanroute.backend.services.UserService;
 
 @RestController
 @RequestMapping("/api/chats")
@@ -34,46 +37,76 @@ public class ChatController {
     private final ChatService chatService;
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
-
+    private final StudentResponsibleService studentResponsibleService;
+    private final UserService userService;
+    
     public ChatController(
-            ChatMessageService chatMessageService, 
+            ChatMessageService chatMessageService,
             ChatService chatService,
             RedisTemplate<String, String> redisTemplate,
-            ObjectMapper objectMapper) {
+            ObjectMapper objectMapper,
+            StudentResponsibleService studentResponsibleService,
+            UserService userService) {
         this.chatMessageService = chatMessageService;
         this.chatService = chatService;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
+        this.studentResponsibleService = studentResponsibleService;
+        this.userService = userService;
     }
 
     @GetMapping
-    public ResponseEntity<Page<ChatResponseDTO>> getActiveChats(@PageableDefault(size = 10) Pageable pageable, Authentication authentication) {
+    public ResponseEntity<Page<ChatResponseDTO>> getActiveChats(@PageableDefault(size = 10) Pageable pageable,
+            Authentication authentication) {
         String cpf = authentication.getName();
         return ResponseEntity.ok(chatService.getUserChats(cpf, pageable));
     }
 
     @GetMapping("/{chatId}/messages")
-    public ResponseEntity<Page<ChatMessageResponseDTO>> getMessages(@PathVariable UUID chatId, @PageableDefault(size = 30) Pageable pageable, Authentication authentication) {
+    public ResponseEntity<Page<ChatMessageResponseDTO>> getMessages(@PathVariable UUID chatId,
+            @PageableDefault(size = 30) Pageable pageable, Authentication authentication) {
         chatService.validateChatAccess(chatId, authentication.getName());
         String cpf = authentication.getName();
         return ResponseEntity.ok(chatMessageService.getMessages(chatId, cpf, pageable));
-    }   
+    }
 
     @PostMapping("/{chatId}/messages")
-    public ResponseEntity<ChatMessageResponseDTO> sendMessage(@PathVariable UUID chatId, @Valid @RequestBody ChatMessageRequestDTO request, Authentication authentication) {
-        
+    public ResponseEntity<ChatMessageResponseDTO> sendMessage(@PathVariable UUID chatId,
+            @Valid @RequestBody ChatMessageRequestDTO request, Authentication authentication) {
+
         String cpf = authentication.getName();
-        
+
         ChatMessageResponseDTO msg = chatMessageService.sendMessage(chatId, cpf, request);
-        
+
         try {
             String json = objectMapper.writeValueAsString(msg);
             redisTemplate.convertAndSend("chat-" + chatId, json);
         } catch (Exception e) {
             log.error("Failed to publish message to Redis for chat: {}", chatId, e);
         }
-        
+
         return ResponseEntity.status(201).body(msg);
     }
+
+
+    //rota apenas de driver,
+    //ich bin müde
+    @PostMapping("/{chatId}/contract")
+    public ResponseEntity<ContractResponseDTO> createContract(@PathVariable UUID chatId,
+        @Valid @RequestBody ContractProposalRequestDTO request, Authentication authentication) {
+        String cpf = authentication.getName();
+        chatService.UsersInChat(chatId, cpf, request.responsibleId());
+        if (!studentResponsibleService.isAdmin(request.responsibleId(), request.studentId())) {
+            throw new RuntimeException("MIA SAN MIA!!!");
+        }
+        //macacada da porra essa porra ser CPF e nao ID agora fodase vou muda sepre no cmc, e ja ta errado pra krl carrengando o user inteiro chat se vc ver isso faz o metodo de pegar so o ID e nao o user tudo
+        UUID driverId = userService.findByCpf(cpf).get().getId();
+        
+        
+
+
+    }
+
+    
 
 }
