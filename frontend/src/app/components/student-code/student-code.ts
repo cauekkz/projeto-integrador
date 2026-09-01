@@ -22,16 +22,11 @@ export class StudentCode {
     private router: Router,
   ) {}
 
-  /**
-   * Volta para a tela anterior.
-   */
   voltar(): void {
-    this.router.navigate(['/home-screen']);
+    this.router.navigate(['/add-student']);
   }
 
-  /**
-   * Trata a digitação de cada posição do código.
-   */
+
   onInput(event: Event, index: number): void {
     const input = event.target as HTMLInputElement;
 
@@ -50,9 +45,7 @@ export class StudentCode {
     }
   }
 
-  /**
-   * Trata teclas especiais, principalmente Backspace.
-   */
+
   onKeydown(event: KeyboardEvent, index: number): void {
     if (event.key === 'Backspace') {
       const input = event.target as HTMLInputElement;
@@ -98,9 +91,7 @@ export class StudentCode {
     }
   }
 
-  /**
-   * Coloca o foco em um campo específico.
-   */
+
   private focarInput(index: number): void {
     setTimeout(() => {
       const inputs = this.codeInputs?.toArray();
@@ -112,16 +103,11 @@ export class StudentCode {
     });
   }
 
-  /**
-   * Retorna o código sem os separadores.
-   */
+
   get codigoCompleto(): string {
     return this.codigo.join('');
   }
 
-  /**
-   * Retorna o código formatado como XXX-XXX-XXX.
-   */
   get codigoFormatado(): string {
     const codigo = this.codigoCompleto;
 
@@ -136,9 +122,7 @@ export class StudentCode {
     return `${codigo.slice(0, 3)}-${codigo.slice(3, 6)}-${codigo.slice(6, 9)}`;
   }
 
-  /**
-   * Verifica se os 9 caracteres foram preenchidos.
-   */
+
   get codigoValido(): boolean {
     return this.codigoCompleto.length === 9;
   }

@@ -58,4 +58,6 @@ export class Dependentes implements OnInit {
   adicionarDependente() {
     this.router.navigate(['/add-student']);
   }
+
+
 }

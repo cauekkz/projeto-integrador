@@ -84,4 +84,8 @@ export class AddStudent {
   fecharBottomSheet() {
     this.mostrarBottomSheet = false;
   }
+
+  vincularDependente() {
+    this.router.navigate(['/student-code']);
+  }
 }
