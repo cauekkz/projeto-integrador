@@ -11,15 +11,15 @@
   <app-button texto="Adicionar dependente" tipo="primary" (clickEvent)="adicionarDependente()"></app-button>
 
   <div class="lista-dependentes">
-    @if (carregando) {
+    @if (carregando()) {
       <p class="estado-vazio">Carregando...</p>
     }
 
-    @if (!carregando && dependentes.length === 0) {
+    @if (!carregando() && dependentes().length === 0) {
       <p class="estado-vazio">Nenhum dependente cadastrado ainda.</p>
     }
 
-    @for (dep of dependentes; track dep.id) {
+    @for (dep of dependentes(); track dep.id) {
       <div class="dependente-card">
         <div class="dependente-linha" (click)="toggleDependente(dep)">
           <img class="dependente-avatar" [src]="dep.photoUrl || '/testee.jpg'" alt="" />

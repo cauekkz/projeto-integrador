@@ -25,4 +25,6 @@ export const routes: Routes = [
   { path: 'dependentes', component: Dependentes },
   { path: 'chat', component: Chat },
   { path: 'profile-info/:tipo', component: ProfileInfo },
+  { path: 'signup/:tipo', component: Signup }
+
 ];
