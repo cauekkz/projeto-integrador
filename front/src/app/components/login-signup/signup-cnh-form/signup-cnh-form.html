@@ -1,0 +1,46 @@
+<div class="cnh-container">
+
+  <app-header titulo="Validacao de CNH" (voltarEvent)="voltar()" />
+
+  <div class="upload-card" (click)="abrirBottomSheet()">
+    <div class="upload-content">
+      <div class="upload-icon">
+        <img src="/AddFile.png" alt="">
+      </div>
+      @if (registerService.selectedFile) {
+        <p>{{ registerService.selectedFile.name }}</p>
+      } @else {
+        <p>Envie sua CNH para validação</p>
+      }
+    </div>
+  </div>
+
+  <div class="bottom-actions">
+    <app-button
+      texto="Excluir PDF"
+      tipo="danger"
+      (clickEvent)="delete()">
+    </app-button>
+
+    <app-button
+      texto="Confirmar"
+      tipo="primary"
+      (clickEvent)="pronto()">
+    </app-button>
+  </div>
+
+</div>
+
+@if (mostrarBottomSheet) {
+  <div class="overlay" (click)="fecharBottomSheet()"></div>
+  <div class="bottom-sheet">
+    <h2>Selecione de onde vem sua CNH</h2>
+    <div class="sheet-options">
+      <button class="sheet-btn" (click)="fileInput.click()">
+        <img src="/AddFile.png" alt="">
+        Enviar PDF
+      </button>
+      <input #fileInput type="file" accept=".pdf" hidden (change)="onFileSelected($event)">
+    </div>
+  </div>
+}

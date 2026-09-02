@@ -1,0 +1,53 @@
+.sucesso-container {
+  width: 100%;
+  max-width: 400px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 100px 24px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sucesso-card {
+  width: 100%;
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.check-circle {
+  width: 72px;
+  height: 72px;
+}
+
+.check-circle svg {
+  width: 100%;
+  height: 100%;
+}
+
+.sucesso-texto {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.sucesso-ilustracao {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.sucesso-ilustracao img {
+  width: 100%;
+  max-width: 320px;
+  object-fit: contain;
+}
+
+

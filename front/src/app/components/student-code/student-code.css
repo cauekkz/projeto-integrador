@@ -1,0 +1,105 @@
+.student-code-container {
+  min-height: 100vh;
+  width: 100%;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 24px;
+}
+
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 110px;
+}
+
+.content h1 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.description {
+  max-width: 300px;
+  margin: 16px 0 0;
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.inputs {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+
+  margin-top: 45px;
+}
+
+.separador {
+  margin-top: 13px;
+  color: #003783;
+  font-size: 1.5rem;
+
+}
+
+.code-input {
+  width: 42px;
+  height: 58px;
+  padding: 0;
+  border: none;
+  border-bottom: 2px solid #cbd5e1;
+  border-radius: 0;
+  background: transparent;
+  outline: none;
+  text-align: center;
+  color: #1f2937;
+  font-size: 1.8rem;
+  font-weight: 700;
+
+  box-sizing: border-box;
+}
+
+.code-input:focus {
+  border-bottom-color: #1565d8;
+}
+
+
+
+/* Responsivo para telas menores */
+
+@media (max-width: 480px) {
+
+  .student-code-container {
+    padding: 24px;
+  }
+
+  .content {
+    padding-top: 200px;
+  }
+
+  .content h1 {
+    font-size: 1.35rem;
+  }
+
+  .description {
+    font-size: 0.9rem;
+  }
+
+  .inputs {
+    gap: 8px;
+    margin-top: 40px;
+  }
+
+  .code-input {
+    width: 30px;
+    height: 50px;
+    font-size: 1.7rem;
+  }
+}
