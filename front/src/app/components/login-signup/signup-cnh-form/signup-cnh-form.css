@@ -1,0 +1,216 @@
+.cnh-container {
+  min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header h1 {
+  flex: 1;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-right: 15%;
+}
+
+.back-button {
+  background: transparent;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.upload-card {
+  width: 100%;
+  max-width: 600px;
+  margin: 60px auto 40px;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.upload-content {
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.upload-icon {
+  font-size: 4rem;
+  margin-bottom: 10px;
+}
+
+.upload-content p {
+  font-size: 1.2rem;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin-bottom: 25px;
+  color: #64748b;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #cbd5e1;
+}
+
+.divider span {
+  padding: 0 10px;
+}
+
+.form {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.field label {
+  margin-bottom: 8px;
+  color: #334155;
+  font-size: 0.95rem;
+}
+
+.field input,
+.field select {
+  height: 56px;
+  border: 1px solid #d6dce5;
+  border-radius: 14px;
+  padding: 0 16px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.double-field {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.bottom-actions {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  max-width: 600px;
+  align-self: center;
+  z-index: 10;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 100;
+}
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  padding: 32px 24px;
+  z-index: 101;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.bottom-sheet h2 {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 28px;
+}
+
+.sheet-options {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.sheet-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: white;
+  font-size: 0.95rem;
+  color: #1f2937;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sheet-btn:hover {
+  background: #f1f5f9;
+}
+
+.sheet-btn img {
+  width: 40px;
+  height: 40px;
+}
+
+@media (max-width: 480px) {
+  .cnh-container {
+    padding: 24px 14px;
+  }
+
+  .header h1 {
+    font-size: 1.8rem;
+  }
+
+  .upload-card {
+    margin-top: 50px;
+  }
+
+  .upload-content {
+    min-height: 200px;
+  }
+
+  .upload-icon {
+    font-size: 3rem;
+  }
+
+  .double-field {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .field input,
+  .field select {
+    height: 52px;
+  }
+}

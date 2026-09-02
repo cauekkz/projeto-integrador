@@ -1,0 +1,59 @@
+<div class="login-container">
+  <app-header
+    titulo="Cadastro {{ tipoUsuario === 'motorista' ? 'Motorista' : 'Responsavel' }}"
+    (voltarEvent)="voltar()"
+  />
+
+  <div class="content">
+    <form (ngSubmit)="login()">
+
+      @if (tipoUsuario === 'motorista') {
+        <h2>Ola, que bom que voce voltou!</h2>
+        <label>CPF do motorista</label>
+        <input type="text" placeholder="Digite seu CPF" name="nome" [(ngModel)]="enteredCPF" required />
+      }
+
+      @if (tipoUsuario === 'responsavel') {
+        <h2>Ola, que bom que voce voltou!</h2>
+        <label>CPF do responsavel</label>
+        <input type="text" placeholder="Digite seu CPF" name="nome" [(ngModel)]="enteredCPF" required />
+      }
+
+      @if (cpfInvalido) {
+        <p class="error-message">O CPF e obrigatorio!</p>
+      }
+
+      <label>Senha</label>
+      <input type="password" placeholder="Digite sua senha" name="senha" [(ngModel)]="enteredPass" required />
+
+      @if (passInvalido) {
+        <p class="error-message">A senha e obrigatoria!</p>
+      }
+
+      <app-button
+        texto="Entrar"
+        tipo="primary"
+        (clickEvent)="login()">
+      </app-button>
+
+      <app-button
+        texto="Esqueceu sua senha?"
+        tipo="secondary"
+        (clickEvent)="mostrarForgotPassword = true">
+      </app-button>
+
+    </form>
+  </div>
+
+  <div class="bottom-container">
+    <app-button
+      texto="Criar uma conta"
+      tipo="secondary"
+      (clickEvent)="irParaCadastro()">
+    </app-button>
+  </div>
+</div>
+
+@if (mostrarForgotPassword) {
+  <app-forgot-password (voltarEvent)="mostrarForgotPassword = false" />
+}

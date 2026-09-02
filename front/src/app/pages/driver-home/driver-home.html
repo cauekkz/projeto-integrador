@@ -1,0 +1,74 @@
+<div class="screen">
+  <div class="topbar">
+    <div class="notif-wrapper">
+      <div class="bell-btn">
+        <i class="bi bi-bell"></i>
+      </div>
+    </div>
+
+    <div class="user-info" (click)="irParaPerfil()">
+      <img src="/testee.jpg" class="avatar" alt="">
+      <span class="name">Gustavo Gomez</span>
+    </div>
+
+    <span class="role">Motorista</span>
+  </div>
+
+  <div class="content">
+    <div class="driver-card-wrapper">
+      <div class="status-top">
+        <span class="dot"></span>
+        <span class="status-text">Em rota</span>
+      </div>
+
+      <div class="rota-card">
+        <div class="mapa-preview">
+          <img
+            src="/mapa-placeholder.jpg"
+            alt="Mapa da rota"
+            class="mapa-img"
+          />
+        </div>
+
+        <div class="rota-footer">
+          <p class="rota-titulo">Indo para casa de Adreas Pereira</p>
+          <p class="rota-subtitulo">você tem 3 passageiros</p>
+        </div>
+
+        <div class="metrics-card">
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <i class="bi bi-people-fill"></i>
+              <span>3</span>
+            </div>
+
+            <div class="metric-box">
+              <i class="bi bi-geo-alt-fill"></i>
+              <span>6 km</span>
+            </div>
+
+            <div class="metric-box">
+              <i class="bi bi-clock-fill"></i>
+              <span>22 min</span>
+            </div>
+          </div>
+
+          <div class="chat-btn">
+            <i class="bi bi-chat-dots-fill"></i>
+            <span class="chat-badge">1</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <app-footer tipoUsuario="motorista" abaAtiva="home"></app-footer>
+</div>
+
+@if (mostrarPerfil) {
+  <app-profile-select
+    tipoUsuario="motorista"
+    [usuario]="usuarioLogado"
+    (fecharEvent)="fecharPerfil()"
+  />
+}

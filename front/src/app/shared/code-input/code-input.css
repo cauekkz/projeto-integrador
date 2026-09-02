@@ -1,0 +1,103 @@
+.code-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 20px;
+  height: 100%;
+  box-sizing: border-box;
+  margin-bottom: 100px;
+}
+
+/* Empurra os botões para o final */
+.botoes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 340px;
+  align-items: center;
+  margin-bottom: 30px;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  width: 100%;
+}
+
+.instrucao {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.95rem;
+  max-width: 280px;
+}
+
+.inputs {
+  display: flex;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.code-input {
+  width: 48px;
+  height: 60px;
+  border: none;
+  border-bottom: 2px solid #cbd5e1;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  outline: none;
+  background: transparent;
+}
+
+.code-input:focus {
+  border-bottom-color: #1565d8;
+}
+
+@keyframes slideUp {
+  0% {
+    transform: translateY(8px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.code-input.animate {
+  animation: slideUp 0.15s ease-out;
+}
+
+.error-message {
+  color: #e61212;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.btn-verificar,
+.btn-reenviar {
+  width: 100%;
+  max-width: 340px;
+  height: 56px;
+  border-radius: 14px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.btn-verificar {
+  border: none;
+  background: #1565d8;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
+}
+
+.btn-reenviar {
+  border: 1px solid #1565d8;
+  background: white;
+  color: #1565d8;
+  font-weight: 500;
+}

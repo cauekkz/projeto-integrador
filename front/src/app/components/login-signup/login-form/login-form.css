@@ -1,0 +1,107 @@
+.login-container {
+  min-height: 100vh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.bottom-container {
+  margin-top: auto;
+  padding-top: 24px;
+  padding-bottom: 16px;
+  width: 100%;
+  max-width: 500px;
+  align-self: center;
+}
+
+.header h1 {
+  flex: 1;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-right: 15%;
+}
+
+.back-button {
+  border: none;
+  background: transparent;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+.content {
+  width: 100%;
+  max-width: 500px;
+  margin: 80px auto ;
+  display: flex;
+  flex-direction: column;
+
+}
+
+.content h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 30px;
+}
+
+label {
+  margin-bottom: 8px;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+input {
+  width: 100%;
+  height: 56px;
+  border: 1px solid #d6dce5;
+  border-radius: 14px;
+  padding: 0 16px;
+  margin-bottom: 13px;
+  font-size: 1rem;
+}
+
+.error-message {
+  margin: 0 0 16px 0;
+  color: #e61212;
+  font-size: 0.85rem;
+  padding-left: 4px;
+}
+
+
+
+@media (max-width: 480px) {
+
+  .login-container {
+    padding: 24px 14px;
+    height: 100vh;
+  }
+
+  .header h1 {
+    font-size: 1.9rem;
+  }
+
+  .content {
+    margin-top: 70px;
+    max-width: 380px;
+  }
+
+  .content h2 {
+    font-size: 1.9rem;
+    margin-bottom: 60px;
+  }
+
+  input {
+    height: 52px;
+  }
+
+
+}

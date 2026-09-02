@@ -1,0 +1,13 @@
+<app-header titulo="Validacao de email" (voltarEvent)="voltar()" />
+
+<div class="code-container">
+
+  <p class="email">{{ email }}</p>
+
+  <app-code-input
+    instrucao="Por favor, digite o codigo que enviamos agora para:"
+    [mostrarReenviar]="true"
+    (codigoVerificado)="onSend($event)"
+    (reenviarEvent)="resend()"
+  />
+</div>
