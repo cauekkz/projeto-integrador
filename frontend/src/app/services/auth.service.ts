@@ -57,7 +57,9 @@ export class AuthService {
     formData.append('confirmPassword', data.confirmPassword);
     formData.append('phone', data.phone);
 
-    return this.http.post(`${this.apiUrl}/driver/signup`, formData);
+    return this.http.post(`${this.apiUrl}/driver/auth/signup`, formData, {
+      responseType: 'text',
+    });
   }
 
   createUser(data: {

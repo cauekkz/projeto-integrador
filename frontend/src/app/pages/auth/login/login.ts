@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { LoginForm } from '../../../components/login-form/login-form';
+import { LoginForm } from '../../../components/login-signup/login-form/login-form';
 
 @Component({
   selector: 'app-login',

@@ -2,16 +2,16 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 
-import { SignupResponsible } from '../../../components/signup-responsible/signup-responsible';
-import { SignupDriver } from '../../../components/signup-driver/signup-driver';
-import { SignupCnhForm } from '../../../components/signup-cnh-form/signup-cnh-form';
+import { SignupResponsible } from '../../../components/login-signup/signup-responsible/signup-responsible';
+import { SignupDriver } from '../../../components/login-signup/signup-driver/signup-driver';
+import { SignupCnhForm } from '../../../components/login-signup/signup-cnh-form/signup-cnh-form';
 import { EmailCode } from '../../../components/email-code/email-code';
-import { Button } from '../../../components/button/button';
+import { Button } from '../../../shared/button/button';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [SignupResponsible, SignupDriver, SignupCnhForm, EmailCode, Button],
+  imports: [SignupResponsible, SignupDriver, SignupCnhForm, EmailCode, ],
   templateUrl: './signup.html',
   styleUrl: './signup.css',
 })
@@ -46,11 +46,10 @@ export class Signup implements OnInit {
   concluirCadastro() {
     this.cadastroConcluido = true;
     this.mostrarCodigo = false;
+
+    this.router.navigate(['/login', this.tipoUsuario]);
   }
 
-  irParaProximaPagina() {
-    this.router.navigate(['/login']);
-  }
 
   voltar() {
     if (this.etapa === 'driver') {

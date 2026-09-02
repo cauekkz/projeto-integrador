@@ -1,7 +1,8 @@
 .header {
   position: fixed;
-  top: 24px;
+  top: 2px;
   left: 24px;
+
 }
 
 .back-button {
@@ -15,9 +16,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 100vw;
   min-height: 100vh;
   padding: 40px 24px;
   gap: 20px;
+
 }
 .instrucao {
   text-align: center;

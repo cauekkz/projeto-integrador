@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { Header } from '../../components/header/header';
+import { Header } from '../../shared/header/header';
 
 @Component({
   selector: 'app-profile-info',

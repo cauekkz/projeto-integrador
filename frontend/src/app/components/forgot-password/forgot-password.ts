@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CodeInput } from '../code-input/code-input';
-import { Header } from '../../components/header/header';
-import { Button } from '../button/button';
+import { CodeInput } from '../../shared/code-input/code-input';
+import { Header } from '../../shared/header/header';
+import { Button } from '../../shared/button/button';
 
 @Component({
   selector: 'app-forgot-password',

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Button } from '../../components/button/button';
+import { Button } from '../../shared/button/button';
 
 @Component({
   selector: 'app-home',

@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { Footer } from '../../components/footer/footer';
+import { Footer } from '../../shared/footer/footer';
 import { ProfileSelect } from '../../components/profile-select/profile-select';
 
 @Component({
