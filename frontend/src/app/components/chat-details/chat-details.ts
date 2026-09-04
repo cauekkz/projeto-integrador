@@ -18,9 +18,9 @@ export class ChatDetails implements OnInit {
   origem = 'home-screen';
 
   mensagens = [
-    { texto: 'Ola, Andreas. Tudo bem?', minha: true, hora: '19:14', lida: true },
-    { texto: 'Ola, Andreas. Tudo bem?', minha: false, hora: '19:14', lida: false },
-    { texto: 'Ola, Gustavo. Tudo sim, e com voce?', minha: false, hora: '19:14', lida: false },
+    { texto: 'Olá, Andreas. Tudo bem?', minha: true, hora: '19:14', lida: true },
+    { texto: 'Olá, Andreas. Tudo bem?', minha: false, hora: '19:14', lida: false },
+    { texto: 'Olá, Gustavo. Tudo sim, e com você?', minha: false, hora: '19:14', lida: false },
   ];
 
   constructor(private route: ActivatedRoute, private router: Router) {}

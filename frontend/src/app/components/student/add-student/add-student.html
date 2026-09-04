@@ -1,15 +1,15 @@
 <div class="add-container">
   @if (etapa === 'form') {
-    <app-header titulo="Suas informações" (voltarEvent)="voltar()"> </app-header>
+    <app-header titulo="Suas informações" (voltarEvent)="voltar()"></app-header>
 
     <div class="photo-card" (click)="abrirBottomSheet()">
       <div class="photo-content">
         <img src="/Camera.png" alt="" class="camera-icon" />
-        <p>Coloque uma foto de seu dependente</p>
+        <p>Coloque uma foto do seu dependente</p>
       </div>
     </div>
 
-    <form class="form" >
+    <form class="form">
       <div class="field">
         <label>Nome do dependente</label>
         <input type="text" placeholder="Nome do dependente" [(ngModel)]="enteredName" name="name" appNameFormat />
@@ -27,13 +27,12 @@
       </div>
 
       <div class="field">
-        <label>Observacoes</label>
+        <label>Observações</label>
         <textarea
-          placeholder="Coloque aqui informacoes necessarias que o motorista precise saber sobre seu dependente. Ex: Auxilio para subir na van, Tomar remedios."
+          placeholder="Coloque aqui informações necessárias que o motorista precise saber sobre seu dependente. Ex: auxílio para subir na van, tomar remédios."
           [(ngModel)]="enteredObservacoes"
           name="observacoes"
-          maxlength="1200"
-        >
+          maxlength="1200">
         </textarea>
         <span class="counter">{{ enteredObservacoes.length }}/{{ maxObs }}</span>
       </div>
@@ -42,26 +41,26 @@
         <label for="relationType">Tipo de relação</label>
 
         <select id="relationType" [(ngModel)]="enteredRelationType" name="relationType" required>
-          <option value="" disabled class="">Selecione uma opção</option>
+          <option value="" disabled>Selecione uma opção</option>
           <option value="FINANCIAL">Financeiro</option>
           <option value="LEGAL">Legal</option>
           <option value="WITHDRAWAL">Retirada</option>
         </select>
-      </div >
+      </div>
+
       <div class="bottom-actions">
-      <app-button texto="Pronto" tipo="primary" (clickEvent)="pronto()"></app-button>
-      <app-button texto="Tenho um Codigo" tipo="secondary" (clickEvent)="vincularDependente()"></app-button>
+        <app-button texto="Pronto" tipo="primary" (clickEvent)="pronto()"></app-button>
+        <app-button texto="Tenho um código" tipo="secondary" (clickEvent)="vincularDependente()"></app-button>
       </div>
     </form>
   }
 
   @if (etapa === 'code') {
-    <app-header titulo="Suas informaçoes" (voltarEvent)="voltar()" />
+    <app-header titulo="Suas informações" (voltarEvent)="voltar()" />
 
     <div class="code-result">
       <p class="code-instrucao">
-        Envie este codigo para o motorista vincular o dependente <strong>{{ enteredName }}</strong
-        >:
+        Envie este código para o motorista vincular o dependente <strong>{{ enteredName }}</strong>:
       </p>
 
       <div class="code-box">
@@ -72,7 +71,6 @@
       </div>
 
       <app-button texto="Concluir" tipo="primary" (clickEvent)="concluir()"></app-button>
-
     </div>
   }
 </div>
@@ -88,7 +86,7 @@
       </button>
       <button class="sheet-btn" (click)="fecharBottomSheet()">
         <img src="/Camera.png" alt="" />
-        Tirar com a camera
+        Tirar com a câmera
       </button>
     </div>
   </div>

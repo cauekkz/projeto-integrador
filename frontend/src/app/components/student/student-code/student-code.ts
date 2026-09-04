@@ -26,11 +26,9 @@ export class StudentCode {
     this.router.navigate(['/add-student']);
   }
 
-
   onInput(event: Event, index: number): void {
     const input = event.target as HTMLInputElement;
 
-    // Permite somente letras e números
     const valor = input.value
       .replace(/[^a-zA-Z0-9]/g, '')
       .toUpperCase()
@@ -39,12 +37,10 @@ export class StudentCode {
     this.codigo[index] = valor;
     input.value = valor;
 
-    // Vai automaticamente para o próximo campo
     if (valor && index < this.codigo.length - 1) {
       this.focarInput(index + 1);
     }
   }
-
 
   onKeydown(event: KeyboardEvent, index: number): void {
     if (event.key === 'Backspace') {
@@ -52,14 +48,12 @@ export class StudentCode {
 
       if (!input.value && index > 0) {
         this.codigo[index - 1] = '';
-
         this.focarInput(index - 1);
       }
 
       return;
     }
 
-    // Permite navegação com as setas
     if (event.key === 'ArrowLeft' && index > 0) {
       event.preventDefault();
       this.focarInput(index - 1);
@@ -72,7 +66,6 @@ export class StudentCode {
       return;
     }
 
-    // Permite somente uma tecla válida
     const teclaPermitida = /^[a-zA-Z0-9]$/.test(event.key);
 
     const teclasEspeciais = [
@@ -91,7 +84,6 @@ export class StudentCode {
     }
   }
 
-
   private focarInput(index: number): void {
     setTimeout(() => {
       const inputs = this.codeInputs?.toArray();
@@ -102,7 +94,6 @@ export class StudentCode {
       }
     });
   }
-
 
   get codigoCompleto(): string {
     return this.codigo.join('');
@@ -121,7 +112,6 @@ export class StudentCode {
 
     return `${codigo.slice(0, 3)}-${codigo.slice(3, 6)}-${codigo.slice(6, 9)}`;
   }
-
 
   get codigoValido(): boolean {
     return this.codigoCompleto.length === 9;

@@ -1,5 +1,4 @@
 <div class="screen">
-
   <app-header
     tipo="driver"
     nomeUsuario="Gustavo Gomez"
@@ -13,8 +12,6 @@
   </div>
 
   <div class="listas">
-
-    <!-- Lista: Alunos Esperando -->
     <div class="lista-card">
       <button class="lista-header" type="button" (click)="toggleEsperando()">
         <div class="icon-box icon-amarelo">
@@ -42,7 +39,6 @@
       }
     </div>
 
-    <!-- Lista: Alunos Embarcados -->
     <div class="lista-card">
       <button class="lista-header" type="button" (click)="toggleEmbarcados()">
         <div class="icon-box icon-azul">
@@ -69,11 +65,9 @@
         }
       }
     </div>
-
   </div>
 
   @if (mostrarPerfil) {
     <app-profile-select (fecharEvent)="fecharPerfil()"></app-profile-select>
   }
-
 </div>

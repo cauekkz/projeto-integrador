@@ -2,9 +2,9 @@ import { Component, EventEmitter, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
-import { Header } from '../../../shared//header/header';
+import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
-import { CommonModule} from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { CpfMaskDirective, PhoneMaskDirective, NameFormatDirective } from '../../../shared/directives';
 import { PopUpService } from '../../../shared/pop-up';
 
@@ -46,18 +46,18 @@ export class SignupResponsible {
     return value.trim() === '';
   }
 
-  voltar(){
+  voltar() {
     this.voltarEvent.emit();
   }
 
   signup() {
-
     this.cpfInvalido = this.verification(this.enteredCpf);
     this.nameInvalido = this.verification(this.enteredName);
     this.emailInvalido = this.verification(this.enteredEmail);
     this.passInvalido = this.verification(this.enteredPass);
     this.confirmPassInvalido = this.verification(this.enteredConfirmPass);
     this.phoneInvalido = this.verification(this.enteredPhone);
+
     if (
       this.cpfInvalido ||
       this.nameInvalido ||
@@ -89,7 +89,6 @@ export class SignupResponsible {
 
     this.authService.createUser(data).subscribe({
       next: (response) => {
-        // router e get user, pegar token e user
         this.cadastroConcluidoEvent.emit({
           email: this.enteredEmail,
         });

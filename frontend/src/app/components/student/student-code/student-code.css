@@ -71,9 +71,6 @@
 }
 
 
-
-/* Responsivo para telas menores */
-
 @media (max-width: 480px) {
 
   .student-code-container {

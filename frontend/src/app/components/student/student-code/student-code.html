@@ -1,9 +1,7 @@
 <div class="student-code-container">
-
   <app-header titulo="Dependentes" (voltarEvent)="voltar()"></app-header>
 
   <div class="content">
-
     <h1>
       Digite seu código para vincular ao seu responsável
     </h1>
@@ -13,8 +11,6 @@
     </p>
 
     <div class="inputs">
-
-      <!-- 1 -->
       <input
         #codeInput
         class="code-input"
@@ -28,7 +24,6 @@
         aria-label="Primeiro caractere do código"
       />
 
-      <!-- 2 -->
       <input
         #codeInput
         class="code-input"
@@ -41,7 +36,6 @@
         aria-label="Segundo caractere do código"
       />
 
-      <!-- 3 -->
       <input
         #codeInput
         class="code-input"
@@ -56,7 +50,6 @@
 
       <span class="separador">-</span>
 
-      <!-- 4 -->
       <input
         #codeInput
         class="code-input"
@@ -69,7 +62,6 @@
         aria-label="Quarto caractere do código"
       />
 
-      <!-- 5 -->
       <input
         #codeInput
         class="code-input"
@@ -82,7 +74,6 @@
         aria-label="Quinto caractere do código"
       />
 
-      <!-- 6 -->
       <input
         #codeInput
         class="code-input"
@@ -97,7 +88,6 @@
 
       <span class="separador">-</span>
 
-      <!-- 7 -->
       <input
         #codeInput
         class="code-input"
@@ -110,7 +100,6 @@
         aria-label="Sétimo caractere do código"
       />
 
-      <!-- 8 -->
       <input
         #codeInput
         class="code-input"
@@ -123,7 +112,6 @@
         aria-label="Oitavo caractere do código"
       />
 
-      <!-- 9 -->
       <input
         #codeInput
         class="code-input"
@@ -135,9 +123,7 @@
         (keydown)="onKeydown($event, 8)"
         aria-label="Nono caractere do código"
       />
-
     </div>
-
   </div>
 
   <app-button
@@ -147,5 +133,4 @@
     [disabled]="!codigoValido"
     (clickEvent)="confirmar()">
   </app-button>
-
 </div>
