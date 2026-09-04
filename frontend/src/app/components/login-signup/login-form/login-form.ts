@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
-import { ForgotPassword } from '../../../components/forgot-password/forgot-password';
+import { ForgotPassword } from '../../../components/login-signup/forgot-password/forgot-password';
 
 @Component({
   selector: 'app-login-form',

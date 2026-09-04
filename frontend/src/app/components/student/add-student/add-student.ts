@@ -1,9 +1,9 @@
 import { Component, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Header } from '../../shared/header/header';
-import { Button } from '../../shared/button/button';
-import { StudentService } from '../../services/student.service';
+import { Header } from '../../../shared/header/header';
+import { Button } from '../../../shared/button/button';
+import { StudentService } from '../../../services/student.service';
 
 @Component({
   selector: 'app-add-student',

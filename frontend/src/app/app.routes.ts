@@ -2,13 +2,13 @@ import { Routes } from '@angular/router';
 import { Home } from './pages/home/home';
 import { Login } from './pages/auth/login/login';
 import { Signup } from './pages/auth/signup/signup';
-import { EmailCode } from './components/email-code/email-code';
+import { EmailCode } from './shared/email-code/email-code';
 import { HomeScreen } from './pages/home-screen/home-screen';
-import { AddStudent } from './components/add-student/add-student';
+import { AddStudent } from './components/student/add-student/add-student';
 import { DriverHome } from './pages/driver-home/driver-home';
 import { DriverRoute } from './pages/driver-route/driver-route';
-import { StudentCode } from './components/student-code/student-code';
-import { Dependentes } from './components/dependentes/dependentes';
+import { StudentCode } from './components/student/student-code/student-code';
+import { Dependentes } from './components/student/dependentes/dependentes';
 import { Chat } from './pages/chat/chat';
 import { ProfileInfo } from './pages/profile-info/profile-info';
 

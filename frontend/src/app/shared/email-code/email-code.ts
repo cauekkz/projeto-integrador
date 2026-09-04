@@ -1,8 +1,8 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
 import { FormsModule } from '@angular/forms';
-import { CodeInput } from '../../shared/code-input/code-input';
-import { Header } from '../../shared/header/header';
+import { CodeInput } from '../../../shared/code-input/code-input';
+import { Header } from '../../../shared/header/header';
 import { Router } from '@angular/router';
 
 @Component({

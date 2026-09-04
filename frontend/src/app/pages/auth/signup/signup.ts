@@ -5,7 +5,7 @@ import { Location } from '@angular/common';
 import { SignupResponsible } from '../../../components/login-signup/signup-responsible/signup-responsible';
 import { SignupDriver } from '../../../components/login-signup/signup-driver/signup-driver';
 import { SignupCnhForm } from '../../../components/login-signup/signup-cnh-form/signup-cnh-form';
-import { EmailCode } from '../../../components/email-code/email-code';
+import { EmailCode } from '../../../shared/email-code/email-code';
 import { Button } from '../../../shared/button/button';
 
 @Component({
