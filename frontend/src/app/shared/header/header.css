@@ -81,6 +81,42 @@
 }
 
 /* ====================
+   HEADER CHAT (NOVO)
+   ==================== */
+.header-chat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #ffffff;
+}
+
+.chat-user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.doc-button {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 0.8px solid #e2e8f0;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+}
+
+.doc-button i {
+  font-size: 1.1rem;
+  color: #334155;
+}
+
+/* ====================
    HEADER GERAL
    ==================== */
 .header-geral {

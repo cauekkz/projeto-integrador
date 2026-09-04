@@ -1,11 +1,9 @@
 <!-- VARIÂNCIA 1: HEADER DRIVER / HOME -->
 @if (tipo === 'driver') {
   <header class="topbar">
-
-      <button type="button" class="back-button" (click)="voltar()">
-        <i class="bi bi-chevron-left"></i>
-      </button>
-
+    <button type="button" class="back-button" (click)="voltar()">
+      <i class="bi bi-chevron-left"></i>
+    </button>
 
     <div class="user-info" (click)="irParaPerfil()">
       <img [src]="fotoUrl" class="avatar" [alt]="nomeUsuario">
@@ -16,6 +14,25 @@
   </header>
 }
 
+<!-- VARIÂNCIA 2: HEADER CHAT -->
+@else if (tipo === 'chat') {
+  <header class="header-chat">
+    <button type="button" class="back-button" (click)="voltar()">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+
+    <div class="chat-user-info" (click)="irParaPerfil()">
+      <img [src]="fotoUrl" class="avatar" [alt]="nomeUsuario">
+      <span class="name">{{ nomeUsuario }}</span>
+    </div>
+
+    <button type="button" class="doc-button" (click)="clicarAcaoChat()">
+      <i class="bi bi-file-earmark-text"></i>
+    </button>
+  </header>
+}
+
+<!-- VARIÂNCIA 3: HEADER GERAL -->
 @else {
   <header class="header-geral">
     <button type="button" class="back-button" (click)="voltar()">

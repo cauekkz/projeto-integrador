@@ -1,5 +1,6 @@
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Header } from '../../shared/header/header';
@@ -15,8 +16,6 @@ export class ProfileInfo implements OnInit {
   tipoUsuario = '';
   modoEdicao = false;
 
-  // INICIALIZE COMO OBJETO VAZIO em vez de 'null'
-  // Isso impede que o [(ngModel)] trave a renderização do template
   usuario: any = {
     name: '',
     document: '',
@@ -32,7 +31,7 @@ export class ProfileInfo implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router,
+    private location: Location,
     private authService: AuthService,
   ) {}
 
@@ -53,12 +52,10 @@ export class ProfileInfo implements OnInit {
   }
 
   voltar() {
-    this.router.navigate([this.tipoUsuario === 'motorista' ? '/driver-home' : '/home-screen']);
+    this.location.back();
   }
 
-  editar() {
-    this.modoEdicao = true;
-  }
+  editar() { this.modoEdicao = true; }
 
   cancelar() {
     this.modoEdicao = false;
