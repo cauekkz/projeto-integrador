@@ -1,8 +1,8 @@
 import { Component, ElementRef, QueryList, ViewChildren } from '@angular/core';
 import { Router } from '@angular/router';
-import { Header } from '../../shared/header/header';
-import { StudentService } from '../../services/student.service';
-import { Button } from '../../shared/button/button';
+import { Header } from '../../../shared/header/header';
+import { StudentService } from '../../../services/student.service';
+import { Button } from '../../../shared/button/button';
 
 @Component({
   selector: 'app-student-code',

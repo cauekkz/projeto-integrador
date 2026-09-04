@@ -1,9 +1,9 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Header } from '../../shared/header/header';
-import { Button } from '../../shared/button/button';
-import { StudentService } from '../../services/student.service';
+import { Header } from '../../../shared/header/header';
+import { Button } from '../../../shared/button/button';
+import { StudentService } from '../../../services/student.service';
 import { Router } from '@angular/router';
 
 @Component({
