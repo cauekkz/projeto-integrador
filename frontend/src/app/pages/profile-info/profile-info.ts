@@ -3,12 +3,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Header } from '../../shared/header/header';
-import { PhoneMaskDirective } from '../../shared/directives';
 
 @Component({
   selector: 'app-profile-info',
   standalone: true,
-  imports: [Header, FormsModule, PhoneMaskDirective],
+  imports: [Header, FormsModule],
   templateUrl: './profile-info.html',
   styleUrl: './profile-info.css',
 })

@@ -1,15 +1,12 @@
 <div class="screen">
 
-  <div class="topbar">
-    <button class="back-button" (click)="voltar()">
-      <img src="/Back.png" alt="">
-    </button>
-    <div class="user-info">
-      <img src="/testee.jpg" class="avatar" alt="">
-      <span class="user-name">Gustavo Gomez</span>
-    </div>
-    <span class="role">Motorista</span>
-  </div>
+  <app-header
+    tipo="driver"
+    nomeUsuario="Gustavo Gomez"
+    [qtdNotificacoes]="1"
+    (voltarEvent)="voltar()"
+    (perfilEvent)="irParaPerfil()">
+  </app-header>
 
   <div class="mapa">
     <img src="/mapa-placeholder.png" alt="Mapa" class="mapa-img">
@@ -17,21 +14,25 @@
 
   <div class="listas">
 
+    <!-- Lista: Alunos Esperando -->
     <div class="lista-card">
-      <button class="lista-header" (click)="toggleEsperando()">
-        <i class="bi bi-people"></i>
+      <button class="lista-header" type="button" (click)="toggleEsperando()">
+        <div class="icon-box icon-amarelo">
+          <i class="bi bi-people"></i>
+        </div>
         <span class="lista-titulo">Alunos Esperando</span>
         <span class="lista-count">{{ alunosEsperando.length }}</span>
-        @if (alunosEmbarcadosAberto) {
-          <img src="/Back.svg" class="chevron-icon">
+        @if (alunosEsperandoAberto) {
+          <img src="/Back.svg" class="chevron-icon" alt="Fechar">
         } @else {
-          <img src="/up.svg" class="chevron-icon">
+          <img src="/up.svg" class="chevron-icon" alt="Abrir">
         }
       </button>
+
       @if (alunosEsperandoAberto) {
         @for (aluno of alunosEsperando; track aluno.nome) {
           <div class="aluno-item">
-            <img src="/avatar.png" class="aluno-avatar" alt="">
+            <img src="/testee.jpg" class="aluno-avatar" alt="">
             <div class="aluno-info">
               <span class="aluno-nome">{{ aluno.nome }}</span>
               <span class="aluno-end">{{ aluno.endereco }}</span>
@@ -41,21 +42,25 @@
       }
     </div>
 
+    <!-- Lista: Alunos Embarcados -->
     <div class="lista-card">
-      <button class="lista-header" (click)="toggleEmbarcados()">
-        <i class="bi bi-people"></i>
+      <button class="lista-header" type="button" (click)="toggleEmbarcados()">
+        <div class="icon-box icon-azul">
+          <i class="bi bi-people"></i>
+        </div>
         <span class="lista-titulo">Alunos Embarcados</span>
         <span class="lista-count">{{ alunosEmbarcados.length }}</span>
         @if (alunosEmbarcadosAberto) {
-          <img src="/Back.svg" class="chevron-icon">
+          <img src="/Back.svg" class="chevron-icon" alt="Fechar">
         } @else {
-          <img src="/up.svg" class="chevron-icon">
+          <img src="/up.svg" class="chevron-icon" alt="Abrir">
         }
       </button>
+
       @if (alunosEmbarcadosAberto) {
         @for (aluno of alunosEmbarcados; track aluno.nome) {
           <div class="aluno-item">
-            <img src="/avatar.png" class="aluno-avatar" alt="">
+            <img src="/testee.jpg" class="aluno-avatar" alt="">
             <div class="aluno-info">
               <span class="aluno-nome">{{ aluno.nome }}</span>
               <span class="aluno-end">{{ aluno.endereco }}</span>
@@ -66,4 +71,9 @@
     </div>
 
   </div>
+
+  @if (mostrarPerfil) {
+    <app-profile-select (fecharEvent)="fecharPerfil()"></app-profile-select>
+  }
+
 </div>

@@ -13,6 +13,7 @@ export interface User {
   accountNonLocked: boolean;
   credentialsNonExpired: boolean;
   username: string;
+  role: string;
 
   authorities: Authority[];
   roles: Role[];

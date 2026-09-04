@@ -1,14 +1,17 @@
 import { Component } from '@angular/core';
-import { Location } from '@angular/common';
+import { Location, CommonModule } from '@angular/common';
+import { Header } from '../../shared/header/header';
+import { ProfileSelect } from '../../components/profile-select/profile-select'; // <--- Importe o ProfileSelect
 
 @Component({
   selector: 'app-driver-route',
   standalone: true,
-  imports: [],
+  imports: [CommonModule, Header, ProfileSelect], // <--- Adicione aqui no imports
   templateUrl: './driver-route.html',
   styleUrl: './driver-route.css',
 })
 export class DriverRoute {
+  mostrarPerfil = false; // <--- Controle de exibição do modal
   alunosEsperandoAberto = false;
   alunosEmbarcadosAberto = false;
 
@@ -30,9 +33,21 @@ export class DriverRoute {
   voltar() {
     this.location.back();
   }
+
+  // Abre o perfil no modal/bottom-sheet por cima
+  irParaPerfil() {
+    this.mostrarPerfil = true;
+  }
+
+  // Fecha o perfil
+  fecharPerfil() {
+    this.mostrarPerfil = false;
+  }
+
   toggleEsperando() {
     this.alunosEsperandoAberto = !this.alunosEsperandoAberto;
   }
+
   toggleEmbarcados() {
     this.alunosEmbarcadosAberto = !this.alunosEmbarcadosAberto;
   }

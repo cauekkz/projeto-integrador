@@ -78,6 +78,7 @@
   color: #64748b;
 }
 
+
 .content {
   width: 100%;
   display: flex;
@@ -87,6 +88,19 @@
   box-sizing: border-box;
   flex: 1;
   margin-top: 100px;
+  cursor: pointer;
+  user-select: none;
+
+}
+
+
+.content:hover {
+  opacity: 0.96;
+}
+
+.content:active {
+  transform: scale(0.99);
+  transition: transform 0.1s ease;
 }
 
 .empty-container {
@@ -112,6 +126,7 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
   border: 1px solid #f1f5f9;
   box-sizing: border-box;
+
 }
 
 .status-top {
