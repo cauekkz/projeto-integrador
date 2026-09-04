@@ -11,6 +11,7 @@ import { StudentCode } from './components/student/student-code/student-code';
 import { Dependentes } from './components/student/dependentes/dependentes';
 import { Chat } from './pages/chat/chat';
 import { ProfileInfo } from './pages/profile-info/profile-info';
+import { ProfileSelect } from './components/profile-select/profile-select';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -25,6 +26,7 @@ export const routes: Routes = [
   { path: 'dependentes', component: Dependentes },
   { path: 'chat', component: Chat },
   { path: 'profile-info/:tipo', component: ProfileInfo },
-  { path: 'signup/:tipo', component: Signup }
+  { path: 'signup/:tipo', component: Signup },
+  { path: 'profile-select', component: ProfileSelect },
 
 ];

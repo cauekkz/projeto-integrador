@@ -5,6 +5,8 @@ import { AuthService } from '../../../services/auth.service';
 import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
 import { PhoneMaskDirective, NameFormatDirective } from '../../../shared/directives';
+import { PopUpService } from '../../../shared/pop-up';
+import { jwtDecode } from 'jwt-decode';
 
 @Component({
   selector: 'app-signup-driver',
@@ -24,6 +26,7 @@ export class SignupDriver {
   constructor(
     protected registerService: RegisterService,
     private authService: AuthService,
+    private popUpService: PopUpService,
   ) {}
 
 
@@ -53,6 +56,20 @@ export class SignupDriver {
     return value.trim() === '';
   }
 
+  getUserRoleFromToken(): string | null {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+      const decoded: any = jwtDecode(token);
+      // Mapeia os campos comuns onde a role pode estar salva no payload do JWT
+      return decoded.role || decoded.roles?.[0] || decoded.tipo || null;
+    } catch (error) {
+      console.error('Erro ao decodificar a role do token:', error);
+      return null;
+    }
+  }
+
 
   signup() {
 
@@ -73,18 +90,20 @@ export class SignupDriver {
       this.confirmPassInvalido ||
       this.phoneInvalido
     ) {
+      this.popUpService.show('Por favor, preencha todos os campos obrigatórios.', 'warning', 'Campos Incompletos');
       return;
     }
 
 
     if (this.enteredPass !== this.enteredConfirmPass) {
       this.passwordsDontMatch = true;
+      this.popUpService.show('As senhas digitadas não coincidem.', 'error', 'Senhas Incompatíveis');
       return;
     }
 
 
     if (!this.registerService.selectedFile) {
-      console.error('Nenhum documento foi selecionado.');
+      this.popUpService.show('É necessário anexa o arquivo PDF da CNH antes de continuar.', 'warning', 'CNH Obrigatória');
       return;
     }
 

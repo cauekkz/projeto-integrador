@@ -1,6 +1,6 @@
 <div class="login-container">
   <app-header
-    titulo="Cadastro {{ tipoUsuario === 'motorista' ? 'Motorista' : 'Responsavel' }}"
+    titulo="Acessar {{ tipoUsuario === 'motorista' ? 'Motorista' : 'Responsável' }}"
     (voltarEvent)="voltar()"
   />
 
@@ -8,26 +8,26 @@
     <form (ngSubmit)="login()">
 
       @if (tipoUsuario === 'motorista') {
-        <h2>Ola, que bom que voce voltou!</h2>
+        <h2>Olá, que bom que você voltou!</h2>
         <label>CPF do motorista</label>
         <input type="text" placeholder="000.000.000-00" name="nome" [(ngModel)]="enteredCPF" appCpfMask required />
       }
 
       @if (tipoUsuario === 'responsavel') {
-        <h2>Ola, que bom que voce voltou!</h2>
-        <label>CPF do responsavel</label>
+        <h2>Olá, que bom que você voltou!</h2>
+        <label>CPF do responsável</label>
         <input type="text" placeholder="000.000.000-00" name="nome" [(ngModel)]="enteredCPF" appCpfMask required />
       }
 
       @if (cpfInvalido) {
-        <p class="error-message">O CPF e obrigatorio!</p>
+        <p class="error-message">O CPF é obrigatório!</p>
       }
 
       <label>Senha</label>
       <input type="password" placeholder="Digite sua senha" name="senha" [(ngModel)]="enteredPass" required />
 
       @if (passInvalido) {
-        <p class="error-message">A senha e obrigatoria!</p>
+        <p class="error-message">A senha é obrigatória!</p>
       }
 
       <app-button

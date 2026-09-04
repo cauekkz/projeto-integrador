@@ -6,6 +6,7 @@ import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
 import { ForgotPassword } from '../../../components/login-signup/forgot-password/forgot-password';
 import { CpfMaskDirective } from '../../../shared/directives';
+import { PopUpService } from '../../../shared/pop-up';
 
 @Component({
   selector: 'app-login-form',
@@ -22,6 +23,7 @@ export class LoginForm {
   constructor(
     private router: Router,
     private authService: AuthService,
+    private popUpService: PopUpService,
   ) {}
 
   enteredCPF = '';
@@ -49,6 +51,7 @@ export class LoginForm {
     this.passInvalido = this.verification(this.enteredPass);
 
     if (this.cpfInvalido || this.passInvalido) {
+      this.popUpService.show('Por favor, preencha o CPF e a senha para entrar.', 'warning', 'Campos Obrigatórios');
       return;
     }
 

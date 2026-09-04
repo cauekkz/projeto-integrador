@@ -6,6 +6,7 @@ import { Header } from '../../../shared//header/header';
 import { Button } from '../../../shared/button/button';
 import { CommonModule} from '@angular/common';
 import { CpfMaskDirective, PhoneMaskDirective, NameFormatDirective } from '../../../shared/directives';
+import { PopUpService } from '../../../shared/pop-up';
 
 @Component({
   selector: 'app-signup-responsible',
@@ -22,7 +23,8 @@ export class SignupResponsible {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private popUpService: PopUpService,
   ) {}
 
   cpfInvalido: boolean = false;
@@ -64,6 +66,7 @@ export class SignupResponsible {
       this.confirmPassInvalido ||
       this.phoneInvalido
     ) {
+      this.popUpService.show('Por favor, preencha todos os campos obrigatórios.', 'warning', 'Campos Incompletos');
       return;
     }
 
@@ -71,6 +74,7 @@ export class SignupResponsible {
 
     if (this.enteredPass !== this.enteredConfirmPass) {
       this.passwordsDontMatch = true;
+      this.popUpService.show('As senhas digitadas não coincidem.', 'error', 'Senhas Incompatíveis');
       return;
     }
 
