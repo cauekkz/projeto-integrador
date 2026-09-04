@@ -10,13 +10,13 @@
       @if (tipoUsuario === 'motorista') {
         <h2>Ola, que bom que voce voltou!</h2>
         <label>CPF do motorista</label>
-        <input type="text" placeholder="Digite seu CPF" name="nome" [(ngModel)]="enteredCPF" required />
+        <input type="text" placeholder="000.000.000-00" name="nome" [(ngModel)]="enteredCPF" appCpfMask required />
       }
 
       @if (tipoUsuario === 'responsavel') {
         <h2>Ola, que bom que voce voltou!</h2>
         <label>CPF do responsavel</label>
-        <input type="text" placeholder="Digite seu CPF" name="nome" [(ngModel)]="enteredCPF" required />
+        <input type="text" placeholder="000.000.000-00" name="nome" [(ngModel)]="enteredCPF" appCpfMask required />
       }
 
       @if (cpfInvalido) {

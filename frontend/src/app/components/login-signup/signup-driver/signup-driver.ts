@@ -4,11 +4,12 @@ import { RegisterService } from '../../../services/register.service';
 import { AuthService } from '../../../services/auth.service';
 import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
+import { PhoneMaskDirective, NameFormatDirective } from '../../../shared/directives';
 
 @Component({
   selector: 'app-signup-driver',
   standalone: true,
-  imports: [FormsModule, Header, Button],
+  imports: [FormsModule, Header, Button, PhoneMaskDirective, NameFormatDirective],
   templateUrl: './signup-driver.html',
   styleUrl: './signup-driver.css',
 })

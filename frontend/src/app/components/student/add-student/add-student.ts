@@ -4,11 +4,12 @@ import { Router } from '@angular/router';
 import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
 import { StudentService } from '../../../services/student.service';
+import { NameFormatDirective, DateMaskDirective } from '../../../shared/directives';
 
 @Component({
   selector: 'app-add-student',
   standalone: true,
-  imports: [FormsModule, Header, Button],
+  imports: [FormsModule, Header, Button, NameFormatDirective, DateMaskDirective],
   templateUrl: './add-student.html',
   styleUrl: './add-student.css',
 })
