@@ -1,0 +1,45 @@
+<div class="screen">
+
+
+  <app-header
+    tipo="chat"
+    nomeUsuario="Gustavo Gómez"
+    fotoUrl="/testee.jpg"
+    (voltarEvent)="voltar()">
+  </app-header>
+
+
+
+  <div class="mensagens">
+    @for (msg of mensagens; track $index) {
+      <div class="msg-wrapper" [class.minha]="msg.minha">
+        <div class="msg-balao" [class.minha]="msg.minha">
+          <span class="msg-texto">{{ msg.texto }}</span>
+          <span class="msg-hora">
+            {{ msg.hora }}
+            @if (msg.minha) {
+              <i class="bi bi-check2-all" [class.lida]="msg.lida"></i>
+            }
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="input-bar">
+    <input
+      type="text"
+      placeholder="Digite sua mensagem"
+      [(ngModel)]="mensagem"
+      name="mensagem"
+      (keydown.enter)="enviar()"
+    >
+    <button class="btn-icon">
+      <i class="bi bi-credit-card"></i>
+    </button>
+    <button class="btn-icon">
+      <i class="bi bi-mic"></i>
+    </button>
+  </div>
+
+</div>

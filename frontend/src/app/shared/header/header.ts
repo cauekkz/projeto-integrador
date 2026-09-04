@@ -9,13 +9,13 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./header.css'],
 })
 export class Header {
-  // Se não passar nada, assume 'geral' por padrão
-  @Input() tipo: 'geral' | 'driver' = 'geral';
+  // Tipos aceitos: 'geral', 'driver' e o novo 'chat'
+  @Input() tipo: 'geral' | 'driver' | 'chat' = 'geral';
 
   // Props do header normal/geral
   @Input() titulo: string = '';
 
-  // Props do header de motorista
+  // Props do header de motorista e chat
   @Input() nomeUsuario: string = '';
   @Input() fotoUrl: string = '/testee.jpg';
   @Input() role: string = 'Motorista';
@@ -26,6 +26,7 @@ export class Header {
   @Output() voltarEvent = new EventEmitter<void>();
   @Output() perfilEvent = new EventEmitter<void>();
   @Output() notificacaoEvent = new EventEmitter<void>();
+  @Output() acaoChatEvent = new EventEmitter<void>();
 
   voltar() {
     this.voltarEvent.emit();
@@ -37,5 +38,9 @@ export class Header {
 
   abrirNotificacoes() {
     this.notificacaoEvent.emit();
+  }
+
+  clicarAcaoChat() {
+    this.acaoChatEvent.emit();
   }
 }

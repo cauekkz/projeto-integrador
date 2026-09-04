@@ -28,9 +28,13 @@ export class Footer {
   selecionarAba(aba: 'meio' | 'config') {
     this.abaAtiva = aba;
 
-    // Redireciona APENAS se for a aba do meio do motorista
     if (aba === 'meio' && this.tipoUsuario === 'motorista') {
       this.router.navigate(['/driver-route']);
+    }
+
+    if (aba === 'config') {
+      const from = this.tipoUsuario === 'motorista' ? 'driver-home' : 'home-screen';
+      this.router.navigate(['/chat'], { queryParams: { from } });
     }
   }
 }

@@ -1,1 +1,18 @@
-<p>chat works!</p>
+<div class="screen">
+  <app-header titulo="Conversas" (voltarEvent)="voltar()" />
+
+  <div class="lista">
+    @for (conversa of conversas; track conversa.id) {
+      <div class="conversa-item" (click)="abrirConversa(conversa)">
+        <img [src]="conversa.foto" class="conversa-avatar" alt="">
+        <div class="conversa-info">
+          <span class="conversa-nome">{{ conversa.nome }}</span>
+          <span class="conversa-msg">{{ conversa.ultimaMensagem }}</span>
+        </div>
+        <span class="conversa-hora">{{ conversa.hora }}</span>
+      </div>
+    }
+  </div>
+
+  <app-footer tipoUsuario="motorista" abaAtiva="chat" />
+</div>
