@@ -5,7 +5,6 @@
   background: #f1f5f9;
 }
 
-/* Topbar / Header */
 .topbar {
   display: flex;
   align-items: center;
@@ -51,14 +50,13 @@
   color: #64748b;
 }
 
-/* Mapa Centralizado */
 .mapa {
   width: 80%;
   max-width: 348px;
   height: 260px;
   background: #e2e8f0;
   overflow: hidden;
-  margin: 16px auto 0 auto; /* Centraliza no meio */
+  margin: 16px auto 0 auto;
   border-radius: 16px;
 }
 
@@ -68,7 +66,6 @@
   object-fit: cover;
 }
 
-/* Container das Listas */
 .listas {
   display: flex;
   flex-direction: column;
@@ -77,20 +74,19 @@
   padding: 16px;
 }
 
-/* Cards de Alunos (Medidas e estilos extraídos do Figma) */
 .lista-card {
   width: 100%;
-  max-width: 348px; /* Largura Figma */
+  max-width: 348px;
   background: #ffffff;
-  border-radius: 16px; /* Radius Figma */
-  border: 0.8px solid #e2e8f0; /* Borda Figma */
-  box-shadow: 0px 1px 2px 0px rgba(15, 23, 42, 0.06); /* Sombra Figma */
+  border-radius: 16px;
+  border: 0.8px solid #e2e8f0;
+  box-shadow: 0px 1px 2px 0px rgba(15, 23, 42, 0.06);
   overflow: hidden;
 }
 
 .lista-header {
   width: 100%;
-  height: 80px; /* Altura Figma */
+  height: 80px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -102,7 +98,6 @@
   font-weight: 600;
 }
 
-/* Container dos Ícones de Pessoas */
 .icon-box {
   display: flex;
   width: 40px;
@@ -118,16 +113,15 @@
 }
 
 .icon-amarelo {
-  background: #fdf5ec; /* Fundo suave amarelo */
-  color: #d97706;      /* Ícone amarelo */
+  background: #fdf5ec;
+  color: #d97706;
 }
 
 .icon-azul {
-  background: #eef4ff; /* Fundo suave azul */
-  color: #0c66db;      /* Ícone azul */
+  background: #eef4ff;
+  color: #0c66db;
 }
 
-/* Textos da Lista */
 .lista-titulo {
   flex: 1;
   text-align: left;
@@ -147,7 +141,6 @@
   height: 20px;
 }
 
-/* Itens da Lista Expandida */
 .aluno-item {
   display: flex;
   align-items: center;

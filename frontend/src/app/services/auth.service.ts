@@ -8,6 +8,7 @@ interface TokenResponse {
   token: string;
   expiresIn: number;
 }
+
 @Injectable({
   providedIn: 'root',
 })
@@ -37,7 +38,6 @@ export class AuthService {
   }
 
   createDriver(data: {
-    /* driverType: string; */
     documentPdf: File;
     name: string;
     email: string;
@@ -47,9 +47,6 @@ export class AuthService {
   }) {
     const formData = new FormData();
 
-    // esse drivertype ta inutil por enquanto
-    // no signup-driver to enviando nd util do drivertype
-    /* formData.append('driverType', data.driverType); */
     formData.append('documentPdf', data.documentPdf);
     formData.append('name', data.name);
     formData.append('email', data.email);
@@ -88,7 +85,6 @@ export class AuthService {
     return this.http.delete(`${this.apiUrl}/users/${id}`);
   }
 
-  // dps ve se isso vai ser usado
   verifyCNH(data: { documentPDF: File }) {
     const formData = new FormData();
     formData.append('documentPdf', data.documentPDF);

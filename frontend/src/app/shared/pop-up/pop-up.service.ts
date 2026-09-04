@@ -9,7 +9,7 @@ export interface PopUpItem {
 }
 
 @Injectable({
-  providedIn: 'root' // <-- Garante que existe APENAS UMA instância no projeto todo
+  providedIn: 'root',
 })
 export class PopUpService {
   readonly popups = signal<PopUpItem[]>([]);
@@ -24,8 +24,6 @@ export class PopUpService {
   ): string {
     const now = Date.now();
 
-    // TRAVA ANTI-DUPLICAÇÃO:
-    // Se for a mesma mensagem disparada num intervalo menor que 300ms, ignora a segunda.
     if (this.lastShowMessage === message && now - this.lastShowTimestamp < 300) {
       return '';
     }

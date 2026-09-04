@@ -16,7 +16,6 @@ import { jwtDecode } from 'jwt-decode';
   styleUrl: './signup-driver.css',
 })
 export class SignupDriver {
-
   @Output() cadastroConcluidoEvent = new EventEmitter<{
     email: string;
   }>();
@@ -29,7 +28,6 @@ export class SignupDriver {
     private popUpService: PopUpService,
   ) {}
 
-
   nameInvalido = false;
   emailInvalido = false;
   passInvalido = false;
@@ -37,18 +35,15 @@ export class SignupDriver {
   phoneInvalido = false;
   passwordsDontMatch = false;
 
-
   enteredName = '';
   enteredEmail = '';
   enteredPass = '';
   enteredConfirmPass = '';
   enteredPhone = '';
 
-
   etapa = 1;
 
-
- voltar() {
+  voltar() {
     this.voltarEvent.emit();
   }
 
@@ -62,7 +57,6 @@ export class SignupDriver {
 
     try {
       const decoded: any = jwtDecode(token);
-      // Mapeia os campos comuns onde a role pode estar salva no payload do JWT
       return decoded.role || decoded.roles?.[0] || decoded.tipo || null;
     } catch (error) {
       console.error('Erro ao decodificar a role do token:', error);
@@ -70,12 +64,8 @@ export class SignupDriver {
     }
   }
 
-
   signup() {
-
-
     this.passwordsDontMatch = false;
-
 
     this.nameInvalido = this.verification(this.enteredName);
     this.emailInvalido = this.verification(this.enteredEmail);
@@ -94,19 +84,16 @@ export class SignupDriver {
       return;
     }
 
-
     if (this.enteredPass !== this.enteredConfirmPass) {
       this.passwordsDontMatch = true;
       this.popUpService.show('As senhas digitadas não coincidem.', 'error', 'Senhas Incompatíveis');
       return;
     }
 
-
     if (!this.registerService.selectedFile) {
-      this.popUpService.show('É necessário anexa o arquivo PDF da CNH antes de continuar.', 'warning', 'CNH Obrigatória');
+      this.popUpService.show('É necessário anexar o arquivo PDF da CNH antes de continuar.', 'warning', 'CNH Obrigatória');
       return;
     }
-
 
     const data = {
       documentPdf: this.registerService.selectedFile,
@@ -122,7 +109,6 @@ export class SignupDriver {
     this.authService.createDriver(data).subscribe({
       next: (response) => {
         console.log('Motorista cadastrado com sucesso:', response);
-        // Este evento avisa o pai para mostrar a tela de código
         this.cadastroConcluidoEvent.emit({
           email: this.enteredEmail,
         });

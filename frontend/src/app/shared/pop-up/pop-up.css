@@ -36,7 +36,6 @@
   }
 }
 
-/* ERROR STATE (Secondary/Alert Theme) */
 .popup-card.error {
   background-color: #fef2f2;
   border-color: #fecaca;
@@ -47,7 +46,6 @@
   color: #dc2626;
 }
 
-/* WARNING STATE */
 .popup-card.warning {
   background-color: #fffbeb;
   border-color: #fde68a;
@@ -58,7 +56,6 @@
   color: #d97706;
 }
 
-/* SUCCESS STATE */
 .popup-card.success {
   background-color: #f0fdf4;
   border-color: #bbf7d0;
@@ -69,7 +66,6 @@
   color: #16a34a;
 }
 
-/* INFO STATE */
 .popup-card.info {
   background-color: #eff6ff;
   border-color: #bfdbfe;

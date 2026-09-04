@@ -35,7 +35,7 @@ export class Dependentes implements OnInit {
       })
       .subscribe({
         next: (resposta: any) => {
-          console.log('resposta:', resposta); // vê o que chega
+          console.log('resposta:', resposta);
           this.dependentes.set(resposta?.content ?? resposta ?? []);
           this.carregando.set(false);
         },

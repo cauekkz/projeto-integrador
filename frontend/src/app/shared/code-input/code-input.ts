@@ -1,7 +1,5 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgFor } from '@angular/common';
-
 
 @Component({
   selector: 'app-code-input',
@@ -13,7 +11,7 @@ import { NgFor } from '@angular/common';
 export class CodeInput implements OnInit {
   @Input() instrucao = '';
   @Input() mostrarReenviar = false;
-  @Input() length = 6; // quantidade de inputs
+  @Input() length = 6;
   @Input() textoBotao = 'Verificar';
   @Output() codigoVerificado = new EventEmitter<string>();
   @Output() reenviarEvent = new EventEmitter<void>();

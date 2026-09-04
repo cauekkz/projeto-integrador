@@ -18,7 +18,7 @@ export class Chat implements OnInit {
     {
       id: 1,
       nome: 'Gustavo Gomez',
-      ultimaMensagem: 'Ola, Gustavo. Tudo sim, e com voce?',
+      ultimaMensagem: 'Olá, Gustavo. Tudo sim, e com você?',
       hora: '19:14',
       foto: '/testee.jpg',
     }

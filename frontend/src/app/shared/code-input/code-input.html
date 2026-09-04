@@ -16,13 +16,13 @@
   </div>
 
   @if (invalido) {
-    <p class="error-message">Digite todos os {{ length }} digitos!</p>
+    <p class="error-message">Digite todos os {{ length }} dígitos!</p>
   }
 
   <div class="botoes">
     <button class="btn-verificar" (click)="verificar()">{{ textoBotao }}</button>
     @if (mostrarReenviar) {
-      <button class="btn-reenviar" (click)="reenviar()">Reenviar codigo</button>
+      <button class="btn-reenviar" (click)="reenviar()">Reenviar código</button>
     }
   </div>
 </div>

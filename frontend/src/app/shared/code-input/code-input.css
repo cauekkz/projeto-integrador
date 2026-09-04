@@ -9,7 +9,6 @@
   margin-bottom: 100px;
 }
 
-/* Empurra os botões para o final */
 .botoes {
   display: flex;
   flex-direction: column;
