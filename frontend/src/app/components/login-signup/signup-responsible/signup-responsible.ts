@@ -5,11 +5,12 @@ import { AuthService } from '../../../services/auth.service';
 import { Header } from '../../../shared//header/header';
 import { Button } from '../../../shared/button/button';
 import { CommonModule} from '@angular/common';
+import { CpfMaskDirective, PhoneMaskDirective, NameFormatDirective } from '../../../shared/directives';
 
 @Component({
   selector: 'app-signup-responsible',
   standalone: true,
-  imports: [FormsModule, Header, Button, CommonModule],
+  imports: [FormsModule, Header, Button, CommonModule, CpfMaskDirective, PhoneMaskDirective, NameFormatDirective],
   templateUrl: './signup-responsible.html',
   styleUrl: './signup-responsible.css',
 })

@@ -4,7 +4,7 @@
     <form class="form" (ngSubmit)="signup()">
       <div class="field">
         <label>Nome do motorista</label>
-        <input type="text" placeholder="Digite seu nome" [(ngModel)]="enteredName" name="name" />
+        <input type="text" placeholder="Digite seu nome" [(ngModel)]="enteredName" name="name" appNameFormat />
 
         @if (nameInvalido) {
           <p class="error-message">O nome é obrigatório!</p>
@@ -27,7 +27,7 @@
 
       <div class="field">
         <label>Telefone do motorista</label>
-        <input type="text" placeholder="11 99999-9999" [(ngModel)]="enteredPhone" name="phone" />
+        <input type="text" placeholder="(11) 99999-9999" [(ngModel)]="enteredPhone" name="phone" appPhoneMask />
 
         @if (phoneInvalido) {
           <p class="error-message">O telefone é obrigatório!</p>
