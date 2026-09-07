@@ -26,7 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import br.com.vanroute.backend.dtos.contract.ContractProposalRequestDTO;
 import br.com.vanroute.backend.services.StudentResponsibleService;
 import br.com.vanroute.backend.services.UserService;
-
+import  br.com.vanroute.backend.services.ContractService;
 @RestController
 @RequestMapping("/api/chats")
 public class ChatController {
@@ -39,6 +39,7 @@ public class ChatController {
     private final ObjectMapper objectMapper;
     private final StudentResponsibleService studentResponsibleService;
     private final UserService userService;
+    private final ContractService contractService;
     
     public ChatController(
             ChatMessageService chatMessageService,
@@ -46,13 +47,15 @@ public class ChatController {
             RedisTemplate<String, String> redisTemplate,
             ObjectMapper objectMapper,
             StudentResponsibleService studentResponsibleService,
-            UserService userService) {
+            UserService userService,
+            ContractService contractService) {
         this.chatMessageService = chatMessageService;
         this.chatService = chatService;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
         this.studentResponsibleService = studentResponsibleService;
         this.userService = userService;
+        this.contractService = contractService;
     }
 
     @GetMapping
@@ -92,15 +95,19 @@ public class ChatController {
     //rota apenas de driver,
     //ich bin müde
     @PostMapping("/{chatId}/contract")
-    public ResponseEntity<ContractResponseDTO> createContract(@PathVariable UUID chatId,
+    public ResponseEntity<Void> createContract(@PathVariable UUID chatId,
         @Valid @RequestBody ContractProposalRequestDTO request, Authentication authentication) {
         String cpf = authentication.getName();
         chatService.UsersInChat(chatId, cpf, request.responsibleId());
+        
         if (!studentResponsibleService.isAdmin(request.responsibleId(), request.studentId())) {
-            throw new RuntimeException("MIA SAN MIA!!!");
+            throw new RuntimeException("MIA SAN MIA!!!"); // Responsavel não possui conexão com essa criança // algo assim
         }
+        
         //macacada da porra essa porra ser CPF e nao ID agora fodase vou muda sepre no cmc, e ja ta errado pra krl carrengando o user inteiro chat se vc ver isso faz o metodo de pegar so o ID e nao o user tudo
         UUID driverId = userService.findByCpf(cpf).get().getId();
+        contractService.createContract(driverId, request);
+        return ResponseEntity.status(201).build();
         
         
 

@@ -8,4 +8,4 @@ public record ContractProposalRequestDTO(
     UUID schoolId,
     ContractRequestDTO contract,
     DocumentRequestDTO document
-) {}
+) {}                                                                                    
