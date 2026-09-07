@@ -31,3 +31,14 @@ spring:
       pageable:
         default-page-size: 10
         max-page-size: 100
+
+  cloud:
+    aws:
+      credentials:
+        access-key: ${MINIO_ACCESS_KEY:vanroute}
+        secret-key: ${MINIO_SECRET_KEY:vanroute123456}
+      s3:
+        endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+        bucket: ${MINIO_BUCKET_NAME:vanroute-storage}
+      region:
+        static: us-east-1
