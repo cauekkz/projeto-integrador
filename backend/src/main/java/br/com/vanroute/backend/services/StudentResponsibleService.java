@@ -26,7 +26,7 @@ public class StudentResponsibleService {
 
     public boolean isAdmin(UUID responsibleId, UUID studentId) {
         return studentResponsibleRepository
-                .existsByResponsible_IdAndStudent_IdAndIsAdminTrue(
+                .existsByResponsible_UserIdAndStudent_IdAndIsAdminTrue(
                         responsibleId,
                         studentId
                 );

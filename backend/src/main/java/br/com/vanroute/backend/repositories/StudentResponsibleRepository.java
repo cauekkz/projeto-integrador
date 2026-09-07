@@ -6,9 +6,12 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.UUID;
 
-public interface StudentResponsibleRepository extends JpaRepository<StudentResponsible, UUID> , JpaSpecificationExecutor<StudentResponsible> {
-    //danke chat
+public interface StudentResponsibleRepository
+        extends JpaRepository<StudentResponsible, UUID>, JpaSpecificationExecutor<StudentResponsible> {
+    // danke chat
     boolean existsByResponsible_User_CpfAndStudent_IdAndIsAdminTrue(String cpf, UUID studentId);
-    boolean existsByResponsible_IdAndStudent_IdAndIsAdminTrue(UUID responsibleId, UUID studentId);
 
+    boolean existsByResponsible_UserIdAndStudent_IdAndIsAdminTrue(
+            UUID responsibleId,
+            UUID studentId);
 }
