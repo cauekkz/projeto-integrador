@@ -1,8 +1,8 @@
 package br.com.vanroute.backend.services;
 
-import br.com.vanroute.backend.dtos.test.Coordenadas;
-import br.com.vanroute.backend.dtos.test.GeocodeResponse;
-import br.com.vanroute.backend.dtos.test.RouteResponse;
+import br.com.vanroute.backend.dtos.geocode.Coordenadas;
+import br.com.vanroute.backend.dtos.geocode.GeocodeResponse;
+import br.com.vanroute.backend.dtos.geocode.GeoRouteResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -19,10 +19,6 @@ public class MapService {
         this.webClient = webClientBuilder.build();
     }
 
-    // =========================
-    // GEOCODING
-    // Endereço -> Coordenadas
-    // =========================
     public Coordenadas searchCoord(String address) {
 
         GeocodeResponse response = webClient.get()
@@ -48,12 +44,7 @@ public class MapService {
         );
     }
 
-
-    // =========================
-    // ROTA
-    // Coordenadas -> Rota
-    // =========================
-    public RouteResponse calcularRota(
+    public GeoRouteResponse calcularRota(
             double longitudeOrigem,
             double latitudeOrigem,
             double longitudeDestino,
@@ -73,7 +64,7 @@ public class MapService {
                         .queryParam("end", end)
                         .build())
                 .retrieve()
-                .bodyToMono(RouteResponse.class)
+                .bodyToMono(GeoRouteResponse.class)
                 .block();
     }
 }

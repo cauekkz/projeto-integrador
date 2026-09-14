@@ -1,4 +1,4 @@
-package br.com.vanroute.backend.dtos.test;
+package br.com.vanroute.backend.dtos.geocode;
 
 import java.util.List;
 
