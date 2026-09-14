@@ -1,7 +1,7 @@
 package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.dtos.route.AddressResponseDTO;
-import br.com.vanroute.backend.dtos.test.Coordenadas;
+import br.com.vanroute.backend.dtos.geocode.Coordenadas;
 import br.com.vanroute.backend.dtos.user.ResponsibleRequestDTO;
 import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
