@@ -1,6 +1,7 @@
 package br.com.vanroute.backend.controllers;
 
 import br.com.vanroute.backend.dtos.route.*;
+import br.com.vanroute.backend.services.MapService;
 import br.com.vanroute.backend.services.RouteService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -15,9 +16,11 @@ import java.util.UUID;
 @RequestMapping("/api/route")
 public class RouteController {
     private final RouteService routeService;
+    private final MapService mapService;
 
-    public RouteController(RouteService routeService) {
+    public RouteController(RouteService routeService, MapService mapService) {
         this.routeService = routeService;
+        this.mapService = mapService;
     }
 
     @PostMapping("/create-route")
@@ -84,4 +87,21 @@ public class RouteController {
                 routeService.findAll(authentication)
         );
     }
+
+// tava testando
+// @GetMapping
+//    public br.com.vanroute.backend.dtos.test.RouteResponse calcularRota(
+//            @RequestParam double longitudeOrigem,
+//            @RequestParam double latitudeOrigem,
+//            @RequestParam double longitudeDestino,
+//            @RequestParam double latitudeDestino
+//    ) {
+//
+//        return mapService.calcularRota(
+//                longitudeOrigem,
+//                latitudeOrigem,
+//                longitudeDestino,
+//                latitudeDestino
+//        );
+//    }
 }

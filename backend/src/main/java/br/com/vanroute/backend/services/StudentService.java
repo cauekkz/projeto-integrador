@@ -1,6 +1,7 @@
 package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.dtos.student.StudentResponsibleResponseDTO;
+import br.com.vanroute.backend.mapper.StudentResponsibleMapper;
 import br.com.vanroute.backend.models.address.Address;
 import br.com.vanroute.backend.models.student.StudentAddress;
 import br.com.vanroute.backend.repositories.StudentAddressRepository;
@@ -27,10 +28,10 @@ public class StudentService {
     private final StudentResponsibleRepository studentResponsibleRepository;
     private final AddressService addressService;
     private final StudentAddressRepository studentAddressRepository;
-    private final br.com.vanroute.backend.mappers.StudentResponsibleMapper studentResponsibleMapper;
+    private final StudentResponsibleMapper studentResponsibleMapper;
 
 
-    public StudentService(StudentRepository studentRepository, ResponsibleRepository responsibleRepository, StudentResponsibleRepository studentResponsibleRepository, AddressService addressService, StudentAddressRepository studentAddressRepository, br.com.vanroute.backend.mappers.StudentResponsibleMapper studentResponsibleMapper) {
+    public StudentService(StudentRepository studentRepository, ResponsibleRepository responsibleRepository, StudentResponsibleRepository studentResponsibleRepository, AddressService addressService, StudentAddressRepository studentAddressRepository,StudentResponsibleMapper studentResponsibleMapper) {
         this.studentRepository = studentRepository;
         this.responsibleRepository = responsibleRepository;
         this.studentResponsibleRepository = studentResponsibleRepository;

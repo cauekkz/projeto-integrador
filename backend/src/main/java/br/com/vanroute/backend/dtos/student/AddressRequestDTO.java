@@ -21,5 +21,8 @@ public record AddressRequestDTO(
         Integer number,
 
         @Size(max = 50, message = "O estado deve ter no máximo 50 caracteres")
-        String state
+        String state,
+
+        Double latitude,
+        Double longitude
 ) {}
