@@ -60,8 +60,8 @@ public class RouteService {
         Route route = routeRepository.findById(routeId)
                 .orElseThrow(() -> new RuntimeException("Route doesn't exists"));
         String cpf = authentication.getName();
-        Driver driver = driverRepository.findByUserCpf(cpf)
-                .orElseThrow(() -> new RuntimeException("Driver not found"));
+//        Driver driver = driverRepository.findByUserCpf(cpf)
+//                .orElseThrow(() -> new RuntimeException("Driver not found"));
         List<RouteStopResponse> response = new ArrayList<>();
         for (AddRouteStopRequest request : addRouteStopRequest) {
             Address address = addressRepository.findById(request.studentAddressId())

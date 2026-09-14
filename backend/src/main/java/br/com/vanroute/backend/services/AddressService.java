@@ -23,6 +23,8 @@ public class AddressService {
         address.setNeighborhood(addressRequestDTO.neighborhood());
         address.setNumber(addressRequestDTO.number());
         address.setState(addressRequestDTO.state());
+        address.setLatitude(addressRequestDTO.latitude());
+        address.setLongitude(addressRequestDTO.longitude());
 
         return addressRepository.save(address);
     }
