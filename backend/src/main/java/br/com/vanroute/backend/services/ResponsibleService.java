@@ -6,10 +6,12 @@ import br.com.vanroute.backend.dtos.user.ResponsibleRequestDTO;
 import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.models.address.Address;
+import br.com.vanroute.backend.models.address.ResponsibleAddress;
 import br.com.vanroute.backend.models.user.Responsible;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
+import br.com.vanroute.backend.repositories.ResponsibleAddressRepository;
 import br.com.vanroute.backend.repositories.ResponsibleRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +22,14 @@ public class ResponsibleService {
     private final UserService userService;
     private final AddressService addressService;
     private final MapService mapService;
+    private final ResponsibleAddressRepository responsibleAddressRepository;
 
-    public ResponsibleService(ResponsibleRepository responsibleRepository, UserService userService, AddressService addressService, MapService mapService) {
+    public ResponsibleService(ResponsibleRepository responsibleRepository, UserService userService, AddressService addressService, MapService mapService, ResponsibleAddressRepository responsibleAddressRepository) {
         this.responsibleRepository = responsibleRepository;
         this.userService = userService;
         this.addressService = addressService;
         this.mapService = mapService;
+        this.responsibleAddressRepository = responsibleAddressRepository;
     }
 
     public ResponsibleResponseDTO createResponsible(ResponsibleRequestDTO responsibleRequestDTO){
@@ -53,6 +57,10 @@ public class ResponsibleService {
        Coordenadas cords = mapService.searchCoord(addressString);
         address.setLatitude(cords.latitude());
         address.setLongitude(cords.longitude());
+        ResponsibleAddress responsibleAddress = new ResponsibleAddress();
+        responsibleAddress.setResponsible(responsible);
+        responsibleAddress.setAddress(address);
+        responsibleAddressRepository.save(responsibleAddress);
 
         Responsible newResponsible = responsibleRepository.save(responsible);
         return new ResponsibleResponseDTO(
