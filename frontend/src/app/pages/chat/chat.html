@@ -14,5 +14,11 @@
     }
   </div>
 
-  <app-footer tipoUsuario="motorista" abaAtiva="chat" />
+
+  @if (origem === 'driver-home') {
+    <app-footer tipoUsuario="motorista" />
+  } @else {
+    <app-footer tipoUsuario="responsavel" />
+  }
+
 </div>

@@ -1,6 +1,7 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-footer',
@@ -9,25 +10,55 @@ import { Router } from '@angular/router';
   templateUrl: './footer.html',
   styleUrl: './footer.css',
 })
-export class Footer {
+export class Footer implements OnInit {
   @Input() tipoUsuario: 'responsavel' | 'motorista' = 'responsavel';
 
-  abaAtiva: 'home' | 'meio' | 'config' = 'home';
+  abaAtiva: 'home' | 'meio' | 'config' | '' = 'home';
 
   constructor(private router: Router) {}
 
-  clicarHome() {
-    this.abaAtiva = 'home';
-    if (this.tipoUsuario === 'responsavel') {
-      this.router.navigate(['/home-screen']);
+  ngOnInit() {
+    this.atualizarAba(this.router.url);
+
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(e => this.atualizarAba(e.urlAfterRedirects));
+  }
+
+  private atualizarAba(url: string) {
+    const rota = url.split('?')[0];
+
+    // rotas do responsável
+    const homeResponsavel = ['/home-screen'];
+    const meioResponsavel: string[] = []; // coloque aqui a rota do mapa do responsável
+
+    // rotas do motorista
+    const homeMotorista = ['/driver-home'];
+    const meioMotorista = ['/driver-route'];
+
+    const home = this.tipoUsuario === 'motorista' ? homeMotorista : homeResponsavel;
+    const meio = this.tipoUsuario === 'motorista' ? meioMotorista : meioResponsavel;
+
+    const bate = (lista: string[]) => lista.some(r => rota.startsWith(r));
+
+    if (rota.startsWith('/chat')) {
+      this.abaAtiva = 'config';
+    } else if (bate(meio)) {
+      this.abaAtiva = 'meio';
+    } else if (bate(home)) {
+      this.abaAtiva = 'home';
     } else {
-      this.router.navigate(['/driver-home']);
+      this.abaAtiva = '';
     }
   }
 
-  selecionarAba(aba: 'meio' | 'config') {
-    this.abaAtiva = aba;
+  clicarHome() {
+    this.router.navigate([
+      this.tipoUsuario === 'responsavel' ? '/home-screen' : '/driver-home',
+    ]);
+  }
 
+  selecionarAba(aba: 'meio' | 'config') {
     if (aba === 'meio' && this.tipoUsuario === 'motorista') {
       this.router.navigate(['/driver-route']);
     }

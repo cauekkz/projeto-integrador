@@ -25,6 +25,10 @@ export class DriverHome {
     this.mostrarPerfil = true;
   }
 
+  irParaChat() {
+    this.router.navigate(['/chat'], { queryParams: { from: 'driver-home' } });
+  }
+
   fecharPerfil() {
     this.mostrarPerfil = false;
   }
