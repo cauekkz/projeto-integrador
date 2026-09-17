@@ -54,9 +54,9 @@
               </div>
             </div>
 
-            <div class="chat-btn">
+            <div class="chat-btn" (click)="irParaChat(); $event.stopPropagation()">
               <i class="bi bi-chat-dots-fill"></i>
-              <span class="chat-badge">1</span>
+              <!--  <span class="chat-badge"></span>... -->
             </div>
           </div>
         </div>

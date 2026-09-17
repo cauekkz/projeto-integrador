@@ -14,6 +14,8 @@ import { Footer } from '../../shared/footer/footer';
 export class Chat implements OnInit {
   origem = 'home-screen';
 
+
+
   conversas = [
     {
       id: 1,
