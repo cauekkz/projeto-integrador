@@ -1,5 +1,5 @@
 package br.com.vanroute.backend.models.school;
-
+//por enquanto nem pensa nessa classe ta foda 
 import jakarta.persistence.*;
 import java.util.UUID;
 

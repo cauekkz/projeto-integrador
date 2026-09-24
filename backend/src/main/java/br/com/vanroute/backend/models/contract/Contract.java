@@ -2,6 +2,7 @@ package br.com.vanroute.backend.models.contract;
 
 import br.com.vanroute.backend.models.contract.enums.ContractPeriodicity;
 import br.com.vanroute.backend.models.contract.enums.ContractStatus;
+import br.com.vanroute.backend.models.school.School;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -19,6 +20,9 @@ public class Contract {
     @Column(nullable = false)
     private ContractPeriodicity periodicity;
 
+ 
+
+    //valor por periodicity nesse recinto hemoglobina
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal value;
 
@@ -78,5 +82,6 @@ public class Contract {
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
     }
+
 
 }
