@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.dtos.geocode.Coordenadas;
 import br.com.vanroute.backend.dtos.student.StudentResponsibleResponseDTO;
 import br.com.vanroute.backend.mapper.StudentResponsibleMapper;
 import br.com.vanroute.backend.models.address.Address;
@@ -29,15 +30,16 @@ public class StudentService {
     private final AddressService addressService;
     private final StudentAddressRepository studentAddressRepository;
     private final StudentResponsibleMapper studentResponsibleMapper;
+    private final MapService mapService;
 
-
-    public StudentService(StudentRepository studentRepository, ResponsibleRepository responsibleRepository, StudentResponsibleRepository studentResponsibleRepository, AddressService addressService, StudentAddressRepository studentAddressRepository,StudentResponsibleMapper studentResponsibleMapper) {
+    public StudentService(StudentRepository studentRepository, ResponsibleRepository responsibleRepository, StudentResponsibleRepository studentResponsibleRepository, AddressService addressService, StudentAddressRepository studentAddressRepository,StudentResponsibleMapper studentResponsibleMapper, MapService mapService) {
         this.studentRepository = studentRepository;
         this.responsibleRepository = responsibleRepository;
         this.studentResponsibleRepository = studentResponsibleRepository;
         this.addressService = addressService;
         this.studentAddressRepository = studentAddressRepository;
         this.studentResponsibleMapper = studentResponsibleMapper;
+        this.mapService = mapService;
     }
 
         public StudentResponsibleResponseDTO createStudentWithRelation(StudentRequestDTO dto, String cpf){
@@ -45,8 +47,17 @@ public class StudentService {
             student.setName(dto.name());
             student.setNotes(dto.notes());
             student.setBirthDate(dto.birthDate());
-            studentRepository.save(student);
             Address address = addressService.addAddress(dto.address());
+            String addressString = address.getStreet()
+                    + ", " + address.getNumber()
+                    + ", " + address.getNeighborhood()
+                    + ", " + address.getCity()
+                    + ", " + address.getState()
+                    + ", " + address.getZipCode();
+            Coordenadas cords = mapService.searchCoord(addressString);
+            address.setLatitude(cords.latitude());
+            address.setLongitude(cords.longitude());
+            studentRepository.save(student);
             StudentAddress studentAddress = new StudentAddress();
             studentAddress.setAddress(address);
             studentAddress.setStudent(student);
