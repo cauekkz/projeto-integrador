@@ -22,7 +22,7 @@ public class Contract {
 
  
 
-
+    //valor por periodicity nesse recinto hemoglobina
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal value;
 
