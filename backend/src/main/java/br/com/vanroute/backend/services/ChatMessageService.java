@@ -39,9 +39,10 @@ public class ChatMessageService {
         message.setChat(chat);
         message.setSender(sender);
         message.setContent(request.content());
-        message.setAttachmentType(request.attachmentType()); // configura storage de arquivos
+        message.setAttachmentType(request.attachmentType()); // maldito jeito
         message.setAttachmentUrl(request.attachmentUrl()); 
         message.setMessageType(request.messageType());
+        message.setPayload(request.payload());
         message = chatMessageRepository.save(message);
         return ChatMessageResponseDTO.from(message);
     }

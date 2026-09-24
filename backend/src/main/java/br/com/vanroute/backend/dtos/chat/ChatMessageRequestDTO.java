@@ -8,7 +8,8 @@ public record ChatMessageRequestDTO(
     String content,
     AttachmentType attachmentType,
     String attachmentUrl,
-    MessageType messageType
+    MessageType messageType,
+    String payload
 ) {
     @AssertTrue(message = "A mensagem deve conter texto e/ou um anexo válido.")
     public boolean isValidContentOrAttachment() {

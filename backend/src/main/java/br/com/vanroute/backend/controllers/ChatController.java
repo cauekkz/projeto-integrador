@@ -1,6 +1,7 @@
 package br.com.vanroute.backend.controllers;
 
 import java.util.UUID;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,6 +29,7 @@ import br.com.vanroute.backend.dtos.contract.ContractProposalRequestDTO;
 import br.com.vanroute.backend.services.StudentResponsibleService;
 import br.com.vanroute.backend.services.UserService;
 import  br.com.vanroute.backend.services.ContractService;
+
 @RestController
 @RequestMapping("/api/chats")
 public class ChatController {
@@ -37,7 +40,6 @@ public class ChatController {
     private final ChatService chatService;
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
-    private final StudentResponsibleService studentResponsibleService;
     private final UserService userService;
     private final ContractService contractService;
     
@@ -46,14 +48,12 @@ public class ChatController {
             ChatService chatService,
             RedisTemplate<String, String> redisTemplate,
             ObjectMapper objectMapper,
-            StudentResponsibleService studentResponsibleService,
             UserService userService,
             ContractService contractService) {
         this.chatMessageService = chatMessageService;
         this.chatService = chatService;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
-        this.studentResponsibleService = studentResponsibleService;
         this.userService = userService;
         this.contractService = contractService;
     }
@@ -95,23 +95,74 @@ public class ChatController {
     //rota apenas de driver,
     //ich bin müde
     @PostMapping("/{chatId}/contract")
-    public ResponseEntity<Void> createContract(@PathVariable UUID chatId,
+    public ResponseEntity<Object> createContract(@PathVariable UUID chatId,
         @Valid @RequestBody ContractProposalRequestDTO request, Authentication authentication) {
         String cpf = authentication.getName();
         chatService.UsersInChat(chatId, cpf, request.responsibleId());
         
-        if (!studentResponsibleService.isAdmin(request.responsibleId(), request.studentId())) {
-            throw new RuntimeException("MIA SAN MIA!!!"); // Responsavel não possui conexão com essa criança // algo assim
-        }
-        
-        //macacada da porra essa porra ser CPF e nao ID agora fodase vou muda sepre no cmc, e ja ta errado pra krl carrengando o user inteiro chat se vc ver isso faz o metodo de pegar so o ID e nao o user tudo
         UUID driverId = userService.findByCpf(cpf).get().getId();
-        contractService.createContract(driverId, request);
-        return ResponseEntity.status(201).build();
-        
+        br.com.vanroute.backend.models.contract.UserDriverContract udc = contractService.createContract(driverId, request);
         
 
+        
+        String payloadStr = "{\"userDriverContractId\": \"" + udc.getId() + "\", \"contractId\": \"" + udc.getContract().getId() + "\"}";
+        ChatMessageRequestDTO msgReq = new ChatMessageRequestDTO(
+            "Proposta de Contrato", null, null, br.com.vanroute.backend.models.chat.enums.MessageType.PROPOSAL, payloadStr
+        );
+        ChatMessageResponseDTO msg = chatMessageService.sendMessage(chatId, cpf, msgReq);
+        try {
+            redisTemplate.convertAndSend("chat-" + chatId, objectMapper.writeValueAsString(msg));
+        } catch (Exception e) {
+            log.error("Failed to publish message to Redis for chat: {}", chatId, e);
+        }
 
+        return ResponseEntity.status(201).body(Map.of("message", msg, "userDriverContractId", udc.getId()));
+    }
+
+    @PutMapping("/{chatId}/contracts/{contractId}/accept")
+    //essa maldita recebera o id do contrato e id do chat da url ent tem que manda certin ent so manda o krl do jwt no header
+    //ai o macaco se pergunta "mas gotao de onde eu vou tirar o id dessas porra??" ent gotao o chat meu irmao je é pra ter faz tempo ne ja tem um get pra pikas como essa, blz ai o id do contrato na linha 108 ele gurda junto com o id da tabela que guarda o krl tudo ele guarda o id do contrato tbm ent é dele
+    //alias front é bom oia com o id dessa merda vc consegue puxar o contrato o documento todas as realação pra mostra pro responsbie hj chega amanha é foco 100% dnv
+    public ResponseEntity<Void> acceptContract(@PathVariable UUID chatId, @PathVariable UUID contractId, Authentication authentication) {
+        String cpf = authentication.getName();
+        UUID responsibleId = userService.findByCpf(cpf).get().getId();
+        chatService.validateChatAccess(chatId, cpf);
+        
+        contractService.acceptContract(contractId, responsibleId);
+        
+        String payloadStr = "{\"contractId\": \"" + contractId + "\"}";
+        ChatMessageRequestDTO msgReq = new ChatMessageRequestDTO(
+            "Contrato Aceito", null, null, br.com.vanroute.backend.models.chat.enums.MessageType.APPROVAL, payloadStr
+        );
+        ChatMessageResponseDTO msg = chatMessageService.sendMessage(chatId, cpf, msgReq);
+        try {
+            redisTemplate.convertAndSend("chat-" + chatId, objectMapper.writeValueAsString(msg));
+        } catch (Exception e) {
+            log.error("Error to publish", e);
+        }
+        return ResponseEntity.ok().build();
+    }
+    //hemoglobina expande explode 
+
+    @PutMapping("/{chatId}/contracts/{contractId}/reject")
+    public ResponseEntity<Void> rejectContract(@PathVariable UUID chatId, @PathVariable UUID contractId, Authentication authentication) {
+        String cpf = authentication.getName();
+        UUID responsibleId = userService.findByCpf(cpf).get().getId();
+        chatService.validateChatAccess(chatId, cpf);
+        
+        contractService.rejectContract(contractId, responsibleId);
+        
+        String payloadStr = "{\"contractId\": \"" + contractId + "\"}";
+        ChatMessageRequestDTO msgReq = new ChatMessageRequestDTO(
+            "Contrato Recusado", null, null, br.com.vanroute.backend.models.chat.enums.MessageType.REJECTION, payloadStr
+        );
+        ChatMessageResponseDTO msg = chatMessageService.sendMessage(chatId, cpf, msgReq);
+        try {
+            redisTemplate.convertAndSend("chat-" + chatId, objectMapper.writeValueAsString(msg));
+        } catch (Exception e) {
+            log.error("Error to publish", e);
+        }
+        return ResponseEntity.ok().build();
     }
 
     

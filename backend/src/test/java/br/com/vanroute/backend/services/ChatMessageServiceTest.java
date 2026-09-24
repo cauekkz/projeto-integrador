@@ -58,7 +58,8 @@ class ChatMessageServiceTest {
                 "Hello, pirate king!",
                 null,
                 null,
-                MessageType.REGULAR_CHAT
+                MessageType.REGULAR_CHAT,
+                null
         );
 
         when(chatService.getChatById(mockChat.getId())).thenReturn(mockChat);
@@ -89,7 +90,8 @@ class ChatMessageServiceTest {
                 "Hello",
                 null,
                 null,
-                MessageType.REGULAR_CHAT
+                MessageType.REGULAR_CHAT,
+                null
         );
 
         doThrow(new IllegalArgumentException("Você não tem acesso a este chat."))
