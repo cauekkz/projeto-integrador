@@ -30,6 +30,7 @@ public class SchoolStopService {
         RouteStop route = routeStopRepository.findById(routeStopId)
                 .orElseThrow(() -> new RuntimeException("School not found"));
         SchoolStop schoolStop = new SchoolStop();
+
         schoolStop.setSchool(school);
         schoolStop.setStop(route);
         schoolStopRepository.save(schoolStop);
