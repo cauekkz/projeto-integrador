@@ -60,9 +60,9 @@ public class ResponsibleService {
         ResponsibleAddress responsibleAddress = new ResponsibleAddress();
         responsibleAddress.setResponsible(responsible);
         responsibleAddress.setAddress(address);
+        Responsible newResponsible = responsibleRepository.save(responsible);
         responsibleAddressRepository.save(responsibleAddress);
 
-        Responsible newResponsible = responsibleRepository.save(responsible);
         return new ResponsibleResponseDTO(
                 newResponsible.getUser().getName(),
                 newResponsible.getUser().getEmail(),
