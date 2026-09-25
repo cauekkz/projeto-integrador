@@ -25,3 +25,20 @@ spring:
   jwt:
     expiration: ${JWT_EXPIRATION:900000}
     key: ${JWT_KEY:4QcYHiOKv6R1GIost25MwdDJNLayEubr3kj9nW8AxZqSFX0gfmhUTepCBPlV7z}
+  
+  data:
+    web:
+      pageable:
+        default-page-size: 10
+        max-page-size: 100
+
+  cloud:
+    aws:
+      credentials:
+        access-key: ${MINIO_ACCESS_KEY:vanroute}
+        secret-key: ${MINIO_SECRET_KEY:vanroute123456}
+      s3:
+        endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+        bucket: ${MINIO_BUCKET_NAME:vanroute-storage}
+      region:
+        static: us-east-1

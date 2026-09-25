@@ -1,9 +1,7 @@
 package br.com.vanroute.backend.models.user;
 
 import br.com.vanroute.backend.models.user.enums.DriverApprovalStatus;
-import br.com.vanroute.backend.models.user.enums.DriverType;
 import jakarta.persistence.*;
-import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -35,6 +33,16 @@ public class Driver {
 
     public UUID getUserId() {
         return userId;
+    }
+    @Column(name = "link_code", length = 9, nullable = false, unique = true)
+    private String linkCode;
+
+    public String getLinkCode() {
+        return linkCode;
+    }
+
+    public void setLinkCode(String linkCode) {
+        this.linkCode = linkCode;
     }
 
     public void setUserId(UUID userId) {

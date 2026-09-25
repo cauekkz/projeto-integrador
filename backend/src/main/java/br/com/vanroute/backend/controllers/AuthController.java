@@ -2,12 +2,10 @@ package br.com.vanroute.backend.controllers;
 
 import br.com.vanroute.backend.dtos.user.LoginRequestDTO;
 import br.com.vanroute.backend.dtos.verifyEmail.VerifyEmailRequestDTO;
-import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.dtos.user.token.TokenResponseDTO;
 import br.com.vanroute.backend.services.AuthenticationService;
 import br.com.vanroute.backend.services.UserService;
 import jakarta.validation.Valid;
-import org.apache.coyote.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

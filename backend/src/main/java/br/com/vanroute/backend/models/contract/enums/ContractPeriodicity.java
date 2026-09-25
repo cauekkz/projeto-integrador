@@ -6,4 +6,4 @@ public enum ContractPeriodicity {
     QUARTERLY, // Trimestral
     SEMI_ANNUALLY, // Semestral
     ANNUALLY // Anual
-}
+}//acerto garantido 
