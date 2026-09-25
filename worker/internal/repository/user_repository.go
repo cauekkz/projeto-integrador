@@ -20,3 +20,8 @@ func CleanupUsers(ctx context.Context, conn *pgx.Conn) (int64, error) {
 
 	return result.RowsAffected(), nil
 }
+
+// user_drive_contract, contracts e documents
+func DeleteContract(ctx context.Context, conn *pgx.Conn) (int64, error) {
+	
+} 
