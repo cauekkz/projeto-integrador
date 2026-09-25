@@ -23,6 +23,13 @@ export class ChatDetails implements OnInit {
     { texto: 'Olá, Gustavo. Tudo sim, e com você?', minha: false, hora: '19:14', lida: false },
   ];
 
+  // vou excluir isso dai de cima, claro
+
+  // como pego chatID?
+  // de resto só criar conexão, carregar as msg pelo get message
+  // a cada msg enviada chama o rest e o onmessage pra carregar as msg q vão ser enviadas no momento da conversa
+  // primeiro tenho q ver como pegar o chatID e separar isso aq do chat-details e do chat normal em questão de qual endpoint puxa
+
   constructor(private route: ActivatedRoute, private router: Router) {}
 
   ngOnInit() {
