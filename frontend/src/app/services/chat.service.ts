@@ -87,4 +87,7 @@ export class ChatWebSocketService {
       content,
     });
   }
+
+
+  // pra criar o chat vai ser aqui
 }

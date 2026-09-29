@@ -23,17 +23,29 @@ func main() {
 	defer conn.Close(ctx)
 
 	repository.CleanupUsers(ctx, &conn)
+	repository.DeleteContract(ctx, &conn)
 	ticker := time.NewTicker(48 * time.Hour)
 	defer ticker.Stop()
 
-	for range ticker.C {
-		removed, err := repository.CleanupUsers(ctx, &conn)
-		if err != nil {
-			log.Println("Erro ao limpar usuários:", err)
+	for {
+		select {
+		case <-ctx.Done():
 			return
-		}
+		case <-ticker.C:
+			removed, err := repository.CleanupUsers(ctx, conn)
+			if err != nil {
+				log.Println("Erro ao limpar usuários:", err)
+			} else {
+				log.Printf("Usuários removidos: %d\n", removed)
+			}
 
-		log.Printf("Usuários removidos: %d\n", removed)
+			res, err := repository.DeleteContract(ctx, conn)
+			if err != nil {
+				log.Println("Erro ao limpar contratos:", err)
+			} else {
+				log.Printf("Contratos removidos: %d\n", len(res.DeletedIDs))
+			}
+		}
 	}
 }
 
