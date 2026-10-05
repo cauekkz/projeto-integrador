@@ -90,4 +90,9 @@ export class ChatWebSocketService {
 
 
   // pra criar o chat vai ser aqui
+
+
+  generateChat(code: string) {
+    
+  }
 }

@@ -32,14 +32,14 @@ func main() {
 		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			removed, err := repository.CleanupUsers(ctx, conn)
+			removed, err := repository.CleanupUsers(ctx, &conn)
 			if err != nil {
 				log.Println("Erro ao limpar usuários:", err)
 			} else {
 				log.Printf("Usuários removidos: %d\n", removed)
 			}
 
-			res, err := repository.DeleteContract(ctx, conn)
+			res, err := repository.DeleteContract(ctx, &conn)
 			if err != nil {
 				log.Println("Erro ao limpar contratos:", err)
 			} else {
