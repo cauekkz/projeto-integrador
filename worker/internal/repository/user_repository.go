@@ -2,24 +2,10 @@ package repository
 
 import (
 	"context"
-	"errors"
+	"fmt"
+
 	"github.com/jackc/pgx/v5"
 )
-
-func CleanupUsers(ctx context.Context, conn *pgx.Conn) (int64, error) {
-	query := `
-		DELETE FROM users
-		WHERE status = 'CHECK_EMAIL'
-		AND created_at <= NOW() - INTERVAL '48 hours'
-	`
-
-	result, err := conn.Exec(ctx, query)
-	if err != nil {
-		return 0, err
-	}
-
-	return result.RowsAffected(), nil
-}
 
 type Response struct {
 	Message    string
@@ -41,12 +27,6 @@ func CleanupUsers(ctx context.Context, conn *pgx.Conn) (int64, error) {
 	}
 
 	return result.RowsAffected(), nil
-}
-
-type Response struct {
-	Message    string
-	Success    bool
-	DeletedIDs []int64
 }
 
 // user_driver_contracts, contracts e documents
