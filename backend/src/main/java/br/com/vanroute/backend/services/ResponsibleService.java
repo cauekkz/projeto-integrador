@@ -13,6 +13,7 @@ import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.repositories.ResponsibleAddressRepository;
 import br.com.vanroute.backend.repositories.ResponsibleRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,6 +33,7 @@ public class ResponsibleService {
         this.responsibleAddressRepository = responsibleAddressRepository;
     }
 
+    @Transactional
     public ResponsibleResponseDTO createResponsible(ResponsibleRequestDTO responsibleRequestDTO){
         UserCreateDTO userDto = new UserCreateDTO();
         userDto.setName(responsibleRequestDTO.getName());

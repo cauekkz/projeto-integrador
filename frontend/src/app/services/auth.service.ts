@@ -1,18 +1,37 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { jwtDecode } from 'jwt-decode';
 
+interface TokenResponse {
+  token: string;
+  expiresIn: number;
+}
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
+  getUserIdFromToken(): string | null {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+
+      const decoded: any = jwtDecode(token);
+      return decoded.id || decoded.sub || null;
+    } catch (error) {
+      console.error('Erro ao decodificar o token:', error);
+      return null;
+    }
+  }
+
   private apiUrl = 'http://localhost:9090/api';
 
   constructor(private http: HttpClient) {}
 
-  login(cpf: string, password: string) {
-    return this.http.post(`${this.apiUrl}/auth/login`, {
+  login(cpf: string, passwordHash: string) {
+    return this.http.post<TokenResponse>(`${this.apiUrl}/auth/login`, {
       cpf,
-      passwordHash: password,
+      passwordHash,
     });
   }
 
@@ -37,7 +56,7 @@ export class AuthService {
     formData.append('confirmPassword', data.confirmPassword);
     formData.append('phone', data.phone);
 
-    return this.http.post(`${this.apiUrl}/drivers/signup`, formData);
+    return this.http.post(`${this.apiUrl}/driver/signup`, formData);
   }
 
   createUser(data: {
@@ -48,7 +67,7 @@ export class AuthService {
     cpf: string;
     phone: string;
   }) {
-    return this.http.post(`${this.apiUrl}/responsible/signup`, {
+    return this.http.post(`${this.apiUrl}/responsible/auth/signup`, {
       name: data.name,
       email: data.email,
       password: data.password,
@@ -64,5 +83,24 @@ export class AuthService {
 
   deleteUser(id: string) {
     return this.http.delete(`${this.apiUrl}/users/${id}`);
+  }
+
+  // dps ve se isso vai ser usado
+  verifyCNH(data: { documentPDF: File }) {
+    const formData = new FormData();
+    formData.append('documentPdf', data.documentPDF);
+
+    return this.http.post(`${this.apiUrl}/driver/verifyCNH`, formData);
+  }
+
+  sendCode(email: string) {
+    return this.http.post(
+      `${this.apiUrl}/auth/send-verification-code?email=${encodeURIComponent(email)}`,
+      {},
+    );
+  }
+
+  verifyEmail(data: { email: string; code: string }) {
+    return this.http.post(`${this.apiUrl}/auth/verify-email`, data, { responseType: 'text' });
   }
 }

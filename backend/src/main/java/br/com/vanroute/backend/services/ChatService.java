@@ -1,10 +1,15 @@
 package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.models.chat.Chat;
+import br.com.vanroute.backend.dtos.chat.ChatResponseDTO;
 import br.com.vanroute.backend.repositories.ChatRepository;
 import br.com.vanroute.backend.repositories.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.UUID;
+import java.util.List;
+import br.com.vanroute.backend.models.user.User;
 
 @Service
 public class ChatService {
@@ -22,7 +27,8 @@ public class ChatService {
             throw new IllegalArgumentException("Um chat precisa de dois usuários distintos.");
         }
 
-        // como no bd eu nao crie index pra comparar (1,2) (2,1) eu faço sempre a ordem crescente
+        // como no bd eu nao crie index pra comparar (1,2) (2,1) eu faço sempre a ordem
+        // crescente
         UUID userOneId = userA.compareTo(userB) < 0 ? userA : userB;
         UUID userTwoId = userA.compareTo(userB) < 0 ? userB : userA;
 
@@ -36,9 +42,39 @@ public class ChatService {
     }
 
     public void validateChatAccess(UUID chatId, String cpf) {
-        UUID userId = userRepository.findByCpf(cpf).orElseThrow(() -> new RuntimeException("Usuário não encontrado")).getId();
+        UUID userId = userRepository.findByCpf(cpf).orElseThrow(() -> new RuntimeException("Usuário não encontrado"))
+                .getId();
         if (!chatRepository.existsByChatIdAndUserId(chatId, userId)) {
             throw new IllegalArgumentException("Você não tem acesso a este chat.");
         }
+    }
+
+    public Chat getChatById(UUID chatId) {
+        return chatRepository.findById(chatId)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Chat não encontrado"));
+    }
+
+    public Page<ChatResponseDTO> getUserChats(String cpf, Pageable pageable) {
+        UUID userId = userRepository.findByCpf(cpf).orElseThrow(() -> new RuntimeException("Usuário não encontrado"))
+                .getId();
+        return chatRepository.findChatsByUserIdOrderByRecentMessage(userId, pageable)
+                .map(chat -> ChatResponseDTO.from(chat, cpf));
+    }
+
+    public void UsersInChat(UUID chatId, String cpf, UUID userId) {
+        UUID userIdByCpf = userRepository.findByCpf(cpf)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado")).getId();
+        Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new RuntimeException("Chat não encontrado"));
+        User userOne = chat.getUserOne();
+        User userTwo = chat.getUserTwo();
+        boolean userOneIsUserByCpf = userOne.getId().equals(userIdByCpf) ||
+                userTwo.getId().equals(userIdByCpf);
+
+        boolean userTwoIsUserByCpf = userOne.getId().equals(userId) ||
+                userTwo.getId().equals(userId);
+        if (!userOneIsUserByCpf || !userTwoIsUserByCpf) {
+            throw new IllegalArgumentException("Você não tem acesso a este chat.");
+        }
+
     }
 }

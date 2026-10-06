@@ -1,21 +1,27 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
+
 import { SignupResponsible } from '../../../components/signup-responsible/signup-responsible';
 import { SignupDriver } from '../../../components/signup-driver/signup-driver';
 import { SignupCnhForm } from '../../../components/signup-cnh-form/signup-cnh-form';
+import { EmailCode } from '../../../components/email-code/email-code';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [SignupResponsible, SignupDriver, SignupCnhForm],
+  imports: [SignupResponsible, SignupDriver, SignupCnhForm, EmailCode],
   templateUrl: './signup.html',
   styleUrl: './signup.css',
 })
 export class Signup implements OnInit {
   tipoUsuario = '';
   etapa: 'cnh' | 'driver' = 'cnh';
+
   cadastroConcluido = false;
+  mostrarCodigo = false;
+
+  email = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -27,20 +33,22 @@ export class Signup implements OnInit {
     this.tipoUsuario = this.route.snapshot.paramMap.get('tipo') || '';
   }
 
+  mostrarTelaCodigo(dados: { email: string }) {
+    this.email = dados.email;
+    this.mostrarCodigo = true;
+  }
+
   irParaDriver() {
     this.etapa = 'driver';
   }
 
   concluirCadastro() {
     this.cadastroConcluido = true;
+    this.mostrarCodigo = false;
   }
 
   irParaProximaPagina() {
-    if (this.tipoUsuario === 'motorista') {
-      this.router.navigate(['/dashboard/motorista']); // troca pela rota do motorista
-    } else {
-      this.router.navigate(['/dashboard/responsavel']); // troca pela rota do responsável
-    }
+    this.router.navigate(['/login']);
   }
 
   voltar() {

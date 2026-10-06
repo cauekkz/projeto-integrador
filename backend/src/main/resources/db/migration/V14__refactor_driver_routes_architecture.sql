@@ -14,8 +14,20 @@ CREATE TABLE driver_schools (
 CREATE INDEX idx_driver_schools_driver ON driver_schools(driver_id);
 CREATE INDEX idx_driver_schools_school ON driver_schools(school_id);
 
+
+-- IA BURRA DO CARALHO PQP POR ISSO HENQUE SO FAZ MERDA, PORRA BICHO NAO PENSA
+/*
+ALTER TABLE student_stops ADD COLUMN status TEXT DEFAULT 'pending';
+ALTER TABLE student_stops ADD COLUMN route_id UUID NULL;
+*/
+
+
+
 ALTER TABLE student_stops
     RENAME COLUMN type TO location_type;
 
 ALTER TABLE student_stops
     ADD COLUMN action TEXT;
+-- Values: 'proposal', 'approval', 'rejection', 'regular_chat
+ALTER TABLE chat_messages ADD COLUMN message_type TEXT DEFAULT 'REGULAR_CHAT';
+ALTER TABLE chat_messages ADD COLUMN payload JSONB DEFAULT NULL;

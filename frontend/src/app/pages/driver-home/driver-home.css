@@ -1,0 +1,190 @@
+.screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f1f5f9;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px;
+  background: white;
+}
+.notif-wrapper {
+  position: relative;
+  width: 50px;
+  height: 50px;
+}
+
+.bell-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #1f2937;
+  border: 0.8px solid #E2E8F0;
+  background: #FFF;
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 5px;
+}
+
+.user-info {
+  display: flex;
+  width: 180px;
+  height: 50px;
+  padding: 4px 12px 4px 4px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  border: 0.8px solid #E2E8F0;
+  background: #FFF;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.role {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.content {
+  flex: 1;
+  padding: 24px 16px;
+}
+
+.rota-card {
+  background: #1565d8;
+  border-radius: 20px;
+  padding: 20px;
+  cursor: pointer;
+  color: white;
+}
+
+.rota-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: #4ade80;
+  border-radius: 50%;
+}
+
+.status-text {
+  font-size: 0.85rem;
+  color: #bfdbfe;
+}
+
+.rota-label {
+  font-size: 0.8rem;
+  color: #bfdbfe;
+  margin-bottom: 4px;
+}
+
+.rota-titulo {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.rota-info {
+  display: flex;
+  gap: 10px;
+}
+
+.info-item {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  flex-direction: ;
+  gap: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.info-item img {
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+}
+
+.bottombar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 15px 0;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
+}.tab {
+   width: 60px;
+   height: 50px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+
+   background-color: #D2DEEF;
+   border: none;
+   border-radius: 12px;
+   cursor: pointer;
+
+   transition: background-color 0.25s ease;
+ }
+
+.tab i {
+  font-size: 28px;
+  color: #0C66DB;
+
+  transition: color 0.25s ease;
+}
+
+/* Mouse em cima */
+.tab:hover {
+  background-color: #0C66DB;
+}
+
+.tab:hover i {
+  color: #ffffff;
+}
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 100;
+}

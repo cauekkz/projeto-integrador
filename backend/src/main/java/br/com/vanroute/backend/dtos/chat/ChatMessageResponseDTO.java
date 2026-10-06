@@ -13,7 +13,8 @@ public record ChatMessageResponseDTO(
                 String content,
                 String attachmentUrl,
                 AttachmentType attachmentType,
-                LocalDateTime sentAt) {
+                LocalDateTime sentAt,
+                String payload) {
 
         public static ChatMessageResponseDTO from(ChatMessage message) {
                 return new ChatMessageResponseDTO(
@@ -22,7 +23,8 @@ public record ChatMessageResponseDTO(
                                 message.getContent(),
                                 message.getAttachmentUrl(),
                                 message.getAttachmentType(),
-                                message.getSentAt());
+                                message.getSentAt(),
+                                message.getPayload());
         }
 
 }
