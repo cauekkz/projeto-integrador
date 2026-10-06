@@ -3,11 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { jwtDecode } from 'jwt-decode';
 import { User } from '../models/user.model';
 import { Observable } from 'rxjs';
-
-interface TokenResponse {
-  token: string;
-  expiresIn: number;
-}
+import { tokenResponse, loginRequest, createUserRequest, verifyEmailRequest } from './dto/auth/auth.dto';
 
 @Injectable({
   providedIn: 'root',
@@ -30,11 +26,8 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(cpf: string, passwordHash: string) {
-    return this.http.post<TokenResponse>(`${this.apiUrl}/auth/login`, {
-      cpf,
-      passwordHash,
-    });
+  login(data: loginRequest) {
+    return this.http.post<tokenResponse>(`${this.apiUrl}/auth/login`, data);
   }
 
   createDriver(data: {
@@ -59,22 +52,8 @@ export class AuthService {
     });
   }
 
-  createUser(data: {
-    name: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-    cpf: string;
-    phone: string;
-  }) {
-    return this.http.post(`${this.apiUrl}/responsible/auth/signup`, {
-      name: data.name,
-      email: data.email,
-      password: data.password,
-      confirmPassword: data.confirmPassword,
-      cpf: data.cpf,
-      phone: data.phone,
-    });
+  createUser(data: createUserRequest) {
+    return this.http.post(`${this.apiUrl}/responsible/auth/signup`, data);
   }
 
   getUserByID(id: string): Observable<User> {
@@ -99,7 +78,7 @@ export class AuthService {
     );
   }
 
-  verifyEmail(data: { email: string; code: string }) {
+  verifyEmail(data: verifyEmailRequest) {
     return this.http.post(`${this.apiUrl}/auth/verify-email`, data, { responseType: 'text' });
   }
 
