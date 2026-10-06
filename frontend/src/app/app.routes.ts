@@ -23,22 +23,22 @@ export const routes: Routes = [
   {
     path: '',
     component: Home,
-    canActivate: [guestGuard]
+    canActivate: [guestGuard],
   },
   {
     path: 'login/:tipo',
     component: Login,
-    canActivate: [guestGuard]
+    canActivate: [guestGuard],
   },
   {
     path: 'signup/:tipo',
     component: Signup,
-    canActivate: [guestGuard]
+    canActivate: [guestGuard],
   },
   {
     path: 'email-code',
     component: EmailCode,
-    canActivate: [guestGuard]
+    canActivate: [guestGuard],
   },
 
   // henrique kct, toda hora q tu criar alguma pagina nova q n seja pro usuario normal, usar esse can Activate q ai se ele tenta entra igual maluco
@@ -89,24 +89,24 @@ export const routes: Routes = [
     path: 'chat',
     component: Chat,
     canActivate: [routeGuard, roleGuard],
-    data: { rolesPermitidas: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+    data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
   },
   {
     path: 'chat-details/:id',
     component: ChatDetails,
     canActivate: [routeGuard, roleGuard],
-    data: { rolesPermitidas: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+    data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
   },
   {
     path: 'profile-info/:tipo',
     component: ProfileInfo,
     canActivate: [routeGuard, roleGuard],
-    data: { rolesPermitidas: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+    data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
   },
   {
     path: 'profile-select',
     component: ProfileSelect,
     canActivate: [routeGuard, roleGuard],
-    data: { rolesPermitidas: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+    data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
   },
 ];
