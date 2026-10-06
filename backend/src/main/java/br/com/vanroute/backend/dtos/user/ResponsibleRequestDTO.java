@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.dtos.user;
 
+import br.com.vanroute.backend.dtos.student.AddressRequestDTO;
 import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.br.CPF;
 
@@ -28,6 +29,8 @@ public class ResponsibleRequestDTO {
 
     @NotBlank(message = "O telefone é obrigatório")
     private String phone;
+
+    private AddressRequestDTO addressRequestDTO;
 
     public String getName() {
         return name;
@@ -75,5 +78,13 @@ public class ResponsibleRequestDTO {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public AddressRequestDTO getAddressRequestDTO() {
+        return addressRequestDTO;
+    }
+
+    public void setAddressRequestDTO(AddressRequestDTO addressRequestDTO) {
+        this.addressRequestDTO = addressRequestDTO;
     }
 }
