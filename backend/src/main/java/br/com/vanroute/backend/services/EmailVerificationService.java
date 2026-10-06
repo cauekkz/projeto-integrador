@@ -13,8 +13,8 @@ public class EmailVerificationService {
     private final EmailService emailService;
 
     public EmailVerificationService(RedisTemplate<String, String> redisTemplate, EmailService emailService) {
-        this.redisTemplate = redisTemplate;
-        this.emailService = emailService;
+            this.redisTemplate = redisTemplate;
+            this.emailService = emailService;
     }
 
    

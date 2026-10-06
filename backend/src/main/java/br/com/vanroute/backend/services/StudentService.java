@@ -80,18 +80,15 @@ public class StudentService {
             );
         }    
 
-        public Page<Student> getAllStudentsResponsible(AllStudentsFilterRequestDTO filter,Pageable pageable,String cpf){
+        public Page<Student> getAllStudentsResponsible(AllStudentsFilterRequestDTO filter,Pageable pageable,String cpf) {
             Specification<StudentResponsible> specification = StudentResponsibleSpecification.withFilters(cpf, filter);
-            Page<StudentResponsible> result =  studentResponsibleRepository.findAll(specification, pageable);
+            Page<StudentResponsible> result = studentResponsibleRepository.findAll(specification, pageable);
             return result.map(StudentResponsible::getStudent);
-        }                                                                                                  
-
-
-
+        }
 
 
     //ns se a melhor coisa é fazer isso nesse service mas fds nao consigo pensa num service diferente pra isso, talvez um especifico pra isso mas nao sei
-    
+
 
 
 }

@@ -26,6 +26,21 @@ services:
       - redis_data:/data
     restart: unless-stopped
 
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: vanroute-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: vanroute
+      MINIO_ROOT_PASSWORD: vanroute123456
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+
 volumes:
   postgres_data:
   redis_data:
+  minio_data:

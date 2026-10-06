@@ -1,66 +1,42 @@
+/* deixa eu ser feliz */
+
 package main
+
 import (
 	"context"
-	"fmt"
 	"log"
-	"os"
+	"time"
 
-	"github.com/jackc/pgx/v5"
+	"worker/db"
+	repository "worker/internal/repository"
 )
-func getEnv(key, fallback string) string {
-	value := os.Getenv(key)
-
-	if value == "" {
-		return fallback
-	}
-
-	return value
-}
 
 func main() {
 	ctx := context.Background()
 
-	databaseName := getEnv("DATABASE_NAME", "vanroute_db")
-	databaseUsername := getEnv("DATABASE_USERNAME", "postgres")
-	databasePassword := getEnv("DATABASE_PASSWORD", "123456")
-	databaseHost := getEnv("DATABASE_HOST", "localhost")
-	databasePort := getEnv("DATABASE_PORT", "5432")
+	conn, err := db.Conn(ctx)
 
-	databaseURL := fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s",
-		databaseUsername,
-		databasePassword,
-		databaseHost,
-		databasePort,
-		databaseName,
-	)
-
-	conn, err := pgx.Connect(ctx, databaseURL)
 	if err != nil {
 		log.Fatal("Erro ao conectar no PostgreSQL:", err)
 	}
 
 	defer conn.Close(ctx)
 
-	cleanupUsers(ctx, conn)
-}
+	repository.CleanupUsers(ctx, &conn)
+	ticker := time.NewTicker(48 * time.Hour)
+	defer ticker.Stop()
 
-func cleanupUsers(ctx context.Context, conn *pgx.Conn) {
-	//adicionar um intervalo de tempo do created_at para nao remover registros mt recentes
-	query := `
-		DELETE FROM users
-		WHERE status = 'CHECK_EMAIL'
-		AND created_at < NOW() 
-	`
+	for range ticker.C {
+		removed, err := repository.CleanupUsers(ctx, &conn)
+		if err != nil {
+			log.Println("Erro ao limpar usuários:", err)
+			return
+		}
 
-	result, err := conn.Exec(ctx, query)
-	if err != nil {
-		log.Println("Erro ao limpar usuários:", err)
-		return
+		log.Printf("Usuários removidos: %d\n", removed)
 	}
-
-	log.Printf("Usuários removidos: %d\n", result.RowsAffected())
 }
+
 /*
 ⠠⠀⠄⡂⠄⢠⠐⠠⠀⠄⠠⠀⠄⡀⠀⢀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ⠠⠑⡌⠰⡁⢆⡉⢆⠱⠈⠤⢁⠂⠄⢁⠀⡀⠂⠠⠀⢀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀

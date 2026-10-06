@@ -1,7 +1,6 @@
 package br.com.vanroute.backend.models.user;
 
 import jakarta.persistence.*;
-import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.UUID;

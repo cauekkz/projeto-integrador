@@ -1,0 +1,111 @@
+.header {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+}
+
+.back-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.code-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 24px;
+  gap: 20px;
+}
+.instrucao {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.95rem;
+  max-width: 260px;
+}
+
+.email {
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 1rem;
+}
+
+.inputs {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.code-input {
+  width: 48px;
+  height: 60px;
+  border: none;
+  border-bottom: 2px solid #cbd5e1;
+  border-radius: 0;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  outline: none;
+  background: transparent;
+}
+
+.code-input:focus {
+  border-bottom-color: #1565d8;
+}
+
+.nao-encontrou {
+  color: #94a3b8;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.nao-encontrou em {
+  font-style: italic;
+  color: #64748b;
+}
+
+.btn-reenviar {
+  margin-top: 8px;
+  background: transparent;
+  border: 1px solid #1565d8;
+  color: #1565d8;
+  border-radius: 14px;
+  padding: 12px 32px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-reenviar:hover {
+  background: #eff6ff;
+}
+
+.btn-verificar {
+  width: 100%;
+  height: 56px;
+  border: none;
+  border-radius: 14px;
+  background: #1565d8;
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
+  width: calc(100% - 48px);
+}
+
+@keyframes slideUp {
+  0%   { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0);   opacity: 1; }
+}
+
+.code-input.animate {
+  animation: slideUp 0.15s ease-out;
+}

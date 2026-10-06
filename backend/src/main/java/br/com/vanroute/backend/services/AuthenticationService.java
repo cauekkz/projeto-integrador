@@ -2,12 +2,9 @@ package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.config.TokenProvider;
 import br.com.vanroute.backend.dtos.user.LoginRequestDTO;
-import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.dtos.user.token.TokenResponseDTO;
 import br.com.vanroute.backend.exceptions.InvalidCredentialsException;
-import br.com.vanroute.backend.models.user.RolesEntity;
 import br.com.vanroute.backend.models.user.User;
-import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.models.user.enums.UserStatus;
 import br.com.vanroute.backend.repositories.RolesRepository;
 import br.com.vanroute.backend.repositories.UserRepository;

@@ -1,9 +1,7 @@
 package br.com.vanroute.backend.models.user;
 
 import br.com.vanroute.backend.models.user.enums.DriverApprovalStatus;
-import br.com.vanroute.backend.models.user.enums.DriverType;
 import jakarta.persistence.*;
-import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
