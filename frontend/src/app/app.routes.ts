@@ -13,22 +13,99 @@ import { Chat } from './pages/chat/chat';
 import { ProfileInfo } from './pages/profile-info/profile-info';
 import { ProfileSelect } from './components/profile-select/profile-select';
 import { ChatDetails } from './components/chat-details/chat-details';
+import { routeGuard, roleGuard, guestGuard } from './interceptor/route.interceptor';
 
 export const routes: Routes = [
-  { path: '', component: Home },
-  { path: 'login/:tipo', component: Login },
-  { path: 'signup/:tipo', component: Signup },
-  { path: 'email-code', component: EmailCode },
-  { path: 'home-screen', component: HomeScreen },
-  { path: 'add-student', component: AddStudent },
-  { path: 'driver-home', component: DriverHome },
-  { path: 'driver-route', component: DriverRoute },
-  { path: 'student-code', component: StudentCode },
-  { path: 'dependentes', component: Dependentes },
-  { path: 'chat', component: Chat },
-  { path: 'profile-info/:tipo', component: ProfileInfo },
-  { path: 'signup/:tipo', component: Signup },
-  { path: 'profile-select', component: ProfileSelect },
-  { path: 'chat-details/:id', component: ChatDetails },
+  // qq esse faz?
+  // faz o front verificar se o usuario ta logado, se ele ta ele manda pro brabo
+  // amanha se der testo isso
+  {
+    path: '',
+    component: Home,
+    canActivate: [guestGuard]
+  },
+  {
+    path: 'login/:tipo',
+    component: Login,
+    canActivate: [guestGuard]
+  },
+  {
+    path: 'signup/:tipo',
+    component: Signup,
+    canActivate: [guestGuard]
+  },
+  {
+    path: 'email-code',
+    component: EmailCode,
+    canActivate: [guestGuard]
+  },
 
+  // henrique kct, toda hora q tu criar alguma pagina nova q n seja pro usuario normal, usar esse can Activate q ai se ele tenta entra igual maluco
+  // ele redireciona pras "publicas" de cima ai, qlq coisa fala comigo
+  // e esse roleGuard serve pra ver qual usuario pode entrar em certa rota, isso vou testar dps ainda
+  // e mesma coisa, fala comigo ou ve qual tipo de usuario vai usar
+  /*
+  ROLE_RESPONSIBLE = responsavel
+  ROLE_DRIVER = motorista
+   */
+  {
+    path: 'home-screen',
+    component: HomeScreen,
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_RESPONSIBLE'] },
+  },
+  {
+    path: 'add-student',
+    component: AddStudent,
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_RESPONSIBLE'] },
+  },
+  {
+    path: 'driver-home',
+    component: DriverHome,
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
+  },
+  {
+    path: 'driver-route',
+    component: DriverRoute,
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
+  },
+  {
+    path: 'student-code',
+    component: StudentCode,
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_RESPONSIBLE'] },
+  },
+  {
+    path: 'dependentes',
+    component: Dependentes,
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_RESPONSIBLE'] },
+  },
+  {
+    path: 'chat',
+    component: Chat,
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitidas: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+  },
+  {
+    path: 'chat-details/:id',
+    component: ChatDetails,
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitidas: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+  },
+  {
+    path: 'profile-info/:tipo',
+    component: ProfileInfo,
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitidas: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+  },
+  {
+    path: 'profile-select',
+    component: ProfileSelect,
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitidas: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+  },
 ];
