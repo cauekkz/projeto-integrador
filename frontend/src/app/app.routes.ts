@@ -19,6 +19,7 @@ export const routes: Routes = [
   // qq esse faz?
   // faz o front verificar se o usuario ta logado, se ele ta ele manda pro brabo
   // amanha se der testo isso
+  //
   {
     path: '',
     component: Home,
