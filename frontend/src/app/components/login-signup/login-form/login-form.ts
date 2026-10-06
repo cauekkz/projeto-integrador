@@ -55,19 +55,24 @@ export class LoginForm {
       return;
     }
 
-    this.authService.login(this.enteredCPF, this.enteredPass).subscribe({
-      next: (response) => {
-        localStorage.setItem('token', response.token);
+    this.authService
+      .login({
+        cpf: this.enteredCPF,
+        passwordHash: this.enteredPass,
+      })
+      .subscribe({
+        next: (response) => {
+          localStorage.setItem('token', response.token);
 
-        if (this.tipoUsuario === 'motorista') {
-          this.router.navigate(['/driver-home']);
-        } else {
-          this.router.navigate(['/home-screen']);
-        }
-      },
-      error: (err) => {
-        console.error(err);
-      },
-    });
+          if (this.tipoUsuario === 'motorista') {
+            this.router.navigate(['/driver-home']);
+          } else {
+            this.router.navigate(['/home-screen']);
+          }
+        },
+        error: (err) => {
+          console.error(err);
+        },
+      });
   }
 }

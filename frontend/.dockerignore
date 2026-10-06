@@ -1,0 +1,8 @@
+node_modules
+dist
+.angular
+.git
+.env
+.env.*
+!.env.example
+npm-debug.log*
