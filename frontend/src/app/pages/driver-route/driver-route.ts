@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import { Location, CommonModule } from '@angular/common';
 import { Header } from '../../shared/header/header';
 import { ProfileSelect } from '../../components/profile-select/profile-select';
+import {Footer} from '../../shared/footer/footer';
 
 @Component({
   selector: 'app-driver-route',
   standalone: true,
-  imports: [CommonModule, Header, ProfileSelect],
+  imports: [CommonModule, Header, ProfileSelect, Footer],
   templateUrl: './driver-route.html',
   styleUrl: './driver-route.css',
 })

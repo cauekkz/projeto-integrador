@@ -1,0 +1,42 @@
+<div class="screen">
+
+  <div class="topbar">
+    <button class="back-button" (click)="voltar()">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+    <img [src]="fotoContato" class="contato-avatar" alt="">
+    <span class="contato-nome">{{ nomeContato }}</span>
+    <button class="contrato-btn">
+      <i class="bi bi-file-earmark-text"></i>
+    </button>
+  </div>
+
+  <div class="mensagens">
+    @for (msg of mensagens; track $index) {
+      <div class="msg-wrapper" [class.minha]="msg.minha">
+        <div class="msg-balao" [class.minha]="msg.minha">
+          <span class="msg-texto">{{ msg.texto }}</span>
+          <span class="msg-hora">
+            {{ msg.hora }}
+            @if (msg.minha) {
+              <i class="bi bi-check2-all" [class.lida]="msg.lida"></i>
+            }
+          </span>
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="input-bar">
+    <input
+      type="text"
+      placeholder="Digite sua mensagem"
+      [(ngModel)]="mensagem"
+      name="mensagem"
+      (keydown.enter)="enviar()"
+    >
+    <button class="btn-icon"><i class="bi bi-credit-card"></i></button>
+    <button class="btn-icon"><i class="bi bi-mic"></i></button>
+  </div>
+
+</div>

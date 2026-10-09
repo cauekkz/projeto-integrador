@@ -12,9 +12,22 @@
   z-index: 100;
 }
 
+.bottombar.mapa {
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  padding: 10px 21px 11px 22px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  gap: 30px;
+  border-radius: 22px;
+  background: rgba(235, 235, 235, 0.60);
+  box-shadow: 1px 4px 4.7px 0 rgba(0, 0, 0, 0.25);
+}
+
 .tab {
   width: 60px;
-  height: 50px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -37,6 +50,13 @@
 
 .tab.active i {
   color: #ffffff;
+}
+
+.bottombar.mapa .tab.active {
+  width: 64px;
+  height: 64px;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(12, 102, 219, 0.35);
 }
 
 .tab:hover {

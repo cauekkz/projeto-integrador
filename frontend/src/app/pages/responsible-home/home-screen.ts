@@ -7,7 +7,7 @@ import { Footer } from '../../shared/footer/footer';
 import { ProfileSelect } from '../../components/profile-select/profile-select';
 
 @Component({
-  selector: 'app-home-screen',
+  selector: 'app-responsible-home',
   standalone: true,
   imports: [Footer, ProfileSelect],
   templateUrl: './home-screen.html',
@@ -80,5 +80,9 @@ export class HomeScreen implements OnInit {
   irParaCadastro() {
     this.mostrarDependentes = false;
     this.mostrarAddStudent = true;
+  }
+
+  irParaChat() {
+    this.router.navigate(['/chat'], { queryParams: { from: 'responsible-home' } });
   }
 }

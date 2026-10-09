@@ -25,6 +25,7 @@ export class EmailCode {
     this.router.navigate(['/']);
   }
 
+
   onSend(codigo: string) {
     this.authService.verifyEmail({ email: this.email, code: codigo }).subscribe({
       next: () => this.verificadoEvent.emit(),
