@@ -44,8 +44,7 @@ export const routes: Routes = [
   },
 
 
-
-  // henrique kct, toda hora q tu criar alguma pagina nova q n seja pro usuario normal, usar esse can Activate q ai se ele tenta entra igual maluco
+  // henrique, toda hora q tu criar alguma pagina nova q n seja pro usuario normal, usar esse can Activate q ai se ele tenta entra igual maluco
   // ele redireciona pras "publicas" de cima ai, qlq coisa fala comigo
   // e esse roleGuard serve pra ver qual usuario pode entrar em certa rota, isso vou testar dps ainda
   // e mesma coisa, fala comigo ou ve qual tipo de usuario vai usar

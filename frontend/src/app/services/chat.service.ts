@@ -17,6 +17,14 @@ export class ChatWebSocketService {
   public messages$ = this.messageSubject.asObservable();
   constructor(private http: HttpClient) {}
 
+  createChatMessage(code: string) {
+    return this.http.post<string>(
+      `${this.apiUrl}/redeem`,
+      { inviteCode: code },
+      { observe: 'response' },
+    );
+  }
+
   connect(chatId: string): void {
     // conecta com o websocket
     if (this.socket?.readyState === WebSocket.OPEN) {
@@ -86,13 +94,5 @@ export class ChatWebSocketService {
     return this.http.post<ChatMessage>(`${this.apiUrl}/chats/${chatId}/messages`, {
       content,
     });
-  }
-
-
-  // pra criar o chat vai ser aqui
-
-
-  generateChat(code: string) {
-    
   }
 }

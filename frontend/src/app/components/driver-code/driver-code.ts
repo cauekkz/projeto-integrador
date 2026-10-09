@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { Header } from '../../shared/header/header';
 import { CodeInput } from '../../shared/code-input/code-input';
+import { ChatWebSocketService } from '../../services/chat.service';
 
 
 @Component({
@@ -12,9 +13,9 @@ import { CodeInput } from '../../shared/code-input/code-input';
   styleUrl: './driver-code.css',
 })
 export class DriverCode {
-
   constructor(
     private router: Router,
+    private chatService: ChatWebSocketService,
   ) {}
 
   voltar() {
@@ -22,13 +23,21 @@ export class DriverCode {
   }
 
   confirmar(codigo: string) {
-    // this.driverService.confirmCode(codigo).subscribe({
-    //   next: () => {
-    //     this.router.navigate(['/responsible-home']);
-    //   },
-    //   error: (err: any) => {
-       // console.error('Erro ao vincular motorista:', err);
-      //},
-   // });
+
+    this.chatService.createChatMessage(codigo).subscribe({
+      next: (response) => {
+        const chatId = response.body;
+        // url se alguma hora precisar
+        const url = response.headers.get('Location');
+
+        if (!chatId) return;
+
+        // manda pro chat
+        this.router.navigate(['/chat-details', chatId]);
+      },
+      error: (err) => {
+        console.error(err);
+      },
+    });
   }
 }
