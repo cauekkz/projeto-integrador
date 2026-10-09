@@ -6,6 +6,7 @@
   <app-code-input
     instrucao="Por favor, digite o código que enviamos agora para:"
     [mostrarReenviar]="true"
+    [length]="6"
     (codigoVerificado)="onSend($event)"
     (reenviarEvent)="resend()"
   />

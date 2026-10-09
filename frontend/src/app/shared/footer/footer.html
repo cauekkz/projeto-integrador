@@ -1,10 +1,10 @@
-<div class="bottombar">
+<div class="bottombar" [class.mapa]="tipo === 'mapa'">
   @if (tipoUsuario === 'responsavel') {
     <button
       class="tab"
       [class.active]="abaAtiva === 'home'"
       (click)="clicarHome()">
-      <i class="down bi bi-house-door-fill"></i>
+      <i class="bi bi-house-door-fill"></i>
     </button>
 
     <button
@@ -27,14 +27,14 @@
       class="tab"
       [class.active]="abaAtiva === 'home'"
       (click)="clicarHome()">
-      <i class="down bi bi-house-door-fill"></i>
+      <i class="bi bi-house-door-fill"></i>
     </button>
 
     <button
       class="tab"
       [class.active]="abaAtiva === 'meio'"
       (click)="selecionarAba('meio')">
-      <i class="down bi bi-map-fill"></i>
+      <i class="bi bi-map-fill"></i>
     </button>
 
     <button

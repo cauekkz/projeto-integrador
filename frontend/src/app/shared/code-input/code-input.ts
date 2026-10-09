@@ -18,6 +18,7 @@ export class CodeInput implements OnInit {
 
   codes: string[] = [];
   invalido = false;
+  @Input() separadores: number[] = []; // posições onde aparece o traço ex: [3, 6] para XXX-XXX-XXX
 
   ngOnInit() {
     this.codes = Array(this.length).fill('');
