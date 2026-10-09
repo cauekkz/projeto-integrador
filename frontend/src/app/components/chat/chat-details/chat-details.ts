@@ -1,17 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Header } from '../../../shared/header/header';
+// import { Header } from '../../../shared/header/header';
 
 @Component({
   selector: 'app-chat-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, Header],
+  imports: [CommonModule, FormsModule, /*Header */],
   templateUrl: './chat-details.html',
   styleUrl: './chat-details.css',
 })
 export class ChatDetails implements OnInit {
+  chatId = '';
   mensagem = '';
   nomeContato = 'Gustavo Gomez';
   fotoContato = '/testee.jpg';
@@ -23,10 +24,15 @@ export class ChatDetails implements OnInit {
     { texto: 'Ola, Gustavo. Tudo sim, e com voce?', minha: false, hora: '19:14', lida: false },
   ];
 
-  constructor(private route: ActivatedRoute, private router: Router) {}
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+  ) {}
 
   ngOnInit() {
     this.origem = this.route.snapshot.queryParamMap.get('from') || 'responsible-home';
+
+    this.chatId = this.route.snapshot.paramMap.get('chatId') || '';
   }
 
   voltar() {
