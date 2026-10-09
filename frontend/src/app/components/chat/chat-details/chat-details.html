@@ -1,14 +1,15 @@
 <div class="screen">
 
-
-  <app-header
-    tipo="chat"
-    nomeUsuario="Gustavo Gómez"
-    fotoUrl="/testee.jpg"
-    (voltarEvent)="voltar()">
-  </app-header>
-
-
+  <div class="topbar">
+    <button class="back-button" (click)="voltar()">
+      <i class="bi bi-chevron-left"></i>
+    </button>
+    <img [src]="fotoContato" class="contato-avatar" alt="">
+    <span class="contato-nome">{{ nomeContato }}</span>
+    <button class="contrato-btn">
+      <i class="bi bi-file-earmark-text"></i>
+    </button>
+  </div>
 
   <div class="mensagens">
     @for (msg of mensagens; track $index) {
@@ -34,12 +35,8 @@
       name="mensagem"
       (keydown.enter)="enviar()"
     >
-    <button class="btn-icon">
-      <i class="bi bi-credit-card"></i>
-    </button>
-    <button class="btn-icon">
-      <i class="bi bi-mic"></i>
-    </button>
+    <button class="btn-icon"><i class="bi bi-credit-card"></i></button>
+    <button class="btn-icon"><i class="bi bi-mic"></i></button>
   </div>
 
 </div>

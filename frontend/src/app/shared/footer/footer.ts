@@ -29,7 +29,7 @@ export class Footer implements OnInit {
     const rota = url.split('?')[0];
 
     // rotas do responsável
-    const homeResponsavel = ['/home-screen'];
+    const homeResponsavel = ['/responsible-home', '/home-screen'];
     const meioResponsavel: string[] = []; // coloque aqui a rota do mapa do responsável
 
     // rotas do motorista
@@ -51,10 +51,11 @@ export class Footer implements OnInit {
       this.abaAtiva = '';
     }
   }
+  @Input() tipo: 'normal' | 'mapa' = 'normal';
 
   clicarHome() {
     this.router.navigate([
-      this.tipoUsuario === 'responsavel' ? '/home-screen' : '/driver-home',
+      this.tipoUsuario === 'responsavel' ? '/responsible-home' : '/driver-home',
     ]);
   }
 
@@ -64,8 +65,9 @@ export class Footer implements OnInit {
     }
 
     if (aba === 'config') {
-      const from = this.tipoUsuario === 'motorista' ? 'driver-home' : 'home-screen';
+      const from = this.tipoUsuario === 'motorista' ? 'driver-home' : 'responsible-home';
       this.router.navigate(['/chat'], { queryParams: { from } });
     }
+
   }
 }

@@ -3,6 +3,9 @@
 
   <div class="inputs">
     @for (code of codes; track $index) {
+      @if (separadores.includes($index) && $index !== 0) {
+        <span class="separador">-</span>
+      }
       <input
         class="code-input"
         type="text"

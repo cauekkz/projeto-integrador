@@ -1,0 +1,62 @@
+.screen {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  padding-bottom: 90px;
+}
+
+.conversa-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.conversa-item:hover {
+  background: #f8fafc;
+}
+
+.conversa-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.conversa-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.conversa-nome {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.conversa-msg {
+  font-size: 0.82rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.conversa-hora {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  flex-shrink: 0;
+}

@@ -14,16 +14,18 @@
   background: white;
 }
 
-.back-btn {
+.back-button {
   background: transparent;
   border: none;
   cursor: pointer;
+  display: flex;
+  align-items: center;
   padding: 0;
 }
 
-.back-btn img {
-  width: 24px;
-  height: 24px;
+.back-button i {
+  font-size: 2rem;
+  color: #1f2937;
 }
 
 .contato-avatar {

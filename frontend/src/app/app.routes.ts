@@ -3,7 +3,7 @@ import { Home } from './pages/home/home';
 import { Login } from './pages/auth/login/login';
 import { Signup } from './pages/auth/signup/signup';
 import { EmailCode } from './shared/email-code/email-code';
-import { HomeScreen } from './pages/home-screen/home-screen';
+import { HomeScreen } from './pages/responsible-home/home-screen';
 import { AddStudent } from './components/student/add-student/add-student';
 import { DriverHome } from './pages/driver-home/driver-home';
 import { DriverRoute } from './pages/driver-route/driver-route';
@@ -12,8 +12,10 @@ import { Dependentes } from './components/student/dependentes/dependentes';
 import { Chat } from './pages/chat/chat';
 import { ProfileInfo } from './pages/profile-info/profile-info';
 import { ProfileSelect } from './components/profile-select/profile-select';
-import { ChatDetails } from './components/chat-details/chat-details';
+import { ChatDetails } from './components/chat/chat-details/chat-details';
 import { routeGuard, roleGuard, guestGuard } from './interceptor/route.interceptor';
+import { DriverCode } from './components/driver-code/driver-code';
+import { ChatListComponent } from './components/chat/chat-list/chat-list';
 
 export const routes: Routes = [
   // qq esse faz?
@@ -41,6 +43,8 @@ export const routes: Routes = [
     canActivate: [guestGuard],
   },
 
+
+
   // henrique kct, toda hora q tu criar alguma pagina nova q n seja pro usuario normal, usar esse can Activate q ai se ele tenta entra igual maluco
   // ele redireciona pras "publicas" de cima ai, qlq coisa fala comigo
   // e esse roleGuard serve pra ver qual usuario pode entrar em certa rota, isso vou testar dps ainda
@@ -50,10 +54,15 @@ export const routes: Routes = [
   ROLE_DRIVER = motorista
    */
   {
-    path: 'home-screen',
+    path: 'responsible-home',
     component: HomeScreen,
-    canActivate: [routeGuard, roleGuard],
+   canActivate: [routeGuard, roleGuard],
     data: { rolesPermitted: ['ROLE_RESPONSIBLE'] },
+  },
+  {
+    path: 'home-screen',
+    redirectTo: 'responsible-home',
+    pathMatch: 'full',
   },
   {
     path: 'add-student',
@@ -92,6 +101,11 @@ export const routes: Routes = [
     data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
   },
   {
+    path: 'chat-list',
+    redirectTo: 'chat',
+    pathMatch: 'full',
+  },
+  {
     path: 'chat-details/:id',
     component: ChatDetails,
     canActivate: [routeGuard, roleGuard],
@@ -108,5 +122,9 @@ export const routes: Routes = [
     component: ProfileSelect,
     canActivate: [routeGuard, roleGuard],
     data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+  },
+  {
+    path: 'driver-code',
+    component: DriverCode
   },
 ];
