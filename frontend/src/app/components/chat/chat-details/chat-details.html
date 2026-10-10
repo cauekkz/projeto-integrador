@@ -11,11 +11,28 @@
     </button>
   </div>
 
-  <div class="mensagens">
-    @for (msg of mensagens; track $index) {
+  <div #messagesContainer class="mensagens" (scroll)="carregarMensagensAnteriores($event)">
+    @for (msg of mensagens; track msg.id) {
       <div class="msg-wrapper" [class.minha]="msg.minha">
         <div class="msg-balao" [class.minha]="msg.minha">
-          <span class="msg-texto">{{ msg.texto }}</span>
+          @if (msg.attachmentType === 'IMAGE' && msg.attachmentUrl) {
+            <img
+              [src]="msg.attachmentUrl"
+              alt="Imagem enviada no chat"
+              [style.max-width.%]="100"
+              [style.max-height.px]="320"
+              style="object-fit: contain"
+            >
+          } @else if (msg.attachmentUrl) {
+            <a [href]="msg.attachmentUrl" target="_blank" rel="noopener noreferrer">
+              {{ msg.texto || 'Abrir anexo' }}
+            </a>
+          }
+          @if (msg.texto && msg.attachmentType === 'IMAGE') {
+            <span class="msg-texto">{{ msg.texto }}</span>
+          } @else if (msg.texto && !msg.attachmentUrl) {
+            <span class="msg-texto">{{ msg.texto }}</span>
+          }
           <span class="msg-hora">
             {{ msg.hora }}
             @if (msg.minha) {
@@ -35,7 +52,15 @@
       name="mensagem"
       (keydown.enter)="enviar()"
     >
-    <button class="btn-icon"><i class="bi bi-credit-card"></i></button>
+    <input
+      #attachmentInput
+      type="file"
+      hidden
+      (change)="selecionarImagem($event)"
+    >
+    <button class="btn-icon" type="button" (click)="attachmentInput.click()" aria-label="Enviar anexo">
+      <i class="bi bi-credit-card"></i>
+    </button>
     <button class="btn-icon"><i class="bi bi-mic"></i></button>
   </div>
 
