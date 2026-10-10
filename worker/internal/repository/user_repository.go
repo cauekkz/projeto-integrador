@@ -15,6 +15,7 @@ type Response struct {
 
 // user_drive_contract, contracts e documents
 func CleanupUsers(ctx context.Context, conn *pgx.Conn) (int64, error) {
+	
 	query := `
 		DELETE FROM users
 		WHERE status = 'CHECK_EMAIL'
