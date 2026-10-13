@@ -18,7 +18,7 @@
           </div>
 
           <div class="field">
-            <input type="text" [(ngModel)]="usuario.document" placeholder="CPF/Documento" name="document" readonly>
+            <input type="text" [(ngModel)]="usuario.cpf" placeholder="CPF/Documento" name="cpf" readonly>
           </div>
 
           <div class="field">
@@ -42,6 +42,71 @@
           <div class="field">
             <input type="text" [(ngModel)]="enteredPhone" placeholder="Telefone" name="phone">
           </div>
+
+          <div class="field">
+            <input
+              type="text"
+              [(ngModel)]="enteredCode"
+              placeholder="Código de verificação"
+              name="verificationCode"
+              autocomplete="one-time-code"
+            >
+          </div>
+
+          <button
+            class="btn-secondary"
+            type="button"
+            (click)="solicitarCodigo()"
+            [disabled]="salvando"
+          >
+            Enviar código por e-mail
+          </button>
+        }
+
+        <section class="password-section" aria-labelledby="password-title">
+          <h2 id="password-title">Alterar senha</h2>
+          <p>Solicite um código enviado para o seu e-mail e informe a nova senha.</p>
+
+          <div class="field">
+            <input
+              type="password"
+              [(ngModel)]="enteredPassword"
+              placeholder="Nova senha"
+              name="newPassword"
+              autocomplete="new-password"
+            >
+          </div>
+
+          <div class="field">
+            <input
+              type="text"
+              [(ngModel)]="enteredPasswordCode"
+              placeholder="Código de verificação"
+              name="passwordVerificationCode"
+              autocomplete="one-time-code"
+            >
+          </div>
+
+          <button
+            class="btn-secondary"
+            type="button"
+            (click)="solicitarCodigo()"
+            [disabled]="salvando"
+          >
+            Enviar código por e-mail
+          </button>
+          <button
+            class="btn-primary"
+            type="button"
+            (click)="alterarSenha()"
+            [disabled]="salvando"
+          >
+            {{ salvando ? 'Salvando...' : 'Atualizar senha' }}
+          </button>
+        </section>
+
+        @if (mensagem) {
+          <p class="status-message" role="status">{{ mensagem }}</p>
         }
       </div>
 
@@ -51,8 +116,10 @@
         }
 
         @if (modoEdicao) {
-          <button class="btn-primary" (click)="salvar()">Salvar</button>
-          <button class="btn-secondary" (click)="cancelar()">Cancelar</button>
+          <button class="btn-primary" (click)="salvar()" [disabled]="salvando">
+            {{ salvando ? 'Salvando...' : 'Salvar dados' }}
+          </button>
+          <button class="btn-secondary" (click)="cancelar()" [disabled]="salvando">Cancelar</button>
         }
       </div>
     </div>
