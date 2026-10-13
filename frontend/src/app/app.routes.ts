@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { Home } from './pages/home/home';
 import { Login } from './pages/auth/login/login';
 import { Signup } from './pages/auth/signup/signup';
-import { EmailCode } from './shared/email-code/email-code';
+import { EmailCode } from './components/login-signup/email-code/email-code';
 import { HomeScreen } from './pages/responsible-home/home-screen';
 import { AddStudent } from './components/student/add-student/add-student';
 import { DriverHome } from './pages/driver-home/driver-home';
