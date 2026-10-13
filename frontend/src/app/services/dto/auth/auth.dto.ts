@@ -22,3 +22,14 @@ export interface verifyEmailRequest {
   email: string;
   code: string;
 }
+
+export interface updateUserRequest {
+  email: string;
+  phone: string;
+  code: string;
+}
+
+export interface updatePasswordRequest {
+  newPassword: string;
+  code: string;
+}

@@ -3,11 +3,19 @@ import { HttpClient } from '@angular/common/http';
 import { jwtDecode } from 'jwt-decode';
 import { User } from '../models/user.model';
 import { Observable } from 'rxjs';
-import { tokenResponse, loginRequest, createUserRequest, verifyEmailRequest } from './dto/auth/auth.dto';
+import {
+  tokenResponse,
+  loginRequest,
+  createUserRequest,
+  verifyEmailRequest,
+  updateUserRequest,
+  updatePasswordRequest,
+} from './dto/auth/auth.dto';
 
 @Injectable({
   providedIn: 'root',
 })
+// por enquanto aq uma parte, dps mudo
 export class AuthService {
   getUserIdFromToken(): string | null {
     const token = localStorage.getItem('token');
@@ -80,6 +88,20 @@ export class AuthService {
 
   verifyEmail(data: verifyEmailRequest) {
     return this.http.post(`${this.apiUrl}/auth/verify-email`, data, { responseType: 'text' });
+  }
+
+  sendCodeToUpdateUser() {
+    return this.http.post(`${this.apiUrl}/users/send-code-updateUser`, {});
+  }
+
+  updateUser(data: updateUserRequest) {
+    return this.http.put(`${this.apiUrl}/users/update-user`, data);
+  }
+
+  updatePassword(data: updatePasswordRequest) {
+    return this.http.put(`${this.apiUrl}/users/forgot-password`, data, {
+      responseType: 'text',
+    });
   }
 
   logout() {

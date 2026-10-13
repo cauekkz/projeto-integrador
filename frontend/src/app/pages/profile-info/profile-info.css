@@ -67,6 +67,29 @@
   gap: 12px;
 }
 
+.password-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 20px;
+  border-top: 1px solid #dbe6f5;
+}
+
+.password-section h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.1rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.password-section p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-family: 'Inter', sans-serif;
+}
+
 .field {
   position: relative;
   display: flex;
@@ -154,4 +177,17 @@
   margin-top: 12px;
   font-family: 'Inter', sans-serif;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status-message {
+  margin: 4px 0 0;
+  color: #1f2937;
+  font-size: 0.9rem;
+  font-family: 'Inter', sans-serif;
 }
