@@ -2,12 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Header } from '../../../shared/header/header';
 
 @Component({
   selector: 'app-chat-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, Header],
+  imports: [CommonModule, FormsModule],
   templateUrl: './chat-details.html',
   styleUrl: './chat-details.css',
 })

@@ -54,7 +54,7 @@ export class Dependentes implements OnInit {
   }
 
   voltar() {
-    this.router.navigate(['/home-screen']);
+    this.router.navigate(['/responsible-home']);
   }
 
   adicionarDependente() {

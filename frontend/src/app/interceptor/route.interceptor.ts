@@ -31,7 +31,7 @@ export const roleGuard: CanActivateFn = (route, state) => {
 
     const userRole: string = decoded.role;
 
-    const rolesPermitidas: string[] = route.data['rolesPermitidas'];
+    const rolesPermitidas: string[] = route.data['rolesPermitted'] || route.data['rolesPermitidas'];
 
     if (userRole === 'ROLE_ADMIN') {
       return true;
@@ -68,7 +68,7 @@ export const guestGuard: CanActivateFn = (route, state) => {
       if (userRole === 'ROLE_DRIVER') {
         router.navigate(['/driver-home']);
       } else if (userRole === 'ROLE_RESPONSIBLE' || userRole === 'ROLE_ADMIN') {
-        router.navigate(['/home-screen']);
+        router.navigate(['/responsible-home']);
       } else {
         router.navigate(['/']);
       }

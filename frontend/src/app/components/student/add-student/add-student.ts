@@ -33,7 +33,7 @@ export class AddStudent {
   ) {}
 
   voltar() {
-    this.router.navigate(['/home-screen']);
+    this.router.navigate(['/responsible-home']);
   }
 
   pronto() {
