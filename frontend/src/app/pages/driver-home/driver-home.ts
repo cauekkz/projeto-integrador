@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { Footer } from '../../shared/footer/footer';
 import { ProfileSelect } from '../../components/profile-select/profile-select';
+import { AuthService } from '../../services/auth.service';
+import { User } from '../../models/user.model';
 
 @Component({
   selector: 'app-driver-home',
@@ -10,12 +12,29 @@ import { ProfileSelect } from '../../components/profile-select/profile-select';
   templateUrl: './driver-home.html',
   styleUrl: './driver-home.css',
 })
-export class DriverHome {
+export class DriverHome implements OnInit {
   temRota = true;
   mostrarPerfil = false;
-  usuarioLogado: any = null;
+  usuarioLogado: User | null = null;
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit() {
+    const userId = this.authService.getUserIdFromToken();
+    if (userId) {
+      this.authService.getUserByID(userId).subscribe({
+        next: (user) => {
+          this.usuarioLogado = user;
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Erro ao buscar motorista:', err),
+      });
+    }
+  }
 
   irParaRota() {
     this.router.navigate(['/driver-route']);

@@ -65,6 +65,11 @@ export class ProfileInfo implements OnInit {
   }
 
   salvar() {
+    this.usuario = {
+      ...this.usuario,
+      email: this.enteredEmail,
+      phone: this.enteredPhone,
+    };
     this.modoEdicao = false;
   }
 }

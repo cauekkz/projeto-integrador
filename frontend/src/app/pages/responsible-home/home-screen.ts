@@ -14,8 +14,6 @@ import { ProfileSelect } from '../../components/profile-select/profile-select';
   styleUrl: './home-screen.css',
 })
 export class HomeScreen implements OnInit {
-  mostrarAddStudent = false;
-  mostrarDependentes = false;
   mostrarPerfil = false;
   meusDependentes: any[] = [];
   usuarioLogado: User | null = null;
@@ -66,20 +64,6 @@ export class HomeScreen implements OnInit {
 
   fecharPerfil() {
     this.mostrarPerfil = false;
-  }
-
-  fecharAddStudent() {
-    this.mostrarAddStudent = false;
-    this.carregarDependentes();
-  }
-
-  fecharDependentes() {
-    this.mostrarDependentes = false;
-  }
-
-  irParaCadastro() {
-    this.mostrarDependentes = false;
-    this.mostrarAddStudent = true;
   }
 
   irParaChat() {

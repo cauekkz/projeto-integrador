@@ -67,7 +67,7 @@ export class LoginForm {
           if (this.tipoUsuario === 'motorista') {
             this.router.navigate(['/driver-home']);
           } else {
-            this.router.navigate(['/home-screen']);
+            this.router.navigate(['/responsible-home']);
           }
         },
         error: (err) => {

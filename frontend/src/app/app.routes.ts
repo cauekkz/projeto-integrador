@@ -125,6 +125,8 @@ export const routes: Routes = [
   },
   {
     path: 'driver-code',
-    component: DriverCode
+    component: DriverCode,
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_RESPONSIBLE', 'ROLE_DRIVER'] },
   },
 ];

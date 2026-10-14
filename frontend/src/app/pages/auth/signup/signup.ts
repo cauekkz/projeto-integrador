@@ -6,12 +6,12 @@ import { SignupResponsible } from '../../../components/login-signup/signup-respo
 import { SignupDriver } from '../../../components/login-signup/signup-driver/signup-driver';
 import { SignupCnhForm } from '../../../components/login-signup/signup-cnh-form/signup-cnh-form';
 import { EmailCode } from '../../../components/login-signup/email-code/email-code';
-import { Button } from '../../../shared/button/button';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [SignupResponsible, SignupDriver, SignupCnhForm, EmailCode, ],
+  imports: [SignupResponsible, SignupDriver, SignupCnhForm, EmailCode],
   templateUrl: './signup.html',
   styleUrl: './signup.css',
 })

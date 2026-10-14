@@ -3,7 +3,7 @@
   <div class="topbar">
     <div class="notif-wrapper">
       <div class="bell-btn" (click)="irParaPerfil()">
-        <img src="/testee.jpg" class="avatar" alt="">
+        <img [src]="usuarioLogado?.photoUrl || '/testee.jpg'" class="avatar" alt="Foto do motorista">
       </div>
     </div>
 
@@ -24,10 +24,16 @@
     <img src="/mapa-placeholder.png" alt="Mapa" class="mapa-img">
   </div>
 
-
-
-  <app-footer tipoUsuario="motorista" abaAtiva="home"  tipo="mapa" />
+  <app-footer tipoUsuario="motorista" abaAtiva="meio" tipo="mapa" />
 
 </div>
+
+@if (mostrarPerfil) {
+  <app-profile-select
+    tipoUsuario="motorista"
+    [usuario]="usuarioLogado"
+    (fecharEvent)="fecharPerfil()"
+  />
+}
 
 
