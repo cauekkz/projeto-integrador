@@ -1,21 +1,35 @@
-import { Directive, ElementRef, HostListener, Optional, Self } from '@angular/core';
+import { Directive, ElementRef, HostListener, OnInit, Optional, Self } from '@angular/core';
 import { NgControl } from '@angular/forms';
+import { formatarData } from '../utils/mask.utils';
 
 @Directive({
   selector: '[appDateMask]',
   standalone: true,
 })
-export class DateMaskDirective {
+export class DateMaskDirective implements OnInit {
   constructor(
     private el: ElementRef<HTMLInputElement>,
     @Optional() @Self() private ngControl: NgControl
   ) {}
 
+  ngOnInit(): void {
+    this.applyMask();
+  }
+
   @HostListener('input')
   onInput(): void {
+    this.applyMask();
+  }
+
+  @HostListener('blur')
+  onBlur(): void {
+    this.applyMask();
+  }
+
+  private applyMask(): void {
     const input = this.el.nativeElement;
     const rawValue = input.value;
-    const formatted = this.formatDate(rawValue);
+    const formatted = formatarData(rawValue);
 
     if (input.value !== formatted) {
       input.value = formatted;
@@ -23,13 +37,5 @@ export class DateMaskDirective {
         this.ngControl.control.setValue(formatted, { emitEvent: false });
       }
     }
-  }
-
-  private formatDate(value: string): string {
-    const digits = value.replace(/\D/g, '').slice(0, 8);
-    if (!digits) return '';
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
   }
 }

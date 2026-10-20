@@ -1,21 +1,35 @@
-import { Directive, ElementRef, HostListener, Optional, Self } from '@angular/core';
+import { Directive, ElementRef, HostListener, OnInit, Optional, Self } from '@angular/core';
 import { NgControl } from '@angular/forms';
+import { formatarTelefone } from '../utils/mask.utils';
 
 @Directive({
   selector: '[appPhoneMask]',
   standalone: true,
 })
-export class PhoneMaskDirective {
+export class PhoneMaskDirective implements OnInit {
   constructor(
     private el: ElementRef<HTMLInputElement>,
     @Optional() @Self() private ngControl: NgControl
   ) {}
 
+  ngOnInit(): void {
+    this.applyMask();
+  }
+
   @HostListener('input')
   onInput(): void {
+    this.applyMask();
+  }
+
+  @HostListener('blur')
+  onBlur(): void {
+    this.applyMask();
+  }
+
+  private applyMask(): void {
     const input = this.el.nativeElement;
     const rawValue = input.value;
-    const formatted = this.formatPhone(rawValue);
+    const formatted = formatarTelefone(rawValue);
 
     if (input.value !== formatted) {
       input.value = formatted;
@@ -23,14 +37,5 @@ export class PhoneMaskDirective {
         this.ngControl.control.setValue(formatted, { emitEvent: false });
       }
     }
-  }
-
-  private formatPhone(value: string): string {
-    const digits = value.replace(/\D/g, '').slice(0, 11);
-    if (!digits) return '';
-    if (digits.length <= 2) return `(${digits}`;
-    if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
   }
 }
