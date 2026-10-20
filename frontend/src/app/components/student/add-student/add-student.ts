@@ -5,6 +5,7 @@ import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
 import { StudentService } from '../../../services/student.service';
 import { NameFormatDirective, DateMaskDirective } from '../../../shared/directives';
+import { dataParaIso } from '../../../shared/utils';
 
 @Component({
   selector: 'app-add-student',
@@ -37,8 +38,7 @@ export class AddStudent {
   }
 
   pronto() {
-    const [dia, mes, ano] = this.enteredBirthdate.split('/');
-    const birthDate = `${ano}-${mes}-${dia}`;
+    const birthDate = dataParaIso(this.enteredBirthdate);
     const data = {
       name: this.enteredName,
       notes: this.enteredObservacoes,

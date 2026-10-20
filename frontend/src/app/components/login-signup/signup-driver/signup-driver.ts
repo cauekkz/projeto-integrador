@@ -7,6 +7,7 @@ import { Button } from '../../../shared/button/button';
 import { PhoneMaskDirective, NameFormatDirective } from '../../../shared/directives';
 import { PopUpService } from '../../../shared/pop-up';
 import { jwtDecode } from 'jwt-decode';
+import { limparMascara } from '../../../shared/utils';
 
 @Component({
   selector: 'app-signup-driver',
@@ -101,7 +102,7 @@ export class SignupDriver {
       email: this.enteredEmail,
       password: this.enteredPass,
       confirmPassword: this.enteredConfirmPass,
-      phone: this.enteredPhone,
+      phone: limparMascara(this.enteredPhone),
     };
 
     console.log('Enviando cadastro do motorista...');

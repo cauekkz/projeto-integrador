@@ -4,6 +4,7 @@ import { jwtDecode } from 'jwt-decode';
 import { User } from '../models/user.model';
 import { Observable } from 'rxjs';
 import { tokenResponse, loginRequest, createUserRequest, verifyEmailRequest } from './dto/auth/auth.dto';
+import { limparMascara } from '../shared/utils';
 
 @Injectable({
   providedIn: 'root',
@@ -27,7 +28,11 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   login(data: loginRequest) {
-    return this.http.post<tokenResponse>(`${this.apiUrl}/auth/login`, data);
+    const payload: loginRequest = {
+      ...data,
+      cpf: limparMascara(data.cpf),
+    };
+    return this.http.post<tokenResponse>(`${this.apiUrl}/auth/login`, payload);
   }
 
   createDriver(data: {
@@ -45,7 +50,7 @@ export class AuthService {
     formData.append('email', data.email);
     formData.append('password', data.password);
     formData.append('confirmPassword', data.confirmPassword);
-    formData.append('phone', data.phone);
+    formData.append('phone', limparMascara(data.phone));
 
     return this.http.post(`${this.apiUrl}/driver/auth/signup`, formData, {
       responseType: 'text',
@@ -53,7 +58,12 @@ export class AuthService {
   }
 
   createUser(data: createUserRequest) {
-    return this.http.post(`${this.apiUrl}/responsible/auth/signup`, data);
+    const payload: createUserRequest = {
+      ...data,
+      cpf: limparMascara(data.cpf),
+      phone: limparMascara(data.phone),
+    };
+    return this.http.post(`${this.apiUrl}/responsible/auth/signup`, payload);
   }
 
   getUserByID(id: string): Observable<User> {
