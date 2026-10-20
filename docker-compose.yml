@@ -27,7 +27,7 @@ services:
     restart: unless-stopped
 
   minio:
-    image: quay.io/minio/minio:latest
+    image: pgsty/silo:RELEASE.2026-09-03T13-18-01Z
     container_name: vanroute-minio
     restart: unless-stopped
     ports:
