@@ -7,6 +7,7 @@ import { Button } from '../../../shared/button/button';
 import { CommonModule } from '@angular/common';
 import { CpfMaskDirective, PhoneMaskDirective, NameFormatDirective } from '../../../shared/directives';
 import { PopUpService } from '../../../shared/pop-up';
+import { limparMascara } from '../../../shared/utils';
 
 @Component({
   selector: 'app-signup-responsible',
@@ -80,9 +81,9 @@ export class SignupResponsible {
 
     const data = {
       name: this.enteredName,
-      cpf: this.enteredCpf,
+      cpf: limparMascara(this.enteredCpf),
       email: this.enteredEmail,
-      phone: this.enteredPhone,
+      phone: limparMascara(this.enteredPhone),
       password: this.enteredPass,
       confirmPassword: this.enteredConfirmPass,
     };

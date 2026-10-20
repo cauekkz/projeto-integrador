@@ -7,6 +7,7 @@ import { Button } from '../../../shared/button/button';
 import { ForgotPassword } from '../../../components/login-signup/forgot-password/forgot-password';
 import { CpfMaskDirective } from '../../../shared/directives';
 import { PopUpService } from '../../../shared/pop-up';
+import { limparMascara } from '../../../shared/utils';
 
 @Component({
   selector: 'app-login-form',
@@ -57,7 +58,7 @@ export class LoginForm {
 
     this.authService
       .login({
-        cpf: this.enteredCPF,
+        cpf: limparMascara(this.enteredCPF),
         passwordHash: this.enteredPass,
       })
       .subscribe({
