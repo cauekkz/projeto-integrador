@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface UserDriverContractRepository extends JpaRepository<UserDriverContract, UUID> {
 
-    boolean existsByDriverIdAndStudentIdAndContractStatusIn(UUID driverId, UUID studentId, List<ContractStatus> statuses);
+    boolean existsByDriverUserIdAndStudentIdAndContractStatusIn(UUID driverId, UUID studentId, List<ContractStatus> statuses);
 
     Optional<UserDriverContract> findByContractId(UUID contractId);
 }

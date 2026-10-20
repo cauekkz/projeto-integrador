@@ -74,7 +74,7 @@ public class ContractService {
         }
 
         boolean hasActiveOrPending = userDriverContractRepository
-                .existsByDriverIdAndStudentIdAndContractStatusIn(driverId, request.studentId(), 
+                .existsByDriverUserIdAndStudentIdAndContractStatusIn(driverId, request.studentId(),
                 List.of(ContractStatus.PENDING, ContractStatus.ACTIVE));
 
         if (hasActiveOrPending) {
