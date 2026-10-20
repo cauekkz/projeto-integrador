@@ -60,14 +60,17 @@ export class Footer implements OnInit {
   }
 
   selecionarAba(aba: 'meio' | 'config') {
-    if (aba === 'meio' && this.tipoUsuario === 'motorista') {
-      this.router.navigate(['/driver-route']);
+    if (aba === 'meio') {
+      if (this.tipoUsuario === 'motorista') {
+        this.router.navigate(['/driver-route']);
+      } else {
+        this.router.navigate(['/responsible-home']);
+      }
     }
 
     if (aba === 'config') {
       const from = this.tipoUsuario === 'motorista' ? 'driver-home' : 'responsible-home';
       this.router.navigate(['/chat'], { queryParams: { from } });
     }
-
   }
 }

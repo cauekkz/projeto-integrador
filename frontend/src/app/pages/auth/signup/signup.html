@@ -26,5 +26,6 @@
 @if (mostrarCodigo) {
   <app-email-code
     [email]="email"
-    (verificadoEvent)="concluirCadastro()" />
+    (verificadoEvent)="concluirCadastro()"
+    (voltarEvent)="mostrarCodigo = false" />
 }

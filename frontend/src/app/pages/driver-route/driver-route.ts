@@ -1,18 +1,20 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Location, CommonModule } from '@angular/common';
-import { Header } from '../../shared/header/header';
 import { ProfileSelect } from '../../components/profile-select/profile-select';
-import {Footer} from '../../shared/footer/footer';
+import { Footer } from '../../shared/footer/footer';
+import { AuthService } from '../../services/auth.service';
+import { User } from '../../models/user.model';
 
 @Component({
   selector: 'app-driver-route',
   standalone: true,
-  imports: [CommonModule, Header, ProfileSelect, Footer],
+  imports: [CommonModule, ProfileSelect, Footer],
   templateUrl: './driver-route.html',
   styleUrl: './driver-route.css',
 })
-export class DriverRoute {
+export class DriverRoute implements OnInit {
   mostrarPerfil = false;
+  usuarioLogado: User | null = null;
   alunosEsperandoAberto = false;
   alunosEmbarcadosAberto = false;
 
@@ -29,7 +31,24 @@ export class DriverRoute {
     { nome: 'Andreas Pereira', endereco: 'Av. Carrollo 1951' },
   ];
 
-  constructor(private location: Location) {}
+  constructor(
+    private location: Location,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef,
+  ) {}
+
+  ngOnInit() {
+    const userId = this.authService.getUserIdFromToken();
+    if (userId) {
+      this.authService.getUserByID(userId).subscribe({
+        next: (user) => {
+          this.usuarioLogado = user;
+          this.cdr.detectChanges();
+        },
+        error: (err) => console.error('Erro ao buscar motorista:', err),
+      });
+    }
+  }
 
   voltar() {
     this.location.back();

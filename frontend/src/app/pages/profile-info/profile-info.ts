@@ -4,11 +4,13 @@ import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Header } from '../../shared/header/header';
+import { PhoneMaskDirective } from '../../shared/directives';
+import { formatarCpf, formatarTelefone, limparMascara } from '../../shared/utils';
 
 @Component({
   selector: 'app-profile-info',
   standalone: true,
-  imports: [Header, FormsModule],
+  imports: [Header, FormsModule, PhoneMaskDirective],
   templateUrl: './profile-info.html',
   styleUrl: './profile-info.css',
 })
@@ -46,10 +48,14 @@ export class ProfileInfo implements OnInit {
     if (id) {
       this.authService.getUserByID(id).subscribe({
         next: (user) => {
-          this.usuario = user || {};
+          this.usuario = {
+            ...user,
+            document: formatarCpf(user?.cpf || (user as any)?.document),
+            phone: formatarTelefone(user?.phone),
+          };
           this.enteredName = user?.name || '';
           this.enteredEmail = user?.email || '';
-          this.enteredPhone = user?.phone || '';
+          this.enteredPhone = formatarTelefone(user?.phone);
         },
         error: (err) => console.error(err),
       });
@@ -97,7 +103,7 @@ export class ProfileInfo implements OnInit {
     this.authService
       .updateUser({
         email: this.enteredEmail,
-        phone: this.enteredPhone,
+        phone: limparMascara(this.enteredPhone),
         code: this.enteredCode,
       })
       .subscribe({
@@ -105,7 +111,7 @@ export class ProfileInfo implements OnInit {
           this.usuario = {
             ...this.usuario,
             email: this.enteredEmail,
-            phone: this.enteredPhone,
+            phone: formatarTelefone(this.enteredPhone),
           };
           this.modoEdicao = false;
           this.enteredCode = '';

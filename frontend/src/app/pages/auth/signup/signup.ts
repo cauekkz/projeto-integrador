@@ -5,13 +5,13 @@ import { Location } from '@angular/common';
 import { SignupResponsible } from '../../../components/login-signup/signup-responsible/signup-responsible';
 import { SignupDriver } from '../../../components/login-signup/signup-driver/signup-driver';
 import { SignupCnhForm } from '../../../components/login-signup/signup-cnh-form/signup-cnh-form';
-import { EmailCode } from '../../../shared/email-code/email-code';
-import { Button } from '../../../shared/button/button';
+import { EmailCode } from '../../../components/login-signup/email-code/email-code';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [SignupResponsible, SignupDriver, SignupCnhForm, EmailCode, ],
+  imports: [SignupResponsible, SignupDriver, SignupCnhForm, EmailCode],
   templateUrl: './signup.html',
   styleUrl: './signup.css',
 })

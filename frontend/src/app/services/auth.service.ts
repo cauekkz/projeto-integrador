@@ -11,6 +11,7 @@ import {
   updateUserRequest,
   updatePasswordRequest,
 } from './dto/auth/auth.dto';
+import { limparMascara } from '../shared/utils';
 
 @Injectable({
   providedIn: 'root',
@@ -35,7 +36,11 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   login(data: loginRequest) {
-    return this.http.post<tokenResponse>(`${this.apiUrl}/auth/login`, data);
+    const payload: loginRequest = {
+      ...data,
+      cpf: limparMascara(data.cpf),
+    };
+    return this.http.post<tokenResponse>(`${this.apiUrl}/auth/login`, payload);
   }
 
   createDriver(data: {
@@ -53,7 +58,7 @@ export class AuthService {
     formData.append('email', data.email);
     formData.append('password', data.password);
     formData.append('confirmPassword', data.confirmPassword);
-    formData.append('phone', data.phone);
+    formData.append('phone', limparMascara(data.phone));
 
     return this.http.post(`${this.apiUrl}/driver/auth/signup`, formData, {
       responseType: 'text',
@@ -61,7 +66,12 @@ export class AuthService {
   }
 
   createUser(data: createUserRequest) {
-    return this.http.post(`${this.apiUrl}/responsible/auth/signup`, data);
+    const payload: createUserRequest = {
+      ...data,
+      cpf: limparMascara(data.cpf),
+      phone: limparMascara(data.phone),
+    };
+    return this.http.post(`${this.apiUrl}/responsible/auth/signup`, payload);
   }
 
   getUserByID(id: string): Observable<User> {
@@ -95,7 +105,12 @@ export class AuthService {
   }
 
   updateUser(data: updateUserRequest) {
-    return this.http.put(`${this.apiUrl}/users/update-user`, data);
+    const payload: updateUserRequest = {
+      ...data,
+      phone: limparMascara(data.phone),
+    };
+
+    return this.http.put(`${this.apiUrl}/users/update-user`, payload);
   }
 
   updatePassword(data: updatePasswordRequest) {

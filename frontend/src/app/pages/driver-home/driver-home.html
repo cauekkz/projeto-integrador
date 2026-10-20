@@ -7,8 +7,8 @@
     </div>
 
     <div class="user-info" (click)="irParaPerfil()">
-      <img src="/testee.jpg" class="avatar" alt="">
-      <span class="name">Gustavo Gomez</span>
+      <img [src]="usuarioLogado?.photoUrl || '/testee.jpg'" class="avatar" alt="Foto do motorista">
+      <span class="name">{{ usuarioLogado?.name || 'Gustavo Gomez' }}</span>
     </div>
 
     <span class="role">Motorista</span>
