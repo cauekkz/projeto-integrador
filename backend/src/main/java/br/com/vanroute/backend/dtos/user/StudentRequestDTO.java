@@ -15,8 +15,6 @@ public record StudentRequestDTO(
 
     @Size(max = 700, message = "As observações devem ter no máximo 700 caracteres")
     String notes,
-    @Size(max = 100, message = "Os dias da semana devem ter no máximo 100 caracteres")
-    String weekdays,
 
     @Past(message = "A data de nascimento deve ser anterior à data atual")
     @NotNull(message = "A data de nascimento é obrigatória")
