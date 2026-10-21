@@ -30,7 +30,6 @@ import jakarta.validation.Valid;
 import org.springframework.data.redis.core.RedisTemplate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import br.com.vanroute.backend.dtos.contract.ContractProposalRequestDTO;
-import br.com.vanroute.backend.services.StudentResponsibleService;
 import  br.com.vanroute.backend.services.ContractService;
 
 @RestController
