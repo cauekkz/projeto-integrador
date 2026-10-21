@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.controllers;
 
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +24,7 @@ public class ResponsibleController {
     }
 
     @PostMapping("/auth/signup")
-    public ResponsibleResponseDTO signUp(@RequestBody ResponsibleRequestDTO responsibleRequestDTO){
+    public ResponsibleResponseDTO signUp(@Valid @RequestBody ResponsibleRequestDTO responsibleRequestDTO){
         return responsibleService.createResponsible(responsibleRequestDTO);
 
     }

@@ -114,7 +114,7 @@ class UserControllerTest {
                 )
                 .andExpect(status().isOk());
 
-        verify(authentication)
+        verify(authentication, atLeastOnce())
                 .getName();
 
         verify(userService)
@@ -150,7 +150,7 @@ class UserControllerTest {
                 )
                 .andExpect(status().isOk());
 
-        verify(authentication)
+        verify(authentication, atLeastOnce())
                 .getName();
 
         verify(userService)

@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.services;
 
+import org.springframework.security.access.AccessDeniedException;
+
 import java.time.Duration;
 
 import org.springframework.data.redis.core.RedisTemplate;
@@ -46,7 +48,7 @@ private final ResponsibleRepository responsibleRepository;
         String code;
 
         if (!studentResponsibleRepository.existsByResponsible_User_CpfAndStudent_IdAndIsAdminTrue(cpf, dto.id())) {
-            throw new RuntimeException(
+            throw new AccessDeniedException(
                     "O Responsavel não tem essa permissão");
         }
 

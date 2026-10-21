@@ -56,7 +56,7 @@ class ResponsibleControllerTest {
 
         AddressResponseDTO address = new AddressResponseDTO(
                 userId,
-                "PAULISTA",
+                "Avenida Paulista",
                 "01310-100",
                 "São Paulo",
                 "Bela Vista",
@@ -87,7 +87,7 @@ class ResponsibleControllerTest {
                                   "email": "carolina@example.com",
                                   "password": "SenhaForte123!",
                                   "confirmPassword": "SenhaForte123!",
-                                  "cpf": "12345678901",
+                                  "cpf": "52998224725",
                                   "phone": "11999999999",
                                   "address": {
                                     "street": "Avenida Paulista",
@@ -123,10 +123,7 @@ class ResponsibleControllerTest {
         verify(responsibleService, times(1))
                 .createResponsible(any());
 
-        verify(emailVerificationService, times(1))
-                .generateAndSendCode(
-                        eq("verificationEmail:email:carolina@example.com"),
-                        eq("carolina@example.com")
-                );
+        // o envio do codigo agora acontece dentro de ResponsibleService (transacional)
+        verifyNoInteractions(emailVerificationService);
     }
 }

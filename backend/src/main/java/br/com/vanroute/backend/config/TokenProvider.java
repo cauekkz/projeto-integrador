@@ -35,7 +35,8 @@ public class TokenProvider {
         Date expiration = new Date(now.getTime() + expirationTime);
         return Jwts.builder()
                 .subject(username)
-                .issuedAt(expiration)
+                .issuedAt(now)
+                .expiration(expiration)
                 .signWith(getSignKey())
                 .claim("roles", roles)
                 .compact();
