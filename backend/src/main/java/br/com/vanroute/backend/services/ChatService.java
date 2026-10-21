@@ -29,8 +29,11 @@ public class ChatService {
 
         // como no bd eu nao crie index pra comparar (1,2) (2,1) eu faço sempre a ordem
         // crescente
-        UUID userOneId = userA.compareTo(userB) < 0 ? userA : userB;
-        UUID userTwoId = userA.compareTo(userB) < 0 ? userB : userA;
+        // compara pela string (ordem de bytes sem sinal, igual ao Postgres); UUID.compareTo usa long com sinal
+        // e violava o CHECK (user_one_id < user_two_id) para metade dos pares
+        boolean aFirst = userA.toString().compareTo(userB.toString()) < 0;
+        UUID userOneId = aFirst ? userA : userB;
+        UUID userTwoId = aFirst ? userB : userA;
 
         return chatRepository.findByUserOneIdAndUserTwoId(userOneId, userTwoId)
                 .orElseGet(() -> {
