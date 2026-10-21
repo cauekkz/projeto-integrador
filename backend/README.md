@@ -4,6 +4,14 @@ Guia para quem consome a API, principalmente o front. Para cada endpoint criado 
 
 Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: Bearer <token>`, exceto os de cadastro e login.
 
+**Logo depois do login**, o front chama **`GET /api/users/me`**:
+```json
+{ "id": "uuid", "name": "...", "email": "...", "phone": "...", "cpf": "...",
+  "roles": ["ROLE_DRIVER"], "photoKey": "profile/... ou null", "linkCode": "ABCD2345K ou null" }
+```
+- O `id` é o que o front compara com o `senderId` das mensagens, para saber quais são suas. Ele também está no `sub` do token JWT, então o front pode lê-lo direto do token (`jwtDecode(token).sub`).
+- O `linkCode` só vem para motorista. É o código que ele passa para os pais, pessoalmente ou de boca, e que eles usam em `POST /api/invite-code/redeem`.
+
 **Erros** sempre vêm assim:
 ```json
 { "timestamp": "...", "message": "texto do erro", "details": "uri=/api/..." }
@@ -66,7 +74,7 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
   "orderIndex": 1,
   "address": { "id": "...", "street": "...", "zipCode": "...", "city": "...", "neighborhood": "...",
                "number": 10, "state": "SP", "latitude": -23.5, "longitude": -46.6 },
-  "students": [ { "id": "uuid do student stop", "studentId": "...", "stopId": "...",
+  "students": [ { "id": "uuid do student stop", "studentId": "...", "studentName": "Ana", "stopId": "...",
                   "locationType": "HOME", "action": "BOARDING", "weekdays": ["MONDAY", "WEDNESDAY"] } ],
   "schools":  [ { "id": "uuid do school stop", "schoolId": "...", "stopId": "..." } ]
 }
@@ -80,6 +88,8 @@ Os `id` de `students` e `schools` são os usados para mover e excluir.
 - **409:** a escola já está nessa rota.
 
 ### Ligar aluno ao ponto
+O `studentId` vem de `GET /api/contract/my-contracts?status=ACTIVE`, a lista de alunos com quem o motorista tem contrato ativo.
+
 `POST /api/route/stop/{routeStopId}/add-student/{studentId}`
 ```json
 { "action": "BOARDING", "locationType": "HOME", "weekdays": ["MONDAY", "WEDNESDAY"] }
@@ -88,7 +98,7 @@ Os `id` de `students` e `schools` são os usados para mover e excluir.
 
 → `200`:
 ```json
-{ "id": "...", "studentId": "...", "stopId": "...", "locationType": "HOME", "action": "BOARDING", "weekdays": ["MONDAY", "WEDNESDAY"] }
+{ "id": "...", "studentId": "...", "studentName": "Ana", "stopId": "...", "locationType": "HOME", "action": "BOARDING", "weekdays": ["MONDAY", "WEDNESDAY"] }
 ```
 
 Regras:
@@ -128,12 +138,14 @@ A proposta nasce no chat. Criar, aceitar e recusar ficam no `ChatController`; a 
 
 | Endpoint | Quem | Retorno |
 |---|---|---|
+| `GET /api/chats/{chatId}/students` | só o **motorista** que participa do chat | `[{ id, name }]`: filhos do pai da conversa de que ele é admin (o botão "ver filhos" usado para escolher o aluno da proposta) |
 | `POST /api/chats/{chatId}/contract` | motorista | `201`: `{ message, userDriverContractId, contract }`, onde `contract` já vem completo (formato abaixo) |
 | `PUT /api/chats/{chatId}/contracts/{contractId}/accept` | responsável do contrato | `200`; o contrato fica `ACTIVE` e as parcelas são geradas |
 | `PUT /api/chats/{chatId}/contracts/{contractId}/reject` | responsável do contrato | `200`; o contrato fica `CANCELED` |
+| `GET /api/contract/my-contracts?status=ACTIVE` | motorista ou responsável | `[{ contractId, userDriverContractId, status, periodicity, value, startDate, endDate, studentId, studentName, schoolId, schoolName, driverId, driverName, responsibleId, responsibleName }]`: os contratos em que o usuário é parte; `status` é opcional |
 | `GET /api/contract/{contractId}` | só as partes do contrato | detalhes (abaixo); os outros recebem `403` |
 
-Corpo da proposta:
+Corpo da proposta. `responsibleId` é o `otherUserId` do chat (`GET /api/chats`), `studentId` vem de `GET /api/chats/{chatId}/students` e `schoolId` vem de `GET /api/school/my-schools`:
 ```json
 { "responsibleId": "...", "studentId": "...", "schoolId": "...",
   "contract": { "periodicity": "MONTHLY", "value": 350.00, "startDate": "2027-02-01", "endDate": "2027-06-30" },
@@ -222,7 +234,9 @@ Quem pode baixar:
 - **Cadastro de aluno** (`POST /api/student/create-student`): não tem mais `weekdays`; os dias ficam no student stop.
 - **Escola** (`POST /api/school/add-school`): se a escola (nome + rua) já existe, o motorista é **vinculado** a ela, e não dá mais erro. `409` se já estiver vinculado.
 - **Caminho removido:** `POST /api/student-stop/{studentId}/{routeStopId}` virou `POST /api/route/stop/{routeStopId}/add-student/{studentId}`.
-- **JWT:** agora expira (`JWT_EXPIRATION`, padrão 15 min). Token vencido dá `401`.
+- **JWT:** agora expira (`JWT_EXPIRATION`, padrão 15 min), e token vencido dá `401`. O `sub` passou a ser o **id do usuário** (antes era o CPF). Tokens antigos dão `401`; basta logar de novo.
+- **No backend**, o `authentication.getName()` devolve o **id** do usuário. Use `AuthenticatedUser.id(authentication)` (um `UUID`, sem ir ao banco). Os services recebem `UUID userId`, e o CPF só é usado no login e na checagem de cadastro duplicado.
+- **Código de atualização do usuário** (`send-code-updateUser` / `update-user`): agora é um por usuário (chave `User:SendCodeUser:{id}` no Redis). Antes a chave era única e um usuário podia usar o código do outro.
 
 ## 6. Banco (migrations novas)
 

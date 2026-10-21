@@ -14,7 +14,8 @@ Branch: `routeLogic` (criada a partir de `new/useForFatecMergeExclude`, que já 
    - O cadastro de responsável aceita `address` (ou `addressRequestDTO`), e agora valida e exige o endereço.
    - O cadastro de aluno não tem mais `weekdays`.
 4. **Chat:** `POST /api/chats/{chatId}/messages` não aceita mais `messageType` nem `payload` (o campo é ignorado, e a mensagem é sempre `REGULAR_CHAT`). As mensagens de contrato agora vêm com `messageType` na resposta, então o front deve usar esse campo para identificar proposta, aceite e recusa.
-5. **Variáveis novas (opcionais):** `ORS_GEOCODE_URL` e `ORS_API_KEY`, que agora tem valor padrão vazio, então o app sobe sem ela.
+5. **Token:** o `sub` do JWT agora é o id do usuário. Quem estava logado precisa logar de novo.
+6. **Variáveis novas (opcionais):** `ORS_GEOCODE_URL` e `ORS_API_KEY`, que agora tem valor padrão vazio, então o app sobe sem ela.
 
 ## H. Resumo executivo
 
@@ -28,8 +29,8 @@ O VanRoute é um sistema de transporte escolar que conecta **responsáveis** (pa
 
 **Estado ao final:**
 - O backend sobe limpo com as 18 migrations e o schema validado.
-- **Testes unitários:** 110/110 passando.
-- **Testes de API ponta a ponta:** 253/253 cenários passando, nenhum retornando 500 inesperado. Inclui:
+- **Testes unitários:** 115/115 passando.
+- **Testes de API ponta a ponta:** 277/277 cenários passando, nenhum retornando 500 inesperado. Inclui:
   - entrega real pelo WebSocket;
   - upload e download autorizado no MinIO (imagem e PDF de contrato).
 - **Lógica de rota:** route stop com endereço (entra no fim), school stop e student stop ligados ao ponto, troca de ordem; tudo no `RouteController`.
@@ -64,7 +65,7 @@ flowchart LR
   W[worker Go] -->|apaga CHECK_EMAIL > 48h| PG
 ```
 
-- **JWT:** o `subject` é o CPF e há a claim `roles`. O `JwtAuthenticatorFilter` aceita o header `Authorization: Bearer` ou o parâmetro `?token=` (usado pelo WebSocket).
+- **JWT:** o `subject` é o **id do usuário** e há a claim `roles`. O filtro carrega o usuário pelo id, e `authentication.getName()` devolve o **id** (`User.getUsername()`). Controllers usam `AuthenticatedUser.id(authentication)`, e os services recebem `UUID userId` (motorista e responsável são buscados pela PK, sem JOIN por CPF). O CPF fica só no login e na checagem de cadastro duplicado. Tokens antigos (sub = CPF) recebem 401.
 - **Redis:** guarda os códigos de verificação de e-mail (TTL 15 min), os códigos de vínculo de aluno (`student:link:*`) e faz o pub/sub `chat-*`, que replica as mensagens para as sessões WebSocket.
 - **MinIO:** o bucket é criado no startup e é **privado**.
   - **Upload:** `GET /api/storage/presigned-url` devolve uma URL de upload (PUT, 15 min) e o `fileKey`.
@@ -177,6 +178,9 @@ Legenda: ✅ coberto pelo script de API · 🧪 coberto só por teste unitário 
 | | POST `/api/chats/{chatId}/contract` | motorista participante | ✅ |
 | | PUT `/api/chats/{chatId}/contracts/{contractId}/accept` · `/reject` | responsável do contrato | ✅ |
 | Contrato | GET `/api/contract/{contractId}` **(novo, `ContractController`)** | parte do contrato | ✅ |
+| | GET `/api/contract/my-contracts` **(novo)** | motorista ou responsável | ✅ |
+| | GET `/api/chats/{chatId}/students` **(novo)** | motorista do chat | ✅ |
+| Usuário | GET `/api/users/me` **(novo)** | logado | ✅ |
 | | WS `/chat/{chatId}?token=` | participante | ✅ (handshake 101/401, entrega em tempo real via Redis, usuário de fora desconectado com 1003) |
 | Rota | POST `/api/route/create-route` | motorista | ✅ |
 | | POST `/api/route/{routeId}/stops` (`addRouteStops`, corpo com endereço) | dono da rota | ✅ |
@@ -196,8 +200,8 @@ Legenda: ✅ coberto pelo script de API · 🧪 coberto só por teste unitário 
 | | DELETE `/api/users/{id}/{code}` | ADMIN | ⚠️ só o 403 (não existe admin) |
 | Infra | GET `/v3/api-docs`, `/swagger-ui.html` | pública | ✅ |
 
-Total: **45 endpoints REST + 1 WebSocket**.
-- 42 REST e o WebSocket testados no fluxo (✅).
+Total: **48 endpoints REST + 1 WebSocket**.
+- 45 REST e o WebSocket testados no fluxo (✅).
 - 3 REST testados parcialmente (⚠️): cadastro e verify-CNH do motorista, e delete de usuário.
 
 **Ordem de dependência usada nos testes:**
@@ -255,8 +259,8 @@ cd backend && DATABASE_NAME=vanroute_audit MINIO_BUCKET_NAME=vanroute-audit \
 ### F.1 Números (execução real)
 | Suite | Antes | Depois |
 |---|---|---|
-| Testes unitários/integração (Maven) | 72: 65 ok, 3 falhas, 4 erros (contexto não subia) | **110: 110 ok** |
-| Cenários de API (`run-api-tests.sh` + `ws-test.mjs`) | não executável (app não subia) | **253: 253 ok**, nenhum 500 e nenhum `ERROR` no log do servidor |
+| Testes unitários/integração (Maven) | 72: 65 ok, 3 falhas, 4 erros (contexto não subia) | **115: 115 ok** |
+| Cenários de API (`run-api-tests.sh` + `ws-test.mjs`) | não executável (app não subia) | **277: 277 ok**, nenhum 500 e nenhum `ERROR` no log do servidor |
 
 **Novos testes unitários:**
 - `TokenProviderTest` (2);
@@ -292,6 +296,8 @@ cd backend && DATABASE_NAME=vanroute_audit MINIO_BUCKET_NAME=vanroute-audit \
 | 16 | **WebSocket nunca entregava mensagens** (nem as de contrato) | o `ObjectMapper` do `JacksonConfig` não tinha o `JavaTimeModule`; `LocalDateTime` quebrava o `writeValueAsString` e o erro era engolido pelo `catch` | `JavaTimeModule` registrado + datas em ISO |
 | 17 | Front não conseguia exibir imagens nem documentos enviados (só existia URL de upload) | faltava leitura | `GET /api/storage/download-url` com URL assinada e checagem de permissão; bucket continua privado |
 | 18 | Qualquer participante podia forjar mensagem de contrato (PROPOSAL/APPROVAL/REJECTION com payload) pelo endpoint de mensagens; a resposta não informava o tipo | `messageType` e `payload` no DTO público (commit 9dc00d3) | DTO público só com conteúdo e anexo, mensagem do usuário sempre `REGULAR_CHAT`; as do contrato saem por `ChatMessageService.sendSystemMessage`; a resposta inclui `messageType` |
+| 19 | Dados pedidos pela API mas nunca entregues: o motorista não via o próprio código de convite; ninguém sabia o próprio `userId` (o token só tem o CPF); o motorista não tinha como obter o `studentId` para a proposta nem a lista de alunos com contrato ativo para a rota | faltavam endpoints de leitura | `GET /api/users/me` (inclui `linkCode` para motorista), `GET /api/chats/{chatId}/students` (só o motorista do chat), `GET /api/contract/my-contracts`, e `studentName` nos student stops. O script de API passou a obter todos os IDs pela própria API, sem consultar o banco |
+| 20 | Identidade por CPF: cada requisição buscava o usuário/motorista/responsável pelo CPF; código de atualização de usuário numa chave Redis única (um usuário usava o código do outro) | token e serviços desenhados sobre o CPF | `sub` do token e `authentication.getName()` = id; services recebem `UUID`; chave do código por usuário |
 | 15 | Endereço não geocodificável → NPE/500 | sem checar lista vazia | 400 "Endereço não encontrado"; URL do geocoder configurável |
 
 ### F.3 Pendências e limitações (não corrigidas)
@@ -302,7 +308,6 @@ cd backend && DATABASE_NAME=vanroute_audit MINIO_BUCKET_NAME=vanroute-audit \
   - worker Go;
   - frontend (fora do escopo).
 - **`GET /api/users/{id}`:** qualquer usuário logado lê CPF, e-mail e telefone de qualquer outro.
-- **Código de atualização/exclusão de usuário:** usa uma **chave Redis única global** (`User:SendCodeUser`), compartilhada entre todos os usuários. O `DELETE /api/users/{id}/{code}` não liga o código ao usuário-alvo.
 - **Anexos com `fileKey` alheio:** o acesso ao download vem de "o arquivo estar numa mensagem do meu chat". Se alguém souber o `fileKey` de outra pessoa (um UUID aleatório, impraticável de adivinhar) e mandá-lo como anexo no próprio chat, ganharia acesso. Para fechar de vez, seria preciso registrar o dono no upload.
 - **Viagens e ocorrências:** `trips`, `boardings` e `occurrences` existem só como tabela, sem código.
 - **Mensagem de proposta:** o payload leva só IDs, mas os detalhes agora vêm de `GET /api/contract/{contractId}` (o `contractId` está no payload): `GET /api/contract/{contractId}`.
