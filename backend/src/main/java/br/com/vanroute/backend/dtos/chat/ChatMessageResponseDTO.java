@@ -4,6 +4,7 @@ import java.util.UUID;
 
 import br.com.vanroute.backend.models.chat.ChatMessage;
 import br.com.vanroute.backend.models.chat.enums.AttachmentType;
+import br.com.vanroute.backend.models.chat.enums.MessageType;
 
 import java.time.LocalDateTime;
 
@@ -14,6 +15,7 @@ public record ChatMessageResponseDTO(
                 String attachmentUrl,
                 AttachmentType attachmentType,
                 LocalDateTime sentAt,
+                MessageType messageType,
                 String payload) {
 
         public static ChatMessageResponseDTO from(ChatMessage message) {
@@ -24,6 +26,7 @@ public record ChatMessageResponseDTO(
                                 message.getAttachmentUrl(),
                                 message.getAttachmentType(),
                                 message.getSentAt(),
+                                message.getMessageType(),
                                 message.getPayload());
         }
 

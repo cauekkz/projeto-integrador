@@ -8,6 +8,5 @@ import java.util.UUID;
 
 public interface ResponsibleRepository extends JpaRepository<Responsible, UUID> {
 
-    Optional<Responsible> findByUserCpf(String cpf);
 
 }
