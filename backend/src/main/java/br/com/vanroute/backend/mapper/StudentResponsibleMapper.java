@@ -55,7 +55,6 @@ public class StudentResponsibleMapper {
         return new StudentAddressResponseDTO(
                 studentAddress.getId(),
                 address.getStreet(),
-                address.getStreet(),
                 address.getZipCode(),
                 address.getCity(),
                 address.getNeighborhood(),

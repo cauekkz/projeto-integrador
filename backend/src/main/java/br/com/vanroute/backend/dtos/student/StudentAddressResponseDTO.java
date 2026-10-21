@@ -4,7 +4,6 @@ import java.util.UUID;
 
 public record StudentAddressResponseDTO(
         UUID id,
-        String weekdays,
         String street,
         String zipCode,
         String city,

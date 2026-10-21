@@ -1,5 +1,17 @@
 package br.com.vanroute.backend.services;
 
+import java.util.UUID;
+
+import java.util.List;
+
+import br.com.vanroute.backend.repositories.StudentStopRepository;
+
+import br.com.vanroute.backend.dtos.route.StudentRouteResponse;
+
+import org.springframework.security.access.AccessDeniedException;
+
+import org.springframework.transaction.annotation.Transactional;
+
 import br.com.vanroute.backend.dtos.geocode.Coordenadas;
 import br.com.vanroute.backend.dtos.student.StudentResponsibleResponseDTO;
 import br.com.vanroute.backend.mapper.StudentResponsibleMapper;
@@ -31,8 +43,9 @@ public class StudentService {
     private final StudentAddressRepository studentAddressRepository;
     private final StudentResponsibleMapper studentResponsibleMapper;
     private final MapService mapService;
+    private final StudentStopRepository studentStopRepository;
 
-    public StudentService(StudentRepository studentRepository, ResponsibleRepository responsibleRepository, StudentResponsibleRepository studentResponsibleRepository, AddressService addressService, StudentAddressRepository studentAddressRepository,StudentResponsibleMapper studentResponsibleMapper, MapService mapService) {
+    public StudentService(StudentRepository studentRepository, ResponsibleRepository responsibleRepository, StudentResponsibleRepository studentResponsibleRepository, AddressService addressService, StudentAddressRepository studentAddressRepository,StudentResponsibleMapper studentResponsibleMapper, MapService mapService, StudentStopRepository studentStopRepository) {
         this.studentRepository = studentRepository;
         this.responsibleRepository = responsibleRepository;
         this.studentResponsibleRepository = studentResponsibleRepository;
@@ -40,8 +53,10 @@ public class StudentService {
         this.studentAddressRepository = studentAddressRepository;
         this.studentResponsibleMapper = studentResponsibleMapper;
         this.mapService = mapService;
+        this.studentStopRepository = studentStopRepository;
     }
 
+        @Transactional
         public StudentResponsibleResponseDTO createStudentWithRelation(StudentRequestDTO dto, String cpf){
             Student student = new Student();
             student.setName(dto.name());
@@ -61,7 +76,6 @@ public class StudentService {
             StudentAddress studentAddress = new StudentAddress();
             studentAddress.setAddress(address);
             studentAddress.setStudent(student);
-            studentAddress.setWeekdays(dto.weekdays());
             studentAddressRepository.save(studentAddress);
 
             StudentResponsible studentResponsible = new StudentResponsible();
@@ -71,8 +85,9 @@ public class StudentService {
 
             //obrigado felipe já ia fica maluco
             Responsible responsible = responsibleRepository.findByUserCpf(cpf)
-                    .orElseThrow(() -> new RuntimeException("Responsible not found"));
+                    .orElseThrow(() -> new AccessDeniedException("Responsible not found"));
             studentResponsible.setResponsible(responsible);
+            studentResponsibleRepository.save(studentResponsible);
             return studentResponsibleMapper.toResponse(
                     student,
                     studentAddress,
@@ -89,6 +104,13 @@ public class StudentService {
 
     //ns se a melhor coisa é fazer isso nesse service mas fds nao consigo pensa num service diferente pra isso, talvez um especifico pra isso mas nao sei
 
-
-
+    // responsavel ve so o nome das rotas em que o filho esta (sem pontos nem ordem)
+    public List<StudentRouteResponse> getStudentRoutes(UUID studentId, String cpf) {
+        if (!studentResponsibleRepository.existsByResponsible_User_CpfAndStudent_Id(cpf, studentId)) {
+            throw new AccessDeniedException("Responsável não vinculado a esse aluno");
+        }
+        return studentStopRepository.findRoutesOfStudent(studentId).stream()
+                .map(route -> new StudentRouteResponse(route.getId(), route.getName()))
+                .toList();
+    }
 }

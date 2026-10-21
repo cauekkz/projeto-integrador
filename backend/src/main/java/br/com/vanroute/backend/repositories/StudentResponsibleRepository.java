@@ -11,6 +11,8 @@ public interface StudentResponsibleRepository
     // danke chat
     boolean existsByResponsible_User_CpfAndStudent_IdAndIsAdminTrue(String cpf, UUID studentId);
 
+    boolean existsByResponsible_User_CpfAndStudent_Id(String cpf, UUID studentId);
+
     boolean existsByResponsible_UserIdAndStudent_IdAndIsAdminTrue(
             UUID responsibleId,
             UUID studentId);
