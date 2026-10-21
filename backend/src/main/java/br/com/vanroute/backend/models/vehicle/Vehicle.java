@@ -26,6 +26,29 @@ public class Vehicle {
     @Column()
     private VehicleStatus status;
 
+    @Column(length = 11, unique = true)
+    private String renavam;
+
+    @Column(length = 17, unique = true)
+    private String chassis;
+
+    @Column(name = "manufacture_year")
+    private Integer manufactureYear;
+
+    @Column(length = 50)
+    private String color;
+
+    @Column(length = 50)
+    private String fuel;
+
+    // PARTICULAR, ALUGUEL...
+    @Column(length = 50)
+    private String category;
+
+    // exercicio do CRLV (ano do licenciamento)
+    @Column(name = "licensing_year")
+    private Integer licensingYear;
+
     public UUID getId() {
         return id;
     }
@@ -74,4 +97,59 @@ public class Vehicle {
         this.status = status;
     }
 
+    public String getRenavam() {
+        return renavam;
+    }
+
+    public void setRenavam(String renavam) {
+        this.renavam = renavam;
+    }
+
+    public String getChassis() {
+        return chassis;
+    }
+
+    public void setChassis(String chassis) {
+        this.chassis = chassis;
+    }
+
+    public Integer getManufactureYear() {
+        return manufactureYear;
+    }
+
+    public void setManufactureYear(Integer manufactureYear) {
+        this.manufactureYear = manufactureYear;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+
+    public String getFuel() {
+        return fuel;
+    }
+
+    public void setFuel(String fuel) {
+        this.fuel = fuel;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public Integer getLicensingYear() {
+        return licensingYear;
+    }
+
+    public void setLicensingYear(Integer licensingYear) {
+        this.licensingYear = licensingYear;
+    }
 }

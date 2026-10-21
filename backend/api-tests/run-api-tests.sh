@@ -139,6 +139,32 @@ req "responsavel lista escolas de motorista" 403 GET /api/school/my-schools "$R1
 req "D2 cadastra a mesma escola de novo" 409 POST /api/school/add-school "$D2" "$SCHOOL_JSON"
 req "responsavel tenta criar escola" 403 POST /api/school/add-school "$R1" "{\"name\":\"X\",\"email\":\"x@x\",\"addressRequestDTO\":$addr}"
 
+echo "== 4b. Van (CRLV digital)"
+CRLV=$(ls "$(cd "$(dirname "$0")/../.." && pwd)"/CRLV*.pdf* 2>/dev/null | head -1)
+upload_crlv() { CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/vehicle/add-vehicle" -H "Authorization: Bearer $2" -F "documentPdf=@$1;type=application/pdf"); BODY=$(cat /tmp/vr_body); }
+upload_crlv /tmp/vr_fake.pdf "$D1"; check "van: PDF que nao e CRLV assinado" 422 "$CODE"
+upload_crlv /tmp/vr_fake.pdf "$R1"; check "van: responsavel nao cadastra van" 403 "$CODE"
+req "van: responsavel lista vans" 403 GET /api/vehicle/my-vehicles "$R1"
+req "van: desvincular van que nao e dele" 404 PUT "/api/vehicle/00000000-0000-0000-0000-000000000000/unlink" "$D1"
+if [ -n "$CRLV" ]; then
+  upload_crlv "$CRLV" "$D1"; check "van: D1 cadastra pelo CRLV" 201 "$CODE"
+  VAN=$(echo "$BODY" | jq -r .id)
+  assert "van: dados lidos do CRLV (placa, renavam, chassi, passageiros, licenciamento)" "echo \"\$BODY\" | jq -e '(.plate|length)==7 and (.renavam|length)==11 and (.chassis|length)==17 and .capacity>0 and .licensingYear>2000 and .status==\"ACTIVE\"' >/dev/null"
+  upload_crlv "$CRLV" "$D1"; check "van: D1 de novo com a mesma van" 409 "$CODE"
+  upload_crlv "$CRLV" "$D2"; check "van: D2 com a mesma van (vincula, nao duplica)" 201 "$CODE"
+  assert "van: mesma van para os dois" "[ \"\$(echo \"\$BODY\" | jq -r .id)\" = \"$VAN\" ]"
+  assert "van: nao duplicou no banco" "[ \"\$(psql_audit -c \"SELECT count(*) FROM vehicles WHERE id='$VAN'\")\" = 1 ]"
+  req "van: D1 lista suas vans" 200 GET /api/vehicle/my-vehicles "$D1"
+  assert "van: my-vehicles traz a van" "echo \"\$BODY\" | jq -e '.[] | select(.id==\"$VAN\")' >/dev/null"
+  req "van: D1 desvincula" 204 PUT "/api/vehicle/$VAN/unlink" "$D1"
+  req "van: D1 sem van ativa" 200 GET /api/vehicle/my-vehicles "$D1"
+  assert "van: lista vazia depois do unlink" "! echo \"\$BODY\" | jq -e '.[] | select(.id==\"$VAN\")' >/dev/null"
+  upload_crlv "$CRLV" "$D1"; check "van: D1 volta a usar a mesma van (historico)" 201 "$CODE"
+  assert "van: 2 vinculos do D1 com a van, so 1 ativo" "[ \"\$(psql_audit -c \"SELECT count(*) || '/' || count(*) FILTER (WHERE end_date IS NULL) FROM driver_vehicles dv JOIN drivers d ON d.user_id=dv.driver_id JOIN users u ON u.id=d.user_id WHERE u.cpf='$D1_CPF' AND dv.vehicle_id='$VAN'\")\" = '2/1' ]"
+else
+  echo "   (sem CRLV na raiz: cadastro real nao testado)"
+fi
+
 echo "== 5. Alunos e vinculos responsavel-aluno"
 STUDENT_JSON="{\"name\":\"Aluno Ficticio\",\"notes\":\"teste\",\"birthDate\":\"2016-05-10\",\"relationType\":\"FINANCIAL\",\"address\":$addr}"
 req "R1 cria aluno" 200 POST /api/student/create-student "$R1" "$STUDENT_JSON"
