@@ -57,8 +57,6 @@ class ChatMessageServiceTest {
         ChatMessageRequestDTO requestDTO = new ChatMessageRequestDTO(
                 "Hello, pirate king!",
                 null,
-                null,
-                MessageType.REGULAR_CHAT,
                 null
         );
 
@@ -85,12 +83,23 @@ class ChatMessageServiceTest {
     }
 
     @Test
+    void userMessageIsAlwaysRegularChatWithoutPayload() {
+        when(chatService.getChatById(mockChat.getId())).thenReturn(mockChat);
+        when(userService.findByCpf("12345678901")).thenReturn(Optional.of(senderUser));
+        when(chatMessageRepository.save(any(ChatMessage.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ChatMessageResponseDTO response = chatMessageService.sendMessage(
+                mockChat.getId(), "12345678901", new ChatMessageRequestDTO("oi", null, null));
+
+        assertEquals(MessageType.REGULAR_CHAT, response.messageType());
+        assertNull(response.payload());
+    }
+
+    @Test
     void shouldThrowWhenUserHasNoChatAccess() {
         ChatMessageRequestDTO requestDTO = new ChatMessageRequestDTO(
                 "Hello",
                 null,
-                null,
-                MessageType.REGULAR_CHAT,
                 null
         );
 

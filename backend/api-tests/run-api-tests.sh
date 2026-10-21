@@ -169,6 +169,8 @@ req "convite inexistente" 404 POST /api/invite-code/redeem "$R1" "{\"inviteCode\
 
 echo "== 7. Chat"
 req "R1 envia mensagem" 201 POST "/api/chats/$CHAT/messages" "$R1" '{"content":"Ola motorista","messageType":"REGULAR_CHAT"}'
+req "tentativa de forjar PROPOSAL pelo endpoint de mensagens" 201 POST "/api/chats/$CHAT/messages" "$R1" '{"content":"fake","messageType":"PROPOSAL","payload":"{\"contractId\":\"x\"}"}'
+assert "forjada vira REGULAR_CHAT sem payload" "echo \"\$BODY\" | jq -e '.messageType==\"REGULAR_CHAT\" and .payload==null' >/dev/null"
 req "mensagem vazia" 400 POST "/api/chats/$CHAT/messages" "$R1" '{"content":"  "}'
 req "D1 lista chats" 200 GET /api/chats "$D1"
 assert "D1 tem 1 chat" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 1 ]"
@@ -208,7 +210,8 @@ CONTRACT2=$(psql_audit -c "SELECT contract_id FROM user_driver_contracts WHERE i
 req "R1 recusa contrato 2" 200 PUT "/api/chats/$CHAT/contracts/$CONTRACT2/reject" "$R1"
 assert "contrato 2 CANCELED" "[ \"\$(psql_audit -c \"SELECT status FROM contracts WHERE id='$CONTRACT2'\")\" = CANCELED ]"
 req "mensagens de proposta/aceite no chat" 200 GET "/api/chats/$CHAT/messages?size=50" "$R1"
-assert "chat contem 4 mensagens de contrato + 2 textos (1 via ws-test)" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 6 ]"
+assert "mensagens de contrato com messageType do sistema" "echo \"\$BODY\" | jq -e '[.content[].messageType] | (index(\"PROPOSAL\") != null) and (index(\"APPROVAL\") != null) and (index(\"REJECTION\") != null)' >/dev/null"
+assert "chat contem 4 mensagens de contrato + 3 textos (1 via ws-test, 1 forjada)" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 7 ]"
 
 echo "== 9. Rotas: route stop (endereco, entra no fim) -> school/student stop -> troca de ordem"
 stop_json() { echo "[{\"address\":{\"street\":\"$1\",\"zipCode\":\"01000-000\",\"city\":\"Sao Paulo\",\"number\":10,\"state\":\"SP\"}}]"; }

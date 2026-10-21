@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.models.chat.enums.MessageType;
+
 import org.springframework.stereotype.Service;
 import br.com.vanroute.backend.repositories.ChatMessageRepository;
 import br.com.vanroute.backend.dtos.chat.ChatMessageResponseDTO;
@@ -30,6 +32,16 @@ public class ChatMessageService {
     }
     
     public ChatMessageResponseDTO sendMessage(UUID chatId, String cpf, ChatMessageRequestDTO request) {
+        return save(chatId, cpf, request.content(), request.attachmentType(), request.attachmentUrl(), MessageType.REGULAR_CHAT, null);
+    }
+
+    // mensagens geradas pelo fluxo de contrato (PROPOSAL, APPROVAL, REJECTION); nao ficam expostas na API
+    public ChatMessageResponseDTO sendSystemMessage(UUID chatId, String cpf, String content, MessageType type, String payload) {
+        return save(chatId, cpf, content, null, null, type, payload);
+    }
+
+    private ChatMessageResponseDTO save(UUID chatId, String cpf, String content, AttachmentType attachmentType,
+                                        String attachmentUrl, MessageType type, String payload) {
         chatService.validateChatAccess(chatId, cpf);
         
         br.com.vanroute.backend.models.chat.Chat chat = chatService.getChatById(chatId);
@@ -38,11 +50,11 @@ public class ChatMessageService {
         ChatMessage message = new ChatMessage();
         message.setChat(chat);
         message.setSender(sender);
-        message.setContent(request.content());
-        message.setAttachmentType(request.attachmentType()); // maldito jeito
-        message.setAttachmentUrl(request.attachmentUrl()); 
-        message.setMessageType(request.messageType());
-        message.setPayload(request.payload());
+        message.setContent(content);
+        message.setAttachmentType(attachmentType); // maldito jeito
+        message.setAttachmentUrl(attachmentUrl);
+        message.setMessageType(type);
+        message.setPayload(payload);
         message = chatMessageRepository.save(message);
         return ChatMessageResponseDTO.from(message);
     }

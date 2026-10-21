@@ -14,7 +14,7 @@ class JacksonConfigTest {
     @Test
     void shouldSerializeChatMessageWithDate() throws Exception {
         ChatMessageResponseDTO msg = new ChatMessageResponseDTO(UUID.randomUUID(), UUID.randomUUID(), "oi",
-                null, null, LocalDateTime.of(2026, 10, 21, 8, 30), null);
+                null, null, LocalDateTime.of(2026, 10, 21, 8, 30), null, null);
 
         String json = new JacksonConfig().objectMapper().writeValueAsString(msg);
 

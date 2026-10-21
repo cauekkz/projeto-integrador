@@ -106,10 +106,8 @@ public class ChatController {
 
         
         String payloadStr = "{\"userDriverContractId\": \"" + udc.getId() + "\", \"contractId\": \"" + udc.getContract().getId() + "\"}";
-        ChatMessageRequestDTO msgReq = new ChatMessageRequestDTO(
-            "Proposta de Contrato", null, null, br.com.vanroute.backend.models.chat.enums.MessageType.PROPOSAL, payloadStr
-        );
-        ChatMessageResponseDTO msg = chatMessageService.sendMessage(chatId, cpf, msgReq);
+        ChatMessageResponseDTO msg = chatMessageService.sendSystemMessage(chatId, cpf, "Proposta de Contrato",
+                br.com.vanroute.backend.models.chat.enums.MessageType.PROPOSAL, payloadStr);
         try {
             redisTemplate.convertAndSend("chat-" + chatId, objectMapper.writeValueAsString(msg));
         } catch (Exception e) {
@@ -134,10 +132,8 @@ public class ChatController {
         contractService.acceptContract(contractId, responsibleId);
         
         String payloadStr = "{\"contractId\": \"" + contractId + "\"}";
-        ChatMessageRequestDTO msgReq = new ChatMessageRequestDTO(
-            "Contrato Aceito", null, null, br.com.vanroute.backend.models.chat.enums.MessageType.APPROVAL, payloadStr
-        );
-        ChatMessageResponseDTO msg = chatMessageService.sendMessage(chatId, cpf, msgReq);
+        ChatMessageResponseDTO msg = chatMessageService.sendSystemMessage(chatId, cpf, "Contrato Aceito",
+                br.com.vanroute.backend.models.chat.enums.MessageType.APPROVAL, payloadStr);
         try {
             redisTemplate.convertAndSend("chat-" + chatId, objectMapper.writeValueAsString(msg));
         } catch (Exception e) {
@@ -156,10 +152,8 @@ public class ChatController {
         contractService.rejectContract(contractId, responsibleId);
         
         String payloadStr = "{\"contractId\": \"" + contractId + "\"}";
-        ChatMessageRequestDTO msgReq = new ChatMessageRequestDTO(
-            "Contrato Recusado", null, null, br.com.vanroute.backend.models.chat.enums.MessageType.REJECTION, payloadStr
-        );
-        ChatMessageResponseDTO msg = chatMessageService.sendMessage(chatId, cpf, msgReq);
+        ChatMessageResponseDTO msg = chatMessageService.sendSystemMessage(chatId, cpf, "Contrato Recusado",
+                br.com.vanroute.backend.models.chat.enums.MessageType.REJECTION, payloadStr);
         try {
             redisTemplate.convertAndSend("chat-" + chatId, objectMapper.writeValueAsString(msg));
         } catch (Exception e) {
