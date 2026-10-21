@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.config.AuthenticatedUser;
+import br.com.vanroute.backend.dtos.user.UserMeResponseDTO;
 import br.com.vanroute.backend.dtos.user.UpdatePhotoRequestDTO;
 import br.com.vanroute.backend.dtos.user.UpdateUser;
 import br.com.vanroute.backend.services.StorageService;
@@ -25,6 +27,12 @@ public class UserController {
         this.userService = userService;
     }
 
+    // o front chama logo apos o login: id proprio (pra saber quais mensagens sao "minhas"), foto e o codigo do motorista
+    @GetMapping("/me")
+    public ResponseEntity<UserMeResponseDTO> me(Authentication authentication) {
+        return ResponseEntity.ok(userService.me(AuthenticatedUser.id(authentication)));
+    }
+
     @GetMapping("/{id}")
     @Valid
     public ResponseEntity<User> getUserById(@PathVariable UUID id) {
@@ -35,15 +43,13 @@ public class UserController {
 
     @PostMapping("/send-code-updateUser")
     public ResponseEntity<Void>  sendCodeToUser(Authentication authentication){
-     String cpf = authentication.getName();
-     userService.sendCodeToUser(cpf);
+     userService.sendCodeToUser(AuthenticatedUser.id(authentication));
      return ResponseEntity.ok().build();
     }
 
     @PutMapping("/update-user")
     public ResponseEntity<User> updateUser(@RequestBody UpdateUser updateUser, Authentication authentication){
-        String cpf = authentication.getName();
-        userService.updateUser(updateUser, cpf);
+        userService.updateUser(updateUser, AuthenticatedUser.id(authentication));
         return ResponseEntity.ok().build();
     }
 
@@ -53,13 +59,13 @@ public class UserController {
     public ResponseEntity<StorageService.PresignedUrlResponse> photoUploadUrl(@RequestParam String fileName,
                                                                               @RequestParam String contentType,
                                                                               Authentication authentication) {
-        return ResponseEntity.ok(userService.photoUploadUrl(authentication.getName(), fileName, contentType));
+        return ResponseEntity.ok(userService.photoUploadUrl(AuthenticatedUser.id(authentication), fileName, contentType));
     }
 
     @PutMapping("/update-photo")
     public ResponseEntity<Map<String, String>> updatePhoto(@RequestBody @Valid UpdatePhotoRequestDTO request,
                                                            Authentication authentication) {
-        User user = userService.updatePhoto(authentication.getName(), request.fileKey());
+        User user = userService.updatePhoto(AuthenticatedUser.id(authentication), request.fileKey());
         return ResponseEntity.ok(Map.of("photoKey", user.getPhotoKey()));
     }
 

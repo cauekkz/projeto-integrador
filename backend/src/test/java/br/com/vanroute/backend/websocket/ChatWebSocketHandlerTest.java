@@ -35,12 +35,12 @@ public class ChatWebSocketHandlerTest {
     private Principal principal;
 
     private UUID chatId;
-    private String cpf;
+    private UUID userId;
 
     @BeforeEach
     void setUp() throws Exception {
         chatId = UUID.randomUUID();
-        cpf = "12345678901";
+        userId = UUID.randomUUID();
     }
 
     @Test
@@ -58,9 +58,9 @@ public class ChatWebSocketHandlerTest {
     void shouldCloseConnectionWhenUnauthorizedAccess() throws Exception {
         when(session.getUri()).thenReturn(new URI("ws://localhost/chat/" + chatId));
         when(session.getPrincipal()).thenReturn(principal);
-        when(principal.getName()).thenReturn(cpf);
+        when(principal.getName()).thenReturn(userId.toString());
         doThrow(new IllegalArgumentException("Você não tem acesso a este chat."))
-                .when(chatService).validateChatAccess(chatId, cpf);
+                .when(chatService).validateChatAccess(chatId, userId);
 
         chatWebSocketHandler.afterConnectionEstablished(session);
 
@@ -71,10 +71,10 @@ public class ChatWebSocketHandlerTest {
     void shouldAcceptConnectionAndReceiveRedisMessage() throws Exception {
         when(session.getUri()).thenReturn(new URI("ws://localhost/chat/" + chatId));
         when(session.getPrincipal()).thenReturn(principal);
-        when(principal.getName()).thenReturn(cpf);
+        when(principal.getName()).thenReturn(userId.toString());
         when(session.isOpen()).thenReturn(true);
         
-        doNothing().when(chatService).validateChatAccess(chatId, cpf);
+        doNothing().when(chatService).validateChatAccess(chatId, userId);
 
         // Estabiliza conexão
         chatWebSocketHandler.afterConnectionEstablished(session);

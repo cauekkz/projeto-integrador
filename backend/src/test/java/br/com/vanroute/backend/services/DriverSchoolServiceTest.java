@@ -49,7 +49,7 @@ class DriverSchoolServiceTest {
         dto = new SchoolRequestDTO("Escola X", "11", "escola@teste.local",
                 new AddressRequestDTO("Rua A", "01000-000", "São Paulo", null, 1, "SP", null, null));
 
-        when(driverRepository.findByUserCpf("cpf")).thenReturn(Optional.of(driver));
+        when(driverRepository.findById(driver.getUserId())).thenReturn(Optional.of(driver));
         when(schoolRepository.findByNameAndAddress_Street("Escola X", "Rua A")).thenReturn(Optional.of(existing));
     }
 
@@ -57,7 +57,7 @@ class DriverSchoolServiceTest {
     void shouldLinkDriverToExistingSchool() {
         when(driverSchoolsRepository.existsByDriverUserIdAndSchoolId(driver.getUserId(), existing.getId())).thenReturn(false);
 
-        School result = driverSchoolService.createSchool(dto, "cpf");
+        School result = driverSchoolService.createSchool(dto, driver.getUserId());
 
         assertSame(existing, result);
         ArgumentCaptor<DriverSchools> captor = ArgumentCaptor.forClass(DriverSchools.class);
@@ -72,7 +72,7 @@ class DriverSchoolServiceTest {
     void shouldRejectWhenDriverAlreadyLinked() {
         when(driverSchoolsRepository.existsByDriverUserIdAndSchoolId(driver.getUserId(), existing.getId())).thenReturn(true);
 
-        assertThrows(ResponseStatusException.class, () -> driverSchoolService.createSchool(dto, "cpf"));
+        assertThrows(ResponseStatusException.class, () -> driverSchoolService.createSchool(dto, driver.getUserId()));
         verify(driverSchoolsRepository, never()).save(any());
     }
 }

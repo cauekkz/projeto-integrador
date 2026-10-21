@@ -1,5 +1,8 @@
 package br.com.vanroute.backend.services;
 
+import java.util.UUID;
+import java.util.List;
+import br.com.vanroute.backend.dtos.student.ChildSummaryResponseDTO;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -41,6 +44,9 @@ import br.com.vanroute.backend.repositories.StudentResponsibleRepository;
 @ExtendWith(MockitoExtension.class)
 public class StudentServiceTest {
 
+    private static final UUID RESPONSIBLE_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final UUID OTHER_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
+
     @Mock
     private StudentRepository studentRepository;
 
@@ -61,6 +67,15 @@ public class StudentServiceTest {
 
     @Spy
     private StudentResponsibleMapper studentResponsibleMapper;
+
+    @Mock
+    private ChatService chatService;
+
+    @Mock
+    private br.com.vanroute.backend.repositories.DriverRepository driverRepository;
+
+    @Mock
+    private br.com.vanroute.backend.repositories.StudentStopRepository studentStopRepository;
 
     @InjectMocks
     private StudentService studentService;
@@ -85,9 +100,9 @@ public class StudentServiceTest {
 
         when(addressService.addAddress(addressDto)).thenReturn(address);
         when(mapService.searchCoord(any())).thenReturn(new Coordenadas(-23.5, -46.6));
-        when(responsibleRepository.findByUserCpf("12345678901")).thenReturn(Optional.of(responsible));
+        when(responsibleRepository.findById(RESPONSIBLE_ID)).thenReturn(Optional.of(responsible));
 
-        studentService.createStudentWithRelation(requestDTO, "12345678901");
+        studentService.createStudentWithRelation(requestDTO, RESPONSIBLE_ID);
 
         ArgumentCaptor<StudentResponsible> captor = ArgumentCaptor.forClass(StudentResponsible.class);
         verify(studentResponsibleRepository, times(1)).save(captor.capture());
@@ -104,10 +119,10 @@ public class StudentServiceTest {
 
         when(addressService.addAddress(addressDto)).thenReturn(new Address());
         when(mapService.searchCoord(any())).thenReturn(new Coordenadas(-23.5, -46.6));
-        when(responsibleRepository.findByUserCpf("invalid")).thenReturn(Optional.empty());
+        when(responsibleRepository.findById(OTHER_ID)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class,
-                () -> studentService.createStudentWithRelation(requestDTO, "invalid"));
+                () -> studentService.createStudentWithRelation(requestDTO, OTHER_ID));
 
         assertEquals("Responsible not found", exception.getMessage());
         verify(studentResponsibleRepository, never()).save(any());
@@ -129,10 +144,49 @@ public class StudentServiceTest {
         
         when(studentResponsibleRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
         
-        Page<Student> resultPage = studentService.getAllStudentsResponsible(filter, pageable, "12345678901");
+        Page<Student> resultPage = studentService.getAllStudentsResponsible(filter, pageable, RESPONSIBLE_ID);
         
         assertNotNull(resultPage);
         assertEquals(1, resultPage.getContent().size());
         assertEquals("Student 1", resultPage.getContent().get(0).getName());
+    }
+
+    private br.com.vanroute.backend.models.chat.Chat chatBetween(User driverUser, User parentUser) {
+        br.com.vanroute.backend.models.chat.Chat chat = new br.com.vanroute.backend.models.chat.Chat();
+        chat.setUserOne(driverUser);
+        chat.setUserTwo(parentUser);
+        return chat;
+    }
+
+    @Test
+    void driverSeesAdminChildrenOfTheChatPartner() {
+        UUID chatId = UUID.randomUUID();
+        User driverUser = new User();
+        driverUser.setId(UUID.randomUUID());
+        User parentUser = new User();
+        parentUser.setId(UUID.randomUUID());
+        parentUser.setCpf("222");
+        Student child = new Student();
+        child.setId(UUID.randomUUID());
+        child.setName("Ana");
+        when(driverRepository.existsById(driverUser.getId())).thenReturn(true);
+        when(chatService.getChatById(chatId)).thenReturn(chatBetween(driverUser, parentUser));
+        when(studentResponsibleRepository.findAdminChildren(parentUser.getId())).thenReturn(List.of(child));
+
+        List<ChildSummaryResponseDTO> children = studentService.getChildrenOfChatPartner(chatId, driverUser.getId());
+
+        assertEquals(1, children.size());
+        assertEquals("Ana", children.get(0).name());
+        verify(chatService).validateChatAccess(chatId, driverUser.getId());
+    }
+
+    @Test
+    void responsibleCannotListChildrenThroughTheChat() {
+        UUID chatId = UUID.randomUUID();
+        when(driverRepository.existsById(OTHER_ID)).thenReturn(false);
+
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> studentService.getChildrenOfChatPartner(chatId, OTHER_ID));
+        verify(studentResponsibleRepository, never()).findAdminChildren(any());
     }
 }

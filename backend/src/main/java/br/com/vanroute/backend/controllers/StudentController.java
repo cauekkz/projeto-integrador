@@ -1,4 +1,5 @@
 package br.com.vanroute.backend.controllers;
+import br.com.vanroute.backend.config.AuthenticatedUser;
 import br.com.vanroute.backend.dtos.student.StudentResponsibleResponseDTO;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -41,22 +42,19 @@ public class StudentController {
     @PostMapping("/create-student")
     public StudentResponsibleResponseDTO createStudentWithRelation(@Valid @RequestBody StudentRequestDTO studentRequestDTO,
                                                                    Authentication authentication) {
-        String cpf = authentication.getName();
-        return studentService.createStudentWithRelation(studentRequestDTO, cpf);
+        return studentService.createStudentWithRelation(studentRequestDTO, AuthenticatedUser.id(authentication));
     }
 
     @PostMapping("/generate-link")
     public ResponseEntity<String> generateStudentCodeToLink(
             @Valid @RequestBody StudentLinkRequestDTO studentLinkRequestDTO, Authentication authentication) {
-        String cpf = authentication.getName();
-        return ResponseEntity.ok(studentLinkService.generateStudentCodeToLink(studentLinkRequestDTO, cpf));
+        return ResponseEntity.ok(studentLinkService.generateStudentCodeToLink(studentLinkRequestDTO, AuthenticatedUser.id(authentication)));
     }
 
     @PostMapping("/confirm-link")
     public ResponseEntity<Void> createRelationWithStudent(@Valid @RequestBody StudentCodeRequestDTO code,
             Authentication authentication) {
-        String cpf = authentication.getName();
-        studentLinkService.createStudentResponsibleRelation(code.code(), cpf);
+        studentLinkService.createStudentResponsibleRelation(code.code(), AuthenticatedUser.id(authentication));
 
         // TODO: usar .created(uri) apontando pro recurso criado
         return ResponseEntity.status(201).build();
@@ -64,13 +62,12 @@ public class StudentController {
 
     @GetMapping("/{studentId}/routes")
     public ResponseEntity<List<StudentRouteResponse>> getStudentRoutes(@PathVariable UUID studentId, Authentication authentication) {
-        return ResponseEntity.ok(studentService.getStudentRoutes(studentId, authentication.getName()));
+        return ResponseEntity.ok(studentService.getStudentRoutes(studentId, AuthenticatedUser.id(authentication)));
     }
 
     @GetMapping("/my-children")
     public ResponseEntity<Page<Student>> getAllChildrenResponsible(@ModelAttribute AllStudentsFilterRequestDTO filter,  @PageableDefault(size = 10) Pageable pageable, Authentication authentication) {
-        String cpf = authentication.getName();
-        return ResponseEntity.ok(studentService.getAllStudentsResponsible(filter, pageable, cpf));
+        return ResponseEntity.ok(studentService.getAllStudentsResponsible(filter, pageable, AuthenticatedUser.id(authentication)));
     }                                                                           
 
 }

@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.config.AuthenticatedUser;
 import br.com.vanroute.backend.services.StorageService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -32,6 +33,6 @@ public class StorageController {
             @RequestParam String fileKey,
             Authentication authentication) {
 
-        return ResponseEntity.ok(storageService.generateDownloadUrl(fileKey, authentication.getName()));
+        return ResponseEntity.ok(storageService.generateDownloadUrl(fileKey, AuthenticatedUser.id(authentication)));
     }
 }

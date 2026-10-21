@@ -27,6 +27,7 @@ public class TokenProvider {
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList();
+        // sub = id do usuario (User.getUsername devolve o id); o front le o id direto do token
         return buildToken(user.getUsername(), roles);
     }
 
@@ -63,7 +64,7 @@ public class TokenProvider {
                 .getPayload();
     }
 
-    public String getUsername(String token){
+    public String getSubject(String token){
         return getClaims(token).getSubject();
     }
 

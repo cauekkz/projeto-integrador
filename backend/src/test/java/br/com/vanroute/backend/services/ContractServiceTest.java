@@ -107,4 +107,15 @@ public class ContractServiceTest {
         assertThrows(org.springframework.security.access.AccessDeniedException.class,
                 () -> contractService.getContractDetails(contractId, UUID.randomUUID()));
     }
+
+    @Test
+    void myContractsUsesTheStatusFilterWhenGiven() {
+        UUID userId = UUID.randomUUID();
+
+        contractService.findMyContracts(userId, br.com.vanroute.backend.models.contract.enums.ContractStatus.ACTIVE);
+        verify(userDriverContractRepository).findAllOfUserByStatus(userId, br.com.vanroute.backend.models.contract.enums.ContractStatus.ACTIVE);
+
+        contractService.findMyContracts(userId, null);
+        verify(userDriverContractRepository).findAllOfUser(userId);
+    }
 }

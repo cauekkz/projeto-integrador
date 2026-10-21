@@ -57,22 +57,21 @@ public class ChatServiceTest {
 
     @Test
     void shouldValidateChatAccessSuccess() {
-        when(userRepository.findByCpf("12345678901")).thenReturn(Optional.of(userOne));
         when(chatRepository.existsByChatIdAndUserId(mockChat.getId(), userOne.getId())).thenReturn(true);
 
-        assertDoesNotThrow(() -> chatService.validateChatAccess(mockChat.getId(), "12345678901"));
+        assertDoesNotThrow(() -> chatService.validateChatAccess(mockChat.getId(), userOne.getId()));
         
-        verify(userRepository, times(1)).findByCpf("12345678901");
+        // o id vem do token: nao consulta mais o usuario
+        verifyNoInteractions(userRepository);
         verify(chatRepository, times(1)).existsByChatIdAndUserId(mockChat.getId(), userOne.getId());
     }
 
     @Test
     void shouldThrowExceptionWhenChatAccessDenied() {
-        when(userRepository.findByCpf("12345678901")).thenReturn(Optional.of(userOne));
         when(chatRepository.existsByChatIdAndUserId(mockChat.getId(), userOne.getId())).thenReturn(false);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> chatService.validateChatAccess(mockChat.getId(), "12345678901"));
+                () -> chatService.validateChatAccess(mockChat.getId(), userOne.getId()));
 
         assertEquals("Você não tem acesso a este chat.", exception.getMessage());
     }
@@ -82,10 +81,9 @@ public class ChatServiceTest {
         PageRequest pageable = PageRequest.of(0, 10);
         Page<Chat> chatPage = new PageImpl<>(Collections.singletonList(mockChat));
         
-        when(userRepository.findByCpf("12345678901")).thenReturn(Optional.of(userOne));
         when(chatRepository.findChatsByUserIdOrderByRecentMessage(userOne.getId(), pageable)).thenReturn(chatPage);
 
-        Page<ChatResponseDTO> result = chatService.getUserChats("12345678901", pageable);
+        Page<ChatResponseDTO> result = chatService.getUserChats(userOne.getId(), pageable);
 
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());

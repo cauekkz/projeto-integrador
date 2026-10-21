@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import java.util.UUID;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.Duration;
@@ -44,10 +45,10 @@ private final ResponsibleRepository responsibleRepository;
         this.responsibleRepository = responsibleRepository;
     }
 
-    public String generateStudentCodeToLink(StudentLinkRequestDTO dto, String cpf) {
+    public String generateStudentCodeToLink(StudentLinkRequestDTO dto, UUID responsibleId) {
         String code;
 
-        if (!studentResponsibleRepository.existsByResponsible_User_CpfAndStudent_IdAndIsAdminTrue(cpf, dto.id())) {
+        if (!studentResponsibleRepository.existsByResponsible_UserIdAndStudent_IdAndIsAdminTrue(responsibleId, dto.id())) {
             throw new AccessDeniedException(
                     "O Responsavel não tem essa permissão");
         }
@@ -77,7 +78,7 @@ private final ResponsibleRepository responsibleRepository;
         }
     }
 
-    public void createStudentResponsibleRelation(String code, String cpf) {
+    public void createStudentResponsibleRelation(String code, UUID responsibleId) {
 
         String storedJson = redisTemplate.opsForValue().get(REDIS_KEY_PREFIX + code);
         if (storedJson == null) {
@@ -89,7 +90,7 @@ private final ResponsibleRepository responsibleRepository;
 
             Student student = studentRepository.getReferenceById(dto.id());
 
-            Responsible responsible = responsibleRepository.findByUserCpf(cpf).orElseThrow(() -> new RuntimeException(
+            Responsible responsible = responsibleRepository.findById(responsibleId).orElseThrow(() -> new RuntimeException(
                     "Responsavel não encontrado"));
 
             StudentResponsible studentResponsible = new StudentResponsible();

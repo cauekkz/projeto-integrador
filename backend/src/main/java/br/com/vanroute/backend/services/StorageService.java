@@ -125,11 +125,7 @@ public class StorageService {
     
     // o bucket continua privado: so gera link temporario de leitura para quem participa do chat
     // onde o arquivo foi enviado ou e parte do contrato do documento
-    public PresignedDownloadResponse generateDownloadUrl(String fileKey, String cpf) {
-        UUID userId = userRepository.findByCpf(cpf)
-                .orElseThrow(() -> new AccessDeniedException("Usuário não encontrado"))
-                .getId();
-
+    public PresignedDownloadResponse generateDownloadUrl(String fileKey, UUID userId) {
         // foto de perfil: qualquer usuario logado ve
         boolean allowed = fileKey.startsWith(PROFILE_PREFIX)
                 || chatMessageRepository.existsAttachmentVisibleTo(fileKey, userId)

@@ -25,6 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
 
+    private static final UUID USER_ID = UUID.fromString("44444444-4444-4444-4444-444444444444");
+
     private MockMvc mockMvc;
 
     @Mock
@@ -102,11 +104,11 @@ class UserControllerTest {
     void shouldSendCodeToUserSuccessfully() throws Exception {
 
         when(authentication.getName())
-                .thenReturn("12345678901");
+                .thenReturn(USER_ID.toString());
 
         doNothing()
                 .when(userService)
-                .sendCodeToUser("12345678901");
+                .sendCodeToUser(USER_ID);
 
         mockMvc.perform(
                         post("/api/users/send-code-updateUser")
@@ -118,7 +120,7 @@ class UserControllerTest {
                 .getName();
 
         verify(userService)
-                .sendCodeToUser("12345678901");
+                .sendCodeToUser(USER_ID);
     }
 
     // =========================================================
@@ -129,11 +131,11 @@ class UserControllerTest {
     void shouldUpdateUserSuccessfully() throws Exception {
 
         when(authentication.getName())
-                .thenReturn("12345678901");
+                .thenReturn(USER_ID.toString());
 
         when(userService.updateUser(
                 any(UpdateUser.class),
-                eq("12345678901")
+                eq(USER_ID)
         )).thenReturn("User updated successfully");
 
         mockMvc.perform(
@@ -156,7 +158,7 @@ class UserControllerTest {
         verify(userService)
                 .updateUser(
                         any(UpdateUser.class),
-                        eq("12345678901")
+                        eq(USER_ID)
                 );
     }
 
