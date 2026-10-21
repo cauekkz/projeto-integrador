@@ -15,7 +15,8 @@ Branch: `routeLogic` (criada a partir de `new/useForFatecMergeExclude`, que já 
    - O cadastro de aluno não tem mais `weekdays`.
 4. **Chat:** `POST /api/chats/{chatId}/messages` não aceita mais `messageType` nem `payload` (o campo é ignorado, e a mensagem é sempre `REGULAR_CHAT`). As mensagens de contrato agora vêm com `messageType` na resposta, então o front deve usar esse campo para identificar proposta, aceite e recusa.
 5. **Token:** o `sub` do JWT agora é o id do usuário. Quem estava logado precisa logar de novo.
-6. **Variáveis novas (opcionais):** `ORS_GEOCODE_URL` e `ORS_API_KEY`, que agora tem valor padrão vazio, então o app sobe sem ela.
+6. **Migration V21:** colunas novas em `vehicles` e índice parcial em `driver_vehicles`.
+7. **Variáveis novas (opcionais):** `ORS_GEOCODE_URL` e `ORS_API_KEY`, que agora tem valor padrão vazio, então o app sobe sem ela.
 
 ## H. Resumo executivo
 
@@ -29,8 +30,8 @@ O VanRoute é um sistema de transporte escolar que conecta **responsáveis** (pa
 
 **Estado ao final:**
 - O backend sobe limpo com as 18 migrations e o schema validado.
-- **Testes unitários:** 115/115 passando.
-- **Testes de API ponta a ponta:** 277/277 cenários passando, nenhum retornando 500 inesperado. Inclui:
+- **Testes unitários:** 123/123 passando.
+- **Testes de API ponta a ponta:** 294/294 cenários passando, nenhum retornando 500 inesperado. Inclui:
   - entrega real pelo WebSocket;
   - upload e download autorizado no MinIO (imagem e PDF de contrato).
 - **Lógica de rota:** route stop com endereço (entra no fim), school stop e student stop ligados ao ponto, troca de ordem; tudo no `RouteController`.
@@ -149,6 +150,7 @@ Os endpoints antigos `POST /api/student-stop/{studentId}/{routeStopId}` (`Studen
 - **Proteção:** o `update-photo` só aceita chave da pasta do próprio usuário e que exista no bucket. Assim ninguém transforma um anexo privado em foto pública. A foto antiga é apagada do bucket na troca.
 
 ### Migrations
+V21 (`V21__vehicle_data_from_crlv.sql`): dados do CRLV em `vehicles` e vínculo motorista↔van único só enquanto ativo.
 V20 (`V20__add_photo_to_users.sql`): adiciona `users.photo_key`.
 V19 (`V19__weekdays_on_student_stops.sql`): adiciona `student_stops.weekdays` e remove `student_stops.status`, `student_stops.route_id` e `student_addresses.weekdays`.
 
@@ -181,6 +183,7 @@ Legenda: ✅ coberto pelo script de API · 🧪 coberto só por teste unitário 
 | | GET `/api/contract/my-contracts` **(novo)** | motorista ou responsável | ✅ |
 | | GET `/api/chats/{chatId}/students` **(novo)** | motorista do chat | ✅ |
 | Usuário | GET `/api/users/me` **(novo)** | logado | ✅ |
+| Van | POST `/api/vehicle/add-vehicle` · GET `/my-vehicles` · PUT `/{vehicleId}/unlink` **(novos)** | motorista | ✅ (com CRLV digital real; validação ICP-Brasil + leitura dos dados pelo texto do PDF) |
 | | WS `/chat/{chatId}?token=` | participante | ✅ (handshake 101/401, entrega em tempo real via Redis, usuário de fora desconectado com 1003) |
 | Rota | POST `/api/route/create-route` | motorista | ✅ |
 | | POST `/api/route/{routeId}/stops` (`addRouteStops`, corpo com endereço) | dono da rota | ✅ |
@@ -200,8 +203,8 @@ Legenda: ✅ coberto pelo script de API · 🧪 coberto só por teste unitário 
 | | DELETE `/api/users/{id}/{code}` | ADMIN | ⚠️ só o 403 (não existe admin) |
 | Infra | GET `/v3/api-docs`, `/swagger-ui.html` | pública | ✅ |
 
-Total: **48 endpoints REST + 1 WebSocket**.
-- 45 REST e o WebSocket testados no fluxo (✅).
+Total: **51 endpoints REST + 1 WebSocket**.
+- 48 REST e o WebSocket testados no fluxo (✅).
 - 3 REST testados parcialmente (⚠️): cadastro e verify-CNH do motorista, e delete de usuário.
 
 **Ordem de dependência usada nos testes:**
@@ -259,8 +262,8 @@ cd backend && DATABASE_NAME=vanroute_audit MINIO_BUCKET_NAME=vanroute-audit \
 ### F.1 Números (execução real)
 | Suite | Antes | Depois |
 |---|---|---|
-| Testes unitários/integração (Maven) | 72: 65 ok, 3 falhas, 4 erros (contexto não subia) | **115: 115 ok** |
-| Cenários de API (`run-api-tests.sh` + `ws-test.mjs`) | não executável (app não subia) | **277: 277 ok**, nenhum 500 e nenhum `ERROR` no log do servidor |
+| Testes unitários/integração (Maven) | 72: 65 ok, 3 falhas, 4 erros (contexto não subia) | **123: 123 ok** |
+| Cenários de API (`run-api-tests.sh` + `ws-test.mjs`) | não executável (app não subia) | **294: 294 ok**, nenhum 500 e nenhum `ERROR` no log do servidor |
 
 **Novos testes unitários:**
 - `TokenProviderTest` (2);
