@@ -13,6 +13,16 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import br.com.vanroute.backend.exceptions.BadRequestException;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import br.com.vanroute.backend.repositories.ChatMessageRepository;
+import br.com.vanroute.backend.repositories.DocumentRepository;
+import br.com.vanroute.backend.repositories.UserRepository;
+import org.springframework.security.access.AccessDeniedException;
 //IA FIRST
 import java.time.Duration;
 import java.util.UUID;
@@ -31,9 +41,17 @@ public class StorageService {
     @Value("${spring.cloud.aws.s3.endpoint}")
     private String endpoint;
 
-    public StorageService(S3Client s3Client, S3Presigner s3Presigner) {
+    private final ChatMessageRepository chatMessageRepository;
+    private final DocumentRepository documentRepository;
+    private final UserRepository userRepository;
+
+    public StorageService(S3Client s3Client, S3Presigner s3Presigner, ChatMessageRepository chatMessageRepository,
+                          DocumentRepository documentRepository, UserRepository userRepository) {
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
+        this.chatMessageRepository = chatMessageRepository;
+        this.documentRepository = documentRepository;
+        this.userRepository = userRepository;
     }
 
     @PostConstruct
@@ -57,8 +75,37 @@ public class StorageService {
         if (originalFilename != null && originalFilename.contains(".")) {
             ext = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        String fileKey = UUID.randomUUID().toString() + ext;
+        return presignPut(UUID.randomUUID().toString() + ext, contentType);
+    }
 
+    public static final String PROFILE_PREFIX = "profile/";
+
+    // foto de perfil vai pra uma pasta propria do usuario; so essa pasta e publica pra usuarios logados
+    public PresignedUrlResponse generateProfilePhotoUploadUrl(UUID userId, String originalFilename, String contentType) {
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new BadRequestException("A foto de perfil precisa ser uma imagem");
+        }
+        String ext = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            ext = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        return presignPut(PROFILE_PREFIX + userId + "/" + UUID.randomUUID() + ext, contentType);
+    }
+
+    public boolean exists(String fileKey) {
+        try {
+            s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(fileKey).build());
+            return true;
+        } catch (NoSuchKeyException e) {
+            return false;
+        }
+    }
+
+    public void delete(String fileKey) {
+        s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(fileKey).build());
+    }
+
+    private PresignedUrlResponse presignPut(String fileKey, String contentType) {
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
                 .key(fileKey)
@@ -76,6 +123,31 @@ public class StorageService {
         return new PresignedUrlResponse(presignedUrl, fileKey); // Returns the presigned upload URL and the permanent download URL
     }
     
+    // o bucket continua privado: so gera link temporario de leitura para quem participa do chat
+    // onde o arquivo foi enviado ou e parte do contrato do documento
+    public PresignedDownloadResponse generateDownloadUrl(String fileKey, String cpf) {
+        UUID userId = userRepository.findByCpf(cpf)
+                .orElseThrow(() -> new AccessDeniedException("Usuário não encontrado"))
+                .getId();
+
+        // foto de perfil: qualquer usuario logado ve
+        boolean allowed = fileKey.startsWith(PROFILE_PREFIX)
+                || chatMessageRepository.existsAttachmentVisibleTo(fileKey, userId)
+                || documentRepository.existsContractDocumentVisibleTo(fileKey, userId);
+        if (!allowed) {
+            throw new AccessDeniedException("Sem acesso a este arquivo");
+        }
+
+        GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(15))
+                .getObjectRequest(GetObjectRequest.builder().bucket(bucketName).key(fileKey).build())
+                .build();
+
+        return new PresignedDownloadResponse(s3Presigner.presignGetObject(presignRequest).url().toString(), fileKey);
+    }
+
+    public record PresignedDownloadResponse(String downloadUrl, String fileKey) {}
+
     //IA burro nao separou por pasta, mas tbm é tao pequeno deixo o bicho aqui    
     public record PresignedUrlResponse(String uploadUrl, String fileKey) {}
 }
