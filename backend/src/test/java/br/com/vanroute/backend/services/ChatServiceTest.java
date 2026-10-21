@@ -91,4 +91,16 @@ public class ChatServiceTest {
         assertEquals(1, result.getTotalElements());
         assertEquals("Sasuke", result.getContent().get(0).otherUserName());
     }
+
+    @Test
+    void shouldOrderChatUsersLikePostgres() {
+        // msb negativo: UUID.compareTo coloca "8..." antes de "1...", o Postgres coloca depois
+        UUID high = UUID.fromString("80000000-0000-0000-0000-000000000000");
+        UUID low = UUID.fromString("10000000-0000-0000-0000-000000000000");
+
+        when(chatRepository.findByUserOneIdAndUserTwoId(low, high)).thenReturn(Optional.of(mockChat));
+
+        assertSame(mockChat, chatService.createOrGetChat(high, low));
+        verify(chatRepository).findByUserOneIdAndUserTwoId(low, high);
+    }
 }
