@@ -132,6 +132,29 @@ O caso comum é **um** embarque e **um** desembarque, sem dias.
 
 ---
 
+## 1b. Van (veículo)
+
+A van é cadastrada pelo **CRLV digital (PDF)**. O backend:
+1. valida a assinatura ICP-Brasil;
+2. lê os dados do veículo do próprio PDF (sem OCR);
+3. vincula a van ao motorista.
+
+O CRLV **não precisa** estar no nome do motorista, e o PDF **não é guardado**.
+
+| Endpoint | Quem | O que faz |
+|---|---|---|
+| `POST /api/vehicle/add-vehicle` (multipart, campo `documentPdf`) | motorista | `201` com a van. Se a van já existe (procura pelo **RENAVAM**, que nunca muda, e depois pela **placa**), só **vincula** o motorista à van existente, sem alterar os dados dela. A assinatura é validada sempre, para ninguém se vincular a uma van com um PDF falso. `422` se o PDF não for um CRLV digital válido. `409` se o motorista já está vinculado a essa van |
+| `GET /api/vehicle/my-vehicles` | motorista | vans **ativas** do motorista (ele pode ter várias) |
+| `PUT /api/vehicle/{vehicleId}/unlink` | motorista | o motorista para de usar a van (`end_date` = hoje). O histórico fica, e depois ele pode vincular de novo. `204` |
+
+Resposta:
+```json
+{ "id": "...", "plate": "ABC1D23", "renavam": "12345678901", "chassis": "9BM...", "model": "M.BENZ/SPRINTER 415",
+  "year": 2020, "manufactureYear": 2019, "color": "BRANCA", "fuel": "DIESEL", "category": "ALUGUEL",
+  "capacity": 16, "licensingYear": 2026, "status": "ACTIVE", "linkedSince": "2026-10-21" }
+```
+`capacity` é o **número de passageiros** (campo LOTAÇÃO do CRLV). `year` é o ano do modelo, e `licensingYear` é o exercício (ano do licenciamento).
+
 ## 2. Contrato
 
 A proposta nasce no chat. Criar, aceitar e recusar ficam no `ChatController`; a consulta fica no `ContractController`.
@@ -245,6 +268,7 @@ Quem pode baixar:
 | V18 | antigo `V15__add_status...`, renomeado porque havia dois V15. Quem já tinha aplicado esse V15: `flyway repair` ou recriar o banco local |
 | V19 | `student_stops.weekdays`; remove `student_stops.status`, `student_stops.route_id` e `student_addresses.weekdays` (sem uso) |
 | V20 | `users.photo_key` |
+| V21 | `vehicles`: `renavam` e `chassis` (únicos), `manufacture_year`, `color`, `fuel`, `category`, `licensing_year`. Em `driver_vehicles`, a UNIQUE (motorista, van) virou índice parcial `WHERE end_date IS NULL`: só um vínculo **ativo** por par, com histórico liberado |
 
 ## 7. Rodar e testar
 
