@@ -161,6 +161,14 @@ assert "R2 ve aluno vinculado" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 
 req "motorista tenta criar aluno" 403 POST /api/student/create-student "$D1" "$STUDENT_JSON"
 
 echo "== 6. Codigo de convite do motorista -> chat"
+req "D1 ve seus dados (me)" 200 GET /api/users/me "$D1"
+assert "me do motorista traz o linkCode" "[ \"\$(echo \"\$BODY\" | jq -r .linkCode)\" = \"$D1_LINK\" ] && echo \"\$BODY\" | jq -e '.roles | index(\"ROLE_DRIVER\") != null' >/dev/null"
+D1_LINK=$(echo "$BODY" | jq -r .linkCode); D1_ID=$(echo "$BODY" | jq -r .id)
+req "R1 ve seus dados (me)" 200 GET /api/users/me "$R1"
+assert "me do responsavel sem linkCode e sem senha" "echo \"\$BODY\" | jq -e '.linkCode==null and (.id|length)==36' >/dev/null && ! grep -qi 'password' <<<\"\$BODY\""
+R1_ID=$(echo "$BODY" | jq -r .id)
+assert "sub do token e o id do usuario" "[ \"\$(echo \"\$R1\" | cut -d. -f2 | tr '_-' '/+' | base64 -d 2>/dev/null | jq -r .sub 2>/dev/null)\" = \"$R1_ID\" ]"
+req "me sem token" 401 GET /api/users/me
 req "R1 resgata convite D1" 201 POST /api/invite-code/redeem "$R1" "{\"inviteCode\":\"$D1_LINK\"}"; CHAT=$(echo "$BODY" | jq -r .)
 req "R1 resgata de novo (mesmo chat)" 201 POST /api/invite-code/redeem "$R1" "{\"inviteCode\":\"$D1_LINK\"}"
 assert "chat reaproveitado" "[ \"\$(echo \"\$BODY\" | jq -r .)\" = \"$CHAT\" ]"
@@ -175,6 +183,7 @@ req "mensagem vazia" 400 POST "/api/chats/$CHAT/messages" "$R1" '{"content":"  "
 req "D1 lista chats" 200 GET /api/chats "$D1"
 assert "D1 tem 1 chat" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 1 ]"
 req "D1 le mensagens" 200 GET "/api/chats/$CHAT/messages" "$D1"
+assert "senderId da mensagem do R1 = id do /me (front sabe quais sao suas)" "echo \"\$BODY\" | jq -e '.content[] | select(.content==\"Ola motorista\" and .senderId==\"$R1_ID\")' >/dev/null"
 assert "mensagem persistida" "echo \"\$BODY\" | jq -e '.content[] | select(.content==\"Ola motorista\")' >/dev/null"
 req "D2 le chat alheio" "403|400" GET "/api/chats/$CHAT/messages" "$D2"
 req "D2 envia em chat alheio" "403|400" POST "/api/chats/$CHAT/messages" "$D2" '{"content":"intruso"}'
@@ -187,11 +196,16 @@ while IFS='|' read -r st name detail; do
 done < <(BASE=$BASE CHAT=$CHAT TOKEN_SENDER=$R1 TOKEN_RECEIVER=$D1 TOKEN_OUTSIDER=$D2 node "$(dirname "$0")/ws-test.mjs" 2>&1 || echo "FAIL|ws-test.mjs nao executou|")
 
 echo "== 8. Contratos (proposta no chat, aceite e recusa)"
-R1_ID=$(psql_audit -c "SELECT id FROM users WHERE cpf='$R1_CPF'")
+req "D1 lista chats (outro usuario = R1)" 200 GET /api/chats "$D1"
+assert "otherUserId do chat e o id do R1" "echo \"\$BODY\" | jq -e '.content[] | select(.id==\"$CHAT\" and .otherUserId==\"$R1_ID\")' >/dev/null"
+req "D1 ve os filhos do pai do chat" 200 GET "/api/chats/$CHAT/students" "$D1"
+assert "filhos do pai: so id e nome" "echo \"\$BODY\" | jq -e '.[] | select(.id==\"$STUDENT\" and .name==\"Aluno Ficticio\" and (keys == [\"id\",\"name\"]))' >/dev/null"
+req "R1 (responsavel) tenta ver filhos pelo chat" 403 GET "/api/chats/$CHAT/students" "$R1"
+req "D2 (fora do chat) tenta ver filhos" 400 GET "/api/chats/$CHAT/students" "$D2"
 contract() { echo "{\"responsibleId\":\"$R1_ID\",\"studentId\":\"$1\",\"schoolId\":\"$SCHOOL\",\"contract\":{\"periodicity\":\"MONTHLY\",\"value\":350.00,\"startDate\":\"2027-02-01\",\"endDate\":\"2027-06-30\"},\"document\":{\"url\":\"contratos/teste.pdf\",\"type\":\"TRANSPORT_CONTRACT\"}}"; }
 req "D1 propoe contrato" 201 POST "/api/chats/$CHAT/contract" "$D1" "$(contract "$STUDENT")"
 assert "criacao ja devolve o contrato completo" "echo \"\$BODY\" | jq -e '.contract.schoolId==\"$SCHOOL\" and .contract.status==\"PENDING\" and .contract.value==350 and (.contract.studentName|length>0)' >/dev/null"
-UDC=$(echo "$BODY" | jq -r .userDriverContractId); CONTRACT=$(psql_audit -c "SELECT contract_id FROM user_driver_contracts WHERE id='$UDC'")
+UDC=$(echo "$BODY" | jq -r .userDriverContractId); CONTRACT=$(echo "$BODY" | jq -r .contract.contractId)
 req "D1 propoe contrato duplicado" 409 POST "/api/chats/$CHAT/contract" "$D1" "$(contract "$STUDENT")"
 req "D2 propoe em chat alheio" 400 POST "/api/chats/$CHAT/contract" "$D2" "$(contract "$STUDENT")"
 req "D1 tenta aceitar o proprio contrato" 403 PUT "/api/chats/$CHAT/contracts/$CONTRACT/accept" "$D1"
@@ -206,9 +220,16 @@ assert "5 parcelas mensais geradas (fev-jun)" "[ \"\$(psql_audit -c \"SELECT cou
 req "R1 aceita de novo" 409 PUT "/api/chats/$CHAT/contracts/$CONTRACT/accept" "$R1"
 req "R1 cria segundo aluno" 200 POST /api/student/create-student "$R1" "$STUDENT_JSON"; STUDENT2=$(echo "$BODY" | jq -r .studentResponseDTO.id)
 req "D1 propoe contrato aluno 2" 201 POST "/api/chats/$CHAT/contract" "$D1" "$(contract "$STUDENT2")"
-CONTRACT2=$(psql_audit -c "SELECT contract_id FROM user_driver_contracts WHERE id='$(echo "$BODY" | jq -r .userDriverContractId)'")
+CONTRACT2=$(echo "$BODY" | jq -r .contract.contractId)
 req "R1 recusa contrato 2" 200 PUT "/api/chats/$CHAT/contracts/$CONTRACT2/reject" "$R1"
 assert "contrato 2 CANCELED" "[ \"\$(psql_audit -c \"SELECT status FROM contracts WHERE id='$CONTRACT2'\")\" = CANCELED ]"
+req "D1 meus contratos ativos" 200 GET "/api/contract/my-contracts?status=ACTIVE" "$D1"
+assert "so o ativo, com aluno e escola" "echo \"\$BODY\" | jq -e 'length==1 and .[0].contractId==\"$CONTRACT\" and .[0].studentId==\"$STUDENT\" and .[0].schoolId==\"$SCHOOL\" and .[0].status==\"ACTIVE\"' >/dev/null"
+req "R1 todos os seus contratos" 200 GET /api/contract/my-contracts "$R1"
+assert "R1 ve o ativo e o cancelado" "echo \"\$BODY\" | jq -e '[.[].status] | (index(\"ACTIVE\") != null) and (index(\"CANCELED\") != null)' >/dev/null"
+req "D2 nao ve contratos dos outros" 200 GET /api/contract/my-contracts "$D2"
+assert "lista do D2 vazia" "[ \"\$(echo \"\$BODY\" | jq length)\" = 0 ]"
+req "status invalido" 400 GET "/api/contract/my-contracts?status=XYZ" "$D1"
 req "mensagens de proposta/aceite no chat" 200 GET "/api/chats/$CHAT/messages?size=50" "$R1"
 assert "mensagens de contrato com messageType do sistema" "echo \"\$BODY\" | jq -e '[.content[].messageType] | (index(\"PROPOSAL\") != null) and (index(\"APPROVAL\") != null) and (index(\"REJECTION\") != null)' >/dev/null"
 assert "chat contem 4 mensagens de contrato + 3 textos (1 via ws-test, 1 forjada)" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 7 ]"
@@ -230,7 +251,7 @@ req "route stop endereco nao geocodificavel" 400 POST "/api/route/$ROUTE/stops" 
 req "D2 cria route stop na rota de D1" 403 POST "/api/route/$ROUTE/stops" "$D2" "$(stop_json 'Rua X')"
 req "route stop na rota sem escola" 200 POST "/api/route/$ROUTE_NS/stops" "$D1" "$(stop_json 'Rua Y')"; NS_STOP=$(echo "$BODY" | jq -r '.[0].id')
 
-req "school stop: escola no ponto" 200 POST "/api/route/stop/$SCHOOL_STOP/add-school/$SCHOOL" "$D1"
+req "school stop: escola no ponto" 200 POST "/api/route/stop/$SCHOOL_STOP/add-school/$SCHOOL" "$D1"; SCHOOL_STOP_LINK=$(echo "$BODY" | jq -r .id)
 assert "school_stops criado" "[ \"\$(psql_audit -c \"SELECT count(*) FROM school_stops WHERE stop_id='$SCHOOL_STOP' AND school_id='$SCHOOL'\")\" = 1 ]"
 req "school stop: escola repetida na rota" 409 POST "/api/route/stop/$HOME_STOP/add-school/$SCHOOL" "$D1"
 req "school stop: escola inexistente" 404 POST "/api/route/stop/$SCHOOL_STOP/add-school/00000000-0000-0000-0000-000000000000" "$D1"
@@ -249,7 +270,7 @@ req "student stop: desembarque na escola" 200 POST "/api/route/stop/$SCHOOL_STOP
 assert "aluno 2x na rota (embarque + desembarque)" "[ \"\$(psql_audit -c \"SELECT count(*) FROM student_stops ss JOIN route_stops rs ON rs.id=ss.stop_id WHERE rs.route_id='$ROUTE' AND ss.student_id='$STUDENT'\")\" = 2 ]"
 req "R1 cria irmao" 200 POST /api/student/create-student "$R1" "$STUDENT_JSON"; STUDENT3=$(echo "$BODY" | jq -r .studentResponseDTO.id)
 req "D1 propoe contrato do irmao" 201 POST "/api/chats/$CHAT/contract" "$D1" "$(contract "$STUDENT3")"
-CONTRACT3=$(psql_audit -c "SELECT contract_id FROM user_driver_contracts WHERE id='$(echo "$BODY" | jq -r .userDriverContractId)'")
+CONTRACT3=$(echo "$BODY" | jq -r .contract.contractId)
 req "R1 aceita contrato do irmao" 200 PUT "/api/chats/$CHAT/contracts/$CONTRACT3/accept" "$R1"
 req "student stop: irmao no MESMO ponto" 200 POST "/api/route/stop/$HOME_STOP/add-student/$STUDENT3" "$D1" "$(ss BOARDING HOME)"; SS_SIB=$(echo "$BODY" | jq -r .id)
 assert "ponto da esquina tem 2 alunos" "[ \"\$(psql_audit -c \"SELECT count(*) FROM student_stops WHERE stop_id='$HOME_STOP'\")\" = 2 ]"
@@ -266,7 +287,7 @@ assert "novo ponto entra no fim (ordem 4)" "[ \"\$(echo \"\$BODY\" | jq '.[0].or
 
 
 echo "   dias da semana"
-req "irmao: desembarque na escola seg/qua" 200 POST "/api/route/stop/$SCHOOL_STOP/add-student/$STUDENT3" "$D1" '{"action":"ALIGHTING","locationType":"SCHOOL","weekdays":["MONDAY","WEDNESDAY"]}'
+req "irmao: desembarque na escola seg/qua" 200 POST "/api/route/stop/$SCHOOL_STOP/add-student/$STUDENT3" "$D1" '{"action":"ALIGHTING","locationType":"SCHOOL","weekdays":["MONDAY","WEDNESDAY"]}'; SS_SIB_MW=$(echo "$BODY" | jq -r .id)
 assert "dias gravados" "[ \"\$(echo \"\$BODY\" | jq -r '.weekdays | join(\",\")')\" = \"MONDAY,WEDNESDAY\" ]"
 req "irmao: desembarque em outro ponto ter/qui (dias diferentes)" 200 POST "/api/route/stop/$THIRD_STOP/add-student/$STUDENT3" "$D1" '{"action":"ALIGHTING","locationType":"OTHER","weekdays":["TUESDAY","THURSDAY"]}'
 SS_SIB_TT=$(echo "$BODY" | jq -r .id)
@@ -278,6 +299,7 @@ assert "irmao sem desembarque sex/sab/dom; aluno 1 completo" "echo \"\$BODY\" | 
 req "pendencias por D2" 403 GET "/api/route/$ROUTE/pending" "$D2"
 req "GET pontos traz alunos e escolas com ids" 200 GET "/api/route/$ROUTE/stops" "$D1"
 assert "ponto da escola lista a escola e os alunos" "echo \"\$BODY\" | jq -e '.[] | select(.id==\"$SCHOOL_STOP\") | (.schools | length == 1) and (.students | length == 2)' >/dev/null"
+assert "student stop traz o nome do aluno" "echo \"\$BODY\" | jq -e '.[] | .students[] | select(.studentId==\"$STUDENT3\" and (.studentName|length>0))' >/dev/null"
 assert "student stop listado com id e dias" "echo \"\$BODY\" | jq -e '.[] | .students[] | select(.id==\"$SS_SIB_TT\" and (.weekdays | join(\",\")) == \"TUESDAY,THURSDAY\")' >/dev/null"
 req "editar dias: ter/qui -> ter/qui/sex" 200 PUT "/api/route/student-stop/$SS_SIB_TT/weekdays" "$D1" '{"weekdays":["TUESDAY","THURSDAY","FRIDAY"]}'
 assert "dias editados" "[ \"\$(echo \"\$BODY\" | jq -r '.weekdays | join(\",\")')\" = \"TUESDAY,THURSDAY,FRIDAY\" ]"
@@ -286,7 +308,7 @@ req "editar dias por D2" 403 PUT "/api/route/student-stop/$SS_SIB_TT/weekdays" "
 req "pendencias depois da edicao" 200 GET "/api/route/$ROUTE/pending" "$D1"
 assert "agora faltam so sab/dom" "echo \"\$BODY\" | jq -e '.[0].studentId==\"$STUDENT3\" and (.[0].missingAlighting|join(\",\"))==\"SATURDAY,SUNDAY\"' >/dev/null"
 req "excluir desembarques do irmao (limpeza)" 204 DELETE "/api/route/student-stop/$SS_SIB_TT" "$D1"
-req "excluir desembarque seg/qua do irmao" 204 DELETE "/api/route/student-stop/$(echo "$BODY" | true; psql_audit -c "SELECT id FROM student_stops WHERE student_id='$STUDENT3' AND stop_id='$SCHOOL_STOP'")" "$D1"
+req "excluir desembarque seg/qua do irmao" 204 DELETE "/api/route/student-stop/$SS_SIB_MW" "$D1"
 
 echo "   mover e excluir"
 req "mover aluno SCHOOL para ponto sem a escola" 400 PUT "/api/route/student-stop/$SS_ALIGHT/move" "$D1" "{\"routeStopId\":\"$HOME_STOP\"}"
@@ -297,7 +319,7 @@ req "mover aluno para onde ja esta" 409 PUT "/api/route/student-stop/$SS_BOARD/m
 req "mover aluno sem ponto" 400 PUT "/api/route/student-stop/$SS_BOARD/move" "$D1" '{}'
 req "mover aluno por D2" 403 PUT "/api/route/student-stop/$SS_BOARD/move" "$D2" "{\"routeStopId\":\"$HOME_STOP\"}"
 req "excluir ponto com aluno (irmao na esquina)" 409 DELETE "/api/route/stop/$HOME_STOP" "$D1"
-req "excluir escola usada por alunos da rota" 409 DELETE "/api/route/school-stop/$(psql_audit -c "SELECT id FROM school_stops WHERE stop_id='$SCHOOL_STOP'")" "$D1"
+req "excluir escola usada por alunos da rota" 409 DELETE "/api/route/school-stop/$SCHOOL_STOP_LINK" "$D1"
 req "excluir student stop por D2" 403 DELETE "/api/route/student-stop/$SS_SIB" "$D2"
 req "excluir student stop inexistente" 404 DELETE "/api/route/student-stop/00000000-0000-0000-0000-000000000000" "$D1"
 req "excluir student stop do irmao" 204 DELETE "/api/route/student-stop/$SS_SIB" "$D1"
@@ -363,7 +385,7 @@ UPCODE=$(curl -s -o /dev/null -w '%{http_code}' -X PUT -H 'Content-Type: applica
 check "upload do PDF do contrato" 200 "$UPCODE"
 DOC_CONTRACT="{\"responsibleId\":\"$R1_ID\",\"studentId\":\"$STUDENT2\",\"schoolId\":\"$SCHOOL\",\"contract\":{\"periodicity\":\"MONTHLY\",\"value\":300.00,\"startDate\":\"2027-02-01\",\"endDate\":\"2027-03-31\"},\"document\":{\"url\":\"$PDFKEY\",\"type\":\"TRANSPORT_CONTRACT\"}}"
 req "D1 propoe contrato com o PDF" 201 POST "/api/chats/$CHAT/contract" "$D1" "$DOC_CONTRACT"
-PDF_CONTRACT=$(psql_audit -c "SELECT contract_id FROM user_driver_contracts WHERE id='$(echo "$BODY" | jq -r .userDriverContractId)'")
+PDF_CONTRACT=$(echo "$BODY" | jq -r .contract.contractId)
 req "R1 ve a proposta com o documento" 200 GET "/api/contract/$PDF_CONTRACT" "$R1"
 assert "detalhe traz o fileKey do PDF e status PENDING" "echo \"\$BODY\" | jq -e '.documentFileKey==\"$PDFKEY\" and .documentType==\"TRANSPORT_CONTRACT\" and .status==\"PENDING\"' >/dev/null"
 req "R1 (parte do contrato) baixa o PDF" 200 GET "/api/storage/download-url?fileKey=$PDFKEY" "$R1"
@@ -402,7 +424,10 @@ req "GET usuario" 200 GET "/api/users/$R1_ID" "$R1"
 assert "GET usuario nao expoe passwordHash" "! echo \"\$BODY\" | grep -qi 'passwordHash\|\\\$2a\\\$'"
 req "GET usuario inexistente" 404 GET "/api/users/00000000-0000-0000-0000-000000000000" "$R1"
 req "envia codigo de atualizacao" 200 POST /api/users/send-code-updateUser "$R2"
-UCODE=$(redis GET User:SendCodeUser)
+req "R2 ve seus dados (me)" 200 GET /api/users/me "$R2"; R2_ID=$(echo "$BODY" | jq -r .id)
+UCODE=$(redis GET "User:SendCodeUser:$R2_ID")
+assert "codigo de atualizacao fica na chave do proprio usuario" "[ -n \"$UCODE\" ] && [ -z \"\$(redis GET User:SendCodeUser)\" ]"
+req "R1 tenta usar o codigo do R2" 400 PUT /api/users/update-user "$R1" "{\"email\":\"x.$RUN@teste.local\",\"phone\":\"1\",\"code\":\"$UCODE\"}"
 req "atualiza usuario codigo errado" 400 PUT /api/users/update-user "$R2" '{"email":"novo@teste.local","phone":"1","code":"errado"}'
 req "atualiza usuario" 200 PUT /api/users/update-user "$R2" "{\"email\":\"r2b.$RUN@teste.local\",\"phone\":\"11${RUN}9\",\"code\":\"$UCODE\"}"
 assert "e-mail atualizado" "[ \"\$(psql_audit -c \"SELECT email FROM users WHERE cpf='$R2_CPF'\")\" = r2b.$RUN@teste.local ]"
