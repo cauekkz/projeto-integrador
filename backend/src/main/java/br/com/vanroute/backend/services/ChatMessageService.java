@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.models.chat.enums.MessageType;
+
 import org.springframework.stereotype.Service;
 import br.com.vanroute.backend.repositories.ChatMessageRepository;
 import br.com.vanroute.backend.dtos.chat.ChatMessageResponseDTO;
@@ -23,26 +25,36 @@ public class ChatMessageService {
         this.chatService = chatService;
         this.userService = userService;
     }
-    public Page<ChatMessageResponseDTO> getMessages(UUID chatId, String cpf, Pageable pageable) {
-        chatService.validateChatAccess(chatId, cpf);
+    public Page<ChatMessageResponseDTO> getMessages(UUID chatId, UUID userId, Pageable pageable) {
+        chatService.validateChatAccess(chatId, userId);
         Page<ChatMessage> messages = chatMessageRepository.findByChatIdOrderBySentAtAsc(chatId, pageable);
         return messages.map(ChatMessageResponseDTO::from);
     }
     
-    public ChatMessageResponseDTO sendMessage(UUID chatId, String cpf, ChatMessageRequestDTO request) {
-        chatService.validateChatAccess(chatId, cpf);
+    public ChatMessageResponseDTO sendMessage(UUID chatId, UUID userId, ChatMessageRequestDTO request) {
+        return save(chatId, userId, request.content(), request.attachmentType(), request.attachmentUrl(), MessageType.REGULAR_CHAT, null);
+    }
+
+    // mensagens geradas pelo fluxo de contrato (PROPOSAL, APPROVAL, REJECTION); nao ficam expostas na API
+    public ChatMessageResponseDTO sendSystemMessage(UUID chatId, UUID userId, String content, MessageType type, String payload) {
+        return save(chatId, userId, content, null, null, type, payload);
+    }
+
+    private ChatMessageResponseDTO save(UUID chatId, UUID userId, String content, AttachmentType attachmentType,
+                                        String attachmentUrl, MessageType type, String payload) {
+        chatService.validateChatAccess(chatId, userId);
         
         br.com.vanroute.backend.models.chat.Chat chat = chatService.getChatById(chatId);
-        br.com.vanroute.backend.models.user.User sender = userService.findByCpf(cpf).orElseThrow(() -> new RuntimeException("User not found"));
+        br.com.vanroute.backend.models.user.User sender = userService.findById(userId).orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("User not found"));
             
         ChatMessage message = new ChatMessage();
         message.setChat(chat);
         message.setSender(sender);
-        message.setContent(request.content());
-        message.setAttachmentType(request.attachmentType()); // maldito jeito
-        message.setAttachmentUrl(request.attachmentUrl()); 
-        message.setMessageType(request.messageType());
-        message.setPayload(request.payload());
+        message.setContent(content);
+        message.setAttachmentType(attachmentType); // maldito jeito
+        message.setAttachmentUrl(attachmentUrl);
+        message.setMessageType(type);
+        message.setPayload(payload);
         message = chatMessageRepository.save(message);
         return ChatMessageResponseDTO.from(message);
     }

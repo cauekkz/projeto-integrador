@@ -1,6 +1,10 @@
 server:
   port: 9090
 
+#openrouteservice:
+#  api-key: ${OPENROUTESERVICE_API_KEY}
+#  base-url: https://api.openrouteservice.org
+
 spring:
   application:
     name: backend

@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.config.AuthenticatedUser;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -26,8 +28,7 @@ public class InviteCodeController {
 
     @PostMapping("/redeem")
     public ResponseEntity<UUID> redeem(@Valid @RequestBody InviteCodeRequestDTO inviteCodeRequestDTO, Authentication authentication) {
-        String cpf = authentication.getName();
-        UUID chatId = inviteCodeService.redeem(inviteCodeRequestDTO.inviteCode(), cpf);
+        UUID chatId = inviteCodeService.redeem(inviteCodeRequestDTO.inviteCode(), AuthenticatedUser.id(authentication));
         return ResponseEntity.created(URI.create("/api/chats/" + chatId+ "/messages")).body(chatId);
     }
     
