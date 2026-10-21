@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.models.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import br.com.vanroute.backend.models.user.enums.UserStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -21,6 +23,7 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String name;
 
+    @JsonIgnore
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
     
@@ -42,6 +45,10 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private UserStatus status;
 
+
+    // chave da foto no MinIO; o front pega a URL em /api/storage/download-url
+    @Column(name = "photo_key")
+    private String photoKey;
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -81,6 +88,7 @@ public class User implements UserDetails {
         this.phone = phone;
     }
 
+    @JsonIgnore
     public String getPasswordHash() {
         return passwordHash;
     }
@@ -113,6 +121,14 @@ public class User implements UserDetails {
         this.status = status;
     }
 
+    public String getPhotoKey() {
+        return photoKey;
+    }
+
+    public void setPhotoKey(String photoKey) {
+        this.photoKey = photoKey;
+    }
+
     public Set<RolesEntity> getRoles() {
         return roles;
     }
@@ -126,6 +142,7 @@ public class User implements UserDetails {
         return roles;
     }
 
+    @JsonIgnore
     @Override
     public @Nullable String getPassword() {
         return passwordHash;

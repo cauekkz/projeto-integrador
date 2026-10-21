@@ -1,5 +1,9 @@
 package br.com.vanroute.backend.services;
 
+import org.springframework.transaction.annotation.Transactional;
+
+import br.com.vanroute.backend.exceptions.BadRequestException;
+
 import br.com.vanroute.backend.dtos.user.UpdateUser;
 import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
 import br.com.vanroute.backend.models.user.User;
@@ -28,13 +32,15 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final RolesRepository rolesRepository;
     private final EmailVerificationService emailVerificationService;
+    private final StorageService storageService;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RolesRepository rolesRepository, EmailVerificationService emailVerificationService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RolesRepository rolesRepository, EmailVerificationService emailVerificationService, StorageService storageService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.rolesRepository = rolesRepository;
         this.emailVerificationService = emailVerificationService;
+        this.storageService = storageService;
     }
 
     public User createUser(UserCreateDTO userCreateDTO) {
@@ -80,6 +86,32 @@ public class UserService {
         }
          userRepository.save(user);
         return "User updated successfully";
+    }
+
+    public StorageService.PresignedUrlResponse photoUploadUrl(String cpf, String fileName, String contentType) {
+        User user = userRepository.findByCpf(cpf)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        return storageService.generateProfilePhotoUploadUrl(user.getId(), fileName, contentType);
+    }
+
+    // so aceita arquivo que o proprio usuario subiu na pasta dele; a foto antiga e apagada do bucket
+    @Transactional
+    public User updatePhoto(String cpf, String fileKey) {
+        User user = userRepository.findByCpf(cpf)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        if (fileKey == null || !fileKey.startsWith(StorageService.PROFILE_PREFIX + user.getId() + "/")) {
+            throw new BadRequestException("Arquivo inválido para foto de perfil");
+        }
+        if (!storageService.exists(fileKey)) {
+            throw new BadRequestException("Arquivo não encontrado. Faça o upload antes");
+        }
+        String oldPhoto = user.getPhotoKey();
+        user.setPhotoKey(fileKey);
+        userRepository.save(user);
+        if (oldPhoto != null && !oldPhoto.equals(fileKey)) {
+            storageService.delete(oldPhoto);
+        }
+        return user;
     }
 
     public Optional<User> findById(UUID id) {

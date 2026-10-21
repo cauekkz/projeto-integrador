@@ -2,6 +2,7 @@ package br.com.vanroute.backend.controllers;
 
 import br.com.vanroute.backend.services.StorageService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,5 +25,13 @@ public class StorageController {
         
         StorageService.PresignedUrlResponse response = storageService.generatePresignedUrl(fileName, contentType);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/download-url")
+    public ResponseEntity<StorageService.PresignedDownloadResponse> getDownloadUrl(
+            @RequestParam String fileKey,
+            Authentication authentication) {
+
+        return ResponseEntity.ok(storageService.generateDownloadUrl(fileKey, authentication.getName()));
     }
 }

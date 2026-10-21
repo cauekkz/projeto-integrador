@@ -14,13 +14,25 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
+import br.com.vanroute.backend.models.user.User;
+import br.com.vanroute.backend.repositories.ChatMessageRepository;
+import br.com.vanroute.backend.repositories.DocumentRepository;
+import br.com.vanroute.backend.repositories.UserRepository;
+import org.springframework.security.access.AccessDeniedException;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
+
 import java.net.URI;
+import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -32,6 +44,15 @@ public class StorageServiceTest {
 
     @Mock
     private S3Presigner s3Presigner;
+
+    @Mock
+    private ChatMessageRepository chatMessageRepository;
+
+    @Mock
+    private DocumentRepository documentRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private StorageService storageService;
@@ -64,5 +85,48 @@ public class StorageServiceTest {
         assertNotNull(response.uploadUrl());
         assertEquals("http://localhost:9000/test-bucket/some-key", response.uploadUrl());
         assertTrue(response.fileKey().endsWith(".pdf"));
+    }
+
+    private UUID userWithCpf(String cpf) {
+        User user = new User();
+        user.setId(UUID.randomUUID());
+        when(userRepository.findByCpf(cpf)).thenReturn(Optional.of(user));
+        return user.getId();
+    }
+
+    @Test
+    void testDownloadUrlForChatParticipant() throws Exception {
+        UUID userId = userWithCpf("111");
+        when(chatMessageRepository.existsAttachmentVisibleTo("foto.jpeg", userId)).thenReturn(true);
+        PresignedGetObjectRequest presigned = mock(PresignedGetObjectRequest.class);
+        when(presigned.url()).thenReturn(new URI("http://localhost:9000/test-bucket/foto.jpeg?X-Amz-Signature=x").toURL());
+        when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presigned);
+
+        StorageService.PresignedDownloadResponse response = storageService.generateDownloadUrl("foto.jpeg", "111");
+
+        assertEquals("foto.jpeg", response.fileKey());
+        assertTrue(response.downloadUrl().contains("X-Amz-Signature"));
+    }
+
+    @Test
+    void testDownloadUrlForContractParty() throws Exception {
+        UUID userId = userWithCpf("111");
+        when(chatMessageRepository.existsAttachmentVisibleTo("contrato.pdf", userId)).thenReturn(false);
+        when(documentRepository.existsContractDocumentVisibleTo("contrato.pdf", userId)).thenReturn(true);
+        PresignedGetObjectRequest presigned = mock(PresignedGetObjectRequest.class);
+        when(presigned.url()).thenReturn(new URI("http://localhost:9000/test-bucket/contrato.pdf").toURL());
+        when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presigned);
+
+        assertNotNull(storageService.generateDownloadUrl("contrato.pdf", "111").downloadUrl());
+    }
+
+    @Test
+    void testDownloadUrlDeniedForOutsider() {
+        UUID userId = userWithCpf("222");
+        when(chatMessageRepository.existsAttachmentVisibleTo("foto.jpeg", userId)).thenReturn(false);
+        when(documentRepository.existsContractDocumentVisibleTo("foto.jpeg", userId)).thenReturn(false);
+
+        assertThrows(AccessDeniedException.class, () -> storageService.generateDownloadUrl("foto.jpeg", "222"));
+        verify(s3Presigner, never()).presignGetObject(any(GetObjectPresignRequest.class));
     }
 }

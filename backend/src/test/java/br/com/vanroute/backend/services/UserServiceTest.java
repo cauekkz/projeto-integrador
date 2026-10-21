@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.exceptions.BadRequestException;
+
 import br.com.vanroute.backend.dtos.user.UpdateUser;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
@@ -41,6 +43,9 @@ class UserServiceTest {
 
     @Mock
     private EmailVerificationService emailVerificationService;
+
+    @Mock
+    private StorageService storageService;
 
     @InjectMocks
     private UserService userService;
@@ -671,5 +676,34 @@ class UserServiceTest {
 
         verify(userRepository, times(1))
                 .save(defaultUser);
+    }
+
+    @Test
+    void shouldRejectPhotoFromAnotherUsersFolder() {
+        User photoOwner = new User();
+        photoOwner.setId(UUID.randomUUID());
+        when(userRepository.findByCpf("111")).thenReturn(Optional.of(photoOwner));
+
+        assertThrows(BadRequestException.class,
+                () -> userService.updatePhoto("111", "profile/" + UUID.randomUUID() + "/foto.jpeg"));
+        assertThrows(BadRequestException.class,
+                () -> userService.updatePhoto("111", "anexo-do-chat.jpeg"));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldUpdatePhotoAndDeleteTheOldOne() {
+        User photoOwner = new User();
+        photoOwner.setId(UUID.randomUUID());
+        String oldKey = "profile/" + photoOwner.getId() + "/antiga.jpeg";
+        String newKey = "profile/" + photoOwner.getId() + "/nova.jpeg";
+        photoOwner.setPhotoKey(oldKey);
+        when(userRepository.findByCpf("111")).thenReturn(Optional.of(photoOwner));
+        when(storageService.exists(newKey)).thenReturn(true);
+
+        userService.updatePhoto("111", newKey);
+
+        assertEquals(newKey, photoOwner.getPhotoKey());
+        verify(storageService).delete(oldKey);
     }
 }

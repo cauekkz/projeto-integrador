@@ -1,6 +1,9 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.dtos.user.UpdatePhotoRequestDTO;
 import br.com.vanroute.backend.dtos.user.UpdateUser;
+import br.com.vanroute.backend.services.StorageService;
+import java.util.Map;
 import br.com.vanroute.backend.models.user.User;//sem DTO por enquanto
 import br.com.vanroute.backend.services.UserService;
 import jakarta.validation.Valid;
@@ -44,6 +47,21 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+
+    // 1) pega a URL de upload da foto  2) sobe a imagem direto no MinIO  3) manda o fileKey no update-photo
+    @GetMapping("/photo-upload-url")
+    public ResponseEntity<StorageService.PresignedUrlResponse> photoUploadUrl(@RequestParam String fileName,
+                                                                              @RequestParam String contentType,
+                                                                              Authentication authentication) {
+        return ResponseEntity.ok(userService.photoUploadUrl(authentication.getName(), fileName, contentType));
+    }
+
+    @PutMapping("/update-photo")
+    public ResponseEntity<Map<String, String>> updatePhoto(@RequestBody @Valid UpdatePhotoRequestDTO request,
+                                                           Authentication authentication) {
+        User user = userService.updatePhoto(authentication.getName(), request.fileKey());
+        return ResponseEntity.ok(Map.of("photoKey", user.getPhotoKey()));
+    }
 
     //nao sei se vai usar isso so pra teste
     // deixa o deleteUser ser feliz
