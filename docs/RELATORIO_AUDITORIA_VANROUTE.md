@@ -30,8 +30,8 @@ O VanRoute é um sistema de transporte escolar que conecta **responsáveis** (pa
 
 **Estado ao final:**
 - O backend sobe limpo com as 18 migrations e o schema validado.
-- **Testes unitários:** 123/123 passando.
-- **Testes de API ponta a ponta:** 294/294 cenários passando, nenhum retornando 500 inesperado. Inclui:
+- **Testes unitários:** 144/144 passando.
+- **Testes de API ponta a ponta:** 371/371 cenários passando, nenhum retornando 500 inesperado. Inclui:
   - entrega real pelo WebSocket;
   - upload e download autorizado no MinIO (imagem e PDF de contrato).
 - **Lógica de rota:** route stop com endereço (entra no fim), school stop e student stop ligados ao ponto, troca de ordem; tudo no `RouteController`.
@@ -262,8 +262,8 @@ cd backend && DATABASE_NAME=vanroute_audit MINIO_BUCKET_NAME=vanroute-audit \
 ### F.1 Números (execução real)
 | Suite | Antes | Depois |
 |---|---|---|
-| Testes unitários/integração (Maven) | 72: 65 ok, 3 falhas, 4 erros (contexto não subia) | **123: 123 ok** |
-| Cenários de API (`run-api-tests.sh` + `ws-test.mjs`) | não executável (app não subia) | **294: 294 ok**, nenhum 500 e nenhum `ERROR` no log do servidor |
+| Testes unitários/integração (Maven) | 72: 65 ok, 3 falhas, 4 erros (contexto não subia) | **144: 144 ok** |
+| Cenários de API (`run-api-tests.sh` + `ws-test.mjs`) | não executável (app não subia) | **371: 371 ok**, nenhum 500 e nenhum `ERROR` no log do servidor |
 
 **Novos testes unitários:**
 - `TokenProviderTest` (2);
