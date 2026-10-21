@@ -33,3 +33,5 @@ build/
 .vscode/
 
 src/main/resources/application-local.properties
+### api-tests ###
+api-tests/out/
