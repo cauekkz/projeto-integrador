@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.services;
 
+import jakarta.persistence.EntityNotFoundException;
+
 import org.springframework.stereotype.Service;
 import br.com.vanroute.backend.repositories.DriverRepository;
 import br.com.vanroute.backend.repositories.ResponsibleRepository;
@@ -23,7 +25,7 @@ public class InviteCodeService {
     @Transactional
     public UUID redeem(String code,String cpf) {
         //TODO depois trocar pra query pegar so o id e nao o objeto inteiro
-        Driver driver = driverRepository.findByLinkCode(code).orElseThrow(() -> new RuntimeException("Motorista não encontrado"));
+        Driver driver = driverRepository.findByLinkCode(code).orElseThrow(() -> new EntityNotFoundException("Motorista não encontrado"));
         Responsible responsible = responsibleRepository.findByUserCpf(cpf).orElseThrow(() -> new RuntimeException("Responsável não encontrado"));
 
         UUID driverId = driver.getUserId();

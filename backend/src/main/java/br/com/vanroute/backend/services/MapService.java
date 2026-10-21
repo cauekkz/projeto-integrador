@@ -1,6 +1,8 @@
 package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.dtos.geocode.Coordenadas;
+import br.com.vanroute.backend.exceptions.BadRequestException;
+import org.springframework.web.util.UriComponentsBuilder;
 import br.com.vanroute.backend.dtos.geocode.GeocodeResponse;
 import br.com.vanroute.backend.dtos.geocode.GeoRouteResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +17,9 @@ public class MapService {
     @Value("${openrouteservice.api-key}")
     private String apiKey;
 
+    @Value("${openrouteservice.geocode-url:https://api.heigit.org/pelias/v1/search}")
+    private String geocodeUrl;
+
     public MapService(WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.build();
     }
@@ -22,16 +27,18 @@ public class MapService {
     public Coordenadas searchCoord(String address) {
 
         GeocodeResponse response = webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .scheme("https")
-                        .host("api.heigit.org")
-                        .path("/pelias/v1/search")
+                .uri(UriComponentsBuilder.fromUriString(geocodeUrl)
                         .queryParam("api_key", apiKey)
                         .queryParam("text", address)
-                        .build())
+                        .build()
+                        .toUri())
                 .retrieve()
                 .bodyToMono(GeocodeResponse.class)
                 .block();
+
+        if (response == null || response.features() == null || response.features().isEmpty()) {
+            throw new BadRequestException("Endereço não encontrado: " + address);
+        }
 
         var coordinates = response.features()
                 .get(0)

@@ -1,9 +1,13 @@
 package br.com.vanroute.backend.dtos.user;
 
 import br.com.vanroute.backend.dtos.student.AddressRequestDTO;
+import br.com.vanroute.backend.validators.password.PasswordMatch;
+import com.fasterxml.jackson.annotation.JsonAlias;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.br.CPF;
 
+@PasswordMatch
 public class ResponsibleRequestDTO {
 
     @NotBlank(message = "O nome é obrigatório")
@@ -30,6 +34,9 @@ public class ResponsibleRequestDTO {
     @NotBlank(message = "O telefone é obrigatório")
     private String phone;
 
+    @Valid
+    @NotNull(message = "O endereço é obrigatório")
+    @JsonAlias("address")
     private AddressRequestDTO addressRequestDTO;
 
     public String getName() {

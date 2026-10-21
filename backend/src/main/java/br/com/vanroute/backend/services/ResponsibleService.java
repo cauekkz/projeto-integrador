@@ -24,13 +24,15 @@ public class ResponsibleService {
     private final AddressService addressService;
     private final MapService mapService;
     private final ResponsibleAddressRepository responsibleAddressRepository;
+    private final EmailVerificationService emailVerificationService;
 
-    public ResponsibleService(ResponsibleRepository responsibleRepository, UserService userService, AddressService addressService, MapService mapService, ResponsibleAddressRepository responsibleAddressRepository) {
+    public ResponsibleService(ResponsibleRepository responsibleRepository, UserService userService, AddressService addressService, MapService mapService, ResponsibleAddressRepository responsibleAddressRepository, EmailVerificationService emailVerificationService) {
         this.responsibleRepository = responsibleRepository;
         this.userService = userService;
         this.addressService = addressService;
         this.mapService = mapService;
         this.responsibleAddressRepository = responsibleAddressRepository;
+        this.emailVerificationService = emailVerificationService;
     }
 
     @Transactional
@@ -64,6 +66,9 @@ public class ResponsibleService {
         responsibleAddress.setAddress(address);
         Responsible newResponsible = responsibleRepository.save(responsible);
         responsibleAddressRepository.save(responsibleAddress);
+
+        // dentro da transacao: se o envio falhar, o cadastro e desfeito
+        emailVerificationService.generateAndSendCode("verificationEmail:email:" + user.getEmail(), user.getEmail());
 
         return new ResponsibleResponseDTO(
                 newResponsible.getUser().getName(),

@@ -8,7 +8,7 @@ import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.UserStatus;
 import br.com.vanroute.backend.repositories.RolesRepository;
 import br.com.vanroute.backend.repositories.UserRepository;
-import org.apache.coyote.BadRequestException;
+import br.com.vanroute.backend.exceptions.BadRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
