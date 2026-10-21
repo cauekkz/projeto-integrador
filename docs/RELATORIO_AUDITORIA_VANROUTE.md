@@ -13,7 +13,8 @@ Branch: `routeLogic` (criada a partir de `new/useForFatecMergeExclude`, que já 
    - `POST /api/route/{routeId}/stops` agora recebe `[{"address":{...}}]` (endereço no corpo; o ponto entra no fim da rota).
    - O cadastro de responsável aceita `address` (ou `addressRequestDTO`), e agora valida e exige o endereço.
    - O cadastro de aluno não tem mais `weekdays`.
-4. **Variáveis novas (opcionais):** `ORS_GEOCODE_URL` e `ORS_API_KEY`, que agora tem valor padrão vazio, então o app sobe sem ela.
+4. **Chat:** `POST /api/chats/{chatId}/messages` não aceita mais `messageType` nem `payload` (o campo é ignorado, e a mensagem é sempre `REGULAR_CHAT`). As mensagens de contrato agora vêm com `messageType` na resposta, então o front deve usar esse campo para identificar proposta, aceite e recusa.
+5. **Variáveis novas (opcionais):** `ORS_GEOCODE_URL` e `ORS_API_KEY`, que agora tem valor padrão vazio, então o app sobe sem ela.
 
 ## H. Resumo executivo
 
@@ -27,8 +28,8 @@ O VanRoute é um sistema de transporte escolar que conecta **responsáveis** (pa
 
 **Estado ao final:**
 - O backend sobe limpo com as 18 migrations e o schema validado.
-- **Testes unitários:** 109/109 passando.
-- **Testes de API ponta a ponta:** 250/250 cenários passando, nenhum retornando 500 inesperado. Inclui:
+- **Testes unitários:** 110/110 passando.
+- **Testes de API ponta a ponta:** 253/253 cenários passando, nenhum retornando 500 inesperado. Inclui:
   - entrega real pelo WebSocket;
   - upload e download autorizado no MinIO (imagem e PDF de contrato).
 - **Lógica de rota:** route stop com endereço (entra no fim), school stop e student stop ligados ao ponto, troca de ordem; tudo no `RouteController`.
@@ -254,8 +255,8 @@ cd backend && DATABASE_NAME=vanroute_audit MINIO_BUCKET_NAME=vanroute-audit \
 ### F.1 Números (execução real)
 | Suite | Antes | Depois |
 |---|---|---|
-| Testes unitários/integração (Maven) | 72: 65 ok, 3 falhas, 4 erros (contexto não subia) | **109: 109 ok** |
-| Cenários de API (`run-api-tests.sh` + `ws-test.mjs`) | não executável (app não subia) | **250: 250 ok**, nenhum 500 e nenhum `ERROR` no log do servidor |
+| Testes unitários/integração (Maven) | 72: 65 ok, 3 falhas, 4 erros (contexto não subia) | **110: 110 ok** |
+| Cenários de API (`run-api-tests.sh` + `ws-test.mjs`) | não executável (app não subia) | **253: 253 ok**, nenhum 500 e nenhum `ERROR` no log do servidor |
 
 **Novos testes unitários:**
 - `TokenProviderTest` (2);
@@ -290,6 +291,7 @@ cd backend && DATABASE_NAME=vanroute_audit MINIO_BUCKET_NAME=vanroute-audit \
 | 14 | Tudo virava 500 (JSON inválido, 401, 404, conflito…) | handler `Exception.class` genérico; `BadRequestException` importada do Tomcat no login | handlers por tipo + import correto; `RuntimeException`s de "não encontrado/sem permissão" trocadas por exceções específicas nos services de escola, aluno, vínculo, convite, rota e contrato (sem mudar regra) |
 | 16 | **WebSocket nunca entregava mensagens** (nem as de contrato) | o `ObjectMapper` do `JacksonConfig` não tinha o `JavaTimeModule`; `LocalDateTime` quebrava o `writeValueAsString` e o erro era engolido pelo `catch` | `JavaTimeModule` registrado + datas em ISO |
 | 17 | Front não conseguia exibir imagens nem documentos enviados (só existia URL de upload) | faltava leitura | `GET /api/storage/download-url` com URL assinada e checagem de permissão; bucket continua privado |
+| 18 | Qualquer participante podia forjar mensagem de contrato (PROPOSAL/APPROVAL/REJECTION com payload) pelo endpoint de mensagens; a resposta não informava o tipo | `messageType` e `payload` no DTO público (commit 9dc00d3) | DTO público só com conteúdo e anexo, mensagem do usuário sempre `REGULAR_CHAT`; as do contrato saem por `ChatMessageService.sendSystemMessage`; a resposta inclui `messageType` |
 | 15 | Endereço não geocodificável → NPE/500 | sem checar lista vazia | 400 "Endereço não encontrado"; URL do geocoder configurável |
 
 ### F.3 Pendências e limitações (não corrigidas)
@@ -303,7 +305,6 @@ cd backend && DATABASE_NAME=vanroute_audit MINIO_BUCKET_NAME=vanroute-audit \
 - **Código de atualização/exclusão de usuário:** usa uma **chave Redis única global** (`User:SendCodeUser`), compartilhada entre todos os usuários. O `DELETE /api/users/{id}/{code}` não liga o código ao usuário-alvo.
 - **Anexos com `fileKey` alheio:** o acesso ao download vem de "o arquivo estar numa mensagem do meu chat". Se alguém souber o `fileKey` de outra pessoa (um UUID aleatório, impraticável de adivinhar) e mandá-lo como anexo no próprio chat, ganharia acesso. Para fechar de vez, seria preciso registrar o dono no upload.
 - **Viagens e ocorrências:** `trips`, `boardings` e `occurrences` existem só como tabela, sem código.
-- **`POST /chats/{id}/messages`:** o cliente pode mandar `messageType=PROPOSAL/APPROVAL` com payload arbitrário (falsificação de mensagem de contrato).
 - **Mensagem de proposta:** o payload leva só IDs, mas os detalhes agora vêm de `GET /api/contract/{contractId}` (o `contractId` está no payload): `GET /api/contract/{contractId}`.
 - **Verificação de e-mail:**
   - o endpoint não usa `@Valid`, e `VerifyEmailRequestDTO` tem `@Size(min = 8)` para um código de 6 dígitos;
