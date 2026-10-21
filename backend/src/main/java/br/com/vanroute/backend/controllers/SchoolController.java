@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.config.AuthenticatedUser;
 import br.com.vanroute.backend.dtos.school.SchoolRequestDTO;
 import br.com.vanroute.backend.models.school.School;
 import br.com.vanroute.backend.services.DriverSchoolService;
@@ -25,12 +26,11 @@ public class SchoolController {
 
     @GetMapping("/my-schools")
     public List<SchoolResponseDTO> findMySchools(Authentication auth) {
-        return schoolService.findMySchools(auth.getName());
+        return schoolService.findMySchools(AuthenticatedUser.id(auth));
     }
 
     @PostMapping("/add-school")
     public School createSchool(@RequestBody SchoolRequestDTO dto, Authentication auth){
-        String userCpf = auth.getName();
-        return schoolService.createSchool(dto, userCpf);
+        return schoolService.createSchool(dto, AuthenticatedUser.id(auth));
     }
 }

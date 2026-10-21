@@ -44,9 +44,7 @@ public class ChatService {
                 });
     }
 
-    public void validateChatAccess(UUID chatId, String cpf) {
-        UUID userId = userRepository.findByCpf(cpf).orElseThrow(() -> new RuntimeException("Usuário não encontrado"))
-                .getId();
+    public void validateChatAccess(UUID chatId, UUID userId) {
         if (!chatRepository.existsByChatIdAndUserId(chatId, userId)) {
             throw new IllegalArgumentException("Você não tem acesso a este chat.");
         }
@@ -57,25 +55,21 @@ public class ChatService {
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Chat não encontrado"));
     }
 
-    public Page<ChatResponseDTO> getUserChats(String cpf, Pageable pageable) {
-        UUID userId = userRepository.findByCpf(cpf).orElseThrow(() -> new RuntimeException("Usuário não encontrado"))
-                .getId();
+    public Page<ChatResponseDTO> getUserChats(UUID userId, Pageable pageable) {
         return chatRepository.findChatsByUserIdOrderByRecentMessage(userId, pageable)
-                .map(chat -> ChatResponseDTO.from(chat, cpf));
+                .map(chat -> ChatResponseDTO.from(chat, userId));
     }
 
-    public void UsersInChat(UUID chatId, String cpf, UUID userId) {
-        UUID userIdByCpf = userRepository.findByCpf(cpf)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado")).getId();
+    public void UsersInChat(UUID chatId, UUID requesterId, UUID userId) {
         Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new RuntimeException("Chat não encontrado"));
         User userOne = chat.getUserOne();
         User userTwo = chat.getUserTwo();
-        boolean userOneIsUserByCpf = userOne.getId().equals(userIdByCpf) ||
-                userTwo.getId().equals(userIdByCpf);
+        boolean requesterInChat = userOne.getId().equals(requesterId) ||
+                userTwo.getId().equals(requesterId);
 
-        boolean userTwoIsUserByCpf = userOne.getId().equals(userId) ||
+        boolean otherInChat = userOne.getId().equals(userId) ||
                 userTwo.getId().equals(userId);
-        if (!userOneIsUserByCpf || !userTwoIsUserByCpf) {
+        if (!requesterInChat || !otherInChat) {
             throw new IllegalArgumentException("Você não tem acesso a este chat.");
         }
 

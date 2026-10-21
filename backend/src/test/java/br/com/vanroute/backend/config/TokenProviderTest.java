@@ -44,4 +44,16 @@ class TokenProviderTest {
     void shouldRejectExpiredToken() {
         assertFalse(tokenProvider.isTokenValid(tokenWithExpiration(-1_000)));
     }
+
+    @Test
+    void subjectIsTheUserIdForAppUsers() {
+        ReflectionTestUtils.setField(tokenProvider, "expirationTime", 60_000L);
+        br.com.vanroute.backend.models.user.User appUser = new br.com.vanroute.backend.models.user.User();
+        appUser.setId(java.util.UUID.randomUUID());
+        appUser.setCpf("12345678901");
+
+        String token = tokenProvider.generateToken(new UsernamePasswordAuthenticationToken(appUser, null, List.of()));
+
+        assertEquals(appUser.getId().toString(), tokenProvider.getSubject(token));
+    }
 }

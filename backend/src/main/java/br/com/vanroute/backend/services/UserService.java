@@ -1,5 +1,8 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.repositories.DriverRepository;
+import br.com.vanroute.backend.models.user.Driver;
+import br.com.vanroute.backend.dtos.user.UserMeResponseDTO;
 import org.springframework.transaction.annotation.Transactional;
 
 import br.com.vanroute.backend.exceptions.BadRequestException;
@@ -33,14 +36,16 @@ public class UserService {
     private final RolesRepository rolesRepository;
     private final EmailVerificationService emailVerificationService;
     private final StorageService storageService;
+    private final DriverRepository driverRepository;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RolesRepository rolesRepository, EmailVerificationService emailVerificationService, StorageService storageService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RolesRepository rolesRepository, EmailVerificationService emailVerificationService, StorageService storageService, DriverRepository driverRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.rolesRepository = rolesRepository;
         this.emailVerificationService = emailVerificationService;
         this.storageService = storageService;
+        this.driverRepository = driverRepository;
     }
 
     public User createUser(UserCreateDTO userCreateDTO) {
@@ -67,17 +72,22 @@ public class UserService {
 
     }
 
-    public void sendCodeToUser(String cpf){
-        User user = userRepository.findByCpf(cpf)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        String userEmail = user.getEmail();
-        emailVerificationService.generateAndSendCode(REDIS_KEY, userEmail);
+    // um codigo por usuario (antes a chave era unica e um usuario sobrescrevia/usava o codigo do outro)
+    private String codeKey(UUID userId) {
+        return REDIS_KEY + ":" + userId;
     }
 
-    public String updateUser(UpdateUser updateUser, String cpf){
-        User user = userRepository.findByCpf(cpf)
+    public void sendCodeToUser(UUID userId){
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        emailVerificationService.verifyCode(REDIS_KEY, updateUser.getCode());
+        String userEmail = user.getEmail();
+        emailVerificationService.generateAndSendCode(codeKey(user.getId()), userEmail);
+    }
+
+    public String updateUser(UpdateUser updateUser, UUID userId){
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        emailVerificationService.verifyCode(codeKey(user.getId()), updateUser.getCode());
         if(updateUser.getEmail() != null){
             user.setEmail(updateUser.getEmail());
         }
@@ -88,16 +98,16 @@ public class UserService {
         return "User updated successfully";
     }
 
-    public StorageService.PresignedUrlResponse photoUploadUrl(String cpf, String fileName, String contentType) {
-        User user = userRepository.findByCpf(cpf)
+    public StorageService.PresignedUrlResponse photoUploadUrl(UUID userId, String fileName, String contentType) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         return storageService.generateProfilePhotoUploadUrl(user.getId(), fileName, contentType);
     }
 
     // so aceita arquivo que o proprio usuario subiu na pasta dele; a foto antiga e apagada do bucket
     @Transactional
-    public User updatePhoto(String cpf, String fileKey) {
-        User user = userRepository.findByCpf(cpf)
+    public User updatePhoto(UUID userId, String fileKey) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         if (fileKey == null || !fileKey.startsWith(StorageService.PROFILE_PREFIX + user.getId() + "/")) {
             throw new BadRequestException("Arquivo inválido para foto de perfil");
@@ -114,12 +124,28 @@ public class UserService {
         return user;
     }
 
+    public UserMeResponseDTO me(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        String linkCode = driverRepository.findById(user.getId()).map(Driver::getLinkCode).orElse(null);
+        return new UserMeResponseDTO(
+                user.getId(),
+                user.getName(),
+                user.getEmail(),
+                user.getPhone(),
+                user.getCpf(),
+                user.getRoles().stream().map(RolesEntity::getAuthority).toList(),
+                user.getPhotoKey(),
+                linkCode
+        );
+    }
+
     public Optional<User> findById(UUID id) {
         return userRepository.findById(id);
     }
 
     public void deleteById(UUID id, String code) {
-        emailVerificationService.verifyCode(REDIS_KEY, code);
+        emailVerificationService.verifyCode(codeKey(id), code);
         userRepository.deleteById(id);
     }
 

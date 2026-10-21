@@ -1,8 +1,12 @@
 package br.com.vanroute.backend.controllers;
 
+import java.util.List;
+import org.springframework.web.bind.annotation.RequestParam;
+import br.com.vanroute.backend.models.contract.enums.ContractStatus;
+import br.com.vanroute.backend.dtos.contract.ContractSummaryResponseDTO;
 import br.com.vanroute.backend.dtos.contract.ContractDetailsResponseDTO;
+import br.com.vanroute.backend.config.AuthenticatedUser;
 import br.com.vanroute.backend.services.ContractService;
-import br.com.vanroute.backend.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,17 +22,21 @@ import java.util.UUID;
 public class ContractController {
 
     private final ContractService contractService;
-    private final UserService userService;
 
-    public ContractController(ContractService contractService, UserService userService) {
+    public ContractController(ContractService contractService) {
         this.contractService = contractService;
-        this.userService = userService;
+    }
+
+    // contratos do usuario logado (motorista ou responsavel); ?status=ACTIVE filtra
+    @GetMapping("/my-contracts")
+    public ResponseEntity<List<ContractSummaryResponseDTO>> myContracts(@RequestParam(required = false) ContractStatus status,
+                                                                        Authentication authentication) {
+        return ResponseEntity.ok(contractService.findMyContracts(AuthenticatedUser.id(authentication), status));
     }
 
     // so as partes do contrato (responsavel e motorista) conseguem ver
     @GetMapping("/{contractId}")
     public ResponseEntity<ContractDetailsResponseDTO> getContract(@PathVariable UUID contractId, Authentication authentication) {
-        UUID userId = userService.findByCpf(authentication.getName()).get().getId();
-        return ResponseEntity.ok(contractService.getContractDetails(contractId, userId));
+        return ResponseEntity.ok(contractService.getContractDetails(contractId, AuthenticatedUser.id(authentication)));
     }
 }

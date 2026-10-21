@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.config.AuthenticatedUser;
 import br.com.vanroute.backend.dtos.geocode.Coordenadas;
 import br.com.vanroute.backend.exceptions.BadRequestException;
 import org.springframework.http.HttpStatus;
@@ -66,8 +67,7 @@ public class RouteService {
         Route route = new Route();
         route.setName(createRouteRequestDTO.name());
         Route routeSaved = routeRepository.save(route);
-        String cpf = authentication.getName();
-        Driver driver = driverRepository.findByUserCpf(cpf)
+        Driver driver = driverRepository.findById(AuthenticatedUser.id(authentication))
                 .orElseThrow(() -> new AccessDeniedException("Driver not found"));
         RouteDriver routeDriver = new RouteDriver();
         routeDriver.setRoute(route);
@@ -195,8 +195,7 @@ public class RouteService {
     }
 
     public RouteResponse findById(UUID id, Authentication authentication) {
-        String cpf = authentication.getName();
-        Driver driver = driverRepository.findByUserCpf(cpf)
+        Driver driver = driverRepository.findById(AuthenticatedUser.id(authentication))
                 .orElseThrow(() -> new AccessDeniedException("Driver not found"));
         Route route = routeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Route not found"));
@@ -223,9 +222,7 @@ public class RouteService {
 
     public List<RouteWithStopsResponse> findAll(Authentication authentication) {
 
-        String cpf = authentication.getName();
-
-        Driver driver = driverRepository.findByUserCpf(cpf)
+        Driver driver = driverRepository.findById(AuthenticatedUser.id(authentication))
                 .orElseThrow(() -> new AccessDeniedException("Driver not found"));
 
         List<Route> routes = routeDriverRepository.findByDriverUserId(driver.getUserId())
@@ -254,7 +251,7 @@ public class RouteService {
 
     // so o motorista vinculado a rota (route_drivers) pode le-la ou altera-la
     public Driver checkOwnership(Route route, Authentication authentication) {
-        Driver driver = driverRepository.findByUserCpf(authentication.getName())
+        Driver driver = driverRepository.findById(AuthenticatedUser.id(authentication))
                 .orElseThrow(() -> new AccessDeniedException("Driver not found"));
         if (!routeDriverRepository.existsByRouteIdAndDriverUserId(route.getId(), driver.getUserId())) {
             throw new AccessDeniedException("Route does not belong to this driver");

@@ -1,5 +1,9 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.repositories.DriverRepository;
+import br.com.vanroute.backend.models.user.User;
+import br.com.vanroute.backend.models.chat.Chat;
+import br.com.vanroute.backend.dtos.student.ChildSummaryResponseDTO;
 import java.util.UUID;
 
 import java.util.List;
@@ -44,8 +48,10 @@ public class StudentService {
     private final StudentResponsibleMapper studentResponsibleMapper;
     private final MapService mapService;
     private final StudentStopRepository studentStopRepository;
+    private final ChatService chatService;
+    private final DriverRepository driverRepository;
 
-    public StudentService(StudentRepository studentRepository, ResponsibleRepository responsibleRepository, StudentResponsibleRepository studentResponsibleRepository, AddressService addressService, StudentAddressRepository studentAddressRepository,StudentResponsibleMapper studentResponsibleMapper, MapService mapService, StudentStopRepository studentStopRepository) {
+    public StudentService(StudentRepository studentRepository, ResponsibleRepository responsibleRepository, StudentResponsibleRepository studentResponsibleRepository, AddressService addressService, StudentAddressRepository studentAddressRepository,StudentResponsibleMapper studentResponsibleMapper, MapService mapService, StudentStopRepository studentStopRepository, ChatService chatService, DriverRepository driverRepository) {
         this.studentRepository = studentRepository;
         this.responsibleRepository = responsibleRepository;
         this.studentResponsibleRepository = studentResponsibleRepository;
@@ -54,10 +60,12 @@ public class StudentService {
         this.studentResponsibleMapper = studentResponsibleMapper;
         this.mapService = mapService;
         this.studentStopRepository = studentStopRepository;
+        this.chatService = chatService;
+        this.driverRepository = driverRepository;
     }
 
         @Transactional
-        public StudentResponsibleResponseDTO createStudentWithRelation(StudentRequestDTO dto, String cpf){
+        public StudentResponsibleResponseDTO createStudentWithRelation(StudentRequestDTO dto, UUID responsibleId){
             Student student = new Student();
             student.setName(dto.name());
             student.setNotes(dto.notes());
@@ -84,7 +92,7 @@ public class StudentService {
             studentResponsible.setAdmin(true);
 
             //obrigado felipe já ia fica maluco
-            Responsible responsible = responsibleRepository.findByUserCpf(cpf)
+            Responsible responsible = responsibleRepository.findById(responsibleId)
                     .orElseThrow(() -> new AccessDeniedException("Responsible not found"));
             studentResponsible.setResponsible(responsible);
             studentResponsibleRepository.save(studentResponsible);
@@ -95,8 +103,8 @@ public class StudentService {
             );
         }    
 
-        public Page<Student> getAllStudentsResponsible(AllStudentsFilterRequestDTO filter,Pageable pageable,String cpf) {
-            Specification<StudentResponsible> specification = StudentResponsibleSpecification.withFilters(cpf, filter);
+        public Page<Student> getAllStudentsResponsible(AllStudentsFilterRequestDTO filter,Pageable pageable,UUID responsibleId) {
+            Specification<StudentResponsible> specification = StudentResponsibleSpecification.withFilters(responsibleId, filter);
             Page<StudentResponsible> result = studentResponsibleRepository.findAll(specification, pageable);
             return result.map(StudentResponsible::getStudent);
         }
@@ -105,12 +113,26 @@ public class StudentService {
     //ns se a melhor coisa é fazer isso nesse service mas fds nao consigo pensa num service diferente pra isso, talvez um especifico pra isso mas nao sei
 
     // responsavel ve so o nome das rotas em que o filho esta (sem pontos nem ordem)
-    public List<StudentRouteResponse> getStudentRoutes(UUID studentId, String cpf) {
-        if (!studentResponsibleRepository.existsByResponsible_User_CpfAndStudent_Id(cpf, studentId)) {
+    public List<StudentRouteResponse> getStudentRoutes(UUID studentId, UUID responsibleId) {
+        if (!studentResponsibleRepository.existsByResponsible_UserIdAndStudent_Id(responsibleId, studentId)) {
             throw new AccessDeniedException("Responsável não vinculado a esse aluno");
         }
         return studentStopRepository.findRoutesOfStudent(studentId).stream()
                 .map(route -> new StudentRouteResponse(route.getId(), route.getName()))
+                .toList();
+    }
+
+    // botao "ver filhos" do chat: so o motorista que participa do chat ve os filhos do pai da conversa
+    @Transactional(readOnly = true)
+    public List<ChildSummaryResponseDTO> getChildrenOfChatPartner(UUID chatId, UUID driverId) {
+        chatService.validateChatAccess(chatId, driverId);
+        if (!driverRepository.existsById(driverId)) {
+            throw new AccessDeniedException("Só o motorista do chat pode ver os filhos");
+        }
+        Chat chat = chatService.getChatById(chatId);
+        User other = chat.getUserOne().getId().equals(driverId) ? chat.getUserTwo() : chat.getUserOne();
+        return studentResponsibleRepository.findAdminChildren(other.getId()).stream()
+                .map(student -> new ChildSummaryResponseDTO(student.getId(), student.getName()))
                 .toList();
     }
 }

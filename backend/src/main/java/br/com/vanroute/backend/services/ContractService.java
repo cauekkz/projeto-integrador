@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.dtos.contract.ContractSummaryResponseDTO;
 import br.com.vanroute.backend.models.address.Address;
 
 import br.com.vanroute.backend.dtos.route.AddressResponseDTO;
@@ -247,5 +248,31 @@ public class ContractService {
                 document == null ? null : document.getUrl(),
                 document == null ? null : document.getType()
         );
+    }
+
+    // serve pros dois lados: motorista (montar a rota com os alunos ativos) e responsavel (ver os contratos dos filhos)
+    @Transactional
+    public List<ContractSummaryResponseDTO> findMyContracts(UUID userId, ContractStatus status) {
+        List<UserDriverContract> contracts = status == null
+                ? userDriverContractRepository.findAllOfUser(userId)
+                : userDriverContractRepository.findAllOfUserByStatus(userId, status);
+        return contracts.stream()
+                .map(udc -> new ContractSummaryResponseDTO(
+                        udc.getContract().getId(),
+                        udc.getId(),
+                        udc.getContract().getStatus(),
+                        udc.getContract().getPeriodicity(),
+                        udc.getContract().getValue(),
+                        udc.getContract().getStartDate(),
+                        udc.getContract().getEndDate(),
+                        udc.getStudent().getId(),
+                        udc.getStudent().getName(),
+                        udc.getSchool().getId(),
+                        udc.getSchool().getName(),
+                        udc.getDriver().getUserId(),
+                        udc.getDriver().getUser().getName(),
+                        udc.getResponsible().getUserId(),
+                        udc.getResponsible().getUser().getName()))
+                .toList();
     }
 }

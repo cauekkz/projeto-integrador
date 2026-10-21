@@ -137,6 +137,7 @@ public class StudentStopService {
         return new StudentStopResponseDTO(
                 studentStop.getId(),
                 studentStop.getStudent().getId(),
+                studentStop.getStudent().getName(),
                 studentStop.getStop().getId(),
                 studentStop.getLocationType(),
                 studentStop.getAction(),

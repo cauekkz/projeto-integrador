@@ -33,6 +33,9 @@ import br.com.vanroute.backend.utils.CodeGenerator;
 @ExtendWith(MockitoExtension.class)
 public class StudentLinkServiceTest {
 
+    private static final UUID RESPONSIBLE_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
+    private static final UUID OTHER_ID = UUID.fromString("22222222-2222-2222-2222-222222222222");
+
     @Mock
     private RedisTemplate<String, String> redisTemplate;
 
@@ -67,13 +70,13 @@ public class StudentLinkServiceTest {
         UUID studentId = UUID.randomUUID();
         StudentLinkRequestDTO dto = new StudentLinkRequestDTO(studentId, RelationType.FINANCIAL);
 
-        when(studentResponsibleRepository.existsByResponsible_User_CpfAndStudent_IdAndIsAdminTrue("12345678901", studentId))
+        when(studentResponsibleRepository.existsByResponsible_UserIdAndStudent_IdAndIsAdminTrue(RESPONSIBLE_ID, studentId))
                 .thenReturn(true);
         when(codeGenerator.generateCode()).thenReturn("ABC123XYZ");
         when(objectMapper.writeValueAsString(dto)).thenReturn("json_string");
         when(valueOperations.setIfAbsent(anyString(), eq("json_string"), any(Duration.class))).thenReturn(true);
 
-        String code = studentLinkService.generateStudentCodeToLink(dto, "12345678901");
+        String code = studentLinkService.generateStudentCodeToLink(dto, RESPONSIBLE_ID);
 
         assertNotNull(code);
         assertEquals(9, code.length());
@@ -85,10 +88,10 @@ public class StudentLinkServiceTest {
         UUID studentId = UUID.randomUUID();
         StudentLinkRequestDTO dto = new StudentLinkRequestDTO(studentId, RelationType.LEGAL);
 
-        when(studentResponsibleRepository.existsByResponsible_User_CpfAndStudent_IdAndIsAdminTrue("123", studentId))
+        when(studentResponsibleRepository.existsByResponsible_UserIdAndStudent_IdAndIsAdminTrue(OTHER_ID, studentId))
                 .thenReturn(false);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> studentLinkService.generateStudentCodeToLink(dto, "123"));
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> studentLinkService.generateStudentCodeToLink(dto, OTHER_ID));
         assertEquals("O Responsavel não tem essa permissão", exception.getMessage());
     }
 
@@ -103,9 +106,9 @@ public class StudentLinkServiceTest {
         when(valueOperations.get("student:link:CODE123")).thenReturn("saved_json");
         when(objectMapper.readValue("saved_json", StudentLinkRequestDTO.class)).thenReturn(dto);
         when(studentRepository.getReferenceById(studentId)).thenReturn(student);
-        when(responsibleRepository.findByUserCpf("12345678901")).thenReturn(Optional.of(responsible));
+        when(responsibleRepository.findById(RESPONSIBLE_ID)).thenReturn(Optional.of(responsible));
 
-        studentLinkService.createStudentResponsibleRelation("CODE123", "12345678901");
+        studentLinkService.createStudentResponsibleRelation("CODE123", RESPONSIBLE_ID);
 
         verify(studentResponsibleRepository, times(1)).save(any(StudentResponsible.class));
         verify(redisTemplate, times(1)).delete("student:link:CODE123");
@@ -116,7 +119,7 @@ public class StudentLinkServiceTest {
         when(valueOperations.get("student:link:INVALID")).thenReturn(null);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            studentLinkService.createStudentResponsibleRelation("INVALID", "123");
+            studentLinkService.createStudentResponsibleRelation("INVALID", OTHER_ID);
         });
 
         assertEquals("Código incorreto ou expirado.", exception.getMessage());

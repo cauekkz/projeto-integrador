@@ -27,5 +27,20 @@ public interface UserDriverContractRepository extends JpaRepository<UserDriverCo
             "JOIN FETCH u.responsible r JOIN FETCH r.user " +
             "WHERE u.contract.id = :contractId")
     Optional<UserDriverContract> findDetailsByContractId(@Param("contractId") UUID contractId);
+
+    // contratos em que o usuario e o motorista ou o responsavel
+    @Query("SELECT u FROM UserDriverContract u " +
+            "JOIN FETCH u.contract c JOIN FETCH u.student JOIN FETCH u.school " +
+            "JOIN FETCH u.driver d JOIN FETCH d.user JOIN FETCH u.responsible r JOIN FETCH r.user " +
+            "WHERE (d.userId = :userId OR r.userId = :userId) " +
+            "ORDER BY c.startDate DESC")
+    List<UserDriverContract> findAllOfUser(@Param("userId") UUID userId);
+
+    @Query("SELECT u FROM UserDriverContract u " +
+            "JOIN FETCH u.contract c JOIN FETCH u.student JOIN FETCH u.school " +
+            "JOIN FETCH u.driver d JOIN FETCH d.user JOIN FETCH u.responsible r JOIN FETCH r.user " +
+            "WHERE (d.userId = :userId OR r.userId = :userId) AND c.status = :status " +
+            "ORDER BY c.startDate DESC")
+    List<UserDriverContract> findAllOfUserByStatus(@Param("userId") UUID userId, @Param("status") ContractStatus status);
     Optional<UserDriverContract> findFirstByDriverUserIdAndStudentIdAndContractStatus(UUID driverId, UUID studentId, ContractStatus status);
 }

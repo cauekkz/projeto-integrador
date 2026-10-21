@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import java.util.UUID;
 import org.springframework.security.access.AccessDeniedException;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -41,8 +42,8 @@ public class DriverSchoolService {
     }
 
     @Transactional
-    public School createSchool(SchoolRequestDTO dto, String cpf){
-        Driver driver = driverRepository.findByUserCpf(cpf)
+    public School createSchool(SchoolRequestDTO dto, UUID driverId){
+        Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new AccessDeniedException("Driver not found"));
 
         // escola ja cadastrada (mesmo nome e rua): so vincula o motorista a ela
@@ -91,8 +92,8 @@ public class DriverSchoolService {
         return school;
     }
 
-    public List<SchoolResponseDTO> findMySchools(String cpf) {
-        Driver driver = driverRepository.findByUserCpf(cpf)
+    public List<SchoolResponseDTO> findMySchools(UUID driverId) {
+        Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new AccessDeniedException("Driver not found"));
         return driverSchoolsRepository.findByDriverWithSchool(driver.getUserId()).stream()
                 .map(DriverSchools::getSchool)

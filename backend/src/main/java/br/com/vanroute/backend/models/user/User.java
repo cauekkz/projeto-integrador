@@ -148,8 +148,9 @@ public class User implements UserDetails {
         return passwordHash;
     }
 
+    // identidade do usuario autenticado: authentication.getName() devolve o id. O login continua por CPF
     @Override
     public String getUsername() {
-        return cpf;
+        return id == null ? null : id.toString();
     }
 }

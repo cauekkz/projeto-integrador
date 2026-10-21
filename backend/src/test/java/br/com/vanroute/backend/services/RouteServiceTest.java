@@ -79,8 +79,8 @@ class RouteServiceTest {
         Driver driver = new Driver();
         driver.setUserId(UUID.randomUUID());
         driver.setUser(new User());
-        when(authentication.getName()).thenReturn("cpf");
-        when(driverRepository.findByUserCpf("cpf")).thenReturn(Optional.of(driver));
+        when(authentication.getName()).thenReturn(driver.getUserId().toString());
+        when(driverRepository.findById(driver.getUserId())).thenReturn(Optional.of(driver));
         when(routeDriverRepository.existsByRouteIdAndDriverUserId(route.getId(), driver.getUserId())).thenReturn(true);
     }
 

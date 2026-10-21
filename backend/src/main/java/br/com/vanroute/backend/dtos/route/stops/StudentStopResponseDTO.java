@@ -10,6 +10,7 @@ import java.util.UUID;
 
 public record StudentStopResponseDTO( UUID id,
                                       UUID studentId,
+                                      String studentName,
                                       UUID stopId,
                                       StudentStopLocationType locationType,
                                       StudentStopAction action,

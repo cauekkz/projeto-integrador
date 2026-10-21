@@ -16,14 +16,6 @@ public class StudentResponsibleService {
         this.studentResponsibleRepository = studentResponsibleRepository;
     }
 
-    public boolean isAdminByCpf(String cpf, UUID studentId) {
-        return studentResponsibleRepository                                                                                                                                                                                                                                                                                                                                     
-                .existsByResponsible_User_CpfAndStudent_IdAndIsAdminTrue(
-                        cpf,
-                        studentId
-                );
-    }
-
     public boolean isAdmin(UUID responsibleId, UUID studentId) {
         return studentResponsibleRepository
                 .existsByResponsible_UserIdAndStudent_IdAndIsAdminTrue(

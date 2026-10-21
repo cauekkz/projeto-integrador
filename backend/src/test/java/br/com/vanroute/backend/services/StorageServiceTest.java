@@ -87,11 +87,9 @@ public class StorageServiceTest {
         assertTrue(response.fileKey().endsWith(".pdf"));
     }
 
-    private UUID userWithCpf(String cpf) {
-        User user = new User();
-        user.setId(UUID.randomUUID());
-        when(userRepository.findByCpf(cpf)).thenReturn(Optional.of(user));
-        return user.getId();
+    // o id vem do token; o download nao consulta mais o usuario
+    private UUID userWithCpf(String ignored) {
+        return UUID.randomUUID();
     }
 
     @Test
@@ -102,7 +100,7 @@ public class StorageServiceTest {
         when(presigned.url()).thenReturn(new URI("http://localhost:9000/test-bucket/foto.jpeg?X-Amz-Signature=x").toURL());
         when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presigned);
 
-        StorageService.PresignedDownloadResponse response = storageService.generateDownloadUrl("foto.jpeg", "111");
+        StorageService.PresignedDownloadResponse response = storageService.generateDownloadUrl("foto.jpeg", userId);
 
         assertEquals("foto.jpeg", response.fileKey());
         assertTrue(response.downloadUrl().contains("X-Amz-Signature"));
@@ -117,7 +115,7 @@ public class StorageServiceTest {
         when(presigned.url()).thenReturn(new URI("http://localhost:9000/test-bucket/contrato.pdf").toURL());
         when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presigned);
 
-        assertNotNull(storageService.generateDownloadUrl("contrato.pdf", "111").downloadUrl());
+        assertNotNull(storageService.generateDownloadUrl("contrato.pdf", userId).downloadUrl());
     }
 
     @Test
@@ -126,7 +124,7 @@ public class StorageServiceTest {
         when(chatMessageRepository.existsAttachmentVisibleTo("foto.jpeg", userId)).thenReturn(false);
         when(documentRepository.existsContractDocumentVisibleTo("foto.jpeg", userId)).thenReturn(false);
 
-        assertThrows(AccessDeniedException.class, () -> storageService.generateDownloadUrl("foto.jpeg", "222"));
+        assertThrows(AccessDeniedException.class, () -> storageService.generateDownloadUrl("foto.jpeg", userId));
         verify(s3Presigner, never()).presignGetObject(any(GetObjectPresignRequest.class));
     }
 }
