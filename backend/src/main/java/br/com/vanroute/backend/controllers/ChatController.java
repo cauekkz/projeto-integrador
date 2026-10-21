@@ -116,7 +116,10 @@ public class ChatController {
             log.error("Failed to publish message to Redis for chat: {}", chatId, e);
         }
 
-        return ResponseEntity.status(201).body(Map.of("message", msg, "userDriverContractId", udc.getId()));
+        return ResponseEntity.status(201).body(Map.of(
+                "message", msg,
+                "userDriverContractId", udc.getId(),
+                "contract", contractService.getContractDetails(udc.getContract().getId(), driverId)));
     }
 
     @PutMapping("/{chatId}/contracts/{contractId}/accept")

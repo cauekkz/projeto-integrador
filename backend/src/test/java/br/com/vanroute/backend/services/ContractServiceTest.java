@@ -13,6 +13,7 @@ import br.com.vanroute.backend.models.user.Responsible;
 import br.com.vanroute.backend.repositories.ContractRepository;
 import br.com.vanroute.backend.repositories.DocumentRepository;
 import br.com.vanroute.backend.repositories.DriverSchoolsRepository;
+import br.com.vanroute.backend.repositories.PaymentRepository;
 import br.com.vanroute.backend.repositories.UserDriverContractRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
@@ -43,6 +44,10 @@ public class ContractServiceTest {
     private DriverSchoolsRepository driverSchoolsRepository;
     @Mock
     private EntityManager entityManager;
+    @Mock
+    private PaymentRepository paymentRepository;
+    @Mock
+    private StudentResponsibleService studentResponsibleService;
 
     @InjectMocks
     private ContractService contractService;
@@ -55,6 +60,7 @@ public class ContractServiceTest {
                 new ContractRequestDTO(ContractPeriodicity.MONTHLY, BigDecimal.TEN, LocalDate.now(), LocalDate.now().plusMonths(1)),
                 new DocumentRequestDTO( "http://url", "OTHER"));
 
+        when(studentResponsibleService.isAdmin(request.responsibleId(), request.studentId())).thenReturn(true);
         when(driverSchoolsRepository.existsByDriverUserIdAndSchoolId(driverId, request.schoolId())).thenReturn(false);
 
         assertThrows(RuntimeException.class, () -> contractService.createContract(driverId, request));
@@ -68,6 +74,7 @@ public class ContractServiceTest {
                 new ContractRequestDTO(ContractPeriodicity.MONTHLY, BigDecimal.TEN, LocalDate.now(), LocalDate.now().plusMonths(1)),
                 new DocumentRequestDTO("http://test-url", "OTHER"));
 
+        when(studentResponsibleService.isAdmin(request.responsibleId(), request.studentId())).thenReturn(true);
         when(driverSchoolsRepository.existsByDriverUserIdAndSchoolId(driverId, request.schoolId())).thenReturn(true);
         when(entityManager.getReference(Driver.class, driverId)).thenReturn(new Driver());
         when(entityManager.getReference(School.class, request.schoolId())).thenReturn(new School());
@@ -83,5 +90,21 @@ public class ContractServiceTest {
         verify(contractRepository).save(any(Contract.class));
         verify(documentRepository).save(any());
         verify(userDriverContractRepository).save(any(UserDriverContract.class));
+    }
+
+    @Test
+    void testContractDetails_OnlyParties() {
+        UUID contractId = UUID.randomUUID();
+        Responsible responsible = new Responsible();
+        responsible.setUserId(UUID.randomUUID());
+        Driver driver = new Driver();
+        driver.setUserId(UUID.randomUUID());
+        UserDriverContract udc = new UserDriverContract();
+        udc.setResponsible(responsible);
+        udc.setDriver(driver);
+        when(userDriverContractRepository.findDetailsByContractId(contractId)).thenReturn(java.util.Optional.of(udc));
+
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> contractService.getContractDetails(contractId, UUID.randomUUID()));
     }
 }

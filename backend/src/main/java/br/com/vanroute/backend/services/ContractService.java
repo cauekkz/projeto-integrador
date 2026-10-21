@@ -1,4 +1,16 @@
 package br.com.vanroute.backend.services;
+
+import br.com.vanroute.backend.models.address.Address;
+
+import br.com.vanroute.backend.dtos.route.AddressResponseDTO;
+
+import br.com.vanroute.backend.dtos.contract.ContractDetailsResponseDTO;
+
+import br.com.vanroute.backend.exceptions.BadRequestException;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.server.ResponseStatusException;
 import br.com.vanroute.backend.dtos.contract.ContractProposalRequestDTO;
 import br.com.vanroute.backend.dtos.contract.ContractRequestDTO;
 import br.com.vanroute.backend.dtos.document.DocumentRequestDTO;
@@ -62,7 +74,7 @@ public class ContractService {
     @Transactional
     public UserDriverContract createContract(UUID driverId, ContractProposalRequestDTO request) {
         if (!studentResponsibleService.isAdmin(request.responsibleId(), request.studentId())) {
-            throw new RuntimeException("O Responsável não possui conexão com a criança informada.");
+            throw new BadRequestException("O Responsável não possui conexão com a criança informada.");
         }
 
         //kaio jorge lixo
@@ -70,15 +82,15 @@ public class ContractService {
                 .existsByDriverUserIdAndSchoolId(driverId, request.schoolId());
         
         if (!isDriverLinkedToSchool) {
-            throw new RuntimeException("Motorista não possui essa escola");
+            throw new AccessDeniedException("Motorista não possui essa escola");
         }
 
         boolean hasActiveOrPending = userDriverContractRepository
-                .existsByDriverIdAndStudentIdAndContractStatusIn(driverId, request.studentId(), 
+                .existsByDriverUserIdAndStudentIdAndContractStatusIn(driverId, request.studentId(), 
                 List.of(ContractStatus.PENDING, ContractStatus.ACTIVE));
 
         if (hasActiveOrPending) {
-            throw new RuntimeException("Já existe um contrato pendente ou ativo para este motorista e aluno");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe um contrato pendente ou ativo para este motorista e aluno");
         }
 
         // ja verificamo tudo I think
@@ -136,15 +148,15 @@ public class ContractService {
     //nao valida aluno pq na hora de criar o contrato etc ja valida etc, nesse recinto.
     public void acceptContract(UUID contractId, UUID responsibleUserId) {
         UserDriverContract udc = userDriverContractRepository.findByContractId(contractId)
-                .orElseThrow(() -> new RuntimeException("Contrato não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Contrato não encontrado"));
         
         if (!udc.getResponsible().getUserId().equals(responsibleUserId)) {
-            throw new RuntimeException("Usuário não tem permissão para aceitar este contrato");
+            throw new AccessDeniedException("Usuário não tem permissão para aceitar este contrato");
         }
 
         Contract contract = udc.getContract();
         if (contract.getStatus() != ContractStatus.PENDING) {
-            throw new RuntimeException("Contrato não está pendente");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Contrato não está pendente");
         }
 
         contract.setStatus(ContractStatus.ACTIVE);
@@ -174,18 +186,66 @@ public class ContractService {
     @Transactional
     public void rejectContract(UUID contractId, UUID responsibleUserId) {
         UserDriverContract udc = userDriverContractRepository.findByContractId(contractId)
-                .orElseThrow(() -> new RuntimeException("Contrato não encontrado"));
+                .orElseThrow(() -> new EntityNotFoundException("Contrato não encontrado"));
         
         if (!udc.getResponsible().getUserId().equals(responsibleUserId)) {
-            throw new RuntimeException("Usuário não tem permissão para rejeitar este contrato");
+            throw new AccessDeniedException("Usuário não tem permissão para rejeitar este contrato");
         }
 
         Contract contract = udc.getContract();
         if (contract.getStatus() != ContractStatus.PENDING) {
-            throw new RuntimeException("Contrato não está pendente");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Contrato não está pendente");
         }
 
         contract.setStatus(ContractStatus.CANCELED);
         contractRepository.save(contract);
+    }
+
+    // so as partes do contrato (responsavel e motorista) veem os detalhes
+    @Transactional
+    public ContractDetailsResponseDTO getContractDetails(UUID contractId, UUID userId) {
+        UserDriverContract udc = userDriverContractRepository.findDetailsByContractId(contractId)
+                .orElseThrow(() -> new EntityNotFoundException("Contrato não encontrado"));
+        if (!udc.getResponsible().getUserId().equals(userId) && !udc.getDriver().getUserId().equals(userId)) {
+            throw new AccessDeniedException("Usuário não faz parte deste contrato");
+        }
+
+        Contract contract = udc.getContract();
+        School school = udc.getSchool();
+        Address address = school.getAddress();
+        Document document = documentRepository
+                .findFirstByEntityTypeAndEntityId(DocumentEntityType.CONTRACT, contractId)
+                .orElse(null);
+
+        return new ContractDetailsResponseDTO(
+                contract.getId(),
+                udc.getId(),
+                contract.getStatus(),
+                contract.getPeriodicity(),
+                contract.getValue(),
+                contract.getStartDate(),
+                contract.getEndDate(),
+                udc.getStudent().getId(),
+                udc.getStudent().getName(),
+                school.getId(),
+                school.getName(),
+                address == null ? null : new AddressResponseDTO(
+                        address.getId(),
+                        address.getStreet(),
+                        address.getZipCode(),
+                        address.getCity(),
+                        address.getNeighborhood(),
+                        address.getNumber(),
+                        address.getState(),
+                        address.getLatitude(),
+                        address.getLongitude()
+                ),
+                udc.getDriver().getUserId(),
+                udc.getDriver().getUser().getName(),
+                udc.getResponsible().getUserId(),
+                udc.getResponsible().getUser().getName(),
+                document == null ? null : document.getUrl(),
+                document == null ? null : document.getType()
+        );
     }
 }
