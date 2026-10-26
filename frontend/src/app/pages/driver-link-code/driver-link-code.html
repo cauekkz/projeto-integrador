@@ -1,0 +1,49 @@
+<div class="link-code-container">
+  <app-header titulo="Código de conversa" (voltarEvent)="voltarAoPerfil()" />
+
+  <div class="content">
+    <h1>Seu código de conversa</h1>
+    <p class="description">
+      Compartilhe este código com o responsável. Ao digitá-lo em "Vincular motorista",
+      uma conversa entre vocês será iniciada.
+    </p>
+
+    @if (carregando()) {
+      <div class="estado" role="status" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Carregando seu código...</span>
+      </div>
+    } @else if (codigo()) {
+      <div class="code-box">
+        <span class="codigo" [attr.aria-label]="'Código ' + codigo().split('').join(' ')">
+          {{ codigoFormatado() }}
+        </span>
+      </div>
+
+      <app-button
+        [texto]="copiado() ? 'Código copiado!' : 'Copiar código'"
+        tipo="primary"
+        (clickEvent)="copiarCodigo()">
+      </app-button>
+
+      <p class="feedback" role="status" aria-live="polite">
+        @if (copiado()) {
+          <i class="bi bi-check-circle-fill" aria-hidden="true"></i> Código copiado para a área de transferência
+        }
+      </p>
+    }
+
+    @if (!carregando() && erro()) {
+      <div class="erro" role="alert">
+        <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+        <span>{{ erro() }}</span>
+      </div>
+
+      @if (!codigo()) {
+        <app-button texto="Tentar novamente"  class="espaco" (clickEvent)="carregarCodigo()"></app-button>
+      }
+    }
+
+    <app-button texto="Voltar ao perfil" tipo="secondary" (clickEvent)="voltarAoPerfil()"></app-button>
+  </div>
+</div>

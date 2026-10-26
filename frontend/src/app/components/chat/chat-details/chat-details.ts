@@ -1,11 +1,11 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { jwtDecode } from 'jwt-decode';
 import { of, Subscription } from 'rxjs';
 import { ChatMessage } from '../../../models/chat-message';
 import { ChatWebSocketService } from '../../../services/chat.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-chat-details',
@@ -21,10 +21,13 @@ export class ChatDetails implements OnInit, OnDestroy {
   fotoContato = '/testee.jpg';
   origem = 'responsible-home';
   usuarioLogadoId = '';
+  enviando = false;
+  erroEnvio = '';
+  erroCarregar = '';
   @ViewChild('messagesContainer') private messagesContainer?: ElementRef<HTMLElement>;
   private paginaMensagens = 0;
   private temMensagensAnteriores = false;
-  private carregandoMensagens = false;
+  carregandoMensagens = true; // comeca true pra nao piscar o estado vazio antes do historico chegar
   private subscription?: Subscription;
 
   mensagens: Array<{
@@ -42,52 +45,91 @@ export class ChatDetails implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private chatService: ChatWebSocketService,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
-    this.origem = this.route.snapshot.queryParamMap.get('from') || 'responsible-home';
+    const home = this.authService.getHomeRoute();
+    this.origem = home ? home.replace('/', '') : this.route.snapshot.queryParamMap.get('from') || 'responsible-home';
     this.chatId = this.route.snapshot.paramMap.get('id') || '';
-    this.usuarioLogadoId = this.getUserIdFromToken();
+
+    // history.state continua la depois do F5, getCurrentNavigation() nao
     const nav = this.router.getCurrentNavigation();
-    const state = nav?.extras.state as { nomeContato?: string; fotoContato?: string } | undefined;
+    const state = (nav?.extras.state ?? history.state) as { nomeContato?: string; fotoContato?: string } | undefined;
     this.nomeContato = state?.nomeContato || this.nomeContato;
     this.fotoContato = state?.fotoContato || this.fotoContato;
 
-    if (this.chatId) {
-      this.carregarMensagens();
-      this.chatService.connect(this.chatId);
-      this.subscription = this.chatService.messages$.subscribe((message) => {
-        if (!message?.id) {
-          return;
-        }
-
-        if (this.mensagens.some((item) => item.id === message.id)) {
-          return;
-        }
-
-        this.adicionarMensagens([message]);
-      });
+    if (!this.chatId) {
+      return;
     }
+
+    if (!state?.nomeContato) {
+      this.carregarNomeContato();
+    }
+
+    // o senderId das mensagens e o UUID do usuario; o token so tem o cpf (sub),
+    // entao busca o id real antes de montar as mensagens (senao todas parecem do outro lado)
+    const cpf = this.authService.getUserIdFromToken();
+    if (!cpf) {
+      return;
+    }
+
+    this.authService.getUserByID(cpf).subscribe({
+      next: (user) => {
+        this.usuarioLogadoId = user?.id ?? '';
+        this.iniciarConversa();
+      },
+      error: (error) => {
+        console.error('Erro ao identificar o usuário logado:', error);
+        this.iniciarConversa();
+      },
+    });
+  }
+
+  private iniciarConversa() {
+    this.carregarMensagens();
+    this.chatService.connect(this.chatId);
+    this.subscription = this.chatService.messages$.subscribe((message) => {
+      if (!message?.id) {
+        return;
+      }
+
+      if (this.mensagens.some((item) => item.id === message.id)) {
+        return;
+      }
+
+      this.adicionarMensagens([message]);
+      this.rolarParaFim();
+    });
+  }
+
+  // quem abre pelo driver-code (ou da F5 sem state) nao tem o nome: pega da lista do proprio usuario
+  private carregarNomeContato() {
+    this.chatService.getChats(0, 50).subscribe({
+      next: (page) => {
+        const chat = (page.content ?? []).find((item) => item.id === this.chatId);
+        if (chat?.otherUserName) {
+          this.nomeContato = chat.otherUserName;
+          this.cdr.markForCheck();
+        }
+      },
+      error: (error) => console.error('Erro ao carregar dados do contato:', error),
+    });
+  }
+
+  private rolarParaFim() {
+    requestAnimationFrame(() => {
+      const container = this.messagesContainer?.nativeElement;
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    });
   }
 
   ngOnDestroy() {
     this.chatService.disconnect();
     this.subscription?.unsubscribe();
-  }
-
-  private getUserIdFromToken(): string {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      return '';
-    }
-
-    try {
-      const decoded: any = jwtDecode(token);
-      return decoded.id ?? decoded.sub ?? '';
-    } catch {
-      return '';
-    }
   }
 
   private carregarMensagens() {
@@ -105,21 +147,24 @@ export class ChatDetails implements OnInit, OnDestroy {
             this.temMensagensAnteriores = latestPage.number > 0;
             this.adicionarMensagens(latestPage.content ?? []);
             this.carregandoMensagens = false;
-            requestAnimationFrame(() => {
-              const container = this.messagesContainer?.nativeElement;
-              if (container) {
-                container.scrollTop = container.scrollHeight;
-              }
-            });
+            this.erroCarregar = '';
+            this.rolarParaFim();
           },
           error: (error) => {
             this.carregandoMensagens = false;
+            this.erroCarregar = 'Não foi possível carregar o histórico da conversa.';
+            this.cdr.markForCheck();
             console.error('Erro ao carregar mensagens recentes:', error);
           },
         });
       },
       error: (error) => {
         this.carregandoMensagens = false;
+        // validateChatAccess joga IllegalArgumentException -> o handler global responde 500
+        this.erroCarregar = error?.status >= 500
+          ? 'Você não tem acesso a esta conversa ou ela não existe.'
+          : 'Não foi possível carregar o histórico da conversa.';
+        this.cdr.markForCheck();
         console.error('Erro ao carregar mensagens:', error);
       },
     });
@@ -159,6 +204,7 @@ export class ChatDetails implements OnInit, OnDestroy {
     }
     this.mensagens = Array.from(mensagensPorId.values())
       .sort((a, b) => new Date(a.sentAt).getTime() - new Date(b.sentAt).getTime());
+    this.cdr.markForCheck();
   }
 
   private mapMessage(message: ChatMessage) {
@@ -188,16 +234,24 @@ export class ChatDetails implements OnInit, OnDestroy {
   enviar() {
     const text = this.mensagem.trim();
 
-    if (!text || !this.chatId) {
+    if (!text || !this.chatId || this.enviando) {
       return;
     }
 
+    this.enviando = true;
+    this.erroEnvio = '';
     this.chatService.sendMessage(this.chatId, text).subscribe({
       next: (message) => {
+        this.enviando = false;
         this.adicionarMensagens([message]);
         this.mensagem = '';
+        this.rolarParaFim();
       },
       error: (error) => {
+        // mantem o texto digitado pra pessoa tentar de novo
+        this.enviando = false;
+        this.erroEnvio = 'Não foi possível enviar a mensagem. Tente novamente.';
+        this.cdr.markForCheck();
         console.error('Erro ao enviar mensagem:', error);
       },
     });

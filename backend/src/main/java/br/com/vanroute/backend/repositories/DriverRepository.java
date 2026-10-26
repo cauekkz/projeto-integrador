@@ -10,4 +10,6 @@ import java.util.UUID;
 @Repository
 public interface DriverRepository extends JpaRepository<Driver, UUID> {
     Optional<Driver> findByLinkCode(String linkCode);
+
+    Optional<Driver> findByUserCpf(String cpf);
 }

@@ -1,9 +1,10 @@
-import { Component, HostListener, Input, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, Input, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
 import { Header } from '../../../shared/header/header';
 import { Footer } from '../../../shared/footer/footer';
 import { ChatWebSocketService } from '../../../services/chat.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-chat-list',
@@ -20,15 +21,21 @@ export class ChatList implements OnInit {
   private pagina = 0;
   private temMais = true;
   private carregando = false;
+  carregandoInicial = true;
+  erroAoCarregar = false;
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private chatService: ChatWebSocketService,
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit() {
-    this.origem = this.route.snapshot.queryParamMap.get('from') || this.from;
+    // a origem vem da role do token, nao do ?from (que aceitava qualquer rota)
+    const home = this.authService.getHomeRoute();
+    this.origem = home ? home.replace('/', '') : this.route.snapshot.queryParamMap.get('from') || this.from;
     this.carregarConversas();
   }
 
@@ -43,7 +50,7 @@ export class ChatList implements OnInit {
         const novasConversas = (response.content ?? []).map((chat) => ({
           id: chat.id,
           nome: chat.otherUserName,
-          ultimaMensagem: 'Converse com o responsável ou motorista',
+          ultimaMensagem: 'Nenhuma mensagem ainda',
           hora: chat.createdAt ? new Date(chat.createdAt).toLocaleTimeString('pt-BR', {
             hour: '2-digit',
             minute: '2-digit',
@@ -54,6 +61,9 @@ export class ChatList implements OnInit {
         this.pagina = response.number + 1;
         this.temMais = !response.last;
         this.carregando = false;
+        this.carregandoInicial = false;
+        this.erroAoCarregar = false;
+        this.cdr.markForCheck();
 
         if (novasConversas.length) {
           forkJoin(
@@ -83,11 +93,17 @@ export class ChatList implements OnInit {
                 });
               }
             });
+            this.cdr.markForCheck();
           });
         }
       },
       error: (error) => {
         this.carregando = false;
+        if (this.carregandoInicial) {
+          this.erroAoCarregar = true;
+        }
+        this.carregandoInicial = false;
+        this.cdr.markForCheck();
         console.error('Erro ao carregar chats:', error);
       },
     });
@@ -106,6 +122,17 @@ export class ChatList implements OnInit {
       queryParams: { from: this.origem },
       state: { nomeContato: conversa.nome, fotoContato: conversa.foto },
     });
+  }
+
+  tentarNovamente() {
+    this.carregandoInicial = true;
+    this.erroAoCarregar = false;
+    this.temMais = true;
+    this.carregarConversas();
+  }
+
+  irParaVincularMotorista() {
+    this.router.navigate(['/driver-code']);
   }
 
   voltar() {

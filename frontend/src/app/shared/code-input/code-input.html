@@ -13,6 +13,9 @@
         [(ngModel)]="codes[$index]"
         (input)="onInput($event, $index)"
         (keydown)="onKeydown($event, $index)"
+        (paste)="onPaste($event, $index)"
+        [disabled]="desabilitado"
+        [attr.aria-label]="'Caractere ' + ($index + 1) + ' de ' + length"
         [name]="'code' + $index"
       />
     }
@@ -23,7 +26,7 @@
   }
 
   <div class="botoes">
-    <button class="btn-verificar" (click)="verificar()">{{ textoBotao }}</button>
+    <button class="btn-verificar" type="button" [disabled]="desabilitado" (click)="verificar()">{{ textoBotao }}</button>
     @if (mostrarReenviar) {
       <button class="btn-reenviar" (click)="reenviar()">Reenviar código</button>
     }

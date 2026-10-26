@@ -2,8 +2,31 @@
   <app-header titulo="Conversas" (voltarEvent)="voltar()" />
 
   <div class="lista">
+    @if (carregandoInicial) {
+      <p class="estado-lista" role="status" aria-live="polite">Carregando conversas...</p>
+    } @else if (erroAoCarregar) {
+      <div class="estado-lista" role="alert">
+        <p>Não foi possível carregar suas conversas.</p>
+        <button type="button" class="btn-estado" (click)="tentarNovamente()">Tentar novamente</button>
+      </div>
+    } @else if (conversas.length === 0) {
+      <div class="estado-lista">
+        @if (origem === 'driver-home') {
+          <p>Nenhuma conversa ainda. Compartilhe seu código de conversa (no seu perfil) com um responsável.</p>
+        } @else {
+          <p>Nenhuma conversa ainda. Vincule um motorista com o código dele para começar.</p>
+          <button type="button" class="btn-estado" (click)="irParaVincularMotorista()">Vincular motorista</button>
+        }
+      </div>
+    }
+
     @for (conversa of conversas; track conversa.id) {
-      <div class="conversa-item" (click)="abrirConversa(conversa)">
+      <div
+        class="conversa-item"
+        role="button"
+        tabindex="0"
+        (click)="abrirConversa(conversa)"
+        (keydown.enter)="abrirConversa(conversa)">
         <img [src]="conversa.foto" class="conversa-avatar" alt="">
         <div class="conversa-info">
           <span class="conversa-nome">{{ conversa.nome }}</span>

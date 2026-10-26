@@ -3,6 +3,8 @@ package br.com.vanroute.backend.controllers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +19,8 @@ import br.com.vanroute.backend.services.DriverService;
 import br.com.vanroute.backend.services.EmailVerificationService;
 import br.com.vanroute.backend.services.IcpValidationService;
 import jakarta.validation.Valid;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/driver")
@@ -66,6 +70,13 @@ public class DriverController {
         }
 
         return ResponseEntity.ok().build();
+    }
+
+    // motorista consulta o proprio codigo de conversa, identificado pelo jwt (nunca por id na url)
+    @GetMapping("/link-code")
+    public ResponseEntity<Map<String, String>> getLinkCode(Authentication authentication) {
+        String linkCode = driverService.getLinkCodeByCpf(authentication.getName());
+        return ResponseEntity.ok(Map.of("linkCode", linkCode));
     }
     
 

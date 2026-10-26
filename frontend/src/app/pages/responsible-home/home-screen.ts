@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { User } from '../../models/user.model';
 import { StudentService } from '../../services/student.service';
 import { AuthService } from '../../services/auth.service';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Footer } from '../../shared/footer/footer';
 import { ProfileSelect } from '../../components/profile-select/profile-select';
 
@@ -22,10 +22,14 @@ export class HomeScreen implements OnInit {
     private authService: AuthService,
     private studentService: StudentService,
     private cdr: ChangeDetectorRef,
+    private route: ActivatedRoute,
     private router: Router,
   ) {}
 
   ngOnInit() {
+    // voltando de "codigo de conversa"/"vincular motorista" reabre o painel do perfil
+    this.mostrarPerfil = this.route.snapshot.queryParamMap.get('perfil') === 'aberto';
+
     const cpfUsuario = this.authService.getUserIdFromToken();
     if (cpfUsuario) {
       this.authService.getUserByID(cpfUsuario).subscribe({
@@ -64,6 +68,9 @@ export class HomeScreen implements OnInit {
 
   fecharPerfil() {
     this.mostrarPerfil = false;
+    if (this.route.snapshot.queryParamMap.has('perfil')) {
+      this.router.navigate([], { queryParams: {}, replaceUrl: true });
+    }
   }
 
   irParaChat() {

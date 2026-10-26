@@ -15,6 +15,10 @@ export interface ChatSummary {
   createdAt: string;
 }
 
+export interface DriverLinkCode {
+  linkCode: string;
+}
+
 export interface ChatPage<T> {
   content: T[];
   number: number;
