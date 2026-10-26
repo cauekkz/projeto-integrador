@@ -31,6 +31,48 @@ export class AuthService {
     }
   }
 
+  // o backend manda as roles na claim "roles" (lista), ex: ["ROLE_DRIVER"]
+  getRolesFromToken(): string[] {
+    const decoded = this.decodeToken();
+    if (!decoded) return [];
+
+    if (Array.isArray(decoded.roles)) return decoded.roles;
+    if (typeof decoded.role === 'string') return [decoded.role];
+    return [];
+  }
+
+  // token existe, é decodificável e não expirou (exp é opcional, o backend ainda não manda)
+  isAuthenticated(): boolean {
+    const decoded = this.decodeToken();
+    if (!decoded) return false;
+
+    if (typeof decoded.exp === 'number' && decoded.exp * 1000 <= Date.now()) {
+      this.logout();
+      return false;
+    }
+
+    return !!(decoded.id || decoded.sub);
+  }
+
+  // rota inicial de acordo com a role do usuário logado, null se não tiver role conhecida
+  getHomeRoute(): string | null {
+    const roles = this.getRolesFromToken();
+    if (roles.includes('ROLE_DRIVER')) return '/driver-home';
+    if (roles.includes('ROLE_RESPONSIBLE') || roles.includes('ROLE_ADMIN')) return '/responsible-home';
+    return null;
+  }
+
+  private decodeToken(): any | null {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+
+    try {
+      return jwtDecode(token);
+    } catch {
+      return null;
+    }
+  }
+
   private apiUrl = 'http://localhost:9090/api';
 
   constructor(private http: HttpClient) {}

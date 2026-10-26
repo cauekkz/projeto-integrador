@@ -1,84 +1,65 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { jwtDecode } from 'jwt-decode';
 import { AuthService } from '../services/auth.service';
 
-export const routeGuard: CanActivateFn = (route, state) => {
+// usuario precisa estar logado (token valido), senao volta pra tela inicial
+export const routeGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const userId = authService.getUserIdFromToken();
-
-  if (userId) {
+  if (authService.isAuthenticated()) {
     return true;
   }
 
-  router.navigate(['/']);
-  return false;
+  authService.logout();
+  return router.createUrlTree(['/']);
 };
 
-export const roleGuard: CanActivateFn = (route, state) => {
-  const router = inject(Router);
-  const token = localStorage.getItem('token');
-
-  if (!token) {
-    router.navigate(['/']);
-    return false;
-  }
-
-  try {
-    const decoded: any = jwtDecode(token);
-
-    const userRole: string = decoded.role;
-
-    const rolesPermitidas: string[] = route.data['rolesPermitted'] || route.data['rolesPermitidas'];
-
-    if (userRole === 'ROLE_ADMIN') {
-      return true;
-    }
-
-    if (rolesPermitidas && rolesPermitidas.includes(userRole)) {
-      return true;
-    }
-
-    console.warn(`Acesso negado para a role: ${userRole}`);
-    router.navigate(['/']);
-    return false;
-  } catch (error) {
-    console.error('Erro ao processar a role no token:', error);
-    router.navigate(['/']);
-    return false;
-  }
-};
-
-export const guestGuard: CanActivateFn = (route, state) => {
+// confere se alguma role do token esta em data.rolesPermitted
+// ROLE_ADMIN entra em tudo
+export const roleGuard: CanActivateFn = (route) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  const userId = authService.getUserIdFromToken();
-
-  if (userId) {
-    const token = localStorage.getItem('token');
-
-    try {
-      const decoded: any = jwtDecode(token!);
-      const userRole = decoded.role;
-
-
-      if (userRole === 'ROLE_DRIVER') {
-        router.navigate(['/driver-home']);
-      } else if (userRole === 'ROLE_RESPONSIBLE' || userRole === 'ROLE_ADMIN') {
-        router.navigate(['/responsible-home']);
-      } else {
-        router.navigate(['/']);
-      }
-    } catch (error) {
-      localStorage.removeItem('token');
-      return true;
-    }
-
-    return false;
+  if (!authService.isAuthenticated()) {
+    authService.logout();
+    return router.createUrlTree(['/']);
   }
 
+  const userRoles = authService.getRolesFromToken();
+  const rolesPermitidas: string[] = route.data['rolesPermitted'] || route.data['rolesPermitidas'] || [];
+
+  if (userRoles.includes('ROLE_ADMIN') || userRoles.some((role) => rolesPermitidas.includes(role))) {
+    return true;
+  }
+
+  console.warn(`Acesso negado para as roles: ${userRoles.join(', ')}`);
+
+  // manda pra home dele em vez de '/', evita ficar quicando entre os guards
+  const home = authService.getHomeRoute();
+  if (home) {
+    return router.createUrlTree([home]);
+  }
+
+  authService.logout();
+  return router.createUrlTree(['/']);
+};
+
+// paginas publicas (home, login, cadastro): se ja ta logado manda pra home da role
+export const guestGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (!authService.isAuthenticated()) {
+    return true;
+  }
+
+  const home = authService.getHomeRoute();
+  if (home) {
+    return router.createUrlTree([home]);
+  }
+
+  // token sem role conhecida: descarta e deixa entrar na pagina publica (antes isso dava loop)
+  authService.logout();
   return true;
 };
