@@ -2,11 +2,16 @@ package br.com.vanroute.backend.models.school;
 
 import br.com.vanroute.backend.models.user.Driver;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "driver_schools")
+@Table(
+        name = "driver_schools",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"driver_id", "school_id"})
+)
 public class DriverSchools {
     
     @Id

@@ -12,9 +12,6 @@ public class StudentAddress {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(length = 100)
-    private String weekdays;
-
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
     private Student student;
@@ -29,14 +26,6 @@ public class StudentAddress {
 
     public void setId(UUID id) {
         this.id = id;
-    }
-
-    public String getWeekdays() {
-        return weekdays;
-    }
-
-    public void setWeekdays(String weekdays) {
-        this.weekdays = weekdays;
     }
 
     public Student getStudent() {

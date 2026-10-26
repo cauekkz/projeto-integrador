@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import java.util.UUID;
 import br.com.vanroute.backend.config.TokenProvider;
 import br.com.vanroute.backend.dtos.user.LoginRequestDTO;
 import br.com.vanroute.backend.dtos.user.token.TokenResponseDTO;
@@ -8,7 +9,7 @@ import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.UserStatus;
 import br.com.vanroute.backend.repositories.RolesRepository;
 import br.com.vanroute.backend.repositories.UserRepository;
-import org.apache.coyote.BadRequestException;
+import br.com.vanroute.backend.exceptions.BadRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,16 +28,19 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final TokenProvider tokenProvider;
+    private final RefreshTokenService refreshTokenService;
     @Value("${spring.jwt.expiration}")
     private Long expirationTime;
 
 
-    public AuthenticationService(UserRepository userRepository, RolesRepository rolesRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenProvider tokenProvider) {
+    public AuthenticationService(UserRepository userRepository, RolesRepository rolesRepository, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager, TokenProvider tokenProvider,
+                                 RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.rolesRepository = rolesRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
+        this.refreshTokenService = refreshTokenService;
     }
 
 //    public void register(UserCreateDTO userCreateDTO) throws BadRequestException {
@@ -72,16 +76,33 @@ public class AuthenticationService {
             throw new BadRequestException("Verifique seu e-mail antes de fazer login.");
         }
 
+        Authentication auth;
         try {
-            Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+            auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                     loginRequestDTO.getCpf(),
                     loginRequestDTO.getPasswordHash()
             ));
-            String token = tokenProvider.generateToken(auth);
-            return ResponseEntity.ok(new TokenResponseDTO(token, expirationTime));
         }catch (Exception e){
             throw new InvalidCredentialsException("Credenciais inválidas.");
         }
+        // fora do try: erro aqui (ex.: Redis fora) nao pode virar "senha errada"
+        String token = tokenProvider.generateToken(auth);
+        return ResponseEntity.ok(new TokenResponseDTO(token, expirationTime,
+                refreshTokenService.create(user.getId()), refreshTokenService.expiresIn()));
+    }
+
+    // troca o refreshToken por um par novo (o usado deixa de valer); 401 se venceu, ja foi usado ou foi feito logout
+    public TokenResponseDTO refresh(String refreshToken) {
+        UUID userId = refreshTokenService.consume(refreshToken);
+        User user = userRepository.findById(userId)
+                .filter(u -> u.getStatus() == UserStatus.ACTIVE)
+                .orElseThrow(() -> new InvalidCredentialsException("Sessão expirada. Faça login novamente."));
+        return new TokenResponseDTO(tokenProvider.generateToken(user), expirationTime,
+                refreshTokenService.create(userId), refreshTokenService.expiresIn());
+    }
+
+    public void logout(String refreshToken) {
+        refreshTokenService.revoke(refreshToken);
     }
 
 }

@@ -1,0 +1,6 @@
+ALTER TABLE addresses
+DROP COLUMN coordinates;
+
+ALTER TABLE addresses
+    ADD COLUMN latitude DOUBLE PRECISION,
+ADD COLUMN longitude DOUBLE PRECISION;

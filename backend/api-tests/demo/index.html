@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VanRoute Trip Demo</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f6f8; --panel: #ffffff; --text: #1d2330; --muted: #677085; --line: #dde1e8;
+    --accent: #2563eb; --accent-text: #ffffff; --ok: #15803d; --warn: #b45309; --bad: #b91c1c;
+    --code: #f0f2f5; --chip: #eef2ff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12151b; --panel: #1b1f27; --text: #e6e9ef; --muted: #9aa3b5; --line: #2c323d;
+      --accent: #3b82f6; --accent-text: #ffffff; --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+      --code: #232833; --chip: #1e2a44;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12151b; --panel: #1b1f27; --text: #e6e9ef; --muted: #9aa3b5; --line: #2c323d;
+    --accent: #3b82f6; --accent-text: #ffffff; --ok: #4ade80; --warn: #fbbf24; --bad: #f87171;
+    --code: #232833; --chip: #1e2a44;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  header { padding: 16px; border-bottom: 1px solid var(--line); background: var(--panel); }
+  header h1 { margin: 0 0 4px; font-size: 18px; }
+  header p { margin: 0; color: var(--muted); max-width: 980px; }
+  header label { color: var(--muted); font-size: 12px; }
+  .config { margin-top: 8px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .group-title { margin: 14px 16px 0; font-size: 15px; color: var(--muted); font-weight: 600; }
+  .msg { display: none; padding: 6px 10px; border-radius: 8px; background: color-mix(in srgb, var(--bad) 15%, transparent);
+    color: var(--bad); font-size: 13px; }
+  .all-done { padding: 10px; border-radius: 8px; border: 2px solid var(--ok); display: flex; justify-content: space-between;
+    align-items: center; gap: 8px; flex-wrap: wrap; }
+  .all-done b { color: var(--ok); }
+  main { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 12px 16px; }
+  @media (max-width: 1100px) { main { grid-template-columns: 1fr; } }
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .panel h2 { margin: 0; font-size: 15px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .who { font-weight: 400; color: var(--muted); font-size: 12px; }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+  input, select { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; min-width: 0; }
+  input.cpf { width: 130px; }
+  button { font: inherit; border: 1px solid var(--line); background: var(--bg); color: var(--text); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  /* mapa estilo app de entrega: claro, linha grossa com contorno, van desenhada */
+  .map-wrap { position: relative; }
+  .map { height: 300px; border-radius: 12px; border: 1px solid var(--line); }
+  .eta-pill { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 500; display: none;
+    background: #ffffff; color: #1d2330; border-radius: 99px; padding: 6px 14px; font-weight: 600; font-size: 13px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .18); white-space: nowrap; }
+  .eta-pill b { color: #ea1d2c; }
+  .van-icon { transition: transform .25s linear; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .35)); }
+  /* casa e escola desenhadas (a base fica em cima do ponto) */
+  .stop-pin { width: 44px; height: 44px; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .35)); }
+  .stop-pin.done { filter: grayscale(1) drop-shadow(0 1px 2px rgba(0, 0, 0, .25)); opacity: .6; }
+  .stop-pin svg { width: 44px; height: 44px; display: block; }
+  .leaflet-div-icon { background: transparent; border: 0; }
+  /* pai: claro e cinza, estilo Uber */
+  .map.uber .leaflet-tile-pane { filter: grayscale(1) brightness(1.12) contrast(.8); }
+  /* motorista: escuro, estilo iFood */
+  .map.ifood { background: #1a1a1a; }
+  .map.ifood .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) grayscale(.9) brightness(.78) contrast(1.15); }
+  .map.ifood .leaflet-control-attribution { background: rgba(0, 0, 0, .55); color: #bbb; }
+  .map.ifood .leaflet-control-attribution a { color: #ddd; }
+  .uber-pin { width: 14px; height: 14px; background: #000; border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0, 0, 0, .4); }
+  .uber-dest { display: flex; align-items: stretch; background: #fff; color: #1d2330; box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+    white-space: nowrap; font: 600 14px/1.2 system-ui, sans-serif; width: max-content; }
+  .uber-dest .eta { background: #000; color: #fff; padding: 5px 9px; text-align: center; }
+  .uber-dest .eta b { display: block; font-size: 19px; }
+  .uber-dest .eta small { font-size: 10px; letter-spacing: .5px; }
+  .uber-dest .name { padding: 0 12px; display: flex; align-items: center; color: #2f5d9e; font-weight: 500; }
+  .eta-pill.ifood-bar { top: 8px; left: 8px; right: 8px; transform: none; background: #1e1e1e; color: #fff; border-radius: 14px;
+    padding: 8px 10px; display: flex; align-items: center; gap: 10px; font-weight: 500; box-shadow: 0 2px 10px rgba(0, 0, 0, .5); }
+  .ifood-status { background: #138a3e; color: #fff; border-radius: 99px; padding: 4px 12px; font-weight: 700; }
+  .eta-pill.ifood-bar b { color: #fff; }
+  .status { padding: 8px 10px; border-radius: 8px; background: var(--code); }
+  .status b { font-size: 15px; }
+  .muted { color: var(--muted); font-size: 12px; }
+  .stop { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+  .stop.next { border-color: var(--accent); }
+  .stop.done { opacity: .55; }
+  .stu { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 3px 0; flex-wrap: wrap; }
+  .chip { display: inline-block; padding: 1px 7px; border-radius: 99px; background: var(--chip); font-size: 12px; }
+  .chip.PENDING { color: var(--warn); } .chip.BOARDED { color: var(--accent); }
+  .chip.DELIVERED { color: var(--ok); } .chip.ABSENT { color: var(--bad); }
+  .stu button { padding: 2px 8px; font-size: 12px; }
+  .hint { font-size: 12px; color: var(--muted); border-left: 3px solid var(--line); padding-left: 8px; }
+  #log { margin: 0 16px 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  #log h2 { margin: 0 0 6px; font-size: 15px; display: flex; justify-content: space-between; }
+  #entries { max-height: 360px; overflow: auto; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .entry { border-top: 1px solid var(--line); padding: 4px 0; }
+  .entry summary { cursor: pointer; overflow-wrap: anywhere; }
+  .entry pre { margin: 4px 0 0; padding: 6px; background: var(--code); border-radius: 6px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 240px; overflow: auto; }
+  .tag { font-weight: 600; }
+  .notifs { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; display: none; }
+  .notifs .head { display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 13px; }
+  .badge { background: var(--bad); color: #fff; border-radius: 99px; padding: 0 7px; font-size: 12px; }
+  .badge.zero { background: var(--line); color: var(--muted); }
+  .notif { padding: 4px 0; border-top: 1px solid var(--line); font-size: 12px; }
+  .notif:first-of-type { border-top: 0; }
+  .notif b { font-size: 13px; }
+  .notif.unread b::before { content: "● "; color: var(--accent); }
+  .notif.fresh { animation: flash 1.6s ease-out; }
+  @keyframes flash { from { background: var(--chip); } to { background: transparent; } }
+  .tag.http { color: var(--accent); } .tag.ws-in { color: var(--ok); } .tag.ws-out { color: var(--warn); } .tag.err { color: var(--bad); }
+</style>
+</head>
+<body>
+<header>
+  <h1>VanRoute: teste da execução da rota</h1>
+  <p>Três pessoas na mesma tela: o motorista inicia a trip e manda o GPS pelo WebSocket; cada pai abre o WebSocket da trip
+    e vê só o que é dele. Cada um também recebe as próprias notificações (WebSocket /notifications).
+    O GPS é simulado: clique no mapa do motorista ou ligue "simular GPS". Embaixo fica o log com cada chamada HTTP e cada mensagem do WebSocket (o JSON exato).</p>
+  <div class="config">
+    <label for="wsBase">WebSocket do backend</label>
+    <input id="wsBase" value="ws://localhost:9090" size="24">
+    <span class="muted">HTTP passa pelo serve.py (/api → backend)</span>
+  </div>
+</header>
+
+<h2 class="group-title">Ida (manhã): casa → casa → escola</h2>
+<main>
+  <section class="panel" id="driver"></section>
+  <section class="panel" id="parent1"></section>
+  <section class="panel" id="parent2"></section>
+</main>
+<h2 class="group-title">Volta (tarde): escola → casa → casa · outro motorista e outros pais</h2>
+<main>
+  <section class="panel" id="driver2"></section>
+  <section class="panel" id="parent3"></section>
+  <section class="panel" id="parent4"></section>
+</main>
+
+<section id="log">
+  <h2>Log <button id="clearLog">limpar</button></h2>
+  <div id="entries"></div>
+</section>
+
+<script>
+const START = { latitude: -23.5614, longitude: -46.6559 }; // Av. Paulista (MASP): onde a van "esta" ao iniciar
+const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const minutes = (s) => s == null ? '-' : s < 60 ? `${Math.round(s)} s` : `${Math.round(s / 60)} min`;
+const ACTION = { BOARDING: 'embarca', ALIGHTING: 'desce' };
+const STATUS = { PENDING: 'aguardando', BOARDED: 'embarcou', DELIVERED: 'entregue', ABSENT: 'ausente' };
+
+// ---------- log ----------
+const entries = document.getElementById('entries');
+document.getElementById('clearLog').onclick = () => { entries.innerHTML = ''; };
+function log(who, kind, title, data) {
+  const el = document.createElement('details');
+  el.className = 'entry';
+  const time = new Date().toLocaleTimeString('pt-BR');
+  el.innerHTML = `<summary>${time} <span class="tag ${kind}">[${esc(who)}] ${kind.toUpperCase()}</span> ${esc(title)}</summary>`;
+  if (data !== undefined) {
+    const pre = document.createElement('pre');
+    pre.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+    el.appendChild(pre);
+  }
+  entries.prepend(el);
+}
+
+// ---------- painel base ----------
+class Panel {
+  constructor(el, label, kind) {
+    this.el = el; this.label = label; this.kind = kind;
+    this.token = null; this.ws = null; this.view = null;
+    el.innerHTML = `
+      <h2>${label} <span class="who"></span></h2>
+      <div class="row login">
+        <input class="cpf" placeholder="CPF"> <input class="pwd" type="password" value="Senha@123" size="10">
+        <button class="primary do-login">Entrar</button>
+      </div>
+      <div class="notifs"><div class="head"><span>Notificações <span class="badge zero">0</span></span>
+        <button class="read-all">ler todas</button></div><div class="list"></div></div>
+      <div class="msg"></div>
+      <div class="body"></div>
+      <div class="map-wrap"><div class="map"></div><div class="eta-pill"></div></div>
+      <div class="live"></div>`;
+    this.$ = (sel) => el.querySelector(sel);
+    this.$('.do-login').onclick = () => this.login().catch(() => {});
+    this.$('.map').classList.add(kind === 'driver' ? 'ifood' : 'uber');
+    // motorista: zoom embaixo pra nao ficar sob a barra de status
+    this.map = L.map(this.$('.map'), { zoomControl: false }).setView([START.latitude, START.longitude], 13);
+    L.control.zoom({ position: kind === 'driver' ? 'bottomright' : 'topleft' }).addTo(this.map);
+    // OpenStreetMap (sem chave), clareado no CSS pra ficar limpo
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(this.map);
+    this.layers = L.layerGroup().addTo(this.map);
+    this.van = null; this.vanAngle = 0;
+  }
+
+  async call(method, path, body, retried = false) {
+    const opts = { method, headers: {} };
+    if (this.token) opts.headers.Authorization = `Bearer ${this.token}`;
+    if (body !== undefined) { opts.headers['Content-Type'] = 'application/json'; opts.body = JSON.stringify(body); }
+    const res = await fetch(path, opts);
+    const text = await res.text();
+    let data = text; try { data = text ? JSON.parse(text) : null; } catch {}
+    log(this.label, res.ok ? 'http' : 'err', `${method} ${path} → ${res.status}`, { enviado: body ?? null, recebido: data });
+    // o JWT dura 15 min: troca o refreshToken por um par novo e repete a chamada (sem pedir a senha)
+    if (res.status === 401 && this.token && !retried) {
+      await this.renew();
+      return this.call(method, path, body, true);
+    }
+    if (!res.ok) { const e = new Error(data?.message || text || res.status); e.status = res.status; throw e; }
+    return data;
+  }
+
+  async relogin() {
+    this.token = null;
+    const tokens = await this.call('POST', '/api/auth/login', { cpf: this.$('.cpf').value.trim(), passwordHash: this.$('.pwd').value });
+    this.token = tokens.token; this.refreshToken = tokens.refreshToken;
+  }
+
+  // POST /api/auth/refresh: o refreshToken usado deixa de valer, guarda o novo. Se falhar (30 dias, logout): login de novo
+  async renew() {
+    log(this.label, 'ws-out', 'JWT venceu: renovando com o refreshToken');
+    this.token = null;
+    try {
+      const tokens = await this.call('POST', '/api/auth/refresh', { refreshToken: this.refreshToken });
+      this.token = tokens.token; this.refreshToken = tokens.refreshToken;
+    } catch {
+      await this.relogin();
+    }
+  }
+
+  showError(text) {
+    const el = this.$('.msg');
+    el.textContent = text;
+    el.style.display = text ? 'block' : 'none';
+    clearTimeout(this.msgTimer);
+    if (text) this.msgTimer = setTimeout(() => this.showError(''), 6000);
+  }
+
+  async login() {
+    await this.relogin();
+    this.me = await this.call('GET', '/api/users/me');
+    this.$('.who').textContent = this.me.name;
+    this.$('.login').style.display = 'none';
+    await this.initNotifications();
+    await this.afterLogin();
+  }
+
+  connect(tripId) {
+    if (this.ws) this.ws.close();
+    const url = `${document.getElementById('wsBase').value}/trip/${tripId}?token=${this.token}`;
+    log(this.label, 'ws-out', `abre ws /trip/${tripId}?token=<jwt>`);
+    const ws = new WebSocket(url);
+    this.ws = ws;
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      log(this.label, 'ws-in', msg.type === 'error' ? `erro: ${msg.message}` : `trip-update (status ${msg.status}, following ${msg.following})`, msg);
+      if (msg.type === 'trip-update') { this.view = msg; this.renderLive(); }
+    };
+    ws.onclose = (e) => log(this.label, e.code === 1000 || e.code === 1005 ? 'ws-in' : 'err', `ws fechado (código ${e.code}${e.reason ? ': ' + e.reason : ''})`);
+  }
+
+  // WebSocket /notifications: o token diz quem e; chega na hora o que for dele
+  async initNotifications() {
+    this.$('.notifs').style.display = 'block';
+    this.$('.read-all').onclick = async () => {
+      try { await this.call('PUT', '/api/notifications/read-all'); } catch {}
+      this.$('.list').querySelectorAll('.notif').forEach((n) => n.classList.remove('unread'));
+      this.setUnread(0);
+    };
+    const page = await this.call('GET', '/api/notifications?size=5');
+    page.content.slice().reverse().forEach((n) => this.addNotification(n, false));
+    const ws = new WebSocket(`${document.getElementById('wsBase').value}/notifications?token=${this.token}`);
+    log(this.label, 'ws-out', 'abre ws /notifications?token=<jwt>');
+    ws.onmessage = (e) => {
+      const msg = JSON.parse(e.data);
+      log(this.label, 'ws-in', msg.type === 'notification' ? `notificação ${msg.notification.type}: ${msg.notification.title}` : msg.type, msg);
+      if (msg.type === 'unread-count') this.setUnread(msg.count);
+      if (msg.type === 'notification') { this.addNotification(msg.notification, true); this.setUnread(this.unread + 1); }
+    };
+    this.notifWs = ws;
+  }
+
+  setUnread(n) {
+    this.unread = n;
+    const badge = this.$('.badge');
+    badge.textContent = n;
+    badge.classList.toggle('zero', n === 0);
+  }
+
+  addNotification(n, fresh) {
+    const el = document.createElement('div');
+    el.className = `notif ${n.read ? '' : 'unread'} ${fresh ? 'fresh' : ''}`;
+    const time = new Date(n.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    el.innerHTML = `<b>${esc(n.title)}</b> <span class="muted">${time}</span><div class="muted">${esc(n.message)}</div>`;
+    const list = this.$('.list');
+    list.prepend(el);
+    while (list.children.length > 5) list.lastChild.remove();
+  }
+
+  send(obj) {
+    if (this.ws?.readyState === WebSocket.OPEN) { this.ws.send(JSON.stringify(obj)); log(this.label, 'ws-out', `envia ${obj.type}`, obj); }
+  }
+
+  // view null = esconde a van e a linha (pai fora do trecho do filho). pill: texto do selo em cima do mapa
+  drawMap(view, stops, pill) {
+    this.layers.clearLayers();
+    const bounds = [];
+    (stops || []).forEach((s) => {
+      if (s.latitude == null) return;
+      const names = s.students.map((x) => x.studentName).join(', ');
+      L.marker([s.latitude, s.longitude], { icon: stopIcon(s.schoolIds.length ? 'school' : 'home', s.done), zIndexOffset: -100 })
+        .bindTooltip(`ponto ${s.orderIndex}: ${names}`).addTo(this.layers);
+      bounds.push([s.latitude, s.longitude]);
+    });
+    if (view?.path?.length) {
+      const line = view.path.map(([lng, lat]) => [lat, lng]);
+      // motorista (iFood): linha vermelha; pai (Uber): linha preta
+      const driverMap = this.kind === 'driver';
+      L.polyline(line, { color: driverMap ? '#5c0a12' : '#ffffff', weight: 10, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(this.layers);
+      L.polyline(line, { color: driverMap ? '#ea1d2c' : '#111111', weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(this.layers);
+      bounds.push(...line);
+      // pai: destino estilo Uber no fim da linha (quadradinho preto + "8 MIN | Casa · Ana")
+      if (!stops) {
+        const kid = view.students?.find((st) => st.status === 'PENDING' || st.status === 'BOARDED');
+        const school = kid?.action === 'ALIGHTING' && kid?.locationType === 'SCHOOL';
+        const end = line[line.length - 1];
+        L.marker(end, { icon: L.divIcon({ className: '', html: '<div class="uber-pin"></div>', iconSize: [20, 20], iconAnchor: [10, 10] }),
+          zIndexOffset: -100 }).addTo(this.layers);
+        const min = view.etaSeconds == null ? '-' : Math.max(1, Math.round(view.etaSeconds / 60));
+        L.marker(end, { icon: L.divIcon({ className: '',
+          html: `<div class="uber-dest"><div class="eta"><b>${min}</b><small>MIN</small></div>
+                 <div class="name">${school ? 'Escola' : 'Casa'} · ${esc(kid?.studentName ?? '')} ›</div></div>`,
+          iconSize: null, iconAnchor: [-14, 50] }), zIndexOffset: 900 }).addTo(this.layers);
+      }
+    }
+    if (view?.latitude != null) {
+      const to = [view.latitude, view.longitude];
+      if (!this.van) {
+        this.van = L.marker(to, { icon: vanIcon(), zIndexOffset: 1000 }).addTo(this.map);
+        // direcao inicial: o comeco da linha
+        if (view.path?.length > 1) this.turnVan(bearing(to, [view.path[1][1], view.path[1][0]]));
+      } else {
+        const from = this.van.getLatLng();
+        if (from.lat !== to[0] || from.lng !== to[1]) {
+          this.turnVan(bearing([from.lat, from.lng], to));
+          animateMarker(this.van, [from.lat, from.lng], to, 1500);
+        }
+        if (!this.map.hasLayer(this.van)) this.van.addTo(this.map);
+      }
+      bounds.push(to);
+    } else if (this.van && this.map.hasLayer(this.van)) {
+      this.van.remove();
+    }
+    // a van saiu da area visivel (ex.: so a van, sem linha pra enquadrar): acompanha ela
+    if (view?.latitude != null && this.fitted && !this.map.getBounds().pad(-0.1).contains([view.latitude, view.longitude])) {
+      this.map.panTo([view.latitude, view.longitude]);
+    }
+    // motorista: barra de status escura no topo (estilo iFood); pai: selo branco
+    const etaEl = this.$('.eta-pill');
+    etaEl.classList.toggle('ifood-bar', this.kind === 'driver');
+    etaEl.style.display = pill ? (this.kind === 'driver' ? 'flex' : 'block') : 'none';
+    etaEl.innerHTML = !pill ? '' : this.kind === 'driver' ? `<span class="ifood-status">Em rota</span><span>${pill}</span>` : pill;
+    // reenquadra na primeira vez e quando o destino muda (ex.: agora a van vai pra escola)
+    const target = view?.targetStopId ?? null;
+    if (bounds.length && (!this.fitted || target !== this.lastTarget)) {
+      this.map.fitBounds(bounds, { padding: [40, 40], maxZoom: 16 });
+      this.fitted = true;
+    }
+    this.lastTarget = target;
+  }
+
+  turnVan(angle) {
+    if (angle == null) return;
+    this.vanAngle = angle;
+    const el = this.van?.getElement()?.querySelector('.van-icon');
+    if (el) el.style.transform = `rotate(${angle}deg)`;
+  }
+}
+
+// ---------- mapa: van, pinos, animacao ----------
+const VAN_SVG = `
+  <svg viewBox="0 0 48 48" width="44" height="44" aria-hidden="true">
+    <g transform="translate(11 2)">
+      <rect x="-3" y="10" width="4" height="4" rx="1.5" fill="#1d2330"/>
+      <rect x="25" y="10" width="4" height="4" rx="1.5" fill="#1d2330"/>
+      <rect x="0" y="0" width="26" height="44" rx="8" fill="#ffc400" stroke="#1d2330" stroke-width="2"/>
+      <rect x="3.5" y="5" width="19" height="8" rx="3" fill="#1d2330"/>
+      <rect x="4" y="16" width="18" height="19" rx="3" fill="#f2a900"/>
+      <rect x="7" y="19" width="12" height="2" rx="1" fill="#ffffff" opacity=".7"/>
+      <rect x="7" y="24" width="12" height="2" rx="1" fill="#ffffff" opacity=".7"/>
+      <rect x="7" y="29" width="12" height="2" rx="1" fill="#ffffff" opacity=".7"/>
+      <rect x="5" y="38" width="16" height="3" rx="1.5" fill="#1d2330"/>
+    </g>
+  </svg>`;
+const ICONS = {
+  // casinha: telhado vermelho, chamine, janelas e porta
+  home: `<svg viewBox="0 0 40 40" aria-hidden="true">
+    <ellipse cx="20" cy="37.5" rx="12" ry="2" fill="#000" opacity=".18"/>
+    <rect x="26" y="7" width="4" height="8" fill="#9b1c1c" stroke="#1d2330" stroke-width="1.2"/>
+    <rect x="9" y="18" width="22" height="18" rx="1" fill="#fff6e5" stroke="#1d2330" stroke-width="1.5"/>
+    <path d="M5 19.5 20 6l15 13.5" fill="#ea1d2c" stroke="#1d2330" stroke-width="1.5" stroke-linejoin="round"/>
+    <rect x="17" y="26" width="6" height="10" rx="1" fill="#a0612b" stroke="#1d2330" stroke-width="1.2"/>
+    <rect x="11.5" y="22" width="4.5" height="4.5" fill="#8fd0ff" stroke="#1d2330" stroke-width="1"/>
+    <rect x="24" y="22" width="4.5" height="4.5" fill="#8fd0ff" stroke="#1d2330" stroke-width="1"/>
+  </svg>`,
+  // escola: predio com frontao, bandeira, relogio e varias janelas
+  school: `<svg viewBox="0 0 40 40" aria-hidden="true">
+    <ellipse cx="20" cy="37.5" rx="16" ry="2" fill="#000" opacity=".18"/>
+    <line x1="20" y1="10" x2="20" y2="1.5" stroke="#1d2330" stroke-width="1.4"/>
+    <path d="M20 1.5h8l-2.2 2.2 2.2 2.2h-8z" fill="#ea1d2c" stroke="#1d2330" stroke-width=".8"/>
+    <rect x="3" y="17" width="34" height="19" rx="1" fill="#ffe6a3" stroke="#1d2330" stroke-width="1.5"/>
+    <path d="M11 17.5 20 9.5l9 8" fill="#2f6fe4" stroke="#1d2330" stroke-width="1.5" stroke-linejoin="round"/>
+    <circle cx="20" cy="15" r="2.2" fill="#fff" stroke="#1d2330" stroke-width=".9"/>
+    <rect x="17" y="27" width="6" height="9" fill="#2f6fe4" stroke="#1d2330" stroke-width="1.2"/>
+    <g fill="#8fd0ff" stroke="#1d2330" stroke-width=".9">
+      <rect x="6" y="20" width="3.5" height="4"/><rect x="11.5" y="20" width="3.5" height="4"/>
+      <rect x="25" y="20" width="3.5" height="4"/><rect x="30.5" y="20" width="3.5" height="4"/>
+      <rect x="6" y="28" width="3.5" height="4"/><rect x="11.5" y="28" width="3.5" height="4"/>
+      <rect x="25" y="28" width="3.5" height="4"/><rect x="30.5" y="28" width="3.5" height="4"/>
+    </g>
+  </svg>`,
+};
+const vanIcon = () => L.divIcon({ className: '', html: `<div class="van-icon">${VAN_SVG}</div>`, iconSize: [44, 44], iconAnchor: [22, 22] });
+const stopIcon = (kind, done) => L.divIcon({ className: '', html: `<div class="stop-pin ${done ? 'done' : ''}">${ICONS[kind]}</div>`,
+  iconSize: [44, 44], iconAnchor: [22, 42], tooltipAnchor: [0, -36] });
+
+// angulo (0 = norte) de a pra b; null se nao andou
+function bearing(a, b) {
+  const dLat = b[0] - a[0], dLng = (b[1] - a[1]) * Math.cos(a[0] * Math.PI / 180);
+  if (Math.abs(dLat) < 1e-7 && Math.abs(dLng) < 1e-7) return null;
+  return Math.atan2(dLng, dLat) * 180 / Math.PI;
+}
+
+// desliza a van ate a posicao nova em vez de pular
+function animateMarker(marker, from, to, ms) {
+  const t0 = performance.now();
+  const step = (now) => {
+    const k = Math.min(1, (now - t0) / ms);
+    marker.setLatLng([from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k]);
+    if (k < 1) marker._anim = requestAnimationFrame(step);
+  };
+  cancelAnimationFrame(marker._anim);
+  marker._anim = requestAnimationFrame(step);
+}
+
+
+// ---------- motorista ----------
+class DriverPanel extends Panel {
+  constructor(el, label = 'Motorista') {
+    super(el, label, 'driver');
+    this.pos = { ...START }; this.trip = null; this.sim = null; this.cursor = 0; this.lastPath = '';
+    this.map.on('click', (e) => this.moveTo(e.latlng.lat, e.latlng.lng));
+  }
+
+  async afterLogin() {
+    const routes = await this.call('GET', '/api/route/get-all-routes-and-stops');
+    this.routes = routes;
+    this.$('.body').innerHTML = `
+      <div class="row"><select class="route">${routes.map((r) => `<option value="${r.id}">${esc(r.name)}</option>`).join('')}</select>
+        <button class="check">Trip de hoje?</button></div>
+      <div class="row trip-actions"></div>
+      <div class="hint">Clique no mapa pra mover a van (manda o GPS pelo WebSocket), ou ligue "simular GPS" pra ela andar sozinha pelo trajeto.</div>`;
+    this.$('.check').onclick = () => this.checkToday();
+    this.$('.route').onchange = () => this.checkToday();
+    if (routes.length) await this.checkToday();
+  }
+
+  get routeId() { return this.$('.route').value; }
+
+  // o app abriu: ja existe trip hoje? (404 = nao, mostra Iniciar; 200 = mostra Continuar / Recomecar)
+  async checkToday() {
+    const box = this.$('.trip-actions');
+    try {
+      const trip = await this.call('GET', `/api/trip/route/${this.routeId}/today`);
+      this.trip = trip;
+      const active = ['STARTED', 'IN_PROGRESS', 'PAUSED'].includes(trip.status);
+      box.innerHTML = active
+        ? `<button class="primary cont">Continuar trip</button><button class="restart">Recomeçar do zero</button>`
+        : `<span class="muted">Trip de hoje já ${trip.status === 'FINISHED' ? 'finalizada' : trip.status}.</span>`;
+      if (active) {
+        box.querySelector('.cont').onclick = () => this.connect(trip.id);
+        box.querySelector('.restart').onclick = () => this.start(true);
+      }
+    } catch (e) {
+      if (e.status !== 404) return;
+      box.innerHTML = `<button class="primary go">Iniciar rota</button>`;
+      box.querySelector('.go').onclick = () => this.start(false);
+    }
+  }
+
+  async start(restart) {
+    // a van comeca a ~220 m do 1o ponto da rota (no app: o GPS do celular)
+    const first = this.routes?.find((r) => r.id === this.routeId)?.stops?.slice().sort((a, b) => a.orderIndex - b.orderIndex)[0]?.address;
+    if (first?.latitude != null) this.pos = { latitude: +(first.latitude + 0.002).toFixed(6), longitude: first.longitude };
+    this.trip = await this.call('POST', `/api/trip/start/${this.routeId}${restart ? '?restart=true' : ''}`,
+      { latitude: this.pos.latitude, longitude: this.pos.longitude });
+    this.fitted = false;
+    this.connect(this.trip.id);
+    await this.checkToday();
+  }
+
+  moveTo(lat, lng) {
+    this.pos = { latitude: +lat.toFixed(6), longitude: +lng.toFixed(6) };
+    this.send({ type: 'position', ...this.pos });
+  }
+
+  toggleSim() {
+    if (this.sim) { clearInterval(this.sim); this.sim = null; this.renderLive(); return; }
+    // a cada 2 s anda alguns pontos na linha atual (quando a linha muda, recomeca do inicio dela)
+    this.sim = setInterval(() => {
+      const path = this.view?.path;
+      if (!path?.length) return;
+      const key = JSON.stringify(path[0]) + path.length;
+      if (key !== this.lastPath) { this.lastPath = key; this.cursor = 0; }
+      this.cursor = Math.min(this.cursor + 6, path.length - 1);
+      const [lng, lat] = path[this.cursor];
+      this.moveTo(lat, lng);
+    }, 2000);
+    this.renderLive();
+  }
+
+  // erro do backend aparece no painel (ex.: "A van está a 5.4 km do ponto do aluno")
+  async act(studentId, what) {
+    try { await this.call('PUT', `/api/trip/${this.view.tripId}/student/${studentId}/${what}`); this.showError(''); }
+    catch (e) { this.showError(e.message); }
+  }
+
+  async finish() {
+    try { await this.call('POST', `/api/trip/${this.view.tripId}/finish`); } catch (e) { this.showError(e.message); }
+    if (this.sim) this.toggleSim();
+    await this.checkToday();
+  }
+
+  // pula a van pro proximo ponto (pra testar sem esperar a simulacao)
+  goToNextStop() {
+    const next = this.view?.stops?.find((s) => !s.done);
+    if (next) this.moveTo(next.latitude, next.longitude);
+  }
+
+  renderLive() {
+    const v = this.view; if (!v) return;
+    this.drawMap(v, v.stops, v.targetStopId && v.etaSeconds != null ? `Próximo ponto em <b>${minutes(v.etaSeconds)}</b>` : null);
+    const active = ['STARTED', 'IN_PROGRESS', 'PAUSED'].includes(v.status);
+    const stops = (v.stops || []).map((s) => `
+      <div class="stop ${s.done ? 'done' : ''} ${s.routeStopId === v.targetStopId ? 'next' : ''}">
+        <div class="muted">ponto ${s.orderIndex}${s.schoolIds.length ? ' (escola)' : ''} · ${s.done ? 'atendido' : 'chega em ' + minutes(s.etaSeconds)}</div>
+        ${s.students.map((st) => `
+          <div class="stu"><span>${esc(st.studentName)} <span class="muted">${ACTION[st.action]}</span>
+            <span class="chip ${st.status}">${STATUS[st.status]}</span></span>
+            <span>${active && st.action === 'BOARDING' && st.status === 'PENDING'
+              ? `<button data-s="${st.studentId}" data-a="board">embarcou</button><button data-s="${st.studentId}" data-a="absent">ausente</button>` : ''}
+            ${active && st.action === 'ALIGHTING' && st.status === 'BOARDED' ? `<button data-s="${st.studentId}" data-a="alight">desceu</button>` : ''}</span></div>`).join('')}
+      </div>`).join('');
+    this.$('.live').innerHTML = `
+      <div class="status"><b>${v.status}</b> · ${v.targetStopId ? 'próximo ponto em ' + minutes(v.etaSeconds) : 'sem próximo ponto'}
+        <div class="muted">van em ${v.latitude?.toFixed(5)}, ${v.longitude?.toFixed(5)}</div></div>
+      ${active && !v.targetStopId ? `<div class="all-done"><span><b>Todos os alunos foram atendidos.</b> Pode encerrar a rota.</span>
+        <button class="primary fin">Finalizar rota</button></div>`
+      : active ? `<div class="row"><button class="sim">${this.sim ? 'parar simulação' : 'simular GPS'}</button>
+        <button class="go-next">ir até o próximo ponto</button><button class="fin">Finalizar trip</button></div>` : ''}
+      ${stops}`;
+    this.$('.live').querySelectorAll('button[data-s]').forEach((b) => { b.onclick = () => this.act(b.dataset.s, b.dataset.a); });
+    if (active) this.$('.fin').onclick = () => this.finish();
+    if (active && v.targetStopId) { this.$('.sim').onclick = () => this.toggleSim(); this.$('.go-next').onclick = () => this.goToNextStop(); }
+    if (active && !v.targetStopId && this.sim) this.toggleSim();
+  }
+}
+
+// ---------- pai ----------
+class ParentPanel extends Panel {
+  async afterLogin() {
+    const page = await this.call('GET', '/api/student/my-children');
+    this.kids = page.content || [];
+    this.$('.body').innerHTML = `
+      <div class="row"><button class="primary find">Procurar trip de hoje</button></div>
+      <div class="kids"></div>
+      <div class="hint">No app de verdade isso roda ao abrir o app (ou ao chegar a notificação "a van saiu").
+        Antes do motorista iniciar não existe trip: a lista vem vazia.</div>`;
+    this.$('.find').onclick = () => this.find();
+    await this.find();
+  }
+
+  async find() {
+    const html = [];
+    for (const kid of this.kids) {
+      const trips = await this.call('GET', `/api/student/${kid.id}/today-trips`);
+      const routes = await this.call('GET', `/api/student/${kid.id}/routes`);
+      const absences = await this.call('GET', `/api/student/${kid.id}/absences`);
+      const todayAbs = absences.filter((a) => a.date === today());
+      html.push(`<div class="stop"><b>${esc(kid.name)}</b>
+        ${trips.length ? trips.map((t) => `<div class="stu"><span>${esc(t.routeName)}: trip <span class="chip">${t.tripStatus}</span>
+             filho <span class="chip ${t.boardingStatus}">${STATUS[t.boardingStatus]}</span></span>
+             <button class="primary" data-trip="${t.tripId}">Acompanhar</button></div>`).join('')
+          : '<div class="muted">nenhuma trip hoje (ainda)</div>'}
+        ${routes.map((r) => {
+          const abs = todayAbs.find((a) => a.routeId === r.id);
+          // desfazer so antes da viagem comecar; avisar falta so enquanto ele nao embarcou
+          const trip = trips.find((t) => t.routeId === r.id);
+          const canUndo = abs && !trip;
+          const canAnnounce = !abs && (!trip || (trip.boardingStatus === 'PENDING' && trip.tripStatus !== 'FINISHED'));
+          return `<div class="stu"><span class="muted">${esc(r.name)}: ${abs ? 'falta avisada pra hoje' : trip && !canAnnounce ? STATUS[trip.boardingStatus] : 'vai hoje'}</span>
+            ${canUndo ? `<button data-undo="${abs.id}" data-kid="${kid.id}">ele vai sim</button>` : ''}
+            ${canAnnounce ? `<button data-abs="${r.id}" data-kid="${kid.id}">não vai hoje</button>` : ''}</div>`;
+        }).join('')}</div>`);
+    }
+    const box = this.$('.kids');
+    box.innerHTML = html.join('');
+    box.querySelectorAll('button[data-trip]').forEach((b) => { b.onclick = () => { this.fitted = false; this.connect(b.dataset.trip); }; });
+    box.querySelectorAll('button[data-abs]').forEach((b) => {
+      b.onclick = async () => { try { await this.call('POST', `/api/student/${b.dataset.kid}/absences`, { routeId: b.dataset.abs, date: today() }); } catch (e) { this.showError(e.message); } this.find(); };
+    });
+    box.querySelectorAll('button[data-undo]').forEach((b) => {
+      b.onclick = async () => { try { await this.call('DELETE', `/api/student/${b.dataset.kid}/absences/${b.dataset.undo}`); } catch (e) { this.showError(e.message); } this.find(); };
+    });
+  }
+
+  renderLive() {
+    const v = this.view; if (!v) return;
+    // FOLLOWING: van + linha + destino + tempo | ON_BOARD: so a van na rua | STATUS: mapa vazio
+    const onBoard = v.mode === 'ON_BOARD';
+    const done = v.mode === 'DONE';
+    const hour = (t) => t ? new Date(t).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+    this.drawMap(v.mode === 'FOLLOWING' || onBoard ? v : null, null, onBoard ? 'Seu filho está na van' : null);
+    const kids = v.students.map((s) => `<div class="stu"><span>${esc(s.studentName)}</span>
+      <span class="chip ${s.status}">${STATUS[s.status]}</span></div>`).join('');
+    this.$('.live').innerHTML = `
+      <div class="status"><b>${v.following ? 'Van a caminho: chega em ' + minutes(v.etaSeconds)
+          : onBoard ? 'Seu filho está na van' : done ? 'Acompanhamento encerrado' : 'Trip ' + v.status}</b>
+        <div class="muted">${v.following
+          ? 'A van está indo pro ponto do seu filho: você vê a van, a linha até o ponto e o tempo.'
+          : onBoard ? 'A van ainda vai buscar outros alunos: você vê só onde ela está. A rota aparece quando ela for pro destino do seu filho.'
+          : done ? v.students.map((s) => s.status === 'DELIVERED' ? `${esc(s.studentName)} foi entregue às ${hour(s.deliveredAt)}.` : `${esc(s.studentName)} não foi hoje.`).join(' ')
+            + ' A rota continua pros outros alunos.'
+          : 'Você vê só o status.'}</div></div>
+      ${kids}`;
+  }
+}
+
+const driver = new DriverPanel(document.getElementById('driver'));
+const parent1 = new ParentPanel(document.getElementById('parent1'), 'Pai 1', 'parent');
+const parent2 = new ParentPanel(document.getElementById('parent2'), 'Pai 2', 'parent');
+const driver2 = new DriverPanel(document.getElementById('driver2'), 'Motorista (volta)');
+const parent3 = new ParentPanel(document.getElementById('parent3'), 'Pai 3', 'parent');
+const parent4 = new ParentPanel(document.getElementById('parent4'), 'Pai 4', 'parent');
+
+// cenario do seed.sh: preenche os CPFs
+fetch('/demo.json').then((r) => r.json()).then((d) => {
+  const cpfs = { motorista: driver, pai1: parent1, pai2: parent2, motorista2: driver2, pai3: parent3, pai4: parent4 };
+  Object.entries(cpfs).forEach(([key, panel]) => { if (d[key]) panel.$('.cpf').value = d[key]; });
+}).catch(() => {});
+</script>
+</body>
+</html>

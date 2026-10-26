@@ -1,15 +1,14 @@
-
--- 1. rmeove shift de routes
+-- 1. remove shift de routes
 ALTER TABLE routes DROP COLUMN shift;
 
 CREATE TABLE driver_schools (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  driver_id UUID NOT NULL,
-  school_id UUID NOT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_driver_schools_driver FOREIGN KEY (driver_id) REFERENCES drivers(user_id) ON DELETE CASCADE,
-  CONSTRAINT fk_driver_schools_school FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
-  CONSTRAINT uk_driver_schools_unique UNIQUE(driver_id, school_id)
+                                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                                driver_id UUID NOT NULL,
+                                school_id UUID NOT NULL,
+                                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                CONSTRAINT fk_driver_schools_driver FOREIGN KEY (driver_id) REFERENCES drivers(user_id) ON DELETE CASCADE,
+                                CONSTRAINT fk_driver_schools_school FOREIGN KEY (school_id) REFERENCES schools(id) ON DELETE CASCADE,
+                                CONSTRAINT uk_driver_schools_unique UNIQUE(driver_id, school_id)
 );
 
 CREATE INDEX idx_driver_schools_driver ON driver_schools(driver_id);

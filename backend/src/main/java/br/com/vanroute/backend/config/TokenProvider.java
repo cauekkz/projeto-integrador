@@ -22,11 +22,16 @@ public class TokenProvider {
     private String key;
 
     public String generateToken(Authentication authentication){
-        UserDetails user = (UserDetails) authentication.getPrincipal();
+        return generateToken((UserDetails) authentication.getPrincipal());
+    }
+
+    // tambem usado na renovacao (POST /api/auth/refresh), quando nao tem senha nem Authentication
+    public String generateToken(UserDetails user) {
         List<String> roles = user.getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList();
+        // sub = id do usuario (User.getUsername devolve o id); o front le o id direto do token
         return buildToken(user.getUsername(), roles);
     }
 
@@ -35,7 +40,8 @@ public class TokenProvider {
         Date expiration = new Date(now.getTime() + expirationTime);
         return Jwts.builder()
                 .subject(username)
-                .issuedAt(expiration)
+                .issuedAt(now)
+                .expiration(expiration)
                 .signWith(getSignKey())
                 .claim("roles", roles)
                 .compact();
@@ -62,7 +68,7 @@ public class TokenProvider {
                 .getPayload();
     }
 
-    public String getUsername(String token){
+    public String getSubject(String token){
         return getClaims(token).getSubject();
     }
 

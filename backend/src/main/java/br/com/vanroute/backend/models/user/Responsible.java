@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.models.user;
 
+import br.com.vanroute.backend.models.address.Address;
 import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import jakarta.persistence.*;
 
@@ -21,6 +22,10 @@ public class Responsible {
     @MapsId
     @JoinColumn(name = "user_id")
     private User user;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_id", nullable = false)
+    private Address address;
 
     public UUID getUserId() {
         return userId;
@@ -46,4 +51,11 @@ public class Responsible {
         this.user = user;
     }
 
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
+    }
 }

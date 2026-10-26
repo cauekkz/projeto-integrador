@@ -29,8 +29,11 @@ public class ChatService {
 
         // como no bd eu nao crie index pra comparar (1,2) (2,1) eu faço sempre a ordem
         // crescente
-        UUID userOneId = userA.compareTo(userB) < 0 ? userA : userB;
-        UUID userTwoId = userA.compareTo(userB) < 0 ? userB : userA;
+        // compara pela string (ordem de bytes sem sinal, igual ao Postgres); UUID.compareTo usa long com sinal
+        // e violava o CHECK (user_one_id < user_two_id) para metade dos pares
+        boolean aFirst = userA.toString().compareTo(userB.toString()) < 0;
+        UUID userOneId = aFirst ? userA : userB;
+        UUID userTwoId = aFirst ? userB : userA;
 
         return chatRepository.findByUserOneIdAndUserTwoId(userOneId, userTwoId)
                 .orElseGet(() -> {
@@ -41,9 +44,7 @@ public class ChatService {
                 });
     }
 
-    public void validateChatAccess(UUID chatId, String cpf) {
-        UUID userId = userRepository.findByCpf(cpf).orElseThrow(() -> new RuntimeException("Usuário não encontrado"))
-                .getId();
+    public void validateChatAccess(UUID chatId, UUID userId) {
         if (!chatRepository.existsByChatIdAndUserId(chatId, userId)) {
             throw new IllegalArgumentException("Você não tem acesso a este chat.");
         }
@@ -54,25 +55,21 @@ public class ChatService {
                 .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Chat não encontrado"));
     }
 
-    public Page<ChatResponseDTO> getUserChats(String cpf, Pageable pageable) {
-        UUID userId = userRepository.findByCpf(cpf).orElseThrow(() -> new RuntimeException("Usuário não encontrado"))
-                .getId();
+    public Page<ChatResponseDTO> getUserChats(UUID userId, Pageable pageable) {
         return chatRepository.findChatsByUserIdOrderByRecentMessage(userId, pageable)
-                .map(chat -> ChatResponseDTO.from(chat, cpf));
+                .map(chat -> ChatResponseDTO.from(chat, userId));
     }
 
-    public void UsersInChat(UUID chatId, String cpf, UUID userId) {
-        UUID userIdByCpf = userRepository.findByCpf(cpf)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado")).getId();
+    public void UsersInChat(UUID chatId, UUID requesterId, UUID userId) {
         Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new RuntimeException("Chat não encontrado"));
         User userOne = chat.getUserOne();
         User userTwo = chat.getUserTwo();
-        boolean userOneIsUserByCpf = userOne.getId().equals(userIdByCpf) ||
-                userTwo.getId().equals(userIdByCpf);
+        boolean requesterInChat = userOne.getId().equals(requesterId) ||
+                userTwo.getId().equals(requesterId);
 
-        boolean userTwoIsUserByCpf = userOne.getId().equals(userId) ||
+        boolean otherInChat = userOne.getId().equals(userId) ||
                 userTwo.getId().equals(userId);
-        if (!userOneIsUserByCpf || !userTwoIsUserByCpf) {
+        if (!requesterInChat || !otherInChat) {
             throw new IllegalArgumentException("Você não tem acesso a este chat.");
         }
 

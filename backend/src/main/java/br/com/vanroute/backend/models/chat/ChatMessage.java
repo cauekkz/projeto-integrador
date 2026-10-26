@@ -1,4 +1,7 @@
 package br.com.vanroute.backend.models.chat;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import br.com.vanroute.backend.models.chat.enums.MessageType;
 import br.com.vanroute.backend.models.chat.enums.AttachmentType;
 import br.com.vanroute.backend.models.user.User;
@@ -42,6 +45,7 @@ public class ChatMessage {
     @Column(name = "message_type")
     private MessageType messageType;
 
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
     private String payload;
 

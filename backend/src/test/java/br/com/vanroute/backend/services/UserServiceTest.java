@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.exceptions.BadRequestException;
+
 import br.com.vanroute.backend.dtos.user.UpdateUser;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
@@ -30,6 +32,8 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
+    private static final UUID USER_ID = UUID.fromString("33333333-3333-3333-3333-333333333333");
+
     @Mock
     private UserRepository userRepository;
 
@@ -41,6 +45,12 @@ class UserServiceTest {
 
     @Mock
     private EmailVerificationService emailVerificationService;
+
+    @Mock
+    private StorageService storageService;
+
+    @Mock
+    private br.com.vanroute.backend.repositories.DriverRepository driverRepository;
 
     @InjectMocks
     private UserService userService;
@@ -68,6 +78,7 @@ class UserServiceTest {
         defaultUser.setName("Mbappé");
         defaultUser.setEmail("mbappe@teste.com");
         defaultUser.setPhone("11999999999");
+        defaultUser.setId(USER_ID);
         defaultUser.setCpf("12345678901");
         defaultUser.setStatus(UserStatus.CHECK_EMAIL);
     }
@@ -231,17 +242,17 @@ class UserServiceTest {
     @Test
     void shouldSendCodeToUserSuccessfully() {
 
-        when(userRepository.findByCpf("12345678901"))
+        when(userRepository.findById(USER_ID))
                 .thenReturn(Optional.of(defaultUser));
 
-        userService.sendCodeToUser("12345678901");
+        userService.sendCodeToUser(USER_ID);
 
         verify(userRepository)
-                .findByCpf("12345678901");
+                .findById(USER_ID);
 
         verify(emailVerificationService)
                 .generateAndSendCode(
-                        "User:SendCodeUser",
+                        "User:SendCodeUser:" + USER_ID,
                         "mbappe@teste.com"
                 );
     }
@@ -249,13 +260,13 @@ class UserServiceTest {
     @Test
     void shouldThrowExceptionWhenUserDoesNotExistWhileSendingCode() {
 
-        when(userRepository.findByCpf("12345678901"))
+        when(userRepository.findById(USER_ID))
                 .thenReturn(Optional.empty());
 
         UsernameNotFoundException exception =
                 assertThrows(
                         UsernameNotFoundException.class,
-                        () -> userService.sendCodeToUser("12345678901")
+                        () -> userService.sendCodeToUser(USER_ID)
                 );
 
         assertEquals(
@@ -278,11 +289,11 @@ class UserServiceTest {
         updateUser.setEmail("novoemail@teste.com");
         updateUser.setCode("123456");
 
-        when(userRepository.findByCpf("12345678901"))
+        when(userRepository.findById(USER_ID))
                 .thenReturn(Optional.of(defaultUser));
 
         doNothing().when(emailVerificationService)
-                .verifyCode("User:SendCodeUser", "123456");
+                .verifyCode("User:SendCodeUser:" + USER_ID, "123456");
 
         when(userRepository.save(any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -290,7 +301,7 @@ class UserServiceTest {
         String result =
                 userService.updateUser(
                         updateUser,
-                        "12345678901"
+                        USER_ID
                 );
 
         assertEquals(
@@ -304,7 +315,7 @@ class UserServiceTest {
         );
 
         verify(emailVerificationService)
-                .verifyCode("User:SendCodeUser", "123456");
+                .verifyCode("User:SendCodeUser:" + USER_ID, "123456");
 
         verify(userRepository)
                 .save(defaultUser);
@@ -317,11 +328,11 @@ class UserServiceTest {
         updateUser.setPhone("11888888888");
         updateUser.setCode("123456");
 
-        when(userRepository.findByCpf("12345678901"))
+        when(userRepository.findById(USER_ID))
                 .thenReturn(Optional.of(defaultUser));
 
         doNothing().when(emailVerificationService)
-                .verifyCode("User:SendCodeUser", "123456");
+                .verifyCode("User:SendCodeUser:" + USER_ID, "123456");
 
         when(userRepository.save(any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -329,7 +340,7 @@ class UserServiceTest {
         String result =
                 userService.updateUser(
                         updateUser,
-                        "12345678901"
+                        USER_ID
                 );
 
         assertEquals(
@@ -354,11 +365,11 @@ class UserServiceTest {
         updateUser.setPhone("11888888888");
         updateUser.setCode("123456");
 
-        when(userRepository.findByCpf("12345678901"))
+        when(userRepository.findById(USER_ID))
                 .thenReturn(Optional.of(defaultUser));
 
         doNothing().when(emailVerificationService)
-                .verifyCode("User:SendCodeUser", "123456");
+                .verifyCode("User:SendCodeUser:" + USER_ID, "123456");
 
         when(userRepository.save(any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -366,7 +377,7 @@ class UserServiceTest {
         String result =
                 userService.updateUser(
                         updateUser,
-                        "12345678901"
+                        USER_ID
                 );
 
         assertEquals(
@@ -398,7 +409,7 @@ class UserServiceTest {
         updateUser.setPhone("11888888888");
         updateUser.setCode("123456");
 
-        when(userRepository.findByCpf("12345678901"))
+        when(userRepository.findById(USER_ID))
                 .thenReturn(Optional.of(defaultUser));
 
         doNothing().when(emailVerificationService)
@@ -409,7 +420,7 @@ class UserServiceTest {
 
         userService.updateUser(
                 updateUser,
-                "12345678901"
+                USER_ID
         );
 
         assertEquals(
@@ -433,7 +444,7 @@ class UserServiceTest {
         updateUser.setPhone(null);
         updateUser.setCode("123456");
 
-        when(userRepository.findByCpf("12345678901"))
+        when(userRepository.findById(USER_ID))
                 .thenReturn(Optional.of(defaultUser));
 
         doNothing().when(emailVerificationService)
@@ -444,7 +455,7 @@ class UserServiceTest {
 
         userService.updateUser(
                 updateUser,
-                "12345678901"
+                USER_ID
         );
 
         assertEquals(
@@ -465,7 +476,7 @@ class UserServiceTest {
         updateUser.setEmail("novoemail@teste.com");
         updateUser.setCode("123456");
 
-        when(userRepository.findByCpf("12345678901"))
+        when(userRepository.findById(USER_ID))
                 .thenReturn(Optional.empty());
 
         UsernameNotFoundException exception =
@@ -473,7 +484,7 @@ class UserServiceTest {
                         UsernameNotFoundException.class,
                         () -> userService.updateUser(
                                 updateUser,
-                                "12345678901"
+                                USER_ID
                         )
                 );
 
@@ -542,7 +553,7 @@ class UserServiceTest {
         String code = "123456";
 
         doNothing().when(emailVerificationService)
-                .verifyCode("User:SendCodeUser", code);
+                .verifyCode("User:SendCodeUser:" + id, code);
 
         doNothing().when(userRepository)
                 .deleteById(id);
@@ -550,7 +561,7 @@ class UserServiceTest {
         userService.deleteById(id, code);
 
         verify(emailVerificationService)
-                .verifyCode("User:SendCodeUser", code);
+                .verifyCode("User:SendCodeUser:" + id, code);
 
         verify(userRepository)
                 .deleteById(id);
@@ -564,7 +575,7 @@ class UserServiceTest {
 
         doThrow(new RuntimeException("Invalid code"))
                 .when(emailVerificationService)
-                .verifyCode("User:SendCodeUser", code);
+                .verifyCode("User:SendCodeUser:" + id, code);
 
         RuntimeException exception =
                 assertThrows(
@@ -671,5 +682,55 @@ class UserServiceTest {
 
         verify(userRepository, times(1))
                 .save(defaultUser);
+    }
+
+    @Test
+    void shouldRejectPhotoFromAnotherUsersFolder() {
+        User photoOwner = new User();
+        photoOwner.setId(UUID.randomUUID());
+        when(userRepository.findById(photoOwner.getId())).thenReturn(Optional.of(photoOwner));
+
+        assertThrows(BadRequestException.class,
+                () -> userService.updatePhoto(photoOwner.getId(), "profile/" + UUID.randomUUID() + "/foto.jpeg"));
+        assertThrows(BadRequestException.class,
+                () -> userService.updatePhoto(photoOwner.getId(), "anexo-do-chat.jpeg"));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldUpdatePhotoAndDeleteTheOldOne() {
+        User photoOwner = new User();
+        photoOwner.setId(UUID.randomUUID());
+        String oldKey = "profile/" + photoOwner.getId() + "/antiga.jpeg";
+        String newKey = "profile/" + photoOwner.getId() + "/nova.jpeg";
+        photoOwner.setPhotoKey(oldKey);
+        when(userRepository.findById(photoOwner.getId())).thenReturn(Optional.of(photoOwner));
+        when(storageService.exists(newKey)).thenReturn(true);
+
+        userService.updatePhoto(photoOwner.getId(), newKey);
+
+        assertEquals(newKey, photoOwner.getPhotoKey());
+        verify(storageService).delete(oldKey);
+    }
+
+    @Test
+    void meReturnsLinkCodeOnlyForDrivers() {
+        User driverUser = new User();
+        driverUser.setId(UUID.randomUUID());
+        driverUser.setCpf("111");
+        br.com.vanroute.backend.models.user.Driver driver = new br.com.vanroute.backend.models.user.Driver();
+        driver.setLinkCode("ABCDEFGH2");
+        when(userRepository.findById(driverUser.getId())).thenReturn(Optional.of(driverUser));
+        when(driverRepository.findById(driverUser.getId())).thenReturn(Optional.of(driver));
+
+        assertEquals("ABCDEFGH2", userService.me(driverUser.getId()).linkCode());
+        assertEquals(driverUser.getId(), userService.me(driverUser.getId()).id());
+
+        User parent = new User();
+        parent.setId(UUID.randomUUID());
+        when(userRepository.findById(parent.getId())).thenReturn(Optional.of(parent));
+        when(driverRepository.findById(parent.getId())).thenReturn(Optional.empty());
+
+        assertNull(userService.me(parent.getId()).linkCode());
     }
 }
