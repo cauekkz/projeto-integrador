@@ -119,6 +119,13 @@ public class RouteController {
         return ResponseEntity.noContent().build();
     }
 
+    // van padrao da rota (a trip usa ela quando o motorista nao escolhe outra)
+    @PutMapping("/{routeId}/set-vehicle/{vehicleId}")
+    public ResponseEntity<RouteResponse> setDefaultVehicle(@PathVariable UUID routeId, @PathVariable UUID vehicleId,
+                                                           Authentication authentication) {
+        return ResponseEntity.ok(routeService.setDefaultVehicle(routeId, vehicleId, authentication));
+    }
+
     @GetMapping("/{routeId}/pending")
     public List<RoutePendingResponse> findPending(@PathVariable UUID routeId, Authentication authentication) {
         return routeService.findPending(routeId, authentication);

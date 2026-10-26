@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface RouteDriverRepository extends JpaRepository<RouteDriver, UUID> {
     boolean existsByRouteIdAndDriverUserId(UUID routeId, UUID driverId);
     List<RouteDriver> findByDriverUserId(UUID driverId);
+    List<RouteDriver> findByRouteIdAndEndDateIsNull(UUID routeId);
 }

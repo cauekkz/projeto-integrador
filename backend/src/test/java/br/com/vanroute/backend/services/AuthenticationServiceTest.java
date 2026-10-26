@@ -51,6 +51,9 @@ class AuthenticationServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private RefreshTokenService refreshTokenService;
+
     @BeforeEach
     void setup() {
         ReflectionTestUtils.setField(
@@ -72,12 +75,42 @@ class AuthenticationServiceTest {
         Authentication authentication = mock(Authentication.class);
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
         when(tokenProvider.generateToken(authentication)).thenReturn("jwt-token");
+        when(refreshTokenService.create(any())).thenReturn("refresh-token");
 
         ResponseEntity<TokenResponseDTO> response = authenticationService.login(request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("jwt-token", response.getBody().token());
+        assertEquals("refresh-token", response.getBody().refreshToken());
+    }
+
+    @Test
+    void refreshGivesANewPairForAnActiveUser() {
+        User user = new User();
+        java.util.UUID id = java.util.UUID.randomUUID();
+        user.setId(id);
+        user.setStatus(UserStatus.ACTIVE);
+        when(refreshTokenService.consume("old")).thenReturn(id);
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+        when(tokenProvider.generateToken(user)).thenReturn("new-jwt");
+        when(refreshTokenService.create(id)).thenReturn("new-refresh");
+
+        TokenResponseDTO tokens = authenticationService.refresh("old");
+
+        assertEquals("new-jwt", tokens.token());
+        assertEquals("new-refresh", tokens.refreshToken());
+    }
+
+    @Test
+    void refreshIsRefusedForABlockedUser() {
+        User user = new User();
+        java.util.UUID id = java.util.UUID.randomUUID();
+        user.setStatus(UserStatus.CHECK_EMAIL);
+        when(refreshTokenService.consume("old")).thenReturn(id);
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+
+        assertThrows(InvalidCredentialsException.class, () -> authenticationService.refresh("old"));
     }
 
     @Test

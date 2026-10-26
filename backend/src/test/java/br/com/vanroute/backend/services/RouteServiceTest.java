@@ -110,7 +110,7 @@ class RouteServiceTest {
         when(routeRepository.findById(route.getId())).thenReturn(Optional.of(route));
         when(routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId())).thenReturn(List.of(a, b, c, d));
         when(addressService.addAddress(any())).thenReturn(new Address());
-        when(mapService.searchCoord(any())).thenReturn(new Coordenadas(-23.5, -46.6));
+        when(mapService.searchCoord(any(Address.class))).thenReturn(new Coordenadas(-23.5, -46.6));
         when(routeStopRepository.save(any(RouteStop.class))).thenAnswer(inv -> inv.getArgument(0));
 
         List<RouteStopResponse> response = routeService.addRouteStop(route.getId(),
