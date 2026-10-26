@@ -16,6 +16,7 @@ import { ChatDetails } from './components/chat/chat-details/chat-details';
 import { routeGuard, roleGuard, guestGuard } from './interceptor/route.interceptor';
 import { DriverCode } from './components/driver-code/driver-code';
 import { ChatListComponent } from './components/chat/chat-list/chat-list';
+import { NotFound } from './pages/not-found/not-found';
 
 export const routes: Routes = [
   // qq esse faz?
@@ -55,7 +56,7 @@ export const routes: Routes = [
   {
     path: 'responsible-home',
     component: HomeScreen,
-   canActivate: [routeGuard, roleGuard],
+    canActivate: [routeGuard, roleGuard],
     data: { rolesPermitted: ['ROLE_RESPONSIBLE'] },
   },
   {
@@ -127,5 +128,10 @@ export const routes: Routes = [
     component: DriverCode,
     canActivate: [routeGuard, roleGuard],
     data: { rolesPermitted: ['ROLE_RESPONSIBLE', 'ROLE_DRIVER'] },
+  },
+  // qualquer url que nao bate com nada acima cai na 404 (tem que ser a ultima)
+  {
+    path: '**',
+    component: NotFound,
   },
 ];

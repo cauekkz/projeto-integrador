@@ -18,6 +18,8 @@ describe('Mask Submission & API Integration', () => {
     it('should submit unmasked CPF to AuthService while keeping formatted CPF in UI', () => {
       const authServiceMock = {
         login: vi.fn().mockReturnValue(of({ token: 'mock-token', expiresIn: 3600 })),
+        getHomeRoute: vi.fn().mockReturnValue('/responsible-home'),
+        logout: vi.fn(),
       };
       const routerMock = { navigate: vi.fn() };
       const popUpMock = { show: vi.fn() };
@@ -52,6 +54,8 @@ describe('Mask Submission & API Integration', () => {
     it('should preserve leading zeroes in CPF during login', () => {
       const authServiceMock = {
         login: vi.fn().mockReturnValue(of({ token: 'mock-token', expiresIn: 3600 })),
+        getHomeRoute: vi.fn().mockReturnValue('/responsible-home'),
+        logout: vi.fn(),
       };
       const routerMock = { navigate: vi.fn() };
       const popUpMock = { show: vi.fn() };

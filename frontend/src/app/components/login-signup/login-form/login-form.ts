@@ -65,11 +65,15 @@ export class LoginForm {
         next: (response) => {
           localStorage.setItem('token', response.token);
 
-          if (this.tipoUsuario === 'motorista') {
-            this.router.navigate(['/driver-home']);
-          } else {
-            this.router.navigate(['/responsible-home']);
+          // destino vem da role do token, nao do :tipo da url
+          const home = this.authService.getHomeRoute();
+          if (!home) {
+            this.authService.logout();
+            this.popUpService.show('Não foi possível identificar o tipo da sua conta.', 'error', 'Erro no login');
+            return;
           }
+
+          this.router.navigate([home]);
         },
         error: (err) => {
           console.error(err);
