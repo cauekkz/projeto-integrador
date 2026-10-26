@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.models.trip;
 
+import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.models.route.Route;
 import br.com.vanroute.backend.models.trip.enums.TripStatus;
 import br.com.vanroute.backend.models.vehicle.Vehicle;
@@ -36,6 +37,10 @@ public class Trip {
     @ManyToOne
     @JoinColumn(name = "vehicle_id")
     private Vehicle vehicle;
+
+    @ManyToOne
+    @JoinColumn(name = "driver_id")
+    private Driver driver;
 
     public UUID getId() {
         return id;
@@ -93,4 +98,11 @@ public class Trip {
         this.vehicle = vehicle;
     }
 
+    public Driver getDriver() {
+        return driver;
+    }
+
+    public void setDriver(Driver driver) {
+        this.driver = driver;
+    }
 }

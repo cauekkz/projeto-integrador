@@ -2,6 +2,11 @@
 
 Guia para quem consome a API, principalmente o front. Para cada endpoint criado ou alterado, mostra **o que mandar**, **o que volta** e **as regras**. O relatório completo da auditoria (bugs, testes, pendências) está em [`docs/RELATORIO_AUDITORIA_VANROUTE.md`](../docs/RELATORIO_AUDITORIA_VANROUTE.md).
 
+Outros guias:
+- **[`docs/FLUXO_FRONT.md`](../docs/FLUXO_FRONT.md)**: como montar o front (telas, a ordem das chamadas, os WebSockets e a renovação do token);
+- [`docs/FLUXO_TRIP.md`](../docs/FLUXO_TRIP.md): execução da rota, faltas e notificações, com todas as entradas e saídas;
+- [`docs/FLUXO_CONTRATO.md`](../docs/FLUXO_CONTRATO.md): contrato passo a passo.
+
 Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: Bearer <token>`, exceto os de cadastro e login.
 
 **Logo depois do login**, o front chama **`GET /api/users/me`**:
@@ -37,7 +42,7 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
   - `action`: `BOARDING` (embarque) ou `ALIGHTING` (desembarque);
   - `locationType`: `HOME`, `SCHOOL` ou `OTHER`;
   - `weekdays`: os dias em que o aluno usa aquele ponto. Sem dias = todos os dias.
-- A **execução** (trip/boarding) ainda não existe. Quando existir, a trip de um dia segue os pontos pela ordem e, em cada um, pega os alunos daquele dia. Um ponto sem aluno no dia é pulado. Falta num dia é coisa do boarding; a configuração não muda.
+- A **execução** (trip/boarding) segue os pontos pela ordem e, em cada um, pega os alunos daquele dia. Um ponto sem aluno no dia é pulado. Falta num dia é coisa do boarding; a configuração não muda. Veja a seção 1c e `docs/FLUXO_TRIP.md`.
 
 ### Passo a passo (motorista)
 ```
@@ -155,6 +160,78 @@ Resposta:
 ```
 `capacity` é o **número de passageiros** (campo LOTAÇÃO do CRLV). `year` é o ano do modelo, e `licensingYear` é o exercício (ano do licenciamento).
 
+## 1c. Execução da rota (trip)
+
+A **trip** é a viagem de uma rota num dia. Cada aluno do dia vira um **boarding** (`PENDING` → `BOARDED` → `DELIVERED`, ou `ABSENT`). O "hoje" é sempre no horário de São Paulo.
+
+**Iniciar:** `POST /api/trip/start/{routeId}` com `{ "latitude", "longitude", "vehicleId"? }`, a posição atual do GPS do motorista.
+- **Regras:**
+  - só o motorista da rota;
+  - a rota não pode ter pendências;
+  - a van é a enviada ou a **van padrão da rota** (`PUT /api/route/{routeId}/set-vehicle/{vehicleId}`), e tem que ser uma van ativa do motorista.
+- **Alunos do dia:** quem tem student stop nessa rota com o dia de hoje. Quem tem **falta avisada** já entra `ABSENT`.
+- **Pontos:** só os que têm aluno hoje, na ordem. Escola sem aluno no dia é pulada.
+- **Trajeto:** calculado pela API de rotas (OpenRouteService), da posição do motorista até os pontos que faltam. Fica no Redis.
+- **Trip já existente:**
+  - já existe trip hoje → `409`. O app chama `GET /api/trip/route/{routeId}/today` para **continuar**, ou inicia de novo com `?restart=true` para **recomeçar do zero** (a antiga vira `CANCELED`);
+  - trip já finalizada hoje → `409`.
+
+| Endpoint | Quem | O que faz |
+|---|---|---|
+| `GET /api/trip/{tripId}` | motorista | trip com os pontos do dia (alunos, status, `done`) e o trajeto |
+| `PUT /api/trip/{tripId}/student/{studentId}/board` | motorista | `PENDING` → `BOARDED` (hora do embarque); a trip vira `IN_PROGRESS` |
+| `PUT /api/trip/{tripId}/student/{studentId}/alight` | motorista | `BOARDED` → `DELIVERED` (hora do desembarque) |
+| `PUT /api/trip/{tripId}/student/{studentId}/absent` | motorista | **pula o aluno** só nessa trip (não apareceu, ninguém respondeu). Só se ainda não embarcou. Recalcula o trajeto |
+| `POST /api/trip/{tripId}/finish` | motorista | `FINISHED` com hora de fim |
+| `GET /api/student/{studentId}/today-trips` | responsável | trips de hoje do filho, para pegar o `tripId` e abrir o WebSocket |
+
+### Tempo real: WebSocket `ws://<host>/trip/{tripId}?token=<jwt>`
+Sem polling: ao conectar, cada um já recebe o estado atual, e depois recebe uma mensagem a cada mudança (GPS, embarque, falta, fim).
+
+- **Motorista** manda o GPS pelo próprio socket, a cada poucos segundos:
+  ```json
+  { "type": "position", "latitude": -23.55, "longitude": -46.63 }
+  ```
+  Ele recebe a trip inteira: todos os pontos com os tempos, todos os alunos e o trajeto.
+- **Responsável** só recebe (se mandar posição, volta `{"type":"error"}`). Ele vê **só os filhos dele** e o status deles. **A van, o trajeto e o tempo restante só aparecem quando o próximo ponto da van é um ponto do filho dele**:
+  - indo buscar na casa: vê a van chegando e o tempo;
+  - o filho embarcou, e a van vai buscar os outros: só o status;
+  - indo para a escola do filho: vê de novo;
+  - entregue: só o status.
+
+  Quem não é motorista nem responsável de um aluno da trip é desconectado (código `1003`).
+
+Mensagem (`type: "trip-update"`):
+```json
+{ "type": "trip-update", "tripId": "...", "routeName": "Ida", "status": "IN_PROGRESS",
+  "following": true, "latitude": -23.55, "longitude": -46.63, "positionAt": 1792585537168,
+  "targetStopId": "...", "etaSeconds": 420.0,
+  "path": [[-46.63, -23.55], [-46.631, -23.551], "..."],
+  "students": [ { "studentId": "...", "studentName": "Ana", "status": "PENDING", "action": "BOARDING", "locationType": "HOME" } ],
+  "stops": null }
+```
+- **`following`:** se o pai está acompanhando agora. Quando é `false`, a posição, o trajeto e o tempo vêm `null`.
+- **`targetStopId` e `etaSeconds`:** o ponto para onde a van está indo e os **segundos que faltam** até ele.
+- **`path`:** a linha do mapa (`[longitude, latitude]`). Para o pai, ela vai só até o ponto do filho.
+- **`stops`:** só para o motorista, com todos os pontos e o `etaSeconds` de cada um.
+
+**Trajeto e tempo:** a linha vem da API de rotas como uma lista de pontos (centenas, em ruas com curvas). O front desenha com Leaflet + OpenStreetMap e move o ícone da van. A API de rotas é chamada:
+- ao iniciar;
+- quando um aluno sai da trip;
+- com o GPS chegando, a cada **5 min** (`TRIP_ETA_REFRESH_SECONDS`), ou na hora se a van sair da linha (mais de 150 m, `TRIP_OFF_ROUTE_METERS`). A cota da chave é de 200 rotas por dia.
+
+Entre uma chamada e outra, o tempo restante só desconta. A chave da API fica só no backend.
+
+**Navegação do motorista:** o front pode abrir o Google Maps ou o Waze com os pontos da trip em ordem (latitude e longitude vêm no `GET /api/trip/{tripId}`), sem chave nenhuma.
+
+**Falta avisada pelo responsável** (vale para uma rota num dia; pode ser com antecedência):
+
+| Endpoint | O que faz |
+|---|---|
+| `POST /api/student/{studentId}/absences` `{routeId, date}` | o filho não vai nessa rota nesse dia. Se a trip já está rolando, ele sai **na hora** e o trajeto é recalculado. O motorista recebe mensagem automática no chat (`messageType: ABSENCE`) |
+| `GET /api/student/{studentId}/absences` | faltas avisadas de hoje em diante |
+| `DELETE /api/student/{studentId}/absences/{absenceId}` | "ele vai sim": volta para a trip (se ainda não passou) e o motorista é avisado |
+
 ## 2. Contrato
 
 A proposta nasce no chat. Criar, aceitar e recusar ficam no `ChatController`; a consulta fica no `ContractController`.
@@ -258,6 +335,8 @@ Quem pode baixar:
 - **Escola** (`POST /api/school/add-school`): se a escola (nome + rua) já existe, o motorista é **vinculado** a ela, e não dá mais erro. `409` se já estiver vinculado.
 - **Caminho removido:** `POST /api/student-stop/{studentId}/{routeStopId}` virou `POST /api/route/stop/{routeStopId}/add-student/{studentId}`.
 - **JWT:** agora expira (`JWT_EXPIRATION`, padrão 15 min), e token vencido dá `401`. O `sub` passou a ser o **id do usuário** (antes era o CPF). Tokens antigos dão `401`; basta logar de novo.
+- **Renovar o token sem senha:** o login agora também devolve `refreshToken` (30 dias, `JWT_REFRESH_EXPIRATION`). Com token vencido (`401`), o front chama `POST /api/auth/refresh` `{"refreshToken"}`, recebe um par novo (o usado deixa de valer) e repete a chamada. `POST /api/auth/logout` `{"refreshToken"}` apaga. No Redis fica só o hash do refreshToken. Passo a passo pro front em `docs/FLUXO_TRIP.md`, seção 4.10.
+- **Notificações:** `GET /api/notifications`, `GET /api/notifications/unread-count`, `PUT /api/notifications/{id}/read`, `PUT /api/notifications/read-all` e o WebSocket `ws://<host>/notifications?token=<jwt>` (veja `docs/FLUXO_TRIP.md`, seção 6).
 - **No backend**, o `authentication.getName()` devolve o **id** do usuário. Use `AuthenticatedUser.id(authentication)` (um `UUID`, sem ir ao banco). Os services recebem `UUID userId`, e o CPF só é usado no login e na checagem de cadastro duplicado.
 - **Código de atualização do usuário** (`send-code-updateUser` / `update-user`): agora é um por usuário (chave `User:SendCodeUser:{id}` no Redis). Antes a chave era única e um usuário podia usar o código do outro.
 
@@ -268,6 +347,7 @@ Quem pode baixar:
 | V18 | antigo `V15__add_status...`, renomeado porque havia dois V15. Quem já tinha aplicado esse V15: `flyway repair` ou recriar o banco local |
 | V19 | `student_stops.weekdays`; remove `student_stops.status`, `student_stops.route_id` e `student_addresses.weekdays` (sem uso) |
 | V20 | `users.photo_key` |
+| V22 | `trips.driver_id`; uma trip não cancelada por rota por dia; `UNIQUE (trip_id, student_id)` em `boardings`; `routes.vehicle_id` (van padrão); tabela `student_absences` (aluno + rota + data) |
 | V21 | `vehicles`: `renavam` e `chassis` (únicos), `manufacture_year`, `color`, `fuel`, `category`, `licensing_year`. Em `driver_vehicles`, a UNIQUE (motorista, van) virou índice parcial `WHERE end_date IS NULL`: só um vínculo **ativo** por par, com histórico liberado |
 
 ## 7. Rodar e testar
@@ -277,4 +357,4 @@ docker compose up -d db redis minio
 cd backend && ./mvnw clean package     # compila e roda os testes unitários
 java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
-Os testes de API ponta a ponta (servidor real, dados fictícios) estão em `backend/api-tests/`. Como rodar está no cabeçalho do `run-api-tests.sh` e na seção E do relatório.
+Para a trip, o servidor também precisa de `ORS_DIRECTIONS_URL` (nos testes aponta para o simulador do `stubs.py`) e, nos testes, `TRIP_ETA_REFRESH_SECONDS=3`. O teste do WebSocket da trip é o `backend/api-tests/trip-ws-test.mjs`. Para ver a execução da rota e as notificações funcionando sem front: `bash backend/api-tests/demo/run-demo.sh` e abra http://localhost:8090 (motorista e 2 pais na mesma tela). Fluxo completo, entradas e saídas de todas as rotas e dos WebSockets (`/trip/{tripId}` e `/notifications`): `docs/FLUXO_TRIP.md`. Para testar contra a API real do OpenRouteService, suba o backend sem `ORS_GEOCODE_URL`/`ORS_DIRECTIONS_URL` (com a chave em `openrouteservice.api-key` no `application-local.properties`, que fica fora do git) e rode com `REAL_MAPS=1`: as contagens de chamadas, que só existem no simulador, aparecem como SKIP. Os testes de API ponta a ponta (servidor real, dados fictícios) estão em `backend/api-tests/`. Como rodar está no cabeçalho do `run-api-tests.sh` e na seção E do relatório.

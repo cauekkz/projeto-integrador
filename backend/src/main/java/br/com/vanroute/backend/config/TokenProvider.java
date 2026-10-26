@@ -22,7 +22,11 @@ public class TokenProvider {
     private String key;
 
     public String generateToken(Authentication authentication){
-        UserDetails user = (UserDetails) authentication.getPrincipal();
+        return generateToken((UserDetails) authentication.getPrincipal());
+    }
+
+    // tambem usado na renovacao (POST /api/auth/refresh), quando nao tem senha nem Authentication
+    public String generateToken(UserDetails user) {
         List<String> roles = user.getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)

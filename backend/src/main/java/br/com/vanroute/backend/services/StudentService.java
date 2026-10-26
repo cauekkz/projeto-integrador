@@ -71,13 +71,7 @@ public class StudentService {
             student.setNotes(dto.notes());
             student.setBirthDate(dto.birthDate());
             Address address = addressService.addAddress(dto.address());
-            String addressString = address.getStreet()
-                    + ", " + address.getNumber()
-                    + ", " + address.getNeighborhood()
-                    + ", " + address.getCity()
-                    + ", " + address.getState()
-                    + ", " + address.getZipCode();
-            Coordenadas cords = mapService.searchCoord(addressString);
+            Coordenadas cords = mapService.searchCoord(address);
             address.setLatitude(cords.latitude());
             address.setLongitude(cords.longitude());
             studentRepository.save(student);

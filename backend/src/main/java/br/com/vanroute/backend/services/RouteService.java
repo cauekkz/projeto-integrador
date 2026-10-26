@@ -45,12 +45,15 @@ public class RouteService {
     private final AddressService addressService;
     private final StudentStopRepository studentStopRepository;
     private final SchoolStopRepository schoolStopRepository;
+    private final DriverVehicleRepository driverVehicleRepository;
+    private final VehicleRepository vehicleRepository;
     private final MapService mapService;
 
 
     public RouteService(RouteRepository routeRepository, AddressRepository addressRepository, RouteStopRepository routeStopRepository,
     DriverRepository driverRepository, RouteDriverRepository routeDriverRepository, AddressService addressService, MapService mapService,
-    StudentStopRepository studentStopRepository, SchoolStopRepository schoolStopRepository) {
+    StudentStopRepository studentStopRepository, SchoolStopRepository schoolStopRepository,
+    DriverVehicleRepository driverVehicleRepository, VehicleRepository vehicleRepository) {
         this.routeRepository = routeRepository;
         this.addressRepository = addressRepository;
         this.routeStopRepository = routeStopRepository;
@@ -59,6 +62,8 @@ public class RouteService {
         this.addressService = addressService;
         this.studentStopRepository = studentStopRepository;
         this.schoolStopRepository = schoolStopRepository;
+        this.driverVehicleRepository = driverVehicleRepository;
+        this.vehicleRepository = vehicleRepository;
         this.mapService = mapService;
     }
 
@@ -91,12 +96,7 @@ public class RouteService {
         List<RouteStopResponse> response = new ArrayList<>();
         for (AddRouteStopRequest request : addRouteStopRequest) {
             Address address = addressService.addAddress(request.address());
-            Coordenadas cords = mapService.searchCoord(address.getStreet()
-                    + ", " + address.getNumber()
-                    + ", " + address.getNeighborhood()
-                    + ", " + address.getCity()
-                    + ", " + address.getState()
-                    + ", " + address.getZipCode());
+            Coordenadas cords = mapService.searchCoord(address);
             address.setLatitude(cords.latitude());
             address.setLongitude(cords.longitude());
 
@@ -170,8 +170,12 @@ public class RouteService {
         Route route = routeRepository.findById(routeId)
                 .orElseThrow(() -> new EntityNotFoundException("Route not found"));
         checkOwnership(route, authentication);
+        return pendingOf(routeId);
+    }
 
-        // para cada aluno: dias em que ele aparece na rota menos os dias em que tem embarque (e desembarque)
+    // para cada aluno: dias em que ele aparece na rota menos os dias em que tem embarque (e desembarque).
+    // a trip usa isso pra nao iniciar com a configuracao incompleta
+    public List<RoutePendingResponse> pendingOf(UUID routeId) {
         Map<Student, List<StudentStop>> byStudent = studentStopRepository.findByRouteWithStudent(routeId).stream()
                 .collect(Collectors.groupingBy(StudentStop::getStudent));
         List<RoutePendingResponse> pending = new ArrayList<>();
@@ -192,6 +196,19 @@ public class RouteService {
             }
         });
         return pending;
+    }
+
+    // van padrao da rota: usada quando o motorista nao escolhe outra ao iniciar a trip
+    @Transactional
+    public RouteResponse setDefaultVehicle(UUID routeId, UUID vehicleId, Authentication authentication) {
+        Route route = routeRepository.findById(routeId)
+                .orElseThrow(() -> new EntityNotFoundException("Route not found"));
+        Driver driver = checkOwnership(route, authentication);
+        if (driverVehicleRepository.findFirstByDriverUserIdAndVehicleIdAndEndDateIsNull(driver.getUserId(), vehicleId).isEmpty()) {
+            throw new BadRequestException("Essa van não está vinculada a você");
+        }
+        route.setVehicle(vehicleRepository.getReferenceById(vehicleId));
+        return new RouteResponse(route.getId(), route.getName(), driver.getUser().getName());
     }
 
     public RouteResponse findById(UUID id, Authentication authentication) {

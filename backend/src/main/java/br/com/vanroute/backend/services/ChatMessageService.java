@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.redis.core.RedisTemplate;
 import br.com.vanroute.backend.models.chat.enums.MessageType;
 
 import org.springframework.stereotype.Service;
@@ -19,11 +21,16 @@ public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatService chatService;
     private final UserService userService;
+    private final RedisTemplate<String, String> redisTemplate;
+    private final ObjectMapper objectMapper;
 
-    public ChatMessageService(ChatMessageRepository chatMessageRepository, ChatService chatService, UserService userService) {
+    public ChatMessageService(ChatMessageRepository chatMessageRepository, ChatService chatService, UserService userService,
+                              RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper) {
         this.chatMessageRepository = chatMessageRepository;
         this.chatService = chatService;
         this.userService = userService;
+        this.redisTemplate = redisTemplate;
+        this.objectMapper = objectMapper;
     }
     public Page<ChatMessageResponseDTO> getMessages(UUID chatId, UUID userId, Pageable pageable) {
         chatService.validateChatAccess(chatId, userId);
@@ -38,6 +45,15 @@ public class ChatMessageService {
     // mensagens geradas pelo fluxo de contrato (PROPOSAL, APPROVAL, REJECTION); nao ficam expostas na API
     public ChatMessageResponseDTO sendSystemMessage(UUID chatId, UUID userId, String content, MessageType type, String payload) {
         return save(chatId, userId, content, null, null, type, payload);
+    }
+
+    // manda a mensagem pros participantes conectados no WebSocket (Redis pub/sub)
+    public void publish(UUID chatId, ChatMessageResponseDTO message) {
+        try {
+            redisTemplate.convertAndSend("chat-" + chatId, objectMapper.writeValueAsString(message));
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(ChatMessageService.class).error("Failed to publish message to Redis for chat: {}", chatId, e);
+        }
     }
 
     private ChatMessageResponseDTO save(UUID chatId, UUID userId, String content, AttachmentType attachmentType,
