@@ -1,5 +1,11 @@
 package br.com.vanroute.backend.controllers;
-import br.com.vanroute.backend.config.AuthenticatedUser;
+
+import org.springframework.web.bind.annotation.DeleteMapping;
+import br.com.vanroute.backend.services.TripService;
+import br.com.vanroute.backend.services.StudentAbsenceService;
+import br.com.vanroute.backend.dtos.trip.StudentTripTodayDTO;
+import br.com.vanroute.backend.dtos.trip.AbsenceResponseDTO;
+import br.com.vanroute.backend.dtos.trip.AbsenceRequestDTO;import br.com.vanroute.backend.config.AuthenticatedUser;
 import br.com.vanroute.backend.dtos.student.StudentResponsibleResponseDTO;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -33,10 +39,15 @@ public class StudentController {
 
     private final StudentService studentService;
     private final StudentLinkService studentLinkService;
+    private final StudentAbsenceService studentAbsenceService;
+    private final TripService tripService;
 
-    public StudentController(StudentService studentService, StudentLinkService studentLinkService) {
+    public StudentController(StudentService studentService, StudentLinkService studentLinkService,
+                             StudentAbsenceService studentAbsenceService, TripService tripService) {
         this.studentService = studentService;
         this.studentLinkService = studentLinkService;
+        this.studentAbsenceService = studentAbsenceService;
+        this.tripService = tripService;
     }
 
     @PostMapping("/create-student")
@@ -63,6 +74,30 @@ public class StudentController {
     @GetMapping("/{studentId}/routes")
     public ResponseEntity<List<StudentRouteResponse>> getStudentRoutes(@PathVariable UUID studentId, Authentication authentication) {
         return ResponseEntity.ok(studentService.getStudentRoutes(studentId, AuthenticatedUser.id(authentication)));
+    }
+
+    // responsavel avisa que o filho nao vai numa rota num dia (sai da trip e o motorista e avisado no chat)
+    @PostMapping("/{studentId}/absences")
+    public ResponseEntity<AbsenceResponseDTO> createAbsence(@PathVariable UUID studentId, @Valid @RequestBody AbsenceRequestDTO request,
+                                                            Authentication authentication) {
+        return ResponseEntity.status(201).body(studentAbsenceService.create(studentId, request, AuthenticatedUser.id(authentication)));
+    }
+
+    @GetMapping("/{studentId}/absences")
+    public ResponseEntity<List<AbsenceResponseDTO>> upcomingAbsences(@PathVariable UUID studentId, Authentication authentication) {
+        return ResponseEntity.ok(studentAbsenceService.upcoming(studentId, AuthenticatedUser.id(authentication)));
+    }
+
+    @DeleteMapping("/{studentId}/absences/{absenceId}")
+    public ResponseEntity<Void> cancelAbsence(@PathVariable UUID studentId, @PathVariable UUID absenceId, Authentication authentication) {
+        studentAbsenceService.cancel(studentId, absenceId, AuthenticatedUser.id(authentication));
+        return ResponseEntity.noContent().build();
+    }
+
+    // trips de hoje do filho (com o tripId o app abre o WebSocket /trip/{tripId})
+    @GetMapping("/{studentId}/today-trips")
+    public ResponseEntity<List<StudentTripTodayDTO>> todayTrips(@PathVariable UUID studentId, Authentication authentication) {
+        return ResponseEntity.ok(tripService.studentTripsToday(studentId, AuthenticatedUser.id(authentication)));
     }
 
     @GetMapping("/my-children")

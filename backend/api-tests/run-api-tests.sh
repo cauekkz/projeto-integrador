@@ -8,6 +8,8 @@
 #   backend iniciado com DATABASE_NAME=vanroute_audit, SPRING_MAIL_HOST=127.0.0.1, SPRING_MAIL_PORT=2525,
 #   SPRING_MAIL_USERNAME/PASSWORD=stub, SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=false,
 #   ORS_GEOCODE_URL=http://127.0.0.1:8089/pelias/v1/search, MINIO_BUCKET_NAME=vanroute-audit
+#   e, pra trip: ORS_DIRECTIONS_URL=http://127.0.0.1:8089/v2/directions/driving-car, TRIP_ETA_REFRESH_SECONDS=3,
+#   TRIP_OFF_ROUTE_MIN_SECONDS=0
 #
 # Cada execucao cria dados ficticios novos (CPFs validos aleatorios), entao pode ser repetida.
 # Motoristas sao inseridos via SQL na base isolada porque o cadastro exige uma CNH digital
@@ -15,7 +17,10 @@
 set -u
 BASE=${BASE:-http://localhost:9090}
 DB=${DB:-vanroute_audit}
-PASS=0; FAIL=0; RESULTS=()
+# REAL_MAPS=1: backend usando a API real do OpenRouteService (sem ORS_*_URL apontando pro stubs.py).
+# A linha real segue as ruas e as chamadas nao passam pelo log do simulador: a contagem de chamadas fica de fora (SKIP)
+REAL_MAPS=${REAL_MAPS:-0}
+PASS=0; FAIL=0; SKIP=0; RESULTS=()
 BODY=""; CODE=""
 
 psql_audit() { docker exec -i vanroute-db psql -U postgres -d "$DB" -tA "$@"; }
@@ -44,12 +49,17 @@ check() {
   else FAIL=$((FAIL+1)); RESULTS+=("FAIL | $name | esperado $expected | obtido $got | ${BODY:0:160}"); fi
 }
 
+skip_real() { # skip_real NOME: conferencia que so existe com o simulador
+  SKIP=$((SKIP+1)); RESULTS+=("SKIP | $1 (so com o simulador)")
+}
+
 assert() { # assert NOME CONDICAO_BASH
   if eval "$2"; then PASS=$((PASS+1)); RESULTS+=("PASS | $1"); else FAIL=$((FAIL+1)); RESULTS+=("FAIL | $1"); fi
 }
 
 RUN=$RANDOM$RANDOM
-addr='{"street":"Rua Ficticia","zipCode":"01000-000","city":"Sao Paulo","neighborhood":"Centro","number":100,"state":"SP"}'
+# enderecos sao ruas publicas reais de Sao Paulo: com a API real, rua inventada e recusada
+addr='{"street":"Avenida Paulista","zipCode":"01310-100","city":"Sao Paulo","neighborhood":"Bela Vista","number":1000,"state":"SP"}'
 
 signup_responsible() { # signup_responsible CPF EMAIL PHONE -> cria e ativa; imprime token
   req "responsible signup ($2)" 200 POST /api/responsible/auth/signup "" \
@@ -102,6 +112,19 @@ req "verify-email codigo errado" 400 POST /api/auth/verify-email "" "{\"email\":
 req "send-verification-code" 200 POST "/api/auth/send-verification-code?email=$R1_EMAIL"
 req "send-verification-code e-mail inexistente" 400 POST "/api/auth/send-verification-code?email=nao.$RUN@teste.local"
 verify_and_login "$R1_CPF" "$R1_EMAIL" R1
+R1_REFRESH=$(echo "$BODY" | jq -r .refreshToken)
+assert "login devolve refreshToken (30 dias)" "[ \${#R1_REFRESH} -gt 30 ] && [ \"\$(echo \"\$BODY\" | jq .refreshExpiresIn)\" = 2592000000 ]"
+req "refresh: troca por um par novo" 200 POST /api/auth/refresh "" "{\"refreshToken\":\"$R1_REFRESH\"}"
+R1_REFRESH2=$(echo "$BODY" | jq -r .refreshToken); R1_TOKEN2=$(echo "$BODY" | jq -r .token)
+assert "refresh: par novo e diferente do anterior" "[ -n \"$R1_TOKEN2\" ] && [ \"$R1_REFRESH2\" != \"$R1_REFRESH\" ]"
+req "refresh: o JWT novo funciona" 200 GET /api/users/me "$R1_TOKEN2"
+req "refresh: o refreshToken usado nao vale de novo" 401 POST /api/auth/refresh "" "{\"refreshToken\":\"$R1_REFRESH\"}"
+req "refresh: reuso = roubo, derruba a sessao (o par novo tambem cai)" 401 POST /api/auth/refresh "" "{\"refreshToken\":\"$R1_REFRESH2\"}"
+req "refresh: sem refreshToken" 400 POST /api/auth/refresh "" '{}'
+req "login de novo (depois de derrubada)" 200 POST /api/auth/login "" "{\"cpf\":\"$R1_CPF\",\"passwordHash\":\"Senha@123\"}"
+R1_REFRESH3=$(echo "$BODY" | jq -r .refreshToken)
+req "logout" 204 POST /api/auth/logout "" "{\"refreshToken\":\"$R1_REFRESH3\"}"
+req "refresh: depois do logout nao vale" 401 POST /api/auth/refresh "" "{\"refreshToken\":\"$R1_REFRESH3\"}"
 req "login senha errada" 401 POST /api/auth/login "" "{\"cpf\":\"$R1_CPF\",\"passwordHash\":\"Errada@123\"}"
 req "login CPF inexistente" 401 POST /api/auth/login "" "{\"cpf\":\"00000000000\",\"passwordHash\":\"Senha@123\"}"
 req "login sem campos" 400 POST /api/auth/login "" "{}"
@@ -125,11 +148,11 @@ CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/driver/auth/
 check "driver signup campos ausentes" 400 "$CODE"
 
 echo "== 4. Escolas (motorista)"
-req "D1 cria escola" 200 POST /api/school/add-school "$D1" "{\"name\":\"Escola Teste $RUN\",\"phone\":\"1133334444\",\"email\":\"escola$RUN@teste.local\",\"addressRequestDTO\":{\"street\":\"Rua Escola $RUN\",\"zipCode\":\"01000-001\",\"city\":\"Sao Paulo\",\"number\":1,\"state\":\"SP\"}}"
+req "D1 cria escola" 200 POST /api/school/add-school "$D1" "{\"name\":\"Escola Teste $RUN\",\"phone\":\"1133334444\",\"email\":\"escola$RUN@teste.local\",\"addressRequestDTO\":{\"street\":\"Rua Vergueiro\",\"zipCode\":\"01504-000\",\"city\":\"Sao Paulo\",\"number\":1,\"state\":\"SP\"}}"
 SCHOOL=$(echo "$BODY" | jq -r .id)
 assert "escola com coordenadas persistidas" "[ \"\$(psql_audit -c \"SELECT a.latitude IS NOT NULL FROM schools s JOIN addresses a ON a.id=s.address_id WHERE s.id='$SCHOOL'\")\" = t ]"
 assert "vinculo driver_schools criado" "[ \"\$(psql_audit -c \"SELECT count(*) FROM driver_schools WHERE school_id='$SCHOOL'\")\" = 1 ]"
-SCHOOL_JSON="{\"name\":\"Escola Teste $RUN\",\"phone\":\"1133334444\",\"email\":\"escola$RUN@teste.local\",\"addressRequestDTO\":{\"street\":\"Rua Escola $RUN\",\"zipCode\":\"01000-001\",\"city\":\"Sao Paulo\",\"number\":1,\"state\":\"SP\"}}"
+SCHOOL_JSON="{\"name\":\"Escola Teste $RUN\",\"phone\":\"1133334444\",\"email\":\"escola$RUN@teste.local\",\"addressRequestDTO\":{\"street\":\"Rua Vergueiro\",\"zipCode\":\"01504-000\",\"city\":\"Sao Paulo\",\"number\":1,\"state\":\"SP\"}}"
 req "D2 cadastra a mesma escola (vincula)" 200 POST /api/school/add-school "$D2" "$SCHOOL_JSON"
 assert "D2 recebeu a escola existente" "[ \"\$(echo \"\$BODY\" | jq -r .id)\" = \"$SCHOOL\" ]"
 assert "escola nao duplicada e 2 vinculos" "[ \"\$(psql_audit -c \"SELECT count(*) FROM driver_schools WHERE school_id='$SCHOOL'\")\" = 2 ]"
@@ -267,15 +290,15 @@ order() { req "D1 lista pontos" 200 GET "/api/route/$ROUTE/stops" "$D1"; echo "$
 req "D1 cria rota de ida" 201 POST /api/route/create-route "$D1" '{"name":"Ida Manha"}'; ROUTE=$(echo "$BODY" | jq -r .id)
 req "rota sem nome" 400 POST /api/route/create-route "$D1" '{"name":""}'
 req "D1 cria rota sem escola" 201 POST /api/route/create-route "$D1" '{"name":"Sem escola"}'; ROUTE_NS=$(echo "$BODY" | jq -r .id)
-req "route stop: esquina" 200 POST "/api/route/$ROUTE/stops" "$D1" "$(stop_json 'Rua da Esquina')"; HOME_STOP=$(echo "$BODY" | jq -r '.[0].id')
+req "route stop: esquina" 200 POST "/api/route/$ROUTE/stops" "$D1" "$(stop_json 'Rua Augusta')"; HOME_STOP=$(echo "$BODY" | jq -r '.[0].id')
 assert "1o ponto entra na ordem 1, com coordenadas" "[ \"\$(echo \"\$BODY\" | jq '.[0].orderIndex')\" = 1 ] && [ \"\$(echo \"\$BODY\" | jq '.[0].address.latitude')\" != null ]"
-req "route stop: escola" 200 POST "/api/route/$ROUTE/stops" "$D1" "$(stop_json 'Rua Escola')"; SCHOOL_STOP=$(echo "$BODY" | jq -r '.[0].id')
+req "route stop: escola" 200 POST "/api/route/$ROUTE/stops" "$D1" "$(stop_json 'Rua da Consolacao')"; SCHOOL_STOP=$(echo "$BODY" | jq -r '.[0].id')
 assert "2o ponto entra no fim (ordem 2)" "[ \"\$(echo \"\$BODY\" | jq '.[0].orderIndex')\" = 2 ]"
-req "route stop: padaria" 200 POST "/api/route/$ROUTE/stops" "$D1" "$(stop_json 'Rua Padaria')"; THIRD_STOP=$(echo "$BODY" | jq -r '.[0].id')
+req "route stop: padaria" 200 POST "/api/route/$ROUTE/stops" "$D1" "$(stop_json 'Rua Haddock Lobo')"; THIRD_STOP=$(echo "$BODY" | jq -r '.[0].id')
 req "route stop sem endereco" 400 POST "/api/route/$ROUTE/stops" "$D1" '[{}]'
 req "route stop endereco nao geocodificavel" 400 POST "/api/route/$ROUTE/stops" "$D1" "$(stop_json NAOEXISTE)"
-req "D2 cria route stop na rota de D1" 403 POST "/api/route/$ROUTE/stops" "$D2" "$(stop_json 'Rua X')"
-req "route stop na rota sem escola" 200 POST "/api/route/$ROUTE_NS/stops" "$D1" "$(stop_json 'Rua Y')"; NS_STOP=$(echo "$BODY" | jq -r '.[0].id')
+req "D2 cria route stop na rota de D1" 403 POST "/api/route/$ROUTE/stops" "$D2" "$(stop_json 'Alameda Santos')"
+req "route stop na rota sem escola" 200 POST "/api/route/$ROUTE_NS/stops" "$D1" "$(stop_json 'Rua Bela Cintra')"; NS_STOP=$(echo "$BODY" | jq -r '.[0].id')
 
 req "school stop: escola no ponto" 200 POST "/api/route/stop/$SCHOOL_STOP/add-school/$SCHOOL" "$D1"; SCHOOL_STOP_LINK=$(echo "$BODY" | jq -r .id)
 assert "school_stops criado" "[ \"\$(psql_audit -c \"SELECT count(*) FROM school_stops WHERE stop_id='$SCHOOL_STOP' AND school_id='$SCHOOL'\")\" = 1 ]"
@@ -308,7 +331,7 @@ req "troca para posicao vazia" 400 PUT "/api/route/stop/$HOME_STOP/swap-order" "
 req "troca sem valor" 400 PUT "/api/route/stop/$HOME_STOP/swap-order" "$D1" '{}'
 req "troca por D2" 403 PUT "/api/route/stop/$HOME_STOP/swap-order" "$D2" '{"orderIndex":1}'
 req "troca ponto inexistente" 404 PUT "/api/route/stop/00000000-0000-0000-0000-000000000000/swap-order" "$D1" '{"orderIndex":1}'
-req "route stop novo depois das trocas" 200 POST "/api/route/$ROUTE/stops" "$D1" "$(stop_json 'Rua Nova')"; NEW_STOP=$(echo "$BODY" | jq -r '.[0].id')
+req "route stop novo depois das trocas" 200 POST "/api/route/$ROUTE/stops" "$D1" "$(stop_json 'Rua Frei Caneca')"; NEW_STOP=$(echo "$BODY" | jq -r '.[0].id')
 assert "novo ponto entra no fim (ordem 4)" "[ \"\$(echo \"\$BODY\" | jq '.[0].orderIndex')\" = 4 ]"
 
 
@@ -422,6 +445,145 @@ req "D1 (parte do contrato) baixa o PDF" 200 GET "/api/storage/download-url?file
 req "R2 (nao e parte do contrato) baixa o PDF" 403 GET "/api/storage/download-url?fileKey=$PDFKEY" "$R2"
 req "D2 (nao e parte do contrato) baixa o PDF" 403 GET "/api/storage/download-url?fileKey=$PDFKEY" "$D2"
 
+echo "== 10b. Execucao da rota (trip)"
+DIRLOG="$(dirname "$0")/out/directions.log"; touch "$DIRLOG"
+dircalls() { wc -l < "$DIRLOG" | tr -d ' '; }
+TODAY=$(TZ=America/Sao_Paulo date +%F); TOMORROW=$(TZ=America/Sao_Paulo date -d tomorrow +%F)
+if [ -z "${VAN:-}" ]; then
+  # sem CRLV na raiz: van criada direto na base de teste so pra poder iniciar a trip
+  VAN=$(psql_audit -c "INSERT INTO vehicles (id, plate, capacity, status) VALUES (gen_random_uuid(), 'TST$RANDOM', 15, 'ACTIVE') RETURNING id" | head -1)
+  psql_audit -c "INSERT INTO driver_vehicles (id, driver_id, vehicle_id, start_date) SELECT gen_random_uuid(), u.id, '$VAN', CURRENT_DATE FROM users u WHERE u.cpf='$D1_CPF'" >/dev/null
+fi
+# irmao volta pra rota: embarca na padaria e desce na escola, todos os dias
+req "trip: irmao embarca na padaria" 200 POST "/api/route/stop/$THIRD_STOP/add-student/$STUDENT3" "$D1" "$(ss BOARDING HOME)"
+req "trip: irmao desce na escola" 200 POST "/api/route/stop/$SCHOOL_STOP/add-student/$STUDENT3" "$D1" "$(ss ALIGHTING SCHOOL)"
+req "trip: rota sem pendencias" 200 GET "/api/route/$ROUTE/pending" "$D1"
+assert "trip: pendencias vazias" "[ \"\$(echo \"\$BODY\" | jq length)\" = 0 ]"
+# coordenadas reais dos pontos (embarque/desembarque so a ate 1 km do ponto): a van comeca a ~220 m do embarque
+req "trip: coordenadas dos pontos" 200 GET "/api/route/$ROUTE/stops" "$D1"
+BOARD_LAT=$(echo "$BODY" | jq -r --arg s "$THIRD_STOP" '.[] | select(.id==$s) | .address.latitude')
+BOARD_LNG=$(echo "$BODY" | jq -r --arg s "$THIRD_STOP" '.[] | select(.id==$s) | .address.longitude')
+SCHOOL_LAT=$(echo "$BODY" | jq -r --arg s "$SCHOOL_STOP" '.[] | select(.id==$s) | .address.latitude')
+SCHOOL_LNG=$(echo "$BODY" | jq -r --arg s "$SCHOOL_STOP" '.[] | select(.id==$s) | .address.longitude')
+POS_LAT=$(python3 -I -c "print(round($BOARD_LAT + 0.002, 6))"); POS_LNG=$BOARD_LNG
+POS="{\"latitude\":$POS_LAT,\"longitude\":$POS_LNG}"
+# manda o GPS da van pelo WebSocket (como o app do motorista faz)
+move_van() { # move_van TRIP LAT LNG
+  node -e 'const [u,la,ln]=process.argv.slice(1); const ws=new WebSocket(u);
+    ws.onopen=()=>ws.send(JSON.stringify({type:"position",latitude:+la,longitude:+ln}));
+    ws.onmessage=(e)=>{const m=JSON.parse(e.data); if(m.latitude===+la&&m.longitude===+ln){ws.close();process.exit(0)}};
+    setTimeout(()=>process.exit(1),5000)' "${BASE/http/ws}/trip/$1?token=$D1" "$2" "$3"
+}
+req "trip: D2 inicia rota de D1" 403 POST "/api/trip/start/$ROUTE" "$D2" "$POS"
+req "trip: sem van e sem van padrao" 400 POST "/api/trip/start/$ROUTE" "$D1" "$POS"
+req "trip: van que nao e do motorista" 400 POST "/api/trip/start/$ROUTE" "$D1" '{"latitude":-23.56,"longitude":-46.64,"vehicleId":"00000000-0000-0000-0000-000000000000"}'
+req "trip: sem posicao" 400 POST "/api/trip/start/$ROUTE" "$D1" '{}'
+req "trip: van padrao da rota" 200 PUT "/api/route/$ROUTE/set-vehicle/$VAN" "$D1"
+
+echo "   falta avisada antes da trip"
+req "falta: R1 avisa falta de amanha" 201 POST "/api/student/$STUDENT3/absences" "$R1" "{\"routeId\":\"$ROUTE\",\"date\":\"$TOMORROW\"}"; ABS_TOMORROW=$(echo "$BODY" | jq -r .id)
+req "falta: mesma falta de novo" 409 POST "/api/student/$STUDENT3/absences" "$R1" "{\"routeId\":\"$ROUTE\",\"date\":\"$TOMORROW\"}"
+req "falta: data que ja passou" 400 POST "/api/student/$STUDENT3/absences" "$R1" "{\"routeId\":\"$ROUTE\",\"date\":\"2020-01-01\"}"
+req "falta: rota em que o aluno nao esta" 400 POST "/api/student/$STUDENT3/absences" "$R1" "{\"routeId\":\"$ROUTE_NS\",\"date\":\"$TOMORROW\"}"
+req "falta: motorista nao avisa falta" 403 POST "/api/student/$STUDENT3/absences" "$D1" "{\"routeId\":\"$ROUTE\",\"date\":\"$TOMORROW\"}"
+req "falta: R1 lista faltas" 200 GET "/api/student/$STUDENT3/absences" "$R1"
+assert "falta: lista traz a de amanha" "echo \"\$BODY\" | jq -e '.[] | select(.id==\"$ABS_TOMORROW\" and .date==\"$TOMORROW\")' >/dev/null"
+req "falta: motorista recebeu aviso no chat" 200 GET "/api/chats/$CHAT/messages?size=200" "$D1"
+assert "falta: mensagem ABSENCE no chat" "echo \"\$BODY\" | jq -e '.content[] | select(.messageType==\"ABSENCE\" and (.content|test(\"não vai\")))' >/dev/null"
+req "falta: R1 desfaz a de amanha" 204 DELETE "/api/student/$STUDENT3/absences/$ABS_TOMORROW" "$R1"
+
+echo "   iniciar"
+CALLS0=$(dircalls)
+req "trip: D1 inicia (van padrao)" 201 POST "/api/trip/start/$ROUTE" "$D1" "$POS"; TRIP=$(echo "$BODY" | jq -r .id)
+assert "trip: STARTED, com a van e os 2 alunos pendentes" "echo \"\$BODY\" | jq -e '.status==\"STARTED\" and .vehicleId==\"$VAN\" and ([.stops[].students[] | select(.status==\"PENDING\")] | length)==4' >/dev/null"
+assert "trip: so os pontos com aluno hoje (padaria e escola), em ordem" "[ \"\$(echo \"\$BODY\" | jq -r '[.stops[].routeStopId] | join(\",\")')\" = \"$THIRD_STOP,$SCHOOL_STOP\" ]"
+if [ "$REAL_MAPS" = 1 ]; then
+  # API real: a linha segue as ruas e comeca na rua mais proxima da van
+  assert "trip: trajeto real calculado a partir da posicao do motorista" "echo \"\$BODY\" | jq -e '.path.distance > 0 and (.path.coordinates|length) > 2 and ((.path.coordinates[0][0] - $POS_LNG)|fabs) < 0.005 and ((.path.coordinates[0][1] - $POS_LAT)|fabs) < 0.005' >/dev/null"
+  skip_real "trip: 1 chamada na API de rotas"
+else
+  assert "trip: trajeto calculado a partir da posicao do motorista" "echo \"\$BODY\" | jq -e '.path.distance > 0 and .path.coordinates[0] == [$POS_LNG,$POS_LAT] and (.path.coordinates|length)==3' >/dev/null"
+  assert "trip: 1 chamada na API de rotas" "[ \$(( \$(dircalls) - $CALLS0 )) = 1 ]"
+fi
+req "trip: iniciar de novo no mesmo dia" 409 POST "/api/trip/start/$ROUTE" "$D1" "$POS"
+req "trip: trip de hoje (continuar)" 200 GET "/api/trip/route/$ROUTE/today" "$D1"
+assert "trip: e a mesma trip" "[ \"\$(echo \"\$BODY\" | jq -r .id)\" = \"$TRIP\" ]"
+assert "trip: so 1 trip ativa hoje no banco" "[ \"\$(psql_audit -c \"SELECT count(*) FROM trips WHERE route_id='$ROUTE' AND date='$TODAY' AND status <> 'CANCELED'\")\" = 1 ]"
+
+echo "   trip do filho (o pai pega o tripId e abre o WebSocket)"
+req "today-trips: R1 acha a trip do filho" 200 GET "/api/student/$STUDENT/today-trips" "$R1"
+assert "today-trips: tripId e status do filho" "echo \"\$BODY\" | jq -e '.[] | select(.tripId==\"$TRIP\" and .boardingStatus==\"PENDING\")' >/dev/null"
+req "today-trips: D1 nao usa" 403 GET "/api/student/$STUDENT/today-trips" "$D1"
+
+echo "   falta durante a trip"
+CALLS2=$(dircalls)
+req "falta: motorista tira o irmao no meio da trip (nao apareceu)" 200 PUT "/api/trip/$TRIP/student/$STUDENT3/absent" "$D1"
+assert "falta: irmao ABSENT pelo motorista" "echo \"\$BODY\" | jq -e '[.stops[].students[] | select(.studentId==\"$STUDENT3\") | .status] | all(. == \"ABSENT\")' >/dev/null"
+if [ "$REAL_MAPS" = 1 ]; then skip_real "falta: trajeto recalculado (1 chamada)"
+else assert "falta: trajeto recalculado (1 chamada)" "[ \$(( \$(dircalls) - $CALLS2 )) = 1 ]"; fi
+req "falta: pai avisa falta de quem ja esta ausente" 409 POST "/api/student/$STUDENT3/absences" "$R1" "{\"routeId\":\"$ROUTE\",\"date\":\"$TODAY\"}"
+
+echo "   embarque e desembarque"
+move_van "$TRIP" "$(python3 -I -c "print(round($BOARD_LAT + 0.05, 6))")" "$BOARD_LNG" || FAIL=$((FAIL+1))
+req "embarque: van a 5 km do ponto nao embarca" 409 PUT "/api/trip/$TRIP/student/$STUDENT/board" "$D1"
+assert "embarque: erro diz a distancia" "grep -q 'km do ponto' <<<\"\$BODY\""
+move_van "$TRIP" "$BOARD_LAT" "$BOARD_LNG" || FAIL=$((FAIL+1))
+req "embarque: aluno embarca" 200 PUT "/api/trip/$TRIP/student/$STUDENT/board" "$D1"
+assert "embarque: BOARDED" "[ \"\$(echo \"\$BODY\" | jq -r .status)\" = BOARDED ]"
+req "falta: pai avisa falta de quem ja embarcou" 409 POST "/api/student/$STUDENT/absences" "$R1" "{\"routeId\":\"$ROUTE\",\"date\":\"$TODAY\"}"
+req "embarque: de novo" 409 PUT "/api/trip/$TRIP/student/$STUDENT/board" "$D1"
+req "embarque: ausente nao embarca" 409 PUT "/api/trip/$TRIP/student/$STUDENT3/board" "$D1"
+req "embarque: aluno que nao esta na trip" 404 PUT "/api/trip/$TRIP/student/00000000-0000-0000-0000-000000000000/board" "$D1"
+req "embarque: D2 na trip de D1" 403 PUT "/api/trip/$TRIP/student/$STUDENT/alight" "$D2"
+req "trip: depois do embarque" 200 GET "/api/trip/$TRIP" "$D1"
+assert "trip: IN_PROGRESS, padaria concluida, escola pendente" "echo \"\$BODY\" | jq -e '.status==\"IN_PROGRESS\" and .stops[0].done==true and .stops[1].done==false' >/dev/null"
+move_van "$TRIP" "$SCHOOL_LAT" "$SCHOOL_LNG" || FAIL=$((FAIL+1))
+req "desembarque: aluno desce" 200 PUT "/api/trip/$TRIP/student/$STUDENT/alight" "$D1"
+assert "desembarque: DELIVERED com horarios no banco" "[ \"\$(psql_audit -c \"SELECT status || '/' || (boarding_time IS NOT NULL) || '/' || (unboarding_time >= boarding_time) FROM boardings WHERE trip_id='$TRIP' AND student_id='$STUDENT'\")\" = 'DELIVERED/true/true' ]"
+
+echo "   recomecar e finalizar"
+req "recomecar: restart cancela e cria outra" 201 POST "/api/trip/start/$ROUTE?restart=true" "$D1" "$POS"; TRIP2=$(echo "$BODY" | jq -r .id)
+assert "recomecar: trip nova do zero, antiga CANCELED" "[ \"$TRIP2\" != \"$TRIP\" ] && [ \"\$(psql_audit -c \"SELECT status FROM trips WHERE id='$TRIP'\")\" = CANCELED ] && echo \"\$BODY\" | jq -e '[.stops[].students[] | select(.studentId==\"$STUDENT\") | .status] | all(. == \"PENDING\")' >/dev/null"
+req "recomecar: trip cancelada nao muda mais" 409 PUT "/api/trip/$TRIP/student/$STUDENT/board" "$D1"
+echo "   websocket da trip (GPS do motorista, mapa e tempo pros pais)"
+while IFS='|' read -r st name detail; do
+  if [ "$st" = PASS ]; then PASS=$((PASS+1)); RESULTS+=("PASS | $name")
+  elif [ "$st" = SKIP ]; then SKIP=$((SKIP+1)); RESULTS+=("SKIP | $name (so com o simulador)"); else FAIL=$((FAIL+1)); RESULTS+=("FAIL | $name | ${detail:0:200}"); fi
+done < <(BASE=$BASE ROUTE=$ROUTE BOARD_LAT=$BOARD_LAT BOARD_LNG=$BOARD_LNG SCHOOL_LAT=$SCHOOL_LAT SCHOOL_LNG=$SCHOOL_LNG TRIP=$TRIP2 TOKEN_DRIVER=$D1 TOKEN_R1=$R1 TOKEN_R2=$R2 TOKEN_OUTSIDER=$D2 STUDENT=$STUDENT STUDENT3=$STUDENT3 \
+  BOARD_STOP=$THIRD_STOP SCHOOL_STOP=$SCHOOL_STOP DIRLOG="$DIRLOG" REAL_MAPS=$REAL_MAPS node "$(dirname "$0")/trip-ws-test.mjs" 2>&1 || echo "FAIL|trip-ws-test.mjs nao executou|")
+req "falta de hoje do irmao (avisada no meio da trip)" 200 GET "/api/student/$STUDENT3/absences" "$R1"
+ABS_TODAY=$(echo "$BODY" | jq -r --arg d "$TODAY" '.[] | select(.date==$d) | .id')
+req "falta: nao da pra desfazer depois que a viagem comecou" 409 DELETE "/api/student/$STUDENT3/absences/$ABS_TODAY" "$R1"
+req "falta: rota do dia ja terminou" 409 POST "/api/student/$STUDENT/absences" "$R1" "{\"routeId\":\"$ROUTE\",\"date\":\"$TODAY\"}"
+assert "finalizar: FINISHED com hora de fim no banco" "[ \"\$(psql_audit -c \"SELECT status || '/' || (end_time IS NOT NULL) FROM trips WHERE id='$TRIP2'\")\" = 'FINISHED/true' ]"
+req "finalizar: embarque depois de finalizada" 409 PUT "/api/trip/$TRIP2/student/$STUDENT/board" "$D1"
+req "finalizar: iniciar de novo no mesmo dia" 409 POST "/api/trip/start/$ROUTE" "$D1" "$POS"
+req "finalizar: nem com restart" 409 POST "/api/trip/start/$ROUTE?restart=true" "$D1" "$POS"
+
+echo "== 13b. Notificacoes (contrato e viagem)"
+types() { echo "$BODY" | jq -r '[.content[].type] | join(",")'; }
+req "notificacoes do R1" 200 GET "/api/notifications?size=100" "$R1"
+R1_TYPES=$(types)
+assert "R1: proposta de contrato com contractId" "echo \"\$BODY\" | jq -e '.content[] | select(.type==\"CONTRACT_PROPOSED\" and .payload.contractId==\"$CONTRACT\")' >/dev/null"
+assert "R1: a van saiu, com o tripId" "echo \"\$BODY\" | jq -e '.content[] | select(.type==\"TRIP_STARTED\" and .payload.tripId==\"$TRIP\")' >/dev/null"
+assert "R1: a van esta indo buscar (proximo ponto e do filho)" "grep -q VAN_ON_THE_WAY <<<\"$R1_TYPES\""
+assert "R1: embarcou / chegou na escola / irmao ausente" "echo \"\$BODY\" | jq -e '([.content[] | select(.type==\"STUDENT_BOARDED\")] | length) > 0 and ([.content[] | select(.type==\"STUDENT_DELIVERED\" and (.title|test(\"escola\")))] | length) > 0 and ([.content[] | select(.type==\"STUDENT_ABSENT\" and .payload.studentIds[0]==\"$STUDENT3\")] | length) > 0' >/dev/null"
+assert "R1: nao recebe aviso de contrato aceito (isso e pro motorista)" "! grep -q CONTRACT_ACCEPTED <<<\"$R1_TYPES\""
+req "notificacoes do D1" 200 GET "/api/notifications?size=100" "$D1"
+assert "D1: contrato aceito e recusado + falta avisada pelo pai" "echo \"\$BODY\" | jq -e '([.content[].type] | index(\"CONTRACT_ACCEPTED\") != null) and ([.content[].type] | index(\"CONTRACT_REJECTED\") != null) and ([.content[].type] | index(\"ABSENCE_REPORTED\") != null)' >/dev/null"
+req "R1 nao lidas" 200 GET /api/notifications/unread-count "$R1"
+assert "R1 tem nao lidas" "[ \$(echo \"\$BODY\" | jq .count) -gt 0 ]"
+req "R1 lista so nao lidas" 200 GET "/api/notifications?unread=true" "$R1"
+NOTIF=$(echo "$BODY" | jq -r '.content[0].id')
+req "R2 tenta marcar notificacao do R1" 404 PUT "/api/notifications/$NOTIF/read" "$R2"
+req "R1 marca como lida" 204 PUT "/api/notifications/$NOTIF/read" "$R1"
+req "notificacao lida" 200 GET "/api/notifications?size=100" "$R1"
+assert "read=true na lida" "echo \"\$BODY\" | jq -e '.content[] | select(.id==\"$NOTIF\" and .read==true)' >/dev/null"
+req "R1 marca todas como lidas" 204 PUT /api/notifications/read-all "$R1"
+req "R1 nao lidas depois" 200 GET /api/notifications/unread-count "$R1"
+assert "zero nao lidas" "[ \$(echo \"\$BODY\" | jq .count) = 0 ]"
+req "notificacoes sem token" 401 GET /api/notifications
+
 echo "== 11. Usuarios"
 echo "   foto de perfil"
 req "foto: tipo nao imagem" 400 GET "/api/users/photo-upload-url?fileName=a.pdf&contentType=application/pdf" "$R1"
@@ -462,4 +624,4 @@ req "DELETE usuario sem ADMIN" 403 DELETE "/api/users/$R1_ID/123456" "$R2"
 echo
 printf '%s\n' "${RESULTS[@]}"
 echo
-echo "TOTAL: $((PASS+FAIL)) cenarios | PASS: $PASS | FAIL: $FAIL"
+echo "TOTAL: $((PASS+FAIL)) cenarios | PASS: $PASS | FAIL: $FAIL$([ "$SKIP" -gt 0 ] && echo " | SKIP: $SKIP (API real)")"

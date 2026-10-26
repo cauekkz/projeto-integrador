@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.models.route;
 
+import br.com.vanroute.backend.models.vehicle.Vehicle;
 import jakarta.persistence.*;
 import java.util.UUID;
 
@@ -13,6 +14,11 @@ public class Route {
 
     @Column(nullable = false)
     private String name;
+
+    // van padrao da rota
+    @ManyToOne
+    @JoinColumn(name = "vehicle_id")
+    private Vehicle vehicle;
 
 
     public UUID getId() {
@@ -31,6 +37,11 @@ public class Route {
         this.name = name;
     }
 
-  
+    public Vehicle getVehicle() {
+        return vehicle;
+    }
 
+    public void setVehicle(Vehicle vehicle) {
+        this.vehicle = vehicle;
+    }
 }

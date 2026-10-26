@@ -20,6 +20,10 @@ public interface StudentResponsibleRepository
     @Query("SELECT sr.student FROM StudentResponsible sr WHERE sr.responsible.userId = :userId AND sr.isAdmin = true ORDER BY sr.student.name")
     List<Student> findAdminChildren(@Param("userId") UUID userId);
 
+    // todos os responsaveis do aluno (pra notificar)
+    @Query("SELECT sr.responsible.userId FROM StudentResponsible sr WHERE sr.student.id = :studentId")
+    List<UUID> findResponsibleUserIds(@Param("studentId") UUID studentId);
+
     boolean existsByResponsible_UserIdAndStudent_IdAndIsAdminTrue(
             UUID responsibleId,
             UUID studentId);

@@ -28,6 +28,8 @@ spring:
 
   jwt:
     expiration: ${JWT_EXPIRATION:900000}
+    # refreshToken: 30 dias (o app renova o JWT de 15 min sem pedir a senha)
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:2592000000}
     key: ${JWT_KEY:4QcYHiOKv6R1GIost25MwdDJNLayEubr3kj9nW8AxZqSFX0gfmhUTepCBPlV7z}
   
   data:

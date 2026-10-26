@@ -80,7 +80,7 @@ class ResponsibleServiceTest {
         Address address = new Address();
         address.setStreet("Avenida Paulista");
         when(addressService.addAddress(any())).thenReturn(address);
-        when(mapService.searchCoord(any())).thenReturn(new Coordenadas(-23.56, -46.65));
+        when(mapService.searchCoord(any(Address.class))).thenReturn(new Coordenadas(-23.56, -46.65));
 
         Responsible savedResponsible = new Responsible();
         savedResponsible.setUser(createdUser);
