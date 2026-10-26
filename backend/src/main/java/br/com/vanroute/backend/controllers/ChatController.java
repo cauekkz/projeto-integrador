@@ -1,5 +1,8 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.services.NotificationService;
+import br.com.vanroute.backend.models.notification.enums.NotificationType;
+import br.com.vanroute.backend.dtos.contract.ContractDetailsResponseDTO;
 import java.util.List;
 import br.com.vanroute.backend.services.StudentService;
 import br.com.vanroute.backend.dtos.student.ChildSummaryResponseDTO;
@@ -44,6 +47,7 @@ public class ChatController {
     private final ObjectMapper objectMapper;
     private final ContractService contractService;
     private final StudentService studentService;
+    private final NotificationService notificationService;
     
     public ChatController(
             ChatMessageService chatMessageService,
@@ -51,13 +55,15 @@ public class ChatController {
             RedisTemplate<String, String> redisTemplate,
             ObjectMapper objectMapper,
             ContractService contractService,
-            StudentService studentService) {
+            StudentService studentService,
+            NotificationService notificationService) {
         this.chatMessageService = chatMessageService;
         this.chatService = chatService;
         this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
         this.contractService = contractService;
         this.studentService = studentService;
+        this.notificationService = notificationService;
     }
 
     @GetMapping
@@ -117,10 +123,15 @@ public class ChatController {
             log.error("Failed to publish message to Redis for chat: {}", chatId, e);
         }
 
+        ContractDetailsResponseDTO details = contractService.getContractDetails(udc.getContract().getId(), driverId);
+        notificationService.send(List.of(request.responsibleId()), NotificationType.CONTRACT_PROPOSED, "Nova proposta de contrato",
+                details.driverName() + " enviou uma proposta de contrato para " + details.studentName(),
+                Map.of("chatId", chatId, "contractId", details.contractId()));
+
         return ResponseEntity.status(201).body(Map.of(
                 "message", msg,
                 "userDriverContractId", udc.getId(),
-                "contract", contractService.getContractDetails(udc.getContract().getId(), driverId)));
+                "contract", details));
     }
 
     @PutMapping("/{chatId}/contracts/{contractId}/accept")
@@ -132,6 +143,10 @@ public class ChatController {
         chatService.validateChatAccess(chatId, responsibleId);
         
         contractService.acceptContract(contractId, responsibleId);
+        ContractDetailsResponseDTO details = contractService.getContractDetails(contractId, responsibleId);
+        notificationService.send(List.of(details.driverId()), NotificationType.CONTRACT_ACCEPTED, "Contrato aceito",
+                details.responsibleName() + " aceitou o contrato de " + details.studentName(),
+                Map.of("chatId", chatId, "contractId", contractId));
         
         String payloadStr = "{\"contractId\": \"" + contractId + "\"}";
         ChatMessageResponseDTO msg = chatMessageService.sendSystemMessage(chatId, responsibleId, "Contrato Aceito",
@@ -151,6 +166,10 @@ public class ChatController {
         chatService.validateChatAccess(chatId, responsibleId);
         
         contractService.rejectContract(contractId, responsibleId);
+        ContractDetailsResponseDTO details = contractService.getContractDetails(contractId, responsibleId);
+        notificationService.send(List.of(details.driverId()), NotificationType.CONTRACT_REJECTED, "Contrato recusado",
+                details.responsibleName() + " recusou o contrato de " + details.studentName(),
+                Map.of("chatId", chatId, "contractId", contractId));
         
         String payloadStr = "{\"contractId\": \"" + contractId + "\"}";
         ChatMessageResponseDTO msg = chatMessageService.sendSystemMessage(chatId, responsibleId, "Contrato Recusado",

@@ -4,5 +4,7 @@ public enum MessageType {
     PROPOSAL,
     APPROVAL,
     REJECTION,
-    REGULAR_CHAT
+    REGULAR_CHAT,
+    // aviso automatico: o responsavel marcou que o aluno nao vai
+    ABSENCE
 }

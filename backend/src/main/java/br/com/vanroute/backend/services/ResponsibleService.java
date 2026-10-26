@@ -52,13 +52,7 @@ public class ResponsibleService {
         responsible.setUser(user);
         responsible.setFinancialStatus(FinancialStatus.PENDING);
         responsible.setAddress(address);
-        String addressString = address.getStreet()
-                + ", " + address.getNumber()
-                + ", " + address.getNeighborhood()
-                + ", " + address.getCity()
-                + ", " + address.getState()
-                + ", " + address.getZipCode();
-       Coordenadas cords = mapService.searchCoord(addressString);
+        Coordenadas cords = mapService.searchCoord(address);
         address.setLatitude(cords.latitude());
         address.setLongitude(cords.longitude());
         ResponsibleAddress responsibleAddress = new ResponsibleAddress();

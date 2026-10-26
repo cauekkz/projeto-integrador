@@ -99,7 +99,7 @@ public class StudentServiceTest {
         responsible.setAddress(address);
 
         when(addressService.addAddress(addressDto)).thenReturn(address);
-        when(mapService.searchCoord(any())).thenReturn(new Coordenadas(-23.5, -46.6));
+        when(mapService.searchCoord(any(Address.class))).thenReturn(new Coordenadas(-23.5, -46.6));
         when(responsibleRepository.findById(RESPONSIBLE_ID)).thenReturn(Optional.of(responsible));
 
         studentService.createStudentWithRelation(requestDTO, RESPONSIBLE_ID);
@@ -118,7 +118,7 @@ public class StudentServiceTest {
         StudentRequestDTO requestDTO = new StudentRequestDTO("John", "Notes", LocalDate.of(2015, 1, 1), RelationType.LEGAL, addressDto);
 
         when(addressService.addAddress(addressDto)).thenReturn(new Address());
-        when(mapService.searchCoord(any())).thenReturn(new Coordenadas(-23.5, -46.6));
+        when(mapService.searchCoord(any(Address.class))).thenReturn(new Coordenadas(-23.5, -46.6));
         when(responsibleRepository.findById(OTHER_ID)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class,
