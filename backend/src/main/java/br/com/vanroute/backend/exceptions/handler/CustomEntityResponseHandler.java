@@ -1,6 +1,12 @@
 package br.com.vanroute.backend.exceptions.handler;
 
 import br.com.vanroute.backend.exceptions.BadRequestException;
+import br.com.vanroute.backend.exceptions.InvalidCredentialsException;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.server.ResponseStatusException;
 import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
 import br.com.vanroute.backend.exceptions.response.ExceptionResponse;
 import org.springframework.http.HttpStatus;
@@ -38,9 +44,43 @@ public class CustomEntityResponseHandler extends ResponseEntityExceptionHandler 
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public final ResponseEntity<ExceptionResponse> handleIllegalArgumentException(Exception ex, WebRequest request){
+        return build(ex, request, HttpStatus.BAD_REQUEST);
+    }
 
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public final ResponseEntity<ExceptionResponse> handleInvalidCredentialsException(Exception ex, WebRequest request){
+        return build(ex, request, HttpStatus.UNAUTHORIZED);
+    }
 
+    @ExceptionHandler({EntityNotFoundException.class, UsernameNotFoundException.class})
+    public final ResponseEntity<ExceptionResponse> handleNotFoundException(Exception ex, WebRequest request){
+        return build(ex, request, HttpStatus.NOT_FOUND);
+    }
 
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public final ResponseEntity<ExceptionResponse> handleDataIntegrityViolationException(Exception ex, WebRequest request){
+        ExceptionResponse response = new ExceptionResponse(new Date(), "Registro duplicado ou referência inválida.",
+                request.getDescription(false));
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
 
+    @ExceptionHandler(ResponseStatusException.class)
+    public final ResponseEntity<ExceptionResponse> handleResponseStatusException(ResponseStatusException ex, WebRequest request){
+        ExceptionResponse response = new ExceptionResponse(new Date(), ex.getReason(),
+                request.getDescription(false));
+        return new ResponseEntity<>(response, ex.getStatusCode());
+    }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public final ResponseEntity<ExceptionResponse> handleAccessDeniedException(Exception ex, WebRequest request){
+        return build(ex, request, HttpStatus.FORBIDDEN);
+    }
+
+    private ResponseEntity<ExceptionResponse> build(Exception ex, WebRequest request, HttpStatus status){
+        ExceptionResponse response = new ExceptionResponse(new Date(), ex.getMessage(),
+                request.getDescription(false));
+        return new ResponseEntity<>(response, status);
+    }
 }

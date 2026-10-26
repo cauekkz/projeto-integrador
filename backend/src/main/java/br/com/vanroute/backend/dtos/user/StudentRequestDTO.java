@@ -2,6 +2,7 @@ package br.com.vanroute.backend.dtos.user;
 
 import java.time.LocalDate;
 
+import br.com.vanroute.backend.dtos.student.AddressRequestDTO;
 import br.com.vanroute.backend.models.student.enums.RelationType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,5 +21,9 @@ public record StudentRequestDTO(
     LocalDate birthDate,
 
     @NotNull(message = "O tipo de relação é obrigatório")
-    RelationType relationType
+    RelationType relationType,
+
+    @NotNull(message = "O endereço é obrigatório")
+    AddressRequestDTO address
+
 ) {}

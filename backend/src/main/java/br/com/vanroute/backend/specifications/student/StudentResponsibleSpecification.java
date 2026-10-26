@@ -1,21 +1,21 @@
 package br.com.vanroute.backend.specifications.student;
-import org.springframework.data.jpa.domain.Specification;
+
+import java.util.UUID;import org.springframework.data.jpa.domain.Specification;
 import jakarta.persistence.criteria.Predicate;
 import br.com.vanroute.backend.dtos.student.AllStudentsFilterRequestDTO;
 import br.com.vanroute.backend.models.student.StudentResponsible;
 public class StudentResponsibleSpecification {
 
     public static Specification<StudentResponsible> withFilters(
-            String cpf,
+            UUID responsibleId,
             AllStudentsFilterRequestDTO filter
     ) {
 
         return (root, query, cb) -> {
             Predicate predicate = cb.equal(
             root.get("responsible")
-                .get("user")
-                .get("cpf"),
-            cpf
+                .get("userId"),
+            responsibleId
         );
         if (filter.isAdmin()!= null){
             predicate = cb.and(predicate, cb.equal(root.get("isAdmin"), filter.isAdmin()));

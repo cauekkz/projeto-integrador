@@ -1,6 +1,7 @@
 package br.com.vanroute.backend.controllers;
 
 import br.com.vanroute.backend.dtos.user.LoginRequestDTO;
+import br.com.vanroute.backend.dtos.user.token.RefreshTokenRequestDTO;
 import br.com.vanroute.backend.dtos.verifyEmail.VerifyEmailRequestDTO;
 import br.com.vanroute.backend.dtos.user.token.TokenResponseDTO;
 import br.com.vanroute.backend.services.AuthenticationService;
@@ -38,6 +39,18 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<TokenResponseDTO> login(@RequestBody @Valid LoginRequestDTO loginRequestDTO) throws Exception {
         return ResponseEntity.ok(authenticationService.login(loginRequestDTO).getBody());
+    }
+
+    // o JWT dura 15 min: o app troca o refreshToken por um par novo sem pedir a senha
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponseDTO> refresh(@RequestBody @Valid RefreshTokenRequestDTO request) {
+        return ResponseEntity.ok(authenticationService.refresh(request.refreshToken()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestBody @Valid RefreshTokenRequestDTO request) {
+        authenticationService.logout(request.refreshToken());
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/verify-email")

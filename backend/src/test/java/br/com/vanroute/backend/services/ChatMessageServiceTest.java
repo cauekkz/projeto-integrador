@@ -57,13 +57,11 @@ class ChatMessageServiceTest {
         ChatMessageRequestDTO requestDTO = new ChatMessageRequestDTO(
                 "Hello, pirate king!",
                 null,
-                null,
-                MessageType.REGULAR_CHAT,
                 null
         );
 
         when(chatService.getChatById(mockChat.getId())).thenReturn(mockChat);
-        when(userService.findByCpf("12345678901")).thenReturn(Optional.of(senderUser));
+        when(userService.findById(senderUser.getId())).thenReturn(Optional.of(senderUser));
 
         ChatMessage savedMessage = new ChatMessage();
         savedMessage.setId(UUID.randomUUID());
@@ -75,13 +73,26 @@ class ChatMessageServiceTest {
         when(chatMessageRepository.save(any(ChatMessage.class))).thenReturn(savedMessage);
 
         ChatMessageResponseDTO response = chatMessageService.sendMessage(
-                mockChat.getId(), "12345678901", requestDTO);
+                mockChat.getId(), senderUser.getId(), requestDTO);
 
         assertNotNull(response);
         assertEquals("Hello, pirate king!", response.content());
         assertEquals(senderUser.getId(), response.senderId());
-        verify(chatService).validateChatAccess(mockChat.getId(), "12345678901");
+        verify(chatService).validateChatAccess(mockChat.getId(), senderUser.getId());
         verify(chatMessageRepository, times(1)).save(any(ChatMessage.class));
+    }
+
+    @Test
+    void userMessageIsAlwaysRegularChatWithoutPayload() {
+        when(chatService.getChatById(mockChat.getId())).thenReturn(mockChat);
+        when(userService.findById(senderUser.getId())).thenReturn(Optional.of(senderUser));
+        when(chatMessageRepository.save(any(ChatMessage.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ChatMessageResponseDTO response = chatMessageService.sendMessage(
+                mockChat.getId(), senderUser.getId(), new ChatMessageRequestDTO("oi", null, null));
+
+        assertEquals(MessageType.REGULAR_CHAT, response.messageType());
+        assertNull(response.payload());
     }
 
     @Test
@@ -89,17 +100,15 @@ class ChatMessageServiceTest {
         ChatMessageRequestDTO requestDTO = new ChatMessageRequestDTO(
                 "Hello",
                 null,
-                null,
-                MessageType.REGULAR_CHAT,
                 null
         );
 
         doThrow(new IllegalArgumentException("Você não tem acesso a este chat."))
-                .when(chatService).validateChatAccess(mockChat.getId(), "12345678901");
+                .when(chatService).validateChatAccess(mockChat.getId(), senderUser.getId());
 
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
-                () -> chatMessageService.sendMessage(mockChat.getId(), "12345678901", requestDTO)
+                () -> chatMessageService.sendMessage(mockChat.getId(), senderUser.getId(), requestDTO)
         );
 
         assertEquals("Você não tem acesso a este chat.", exception.getMessage());

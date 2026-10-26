@@ -1,5 +1,10 @@
 package br.com.vanroute.backend.models.student;
 
+import br.com.vanroute.backend.models.shared.WeekDaysConverter;
+import br.com.vanroute.backend.models.shared.enums.WeekDay;
+import java.util.EnumSet;
+import java.util.Set;
+
 import br.com.vanroute.backend.models.route.RouteStop;
 import br.com.vanroute.backend.models.student.enums.StudentStopAction;
 import br.com.vanroute.backend.models.student.enums.StudentStopLocationType;
@@ -22,6 +27,11 @@ public class StudentStop {
     @Enumerated(EnumType.STRING)
     @Column(name = "action", nullable = false)
     private StudentStopAction action;
+
+    // dias em que o aluno usa esse ponto; padrao: todos
+    @Convert(converter = WeekDaysConverter.class)
+    @Column(name = "weekdays", nullable = false)
+    private Set<WeekDay> weekdays = EnumSet.allOf(WeekDay.class);
 
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
@@ -69,5 +79,13 @@ public class StudentStop {
 
     public void setStop(RouteStop stop) {
         this.stop = stop;
+    }
+
+    public Set<WeekDay> getWeekdays() {
+        return weekdays;
+    }
+
+    public void setWeekdays(Set<WeekDay> weekdays) {
+        this.weekdays = weekdays;
     }
 }

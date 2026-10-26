@@ -38,9 +38,9 @@ public class ChatWebSocketHandler extends TextWebSocketHandler implements Messag
             return;
         }
         
-        String cpf = session.getPrincipal().getName();
+        UUID userId = UUID.fromString(session.getPrincipal().getName());
         try {
-            chatService.validateChatAccess(UUID.fromString(chatId), cpf);
+            chatService.validateChatAccess(UUID.fromString(chatId), userId);
         } catch (Exception e) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Unauthorized"));
             return;
