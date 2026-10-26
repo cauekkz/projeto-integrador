@@ -17,6 +17,20 @@
       <span>Configurar perfil</span>
     </button>
 
+    @if (tipoUsuario === 'motorista') {
+      <button class="menu-item" (click)="irParaCodigoConversa()">
+        <i class="bi bi-key"></i>
+        <span>Código de conversa</span>
+      </button>
+    }
+
+    @if (tipoUsuario === 'responsavel') {
+      <button class="menu-item" (click)="irParaVincularMotorista()">
+        <i class="bi bi-person-plus"></i>
+        <span>Vincular motorista</span>
+      </button>
+    }
+
     <button class="menu-item">
       <i class="bi bi-file-text"></i>
       <span>Contratos</span>

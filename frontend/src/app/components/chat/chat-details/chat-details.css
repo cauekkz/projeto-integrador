@@ -146,3 +146,17 @@
   color: #64748b;
   padding: 4px;
 }
+
+.chat-aviso {
+  margin: 24px auto;
+  max-width: 320px;
+  padding: 0 16px;
+  font-size: 0.85rem;
+  color: #64748b;
+  text-align: center;
+}
+
+.chat-aviso.erro {
+  margin: 8px auto;
+  color: #b91c1c;
+}

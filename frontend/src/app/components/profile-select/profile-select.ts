@@ -28,6 +28,18 @@ export class ProfileSelect {
     this.router.navigate(['/profile-info', this.tipoUsuario]);
   }
 
+  // motorista ve o proprio codigo de conversa
+  irParaCodigoConversa() {
+    this.fecharEvent.emit();
+    this.router.navigate(['/driver-link-code']);
+  }
+
+  // responsavel digita o codigo do motorista (tela driver-code que ja existia)
+  irParaVincularMotorista() {
+    this.fecharEvent.emit();
+    this.router.navigate(['/driver-code']);
+  }
+
   sairDaConta() {
     this.authService.logout();
     this.router.navigate(['/']);

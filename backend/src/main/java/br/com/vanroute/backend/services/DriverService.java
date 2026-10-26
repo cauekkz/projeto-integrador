@@ -14,6 +14,8 @@ import jakarta.transaction.Transactional;
 import br.com.vanroute.backend.utils.CodeGenerator;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class DriverService {
@@ -57,6 +59,13 @@ public class DriverService {
         }
 
         throw new RuntimeException("Não foi possível gerar um código único.");
+    }
+
+    // codigo de conversa do motorista autenticado (gerado no cadastro), so pelo cpf do jwt
+    public String getLinkCodeByCpf(String cpf) {
+        return driverRepository.findByUserCpf(cpf)
+                .map(Driver::getLinkCode)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Motorista não encontrado."));
     }
 
 }

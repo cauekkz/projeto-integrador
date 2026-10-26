@@ -17,6 +17,7 @@ import { routeGuard, roleGuard, guestGuard } from './interceptor/route.intercept
 import { DriverCode } from './components/driver-code/driver-code';
 import { ChatListComponent } from './components/chat/chat-list/chat-list';
 import { NotFound } from './pages/not-found/not-found';
+import { DriverLinkCode } from './pages/driver-link-code/driver-link-code';
 
 export const routes: Routes = [
   // qq esse faz?
@@ -124,10 +125,18 @@ export const routes: Routes = [
     data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
   },
   {
+    // responsavel digita o codigo do motorista (o redeem do backend so aceita responsavel)
     path: 'driver-code',
     component: DriverCode,
     canActivate: [routeGuard, roleGuard],
-    data: { rolesPermitted: ['ROLE_RESPONSIBLE', 'ROLE_DRIVER'] },
+    data: { rolesPermitted: ['ROLE_RESPONSIBLE'] },
+  },
+  {
+    // motorista ve o proprio codigo de conversa
+    path: 'driver-link-code',
+    component: DriverLinkCode,
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
   },
   // qualquer url que nao bate com nada acima cai na 404 (tem que ser a ultima)
   {

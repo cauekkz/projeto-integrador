@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { firstValueFrom, map, Observable, of, Subject, switchMap } from 'rxjs';
-import { ChatMessage, ChatPage, ChatSummary } from '../models/chat-message';
+import { ChatMessage, ChatPage, ChatSummary, DriverLinkCode } from '../models/chat-message';
+import { SKIP_ERROR_POPUP } from '../interceptor/auth.interceptor';
 
 @Injectable({
   providedIn: 'root',
@@ -17,12 +18,21 @@ export class ChatWebSocketService {
 
   constructor(private http: HttpClient) {}
 
+  // responsavel resgata o codigo do motorista; backend cria ou recupera o chat e devolve o id dele
+  // o erro e tratado na tela (driver-code), por isso sem popup global
   createChatMessage(code: string) {
     return this.http.post<string>(
       `${this.apiUrl}/invite-code/redeem`,
       { inviteCode: code },
-      { observe: 'response' },
+      { observe: 'response', context: new HttpContext().set(SKIP_ERROR_POPUP, true) },
     );
+  }
+
+  // codigo de conversa do motorista logado (identificado pelo jwt no backend)
+  getDriverLinkCode() {
+    return this.http.get<DriverLinkCode>(`${this.apiUrl}/driver/link-code`, {
+      context: new HttpContext().set(SKIP_ERROR_POPUP, true),
+    });
   }
 
   getChats(page = 0, size = 10) {

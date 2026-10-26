@@ -1,9 +1,12 @@
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { HttpContextToken, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { PopUpService } from '../shared/pop-up';
 import { AuthService } from '../services/auth.service';
+
+// requisicoes que tratam o erro na propria tela marcam isso pra nao aparecer popup duplicado
+export const SKIP_ERROR_POPUP = new HttpContextToken<boolean>(() => false);
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = localStorage.getItem('token');
@@ -27,7 +30,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         router.navigate(['/']);
       }
 
-      popUpService.showError(error);
+      if (!req.context.get(SKIP_ERROR_POPUP)) {
+        popUpService.showError(error);
+      }
       return throwError(() => error);
     })
   );

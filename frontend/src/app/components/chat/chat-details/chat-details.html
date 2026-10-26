@@ -1,7 +1,7 @@
 <div class="screen">
 
   <div class="topbar">
-    <button class="back-button" (click)="voltar()">
+    <button class="back-button" type="button" aria-label="Voltar" (click)="voltar()">
       <i class="bi bi-chevron-left"></i>
     </button>
     <img [src]="fotoContato" class="contato-avatar" alt="">
@@ -12,6 +12,11 @@
   </div>
 
   <div #messagesContainer class="mensagens" (scroll)="carregarMensagensAnteriores($event)">
+    @if (erroCarregar) {
+      <p class="chat-aviso" role="alert">{{ erroCarregar }}</p>
+    } @else if (!carregandoMensagens && mensagens.length === 0) {
+      <p class="chat-aviso">Nenhuma mensagem ainda. Envie a primeira!</p>
+    }
     @for (msg of mensagens; track msg.id) {
       <div class="msg-wrapper" [class.minha]="msg.minha">
         <div class="msg-balao" [class.minha]="msg.minha">
@@ -44,12 +49,18 @@
     }
   </div>
 
+  @if (erroEnvio) {
+    <p class="chat-aviso erro" role="alert">{{ erroEnvio }}</p>
+  }
+
   <div class="input-bar">
     <input
       type="text"
       placeholder="Digite sua mensagem"
+      aria-label="Mensagem"
       [(ngModel)]="mensagem"
       name="mensagem"
+      [disabled]="!!erroCarregar"
       (keydown.enter)="enviar()"
     >
     <input

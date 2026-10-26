@@ -2,17 +2,38 @@
   <app-header titulo="Vincular Motorista" (voltarEvent)="voltar()" />
 
   <div class="content">
-    <h1>Digite o código do motorista</h1>
-    <p class="description">
-      Digite o código fornecido pelo motorista para vinculá-lo à sua conta.
-    </p>
+    @if (!chatId()) {
+      <h1>Digite o código do motorista</h1>
+      <p class="description">
+        Digite ou cole o código fornecido pelo motorista para vinculá-lo à sua conta.
+      </p>
 
-    <app-code-input
-      [length]="9"
-      [separadores]="[3, 6]"
-      instrucao=""
-      textoBotao="Confirmar"
-      (codigoVerificado)="confirmar($event)"
-    />
+      <app-code-input
+        [length]="9"
+        [separadores]="[3, 6]"
+        instrucao=""
+        [textoBotao]="enviando() ? 'Vinculando...' : 'Confirmar'"
+        [desabilitado]="enviando()"
+        (codigoVerificado)="confirmar($event)"
+      />
+
+      @if (erro()) {
+        <div class="erro" role="alert">
+          <i class="bi bi-exclamation-circle" aria-hidden="true"></i>
+          <span>{{ erro() }}</span>
+        </div>
+      }
+    } @else {
+      <div class="sucesso" role="status" aria-live="polite">
+        <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+        <h1>Motorista vinculado!</h1>
+        <p class="description">A conversa com o motorista já está disponível na sua lista de chats.</p>
+      </div>
+
+      <div class="acoes">
+        <app-button texto="Abrir conversa" tipo="primary" (clickEvent)="abrirConversa()"></app-button>
+        <app-button texto="Ver conversas" tipo="secondary" (clickEvent)="irParaConversas()"></app-button>
+      </div>
+    }
   </div>
 </div>
