@@ -141,7 +141,7 @@ Os endpoints antigos `POST /api/student-stop/{studentId}/{routeStopId}` (`Studen
 **Onde fica o endereço:** no route stop, que é o lugar onde a van para. Não mudou o banco. Assim a regra "alunos com endereços diferentes não podem estar no mesmo ponto" vale automaticamente: o ponto tem um endereço só. Tirar o endereço do ponto e colocar no student stop e no school stop exigiria duplicar o endereço e validar a consistência a cada vínculo. Dois alunos no mesmo ponto com casas diferentes é válido; a casa de cada um está em `student_addresses`. Pelo mesmo motivo, não se exige que o endereço do ponto seja igual ao da escola, porque o portão pode estar em outra rua.
 
 ### Foto de perfil (migration V20)
-- `users.photo_key` guarda a **chave** do arquivo no MinIO, não a URL, porque a URL assinada expira. O `GET /api/users/{id}` e a lista de chats (`otherUserPhotoKey`) devolvem a chave, e o front pega a URL em `/api/storage/download-url`.
+- `users.photo_key` guarda a **chave** do arquivo no MinIO, não a URL, porque a URL assinada expira. O `GET /api/users/me` e a lista de chats (`otherUserPhotoKey`) devolvem a chave, e o front pega a URL em `/api/storage/download-url`.
 - **Fluxo:**
   1. `GET /api/users/photo-upload-url?fileName&contentType`: só `image/*`; a chave é `profile/{userId}/...`.
   2. Upload direto no MinIO.
@@ -197,7 +197,7 @@ Legenda: ✅ coberto pelo script de API · 🧪 coberto só por teste unitário 
 | | GET `/api/route/{id}` · `/{routeId}/stops` · `/get-all-routes-and-stops` | dono da rota | ✅ |
 | Storage | GET `/api/storage/presigned-url` | logado | ✅ (upload real de imagem e PDF) |
 | | GET `/api/storage/download-url?fileKey=` **(novo)** | participante do chat / parte do contrato | ✅ (conteúdo baixado idêntico ao enviado; 403 para quem está de fora, para arquivo inexistente e para assinatura adulterada) |
-| Usuário | GET `/api/users/{id}` | logado | ✅ |
+| Usuário | GET `/api/users/{id}` | — | removido (ninguém usava e expunha CPF/e-mail/telefone) |
 | | POST `/api/users/send-code-updateUser` · PUT `/api/users/update-user` | logado | ✅ |
 | | GET `/api/users/photo-upload-url` · PUT `/api/users/update-photo` **(novos)** | logado | ✅ |
 | | DELETE `/api/users/{id}/{code}` | ADMIN | ⚠️ só o 403 (não existe admin) |
@@ -310,7 +310,7 @@ cd backend && DATABASE_NAME=vanroute_audit MINIO_BUCKET_NAME=vanroute-audit \
   - geocodificação real (sem `ORS_API_KEY`);
   - worker Go;
   - frontend (fora do escopo).
-- **`GET /api/users/{id}`:** qualquer usuário logado lê CPF, e-mail e telefone de qualquer outro.
+- **`GET /api/users/{id}`:** removido (expunha CPF, e-mail e telefone de qualquer usuário e nenhuma tela usava).
 - **Anexos com `fileKey` alheio:** o acesso ao download vem de "o arquivo estar numa mensagem do meu chat". Se alguém souber o `fileKey` de outra pessoa (um UUID aleatório, impraticável de adivinhar) e mandá-lo como anexo no próprio chat, ganharia acesso. Para fechar de vez, seria preciso registrar o dono no upload.
 - **Viagens e ocorrências:** `trips`, `boardings` e `occurrences` existem só como tabela, sem código.
 - **Mensagem de proposta:** o payload leva só IDs, mas os detalhes agora vêm de `GET /api/contract/{contractId}` (o `contractId` está no payload): `GET /api/contract/{contractId}`.

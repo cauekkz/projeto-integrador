@@ -105,6 +105,22 @@ class StudentStopServiceTest {
     }
 
     @Test
+    void shouldCheckOrderWithTheOtherStopsOfTheStudent() {
+        activeContract();
+        schoolInRoute(true);
+        StudentStop alighting = new StudentStop();
+        alighting.setId(UUID.randomUUID());
+        when(studentStopRepository.findByStudentIdAndStopRouteId(student.getId(), stop.getRoute().getId()))
+                .thenReturn(List.of(alighting));
+        doThrow(new BadRequestException("ordem")).when(routeService).checkBoardingBeforeAlighting(
+                argThat(stops -> stops.size() == 2 && stops.contains(alighting)));
+
+        assertThrows(BadRequestException.class,
+                () -> studentStopService.createStudentStop(boarding, student.getId(), stop.getId(), authentication));
+        verify(studentStopRepository, never()).save(any());
+    }
+
+    @Test
     void shouldRejectWithoutActiveContract() {
         when(userDriverContractRepository.findFirstByDriverUserIdAndStudentIdAndContractStatus(
                 driver.getUserId(), student.getId(), ContractStatus.ACTIVE)).thenReturn(Optional.empty());

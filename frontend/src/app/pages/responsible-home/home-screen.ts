@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { User } from '../../models/user.model';
+import { UserMe } from '../../models/user.model';
 import { StudentService } from '../../services/student.service';
 import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -16,7 +16,7 @@ import { ProfileSelect } from '../../components/profile-select/profile-select';
 export class HomeScreen implements OnInit {
   mostrarPerfil = false;
   meusDependentes: any[] = [];
-  usuarioLogado: User | null = null;
+  usuarioLogado: UserMe | null = null;
 
   constructor(
     private authService: AuthService,
@@ -30,16 +30,13 @@ export class HomeScreen implements OnInit {
     // voltando de "codigo de conversa"/"vincular motorista" reabre o painel do perfil
     this.mostrarPerfil = this.route.snapshot.queryParamMap.get('perfil') === 'aberto';
 
-    const cpfUsuario = this.authService.getUserIdFromToken();
-    if (cpfUsuario) {
-      this.authService.getUserByID(cpfUsuario).subscribe({
-        next: (user) => {
-          this.usuarioLogado = user;
-          this.cdr.detectChanges();
-        },
-        error: (err) => console.error('Erro ao buscar usuário:', err),
-      });
-    }
+    this.authService.getMe().subscribe({
+      next: (user) => {
+        this.usuarioLogado = user;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Erro ao buscar usuário:', err),
+    });
     this.carregarDependentes();
   }
 

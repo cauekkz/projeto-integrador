@@ -1,11 +1,8 @@
 package br.com.vanroute.backend.controllers;
 
-import br.com.vanroute.backend.dtos.user.ForgotPasswordRequest;
-
 import br.com.vanroute.backend.config.AuthenticatedUser;
 import br.com.vanroute.backend.dtos.user.UserMeResponseDTO;
 import br.com.vanroute.backend.dtos.user.UpdatePhotoRequestDTO;
-
 import br.com.vanroute.backend.dtos.user.UpdateUser;
 import br.com.vanroute.backend.services.StorageService;
 import java.util.Map;
@@ -30,18 +27,10 @@ public class UserController {
         this.userService = userService;
     }
 
-
     // o front chama logo apos o login: id proprio (pra saber quais mensagens sao "minhas"), foto e o codigo do motorista
     @GetMapping("/me")
     public ResponseEntity<UserMeResponseDTO> me(Authentication authentication) {
         return ResponseEntity.ok(userService.me(AuthenticatedUser.id(authentication)));
-    }
-    @GetMapping("/{id}")
-    @Valid
-    public ResponseEntity<User> getUserById(@PathVariable UUID id) {
-        return userService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping("/send-code-updateUser")
@@ -55,14 +44,6 @@ public class UserController {
         userService.updateUser(updateUser, AuthenticatedUser.id(authentication));
         return ResponseEntity.ok().build();
     }
-
-    @PutMapping("/forgot-password")
-    public String forgetPassword(@RequestBody ForgotPasswordRequest forgotPasswordRequest, Authentication authentication) {
-        String cpf = authentication.getName();
-        return userService.forgetPassword(cpf, forgotPasswordRequest);
-    }
-
-        //nao sei se vai usar isso so pra teste
 
     // 1) pega a URL de upload da foto  2) sobe a imagem direto no MinIO  3) manda o fileKey no update-photo
     @GetMapping("/photo-upload-url")

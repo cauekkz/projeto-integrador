@@ -1,3 +1,17 @@
+// GET /api/users/me: dados do usuario logado; linkCode so vem pro motorista
+export interface UserMe {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  cpf: string;
+  roles: string[];
+  photoKey: string | null;
+  linkCode: string | null;
+  // so do front: link temporario da foto (gerado a partir do photoKey)
+  photoUrl?: string;
+}
+
 export interface User {
   id: string;
   name: string;

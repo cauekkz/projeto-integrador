@@ -61,9 +61,9 @@ public class DriverService {
         throw new RuntimeException("Não foi possível gerar um código único.");
     }
 
-    // codigo de conversa do motorista autenticado (gerado no cadastro), so pelo cpf do jwt
-    public String getLinkCodeByCpf(String cpf) {
-        return driverRepository.findByUserCpf(cpf)
+    // codigo de conversa do motorista autenticado (gerado no cadastro), pelo id do jwt
+    public String getLinkCode(UUID userId) {
+        return driverRepository.findById(userId)
                 .map(Driver::getLinkCode)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Motorista não encontrado."));
     }

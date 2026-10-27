@@ -23,8 +23,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -76,6 +78,7 @@ public class StudentStopService {
         studentStop.setWeekdays(weekdays);
         studentStop.setStop(routeStop);
         studentStop.setStudent(contract.getStudent());
+        checkOrder(studentStop, routeId);
         return toResponse(studentStopRepository.save(studentStop));
     }
 
@@ -100,6 +103,7 @@ public class StudentStopService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Student is already registered at this stop.");
         }
         studentStop.setStop(target);
+        checkOrder(studentStop, target.getRoute().getId());
         return toResponse(studentStop);
     }
 
@@ -111,7 +115,18 @@ public class StudentStopService {
         checkOverlap(studentStop.getStudent().getId(), studentStop.getStop().getRoute().getId(),
                 studentStop.getAction(), weekdays, studentStopId);
         studentStop.setWeekdays(weekdays);
+        checkOrder(studentStop, studentStop.getStop().getRoute().getId());
         return toResponse(studentStop);
+    }
+
+    // os pontos do aluno na rota ja com a mudanca aplicada; embarque tem que vir antes do desembarque
+    private void checkOrder(StudentStop changed, UUID routeId) {
+        List<StudentStop> stops = new ArrayList<>(studentStopRepository
+                .findByStudentIdAndStopRouteId(changed.getStudent().getId(), routeId).stream()
+                .filter(existing -> changed.getId() == null || !changed.getId().equals(existing.getId()))
+                .toList());
+        stops.add(changed);
+        routeService.checkBoardingBeforeAlighting(stops);
     }
 
     // sem dias = todos os dias

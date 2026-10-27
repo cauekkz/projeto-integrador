@@ -20,16 +20,16 @@
     @for (msg of mensagens; track msg.id) {
       <div class="msg-wrapper" [class.minha]="msg.minha">
         <div class="msg-balao" [class.minha]="msg.minha">
-          @if (msg.attachmentType === 'IMAGE' && msg.attachmentUrl) {
+          @if (msg.attachmentType === 'IMAGE' && msg.anexoUrl) {
             <img
-              [src]="msg.attachmentUrl"
+              [src]="msg.anexoUrl"
               alt="Imagem enviada no chat"
               [style.max-width.%]="100"
               [style.max-height.px]="320"
               style="object-fit: contain"
             >
-          } @else if (msg.attachmentUrl) {
-            <a [href]="msg.attachmentUrl" target="_blank" rel="noopener noreferrer">
+          } @else if (msg.anexoUrl) {
+            <a [href]="msg.anexoUrl" target="_blank" rel="noopener noreferrer">
               {{ msg.texto || 'Abrir anexo' }}
             </a>
           }

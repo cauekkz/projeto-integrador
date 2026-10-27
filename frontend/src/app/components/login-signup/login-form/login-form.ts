@@ -63,7 +63,7 @@ export class LoginForm {
       })
       .subscribe({
         next: (response) => {
-          localStorage.setItem('token', response.token);
+          this.authService.saveTokens(response);
 
           // destino vem da role do token, nao do :tipo da url
           const home = this.authService.getHomeRoute();

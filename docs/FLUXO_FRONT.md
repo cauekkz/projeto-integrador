@@ -95,7 +95,7 @@ splash
 
 | Ação | Chamadas |
 |---|---|
-| ver foto de alguém | `photoKey` (do `/me`, do chat ou de `GET /api/users/{id}`) → `GET /api/storage/download-url?fileKey=` → usa o `downloadUrl` no `<Image>`. O link vale 15 min, então guarde em cache por pouco tempo |
+| ver foto de alguém | `photoKey` (do `/me` ou do chat) → `GET /api/storage/download-url?fileKey=` → usa o `downloadUrl` no `<Image>`. O link vale 15 min, então guarde em cache por pouco tempo |
 | trocar a foto | `GET /api/users/photo-upload-url?fileName=&contentType=image/jpeg` → `PUT <uploadUrl>` com a imagem (direto no MinIO, sem token) → `PUT /api/users/update-photo` `{fileKey}` |
 | editar e-mail/telefone | `POST /api/users/send-code-updateUser` (manda um código pro e-mail) → `PUT /api/users/update-user` `{email, phone, code}` |
 

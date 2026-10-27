@@ -2,6 +2,7 @@ package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.exceptions.BadRequestException;
 
+import br.com.vanroute.backend.dtos.user.ForgotPasswordRequest;
 import br.com.vanroute.backend.dtos.user.UpdateUser;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
@@ -51,6 +52,9 @@ class UserServiceTest {
 
     @Mock
     private br.com.vanroute.backend.repositories.DriverRepository driverRepository;
+
+    @Mock
+    private RefreshTokenService refreshTokenService;
 
     @InjectMocks
     private UserService userService;
@@ -732,5 +736,57 @@ class UserServiceTest {
         when(driverRepository.findById(parent.getId())).thenReturn(Optional.empty());
 
         assertNull(userService.me(parent.getId()).linkCode());
+    }
+
+    private ForgotPasswordRequest forgotPasswordRequest() {
+        ForgotPasswordRequest request = new ForgotPasswordRequest();
+        request.setEmail("mbappe@teste.com");
+        request.setCode("123456");
+        request.setPassword("Nova@1234");
+        request.setConfirmPassword("Nova@1234");
+        return request;
+    }
+
+    @Test
+    void shouldSendForgotPasswordCodeWhenEmailExists() {
+        when(userRepository.findByEmail("mbappe@teste.com")).thenReturn(Optional.of(defaultUser));
+
+        userService.sendForgotPasswordCode("mbappe@teste.com");
+
+        verify(emailVerificationService).generateAndSendCode("forgotPassword:email:" + defaultUser.getEmail(), defaultUser.getEmail());
+    }
+
+    @Test
+    void shouldNotSendForgotPasswordCodeWhenEmailDoesNotExist() {
+        when(userRepository.findByEmail("ninguem@teste.com")).thenReturn(Optional.empty());
+
+        userService.sendForgotPasswordCode("ninguem@teste.com");
+
+        verify(emailVerificationService, never()).generateAndSendCode(anyString(), anyString());
+    }
+
+    @Test
+    void shouldResetPasswordAndRevokeSessions() {
+        defaultUser.setId(USER_ID);
+        when(userRepository.findByEmail("mbappe@teste.com")).thenReturn(Optional.of(defaultUser));
+        when(passwordEncoder.encode("Nova@1234")).thenReturn("hash-novo");
+
+        userService.resetPassword(forgotPasswordRequest());
+
+        verify(emailVerificationService).verifyCode("forgotPassword:email:mbappe@teste.com", "123456");
+        assertEquals("hash-novo", defaultUser.getPasswordHash());
+        verify(userRepository).save(defaultUser);
+        verify(refreshTokenService).revokeAll(USER_ID);
+    }
+
+    @Test
+    void shouldNotResetPasswordWhenCodeIsWrong() {
+        doThrow(new IllegalArgumentException("Código incorreto ou expirado."))
+                .when(emailVerificationService).verifyCode("forgotPassword:email:mbappe@teste.com", "123456");
+
+        assertThrows(IllegalArgumentException.class, () -> userService.resetPassword(forgotPasswordRequest()));
+
+        verify(userRepository, never()).save(any(User.class));
+        verify(refreshTokenService, never()).revokeAll(any());
     }
 }

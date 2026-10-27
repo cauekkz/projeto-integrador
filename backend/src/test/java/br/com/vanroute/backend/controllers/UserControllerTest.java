@@ -13,7 +13,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -52,48 +51,6 @@ class UserControllerTest {
         user.setName("Mbappé");
         user.setEmail("mbappe@teste.com");
         user.setCpf("12345678901");
-    }
-
-    // =========================================================
-    // GET /api/users/{id}
-    // =========================================================
-
-    @Test
-    void shouldReturnUserWhenUserExists() throws Exception {
-
-        UUID id = user.getId();
-
-        when(userService.findById(id))
-                .thenReturn(Optional.of(user));
-
-        mockMvc.perform(
-                        get("/api/users/{id}", id)
-                )
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.name").value("Mbappé"))
-                .andExpect(jsonPath("$.email").value("mbappe@teste.com"))
-                .andExpect(jsonPath("$.cpf").value("12345678901"));
-
-        verify(userService)
-                .findById(id);
-    }
-
-    @Test
-    void shouldReturn404WhenUserDoesNotExist() throws Exception {
-
-        UUID id = UUID.randomUUID();
-
-        when(userService.findById(id))
-                .thenReturn(Optional.empty());
-
-        mockMvc.perform(
-                        get("/api/users/{id}", id)
-                )
-                .andExpect(status().isNotFound());
-
-        verify(userService)
-                .findById(id);
     }
 
     // =========================================================

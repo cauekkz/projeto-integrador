@@ -2,7 +2,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { firstValueFrom, map, Observable, of, Subject, switchMap } from 'rxjs';
 import { ChatMessage, ChatPage, ChatSummary, DriverLinkCode } from '../models/chat-message';
-import { SKIP_ERROR_POPUP } from '../interceptor/auth.interceptor';
+import { SKIP_ERROR_POPUP } from '../interceptor/http-context';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root',
@@ -12,11 +13,16 @@ export class ChatWebSocketService {
   private wsUrl = 'ws://localhost:9090';
 
   private socket?: WebSocket;
+  // chat que a tela quer aberto: se sair antes do token chegar, nao abre o socket
+  private chatAlvo?: string;
   private messageSubject = new Subject<ChatMessage>();
 
   public messages$ = this.messageSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService,
+  ) {}
 
   // responsavel resgata o codigo do motorista; backend cria ou recupera o chat e devolve o id dele
   // o erro e tratado na tela (driver-code), por isso sem popup global
@@ -53,18 +59,29 @@ export class ChatWebSocketService {
     );
   }
 
+  // o WebSocket so confere o token na abertura: pega um valido (renovando se venceu) antes de conectar
   connect(chatId: string): void {
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      console.error('Token ausente para conectar ao chat.');
-      return;
-    }
-
     if (this.socket?.readyState === WebSocket.OPEN) {
       return;
     }
 
+    this.chatAlvo = chatId;
+    this.authService.getValidToken().subscribe({
+      next: (token) => {
+        if (this.chatAlvo !== chatId) {
+          return;
+        }
+        if (!token) {
+          console.error('Token ausente para conectar ao chat.');
+          return;
+        }
+        this.abrirSocket(chatId, token);
+      },
+      error: (error) => console.error('Não foi possível renovar a sessão para abrir o chat:', error),
+    });
+  }
+
+  private abrirSocket(chatId: string, token: string): void {
     const url = `${this.wsUrl}/chat/${chatId}?token=${encodeURIComponent(token)}`;
     this.socket = new WebSocket(url);
 
@@ -89,6 +106,7 @@ export class ChatWebSocketService {
   }
 
   disconnect(): void {
+    this.chatAlvo = undefined;
     this.socket?.close();
     this.socket = undefined;
   }
@@ -105,6 +123,7 @@ export class ChatWebSocketService {
     });
   }
 
+  // devolve o fileKey: e ele que vai na mensagem (o link de leitura sai do /storage/download-url)
   async uploadAttachment(file: File): Promise<string> {
     const contentType = file.type || 'application/octet-stream';
     const params = new URLSearchParams({
@@ -131,10 +150,7 @@ export class ChatWebSocketService {
       throw new Error(`Falha ao enviar o anexo para o armazenamento (${response.status}).`);
     }
 
-    const imageUrl = new URL(upload.uploadUrl);
-    imageUrl.search = '';
-    imageUrl.hash = '';
-    return imageUrl.toString();
+    return upload.fileKey;
   }
 
   sendAttachmentMessage(chatId: string, attachmentUrl: string, attachmentType: 'IMAGE' | 'OTHER') {
