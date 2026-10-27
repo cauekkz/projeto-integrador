@@ -38,6 +38,36 @@
       </div>
 
       <div class="field">
+        <label>CEP</label>
+        <input type="text" placeholder="00000-000" [(ngModel)]="enteredCep" name="cep" appCepMask />
+      </div>
+
+      <div class="field">
+        <label>Rua</label>
+        <input type="text" placeholder="Nome da rua" [(ngModel)]="enteredStreet" name="street" />
+      </div>
+
+      <div class="field">
+        <label>Número</label>
+        <input type="text" inputmode="numeric" placeholder="Número" [(ngModel)]="enteredNumber" name="number" />
+      </div>
+
+      <div class="field">
+        <label>Bairro</label>
+        <input type="text" placeholder="Bairro" [(ngModel)]="enteredNeighborhood" name="neighborhood" />
+      </div>
+
+      <div class="field">
+        <label>Cidade</label>
+        <input type="text" placeholder="Cidade" [(ngModel)]="enteredCity" name="city" />
+      </div>
+
+      <div class="field">
+        <label>Estado</label>
+        <input type="text" placeholder="UF" maxlength="2" [(ngModel)]="enteredState" name="state" />
+      </div>
+
+      <div class="field">
         <label for="relationType">Tipo de relação</label>
 
         <select id="relationType" [(ngModel)]="enteredRelationType" name="relationType" required>

@@ -17,7 +17,8 @@ describe('Mask Submission & API Integration', () => {
   describe('LoginForm', () => {
     it('should submit unmasked CPF to AuthService while keeping formatted CPF in UI', () => {
       const authServiceMock = {
-        login: vi.fn().mockReturnValue(of({ token: 'mock-token', expiresIn: 3600 })),
+        login: vi.fn().mockReturnValue(of({ token: 'mock-token', expiresIn: 3600, refreshToken: 'mock-refresh', refreshExpiresIn: 1 })),
+        saveTokens: vi.fn(),
         getHomeRoute: vi.fn().mockReturnValue('/responsible-home'),
         logout: vi.fn(),
       };
@@ -53,7 +54,8 @@ describe('Mask Submission & API Integration', () => {
 
     it('should preserve leading zeroes in CPF during login', () => {
       const authServiceMock = {
-        login: vi.fn().mockReturnValue(of({ token: 'mock-token', expiresIn: 3600 })),
+        login: vi.fn().mockReturnValue(of({ token: 'mock-token', expiresIn: 3600, refreshToken: 'mock-refresh', refreshExpiresIn: 1 })),
+        saveTokens: vi.fn(),
         getHomeRoute: vi.fn().mockReturnValue('/responsible-home'),
         logout: vi.fn(),
       };
@@ -108,6 +110,12 @@ describe('Mask Submission & API Integration', () => {
       component.enteredPhone = '(11) 98765-4321';
       component.enteredPass = 'senhaSegura1';
       component.enteredConfirmPass = 'senhaSegura1';
+      component.enteredCep = '01304-000';
+      component.enteredStreet = 'Rua Augusta';
+      component.enteredNumber = '500';
+      component.enteredNeighborhood = 'Consolação';
+      component.enteredCity = 'São Paulo';
+      component.enteredState = 'sp';
 
       component.signup();
 
@@ -123,6 +131,14 @@ describe('Mask Submission & API Integration', () => {
         phone: '11987654321',
         password: 'senhaSegura1',
         confirmPassword: 'senhaSegura1',
+        address: {
+          zipCode: '01304000',
+          street: 'Rua Augusta',
+          number: 500,
+          neighborhood: 'Consolação',
+          city: 'São Paulo',
+          state: 'SP',
+        },
       });
     });
   });
@@ -172,7 +188,7 @@ describe('Mask Submission & API Integration', () => {
   describe('AddStudent', () => {
     it('should format birthDate to ISO YYYY-MM-DD on submission while keeping DD/MM/YYYY in UI', () => {
       const studentServiceMock = {
-        createStudent: vi.fn().mockReturnValue(of({ student: { id: 'stud-1' } })),
+        createStudent: vi.fn().mockReturnValue(of({ studentResponseDTO: { id: 'stud-1' } })),
         generateStudentLink: vi.fn().mockReturnValue(of('CODE123')),
       };
       const routerMock = { navigate: vi.fn() };
@@ -191,6 +207,9 @@ describe('Mask Submission & API Integration', () => {
       component.enteredBirthdate = '15/03/2012';
       component.enteredObservacoes = 'Alergia a amendoim';
       component.enteredRelationType = 'FILHO';
+      component.enteredCep = '01304-000';
+      component.enteredStreet = 'Rua Augusta';
+      component.enteredCity = 'São Paulo';
 
       component.pronto();
 
@@ -200,7 +219,16 @@ describe('Mask Submission & API Integration', () => {
         notes: 'Alergia a amendoim',
         birthDate: '2012-03-15',
         relationType: 'FILHO',
+        address: {
+          zipCode: '01304000',
+          street: 'Rua Augusta',
+          number: null,
+          neighborhood: '',
+          city: 'São Paulo',
+          state: '',
+        },
       });
+      expect(studentServiceMock.generateStudentLink).toHaveBeenCalledWith({ id: 'stud-1', relationType: 'FILHO' });
     });
   });
 
@@ -237,7 +265,7 @@ describe('Mask Submission & API Integration', () => {
         cpf: '12345678900',
         passwordHash: 'pass123',
       });
-      req.flush({ token: 'jwt', expiresIn: 3600 });
+      req.flush({ token: 'jwt', expiresIn: 3600, refreshToken: 'r', refreshExpiresIn: 1 });
     });
 
     it('should clean CPF and phone masks before POST /responsible/auth/signup request', () => {
@@ -248,6 +276,7 @@ describe('Mask Submission & API Integration', () => {
         phone: '(11) 98765-4321',
         password: 'pass',
         confirmPassword: 'pass',
+        address: { zipCode: '01304-000', street: 'Rua Augusta', number: 500, neighborhood: '', city: 'São Paulo', state: 'SP' },
       }).subscribe();
 
       const req = httpMock.expectOne('http://localhost:9090/api/responsible/auth/signup');
@@ -256,6 +285,7 @@ describe('Mask Submission & API Integration', () => {
       expect(req.request.body.phone).toBe('11987654321');
       expect(req.request.body.name).toBe('João Souza');
       expect(req.request.body.email).toBe('joao@example.com');
+      expect(req.request.body.address.zipCode).toBe('01304000');
       req.flush({});
     });
 

@@ -6,7 +6,6 @@ import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
 import { PhoneMaskDirective, NameFormatDirective } from '../../../shared/directives';
 import { PopUpService } from '../../../shared/pop-up';
-import { jwtDecode } from 'jwt-decode';
 import { limparMascara } from '../../../shared/utils';
 
 @Component({
@@ -50,19 +49,6 @@ export class SignupDriver {
 
   verification(value: string): boolean {
     return value.trim() === '';
-  }
-
-  getUserRoleFromToken(): string | null {
-    const token = localStorage.getItem('token');
-    if (!token) return null;
-
-    try {
-      const decoded: any = jwtDecode(token);
-      return decoded.role || decoded.roles?.[0] || decoded.tipo || null;
-    } catch (error) {
-      console.error('Erro ao decodificar a role do token:', error);
-      return null;
-    }
   }
 
   signup() {

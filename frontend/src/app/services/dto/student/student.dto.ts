@@ -1,13 +1,17 @@
+import { addressRequest } from '../auth/auth.dto';
+
+// resposta do POST /api/student/create-student
 export interface studentResponsibleResponse {
-  id: string;
-  relationType: string;
-  student: {
+  studentResponseDTO: {
     id: string;
     name: string;
     notes: string;
     birthDate: string;
   };
-  admin: boolean;
+  responsibleResponseDTO: {
+    name: string;
+    email: string;
+  };
 }
 
 export interface createStudentRequest {
@@ -15,6 +19,7 @@ export interface createStudentRequest {
   notes: string;
   birthDate: string;
   relationType: string;
+  address: addressRequest;
 }
 
 export interface generateStudentLink {

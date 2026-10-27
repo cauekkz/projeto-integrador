@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.config.AuthenticatedUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -75,7 +76,7 @@ public class DriverController {
     // motorista consulta o proprio codigo de conversa, identificado pelo jwt (nunca por id na url)
     @GetMapping("/link-code")
     public ResponseEntity<Map<String, String>> getLinkCode(Authentication authentication) {
-        String linkCode = driverService.getLinkCodeByCpf(authentication.getName());
+        String linkCode = driverService.getLinkCode(AuthenticatedUser.id(authentication));
         return ResponseEntity.ok(Map.of("linkCode", linkCode));
     }
     

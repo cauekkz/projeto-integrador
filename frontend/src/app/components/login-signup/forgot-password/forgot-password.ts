@@ -3,7 +3,14 @@ import { FormsModule } from '@angular/forms';
 import { CodeInput } from '../../../shared/code-input/code-input';
 import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
+import { AuthService } from '../../../services/auth.service';
+import { PopUpService } from '../../../shared/pop-up';
 
+// mesma regra do backend: maiuscula, minuscula, numero e caractere especial, 8+ caracteres
+const SENHA_FORTE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
+
+// esqueci a senha (publico, sem login): 1) e-mail recebe o codigo  2) digita o codigo  3) senha nova
+// o codigo so e conferido no backend junto com a senha nova, na etapa 3
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
@@ -22,12 +29,16 @@ export class ForgotPassword {
   enteredConfirmPass = '';
 
   emailInvalido = false;
-  codeInvalido = false;
   passInvalido = false;
+  passFraca = false;
   confirmPassInvalido = false;
   passwordsDontMatch = false;
+  enviando = false;
 
-  codigoCampos = ['', '', '', '', '', ''];
+  constructor(
+    private authService: AuthService,
+    private popUpService: PopUpService,
+  ) {}
 
   voltar() {
     if (this.etapa === 1) {
@@ -38,30 +49,20 @@ export class ForgotPassword {
   }
 
   enviarEmail() {
+    this.enteredEmail = this.enteredEmail.trim();
     this.emailInvalido = !this.enteredEmail;
-    if (!this.emailInvalido) this.etapa = 2;
-  }
+    if (this.emailInvalido || this.enviando) return;
 
-  onInput(event: Event, index: number) {
-    const input = event.target as HTMLInputElement;
-    input.classList.remove('animate');
-    void input.offsetWidth;
-    input.classList.add('animate');
-    if (input.value.length === 1) {
-      const inputs = document.querySelectorAll('.code-input');
-      const next = inputs[index + 1] as HTMLInputElement;
-      if (next) next.focus();
-    }
-    this.codigoCampos[index] = input.value;
-  }
-
-  onKeydown(event: KeyboardEvent, index: number) {
-    const input = event.target as HTMLInputElement;
-    if (event.key === 'Backspace' && input.value === '') {
-      const inputs = document.querySelectorAll('.code-input');
-      const prev = inputs[index - 1] as HTMLInputElement;
-      if (prev) prev.focus();
-    }
+    this.enviando = true;
+    this.authService.sendForgotPasswordCode(this.enteredEmail).subscribe({
+      next: () => {
+        this.enviando = false;
+        this.etapa = 2;
+      },
+      error: () => {
+        this.enviando = false;
+      },
+    });
   }
 
   enviarCodigo(codigo: string) {
@@ -71,10 +72,32 @@ export class ForgotPassword {
 
   novaSenha() {
     this.passInvalido = !this.enteredNewPass;
+    this.passFraca = !this.passInvalido && !SENHA_FORTE.test(this.enteredNewPass);
     this.confirmPassInvalido = !this.enteredConfirmPass;
-    this.passwordsDontMatch = this.enteredNewPass !== this.enteredConfirmPass;
-    if (!this.passInvalido && !this.confirmPassInvalido && !this.passwordsDontMatch) {
-      this.voltarEvent.emit();
+    this.passwordsDontMatch = !this.confirmPassInvalido && this.enteredNewPass !== this.enteredConfirmPass;
+
+    if (this.passInvalido || this.passFraca || this.confirmPassInvalido || this.passwordsDontMatch || this.enviando) {
+      return;
     }
+
+    this.enviando = true;
+    this.authService
+      .resetPassword({
+        email: this.enteredEmail,
+        code: this.enteredCode,
+        password: this.enteredNewPass,
+        confirmPassword: this.enteredConfirmPass,
+      })
+      .subscribe({
+        next: () => {
+          this.enviando = false;
+          this.popUpService.show('Senha alterada! Entre com a nova senha.', 'success', 'Tudo certo');
+          this.voltarEvent.emit();
+        },
+        error: () => {
+          // o popup global mostra a mensagem do backend (ex.: codigo incorreto ou expirado)
+          this.enviando = false;
+        },
+      });
   }
 }

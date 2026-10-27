@@ -1,11 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Header } from '../../shared/header/header';
 import { PhoneMaskDirective } from '../../shared/directives';
+import { PopUpService } from '../../shared/pop-up';
 import { formatarCpf, formatarTelefone, limparMascara } from '../../shared/utils';
+
+// mesma regra do backend: maiuscula, minuscula, numero e caractere especial, 8+ caracteres
+const SENHA_FORTE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 
 @Component({
   selector: 'app-profile-info',
@@ -18,48 +22,48 @@ export class ProfileInfo implements OnInit {
   tipoUsuario = '';
   modoEdicao = false;
 
-  usuario: any = {
+  // dados do GET /api/users/me ja formatados pra exibir
+  usuario = {
     name: '',
-    document: '',
+    cpf: '',
     email: '',
     phone: '',
-    address: '',
     photoUrl: '',
   };
 
-  enteredName = '';
   enteredEmail = '';
   enteredPhone = '';
   enteredCode = '';
   enteredPassword = '';
+  enteredConfirmPassword = '';
   enteredPasswordCode = '';
   mensagem = '';
   salvando = false;
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private location: Location,
     private authService: AuthService,
+    private popUpService: PopUpService,
   ) {}
 
   ngOnInit() {
     this.tipoUsuario = this.route.snapshot.paramMap.get('tipo') || '';
-    const id = this.authService.getUserIdFromToken();
-    if (id) {
-      this.authService.getUserByID(id).subscribe({
-        next: (user) => {
-          this.usuario = {
-            ...user,
-            document: formatarCpf(user?.cpf || (user as any)?.document),
-            phone: formatarTelefone(user?.phone),
-          };
-          this.enteredName = user?.name || '';
-          this.enteredEmail = user?.email || '';
-          this.enteredPhone = formatarTelefone(user?.phone);
-        },
-        error: (err) => console.error(err),
-      });
-    }
+    this.authService.getMe().subscribe({
+      next: (me) => {
+        this.usuario = {
+          name: me.name ?? '',
+          cpf: formatarCpf(me.cpf),
+          email: me.email ?? '',
+          phone: formatarTelefone(me.phone),
+          photoUrl: me.photoUrl ?? '',
+        };
+        this.enteredEmail = this.usuario.email;
+        this.enteredPhone = this.usuario.phone;
+      },
+      error: (err) => console.error(err),
+    });
   }
 
   voltar() {
@@ -70,12 +74,9 @@ export class ProfileInfo implements OnInit {
 
   cancelar() {
     this.modoEdicao = false;
-    this.enteredName = this.usuario?.name || '';
-    this.enteredEmail = this.usuario?.email || '';
-    this.enteredPhone = this.usuario?.phone || '';
+    this.enteredEmail = this.usuario.email;
+    this.enteredPhone = this.usuario.phone;
     this.enteredCode = '';
-    this.enteredPassword = '';
-    this.enteredPasswordCode = '';
     this.mensagem = '';
   }
 
@@ -126,25 +127,50 @@ export class ProfileInfo implements OnInit {
       });
   }
 
+  // troca de senha usa o mesmo fluxo do "esqueci a senha" (codigo no e-mail da conta)
+  solicitarCodigoSenha() {
+    this.mensagem = '';
+    this.authService.sendForgotPasswordCode(this.usuario.email).subscribe({
+      next: () => {
+        this.mensagem = 'Código para trocar a senha enviado para o seu e-mail.';
+      },
+      error: (err) => {
+        console.error(err);
+        this.mensagem = 'Não foi possível enviar o código de verificação.';
+      },
+    });
+  }
+
   alterarSenha() {
-    if (!this.enteredPasswordCode.trim() || !this.enteredPassword) {
-      this.mensagem = 'Informe a nova senha e o código de verificação.';
+    if (!this.enteredPasswordCode.trim() || !this.enteredPassword || !this.enteredConfirmPassword) {
+      this.mensagem = 'Informe a nova senha, a confirmação e o código de verificação.';
+      return;
+    }
+    if (!SENHA_FORTE.test(this.enteredPassword)) {
+      this.mensagem = 'A senha precisa de 8 ou mais caracteres, com letra maiúscula, minúscula, número e símbolo.';
+      return;
+    }
+    if (this.enteredPassword !== this.enteredConfirmPassword) {
+      this.mensagem = 'As senhas não são iguais.';
       return;
     }
 
     this.salvando = true;
     this.mensagem = '';
     this.authService
-      .updatePassword({
-        newPassword: this.enteredPassword,
-        code: this.enteredPasswordCode,
+      .resetPassword({
+        email: this.usuario.email,
+        code: this.enteredPasswordCode.trim(),
+        password: this.enteredPassword,
+        confirmPassword: this.enteredConfirmPassword,
       })
       .subscribe({
         next: () => {
-          this.enteredPasswordCode = '';
-          this.enteredPassword = '';
+          // o backend derruba as sessoes ao trocar a senha: entra de novo com a senha nova
           this.salvando = false;
-          this.mensagem = 'Senha atualizada com sucesso.';
+          this.authService.logout();
+          this.popUpService.show('Senha alterada! Entre novamente com a nova senha.', 'success', 'Tudo certo');
+          this.router.navigate(['/']);
         },
         error: (err) => {
           console.error(err);

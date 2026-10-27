@@ -169,4 +169,47 @@ class RouteServiceTest {
         assertEquals(EnumSet.noneOf(WeekDay.class), pending.get(0).missingBoarding());
         assertEquals(EnumSet.of(WeekDay.TUESDAY, WeekDay.WEDNESDAY), pending.get(0).missingAlighting());
     }
+
+    private StudentStop at(RouteStop routeStop, Student student, StudentStopAction action, WeekDay... days) {
+        StudentStop studentStop = studentStop(student, action, days);
+        studentStop.setStop(routeStop);
+        return studentStop;
+    }
+
+    @Test
+    void alightingBeforeBoardingIsRejected() {
+        Student ana = new Student();
+        List<StudentStop> stops = List.of(
+                at(c, ana, StudentStopAction.BOARDING, WeekDay.MONDAY),
+                at(a, ana, StudentStopAction.ALIGHTING, WeekDay.MONDAY));
+
+        assertThrows(BadRequestException.class, () -> routeService.checkBoardingBeforeAlighting(stops));
+    }
+
+    @Test
+    void boardingBeforeAlightingIsAccepted() {
+        Student ana = new Student();
+        // seg: embarca no 1 e desce no 3; embarque de sex no 4 e desembarque de sab no 2 sao dias diferentes
+        routeService.checkBoardingBeforeAlighting(List.of(
+                at(a, ana, StudentStopAction.BOARDING, WeekDay.MONDAY),
+                at(c, ana, StudentStopAction.ALIGHTING, WeekDay.MONDAY),
+                at(d, ana, StudentStopAction.BOARDING, WeekDay.FRIDAY),
+                at(b, ana, StudentStopAction.ALIGHTING, WeekDay.SATURDAY)));
+    }
+
+    @Test
+    void swapThatPutsAlightingBeforeBoardingIsRejected() {
+        Student ana = new Student();
+        ana.setId(UUID.randomUUID());
+        StudentStop boarding = at(a, ana, StudentStopAction.BOARDING, WeekDay.MONDAY);
+        StudentStop alighting = at(c, ana, StudentStopAction.ALIGHTING, WeekDay.MONDAY);
+        when(routeStopRepository.findById(a.getId())).thenReturn(Optional.of(a));
+        when(routeStopRepository.findFirstByRouteIdAndOrderIndex(route.getId(), 3)).thenReturn(Optional.of(c));
+        when(studentStopRepository.findByStopId(a.getId())).thenReturn(List.of(boarding));
+        when(studentStopRepository.findByStudentIdAndStopRouteId(ana.getId(), route.getId())).thenReturn(List.of(boarding, alighting));
+
+        // embarque vai pro 3 e desembarque pro 1
+        assertThrows(BadRequestException.class,
+                () -> routeService.updateRouteStopOrder(a.getId(), new UpdateRouteStopOrderRequest(3), authentication));
+    }
 }

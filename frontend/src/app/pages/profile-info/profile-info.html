@@ -3,7 +3,7 @@
 
   <div class="profile-wrapper">
     <div class="avatar-container">
-      <img [src]="usuario?.photoUrl || '/testee.jpg'" class="avatar-grande" alt="Foto do usuário">
+      <img [src]="usuario.photoUrl || '/testee.jpg'" class="avatar-grande" alt="Foto do usuário">
     </div>
 
     <div class="hero">
@@ -28,10 +28,6 @@
 
           <div class="field">
             <input type="text" [(ngModel)]="usuario.phone" placeholder="Telefone" name="phone" readonly>
-          </div>
-
-          <div class="field">
-            <input type="text" [(ngModel)]="usuario.address" placeholder="Endereço" name="address" readonly>
           </div>
         }
 
@@ -80,6 +76,16 @@
 
           <div class="field">
             <input
+              type="password"
+              [(ngModel)]="enteredConfirmPassword"
+              placeholder="Repita a nova senha"
+              name="confirmNewPassword"
+              autocomplete="new-password"
+            >
+          </div>
+
+          <div class="field">
+            <input
               type="text"
               [(ngModel)]="enteredPasswordCode"
               placeholder="Código de verificação"
@@ -91,7 +97,7 @@
           <button
             class="btn-secondary"
             type="button"
-            (click)="solicitarCodigo()"
+            (click)="solicitarCodigoSenha()"
             [disabled]="salvando"
           >
             Enviar código por e-mail

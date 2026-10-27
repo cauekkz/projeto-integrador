@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -93,20 +94,22 @@ class DriverServiceTest {
     }
 
     @Test
-    void shouldReturnLinkCodeOfDriverByCpf() {
+    void shouldReturnLinkCodeOfDriverById() {
+        UUID userId = UUID.randomUUID();
         Driver driver = new Driver();
         driver.setLinkCode("ABC23XYZ9");
-        when(driverRepository.findByUserCpf("12345678900")).thenReturn(Optional.of(driver));
+        when(driverRepository.findById(userId)).thenReturn(Optional.of(driver));
 
-        assertEquals("ABC23XYZ9", driverService.getLinkCodeByCpf("12345678900"));
+        assertEquals("ABC23XYZ9", driverService.getLinkCode(userId));
     }
 
     @Test
-    void shouldReturnNotFoundWhenCpfIsNotADriver() {
-        when(driverRepository.findByUserCpf("98765432100")).thenReturn(Optional.empty());
+    void shouldReturnNotFoundWhenUserIsNotADriver() {
+        UUID userId = UUID.randomUUID();
+        when(driverRepository.findById(userId)).thenReturn(Optional.empty());
 
         ResponseStatusException exception = assertThrows(ResponseStatusException.class,
-                () -> driverService.getLinkCodeByCpf("98765432100"));
+                () -> driverService.getLinkCode(userId));
 
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }

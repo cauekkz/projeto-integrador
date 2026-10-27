@@ -30,6 +30,7 @@ import java.util.UUID;
 public class UserService {
 
         private static final String REDIS_KEY = "User:SendCodeUser";
+    private static final String FORGOT_PASSWORD_KEY = "forgotPassword:email:";
 
 
     private final UserRepository userRepository;
@@ -38,15 +39,17 @@ public class UserService {
     private final EmailVerificationService emailVerificationService;
     private final StorageService storageService;
     private final DriverRepository driverRepository;
+    private final RefreshTokenService refreshTokenService;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RolesRepository rolesRepository, EmailVerificationService emailVerificationService, StorageService storageService, DriverRepository driverRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RolesRepository rolesRepository, EmailVerificationService emailVerificationService, StorageService storageService, DriverRepository driverRepository, RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.rolesRepository = rolesRepository;
         this.emailVerificationService = emailVerificationService;
         this.storageService = storageService;
         this.driverRepository = driverRepository;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public User createUser(UserCreateDTO userCreateDTO) {
@@ -99,15 +102,20 @@ public class UserService {
         return "User updated successfully";
     }
 
-    public String forgetPassword(String cpf, ForgotPasswordRequest forgotPasswordRequest){
-        User user = userRepository.findByCpf(cpf)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-        emailVerificationService.verifyCode(REDIS_KEY, forgotPasswordRequest.getCode());
-        if(forgotPasswordRequest.getNewPassword() != null){
-            user.setPasswordHash(passwordEncoder.encode(forgotPasswordRequest.getNewPassword()));
-        }
+    // e-mail desconhecido nao da erro: a resposta e a mesma pra nao revelar quem tem conta
+    public void sendForgotPasswordCode(String email) {
+        userRepository.findByEmail(email)
+                .ifPresent(user -> emailVerificationService.generateAndSendCode(FORGOT_PASSWORD_KEY + user.getEmail(), user.getEmail()));
+    }
+
+    // o codigo confere antes de buscar o usuario; trocou a senha, cai a sessao de todos os aparelhos
+    public void resetPassword(ForgotPasswordRequest request) {
+        emailVerificationService.verifyCode(FORGOT_PASSWORD_KEY + request.getEmail(), request.getCode());
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Código incorreto ou expirado."));
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         userRepository.save(user);
-        return "Password changed";
+        refreshTokenService.revokeAll(user.getId());
     }
 
     public StorageService.PresignedUrlResponse photoUploadUrl(UUID userId, String fileName, String contentType) {

@@ -28,11 +28,13 @@ import br.com.vanroute.backend.models.student.Student;
 import br.com.vanroute.backend.models.student.StudentStop;
 import br.com.vanroute.backend.models.student.enums.StudentStopAction;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class RouteService {
@@ -67,6 +69,7 @@ public class RouteService {
         this.mapService = mapService;
     }
 
+    @Transactional
     public RouteResponse createRoute(CreateRouteRequestDTO createRouteRequestDTO, Authentication authentication) {
 
         Route route = new Route();
@@ -121,7 +124,30 @@ public class RouteService {
                 .orElseThrow(() -> new BadRequestException("Não existe ponto nessa posição"));
         other.setOrderIndex(routeStop.getOrderIndex());
         routeStop.setOrderIndex(request.orderIndex());
+        // a troca nao pode deixar o desembarque de algum aluno antes do embarque
+        UUID routeId = routeStop.getRoute().getId();
+        Stream.concat(studentStopRepository.findByStopId(routeStop.getId()).stream(),
+                        studentStopRepository.findByStopId(other.getId()).stream())
+                .map(studentStop -> studentStop.getStudent().getId())
+                .distinct()
+                .forEach(studentId -> checkBoardingBeforeAlighting(
+                        studentStopRepository.findByStudentIdAndStopRouteId(studentId, routeId)));
         return toResponse(routeStop);
+    }
+
+    // em cada dia o embarque do aluno tem que vir antes do desembarque na ordem dos pontos da rota
+    public void checkBoardingBeforeAlighting(List<StudentStop> stopsOfStudent) {
+        for (StudentStop boarding : stopsOfStudent) {
+            if (boarding.getAction() != StudentStopAction.BOARDING) continue;
+            for (StudentStop alighting : stopsOfStudent) {
+                if (alighting.getAction() == StudentStopAction.ALIGHTING
+                        && !Collections.disjoint(boarding.getWeekdays(), alighting.getWeekdays())
+                        && boarding.getStop().getOrderIndex() >= alighting.getStop().getOrderIndex()) {
+                    throw new BadRequestException("O embarque de " + boarding.getStudent().getName()
+                            + " precisa vir antes do desembarque na ordem da rota");
+                }
+            }
+        }
     }
 
     // so exclui ponto vazio; os pontos de baixo sobem uma posicao pra nao deixar buraco na ordem

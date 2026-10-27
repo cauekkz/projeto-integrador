@@ -6,6 +6,7 @@ import { of, Subscription } from 'rxjs';
 import { ChatMessage } from '../../../models/chat-message';
 import { ChatWebSocketService } from '../../../services/chat.service';
 import { AuthService } from '../../../services/auth.service';
+import { StorageService } from '../../../services/storage.service';
 
 @Component({
   selector: 'app-chat-details',
@@ -38,14 +39,20 @@ export class ChatDetails implements OnInit, OnDestroy {
     lida: boolean;
     attachmentUrl: string | null;
     attachmentType: string | null;
+    // link temporario pra abrir o anexo (o attachmentUrl guarda o fileKey)
+    anexoUrl: string | null;
     sentAt: string;
   }> = [];
+
+  private linksAnexo = new Map<string, string>();
+  private anexosCarregando = new Set<string>();
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private chatService: ChatWebSocketService,
     private authService: AuthService,
+    private storageService: StorageService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -68,16 +75,10 @@ export class ChatDetails implements OnInit, OnDestroy {
       this.carregarNomeContato();
     }
 
-    // o senderId das mensagens e o UUID do usuario; o token so tem o cpf (sub),
-    // entao busca o id real antes de montar as mensagens (senao todas parecem do outro lado)
-    const cpf = this.authService.getUserIdFromToken();
-    if (!cpf) {
-      return;
-    }
-
-    this.authService.getUserByID(cpf).subscribe({
-      next: (user) => {
-        this.usuarioLogadoId = user?.id ?? '';
+    // o senderId das mensagens e o id do usuario: compara com o /me pra saber quais sao "minhas"
+    this.authService.getMe().subscribe({
+      next: (me) => {
+        this.usuarioLogadoId = me?.id ?? '';
         this.iniciarConversa();
       },
       error: (error) => {
@@ -216,8 +217,34 @@ export class ChatDetails implements OnInit, OnDestroy {
       lida: message.senderId === this.usuarioLogadoId,
       attachmentUrl: message.attachmentUrl,
       attachmentType: message.attachmentType,
+      anexoUrl: this.linkDoAnexo(message.attachmentUrl),
       sentAt: message.sentAt,
     };
+  }
+
+  // anexo antigo ja era um link; os novos sao fileKey e pedem um link de leitura (vale 15 min)
+  private linkDoAnexo(attachmentUrl: string | null): string | null {
+    if (!attachmentUrl) return null;
+    if (/^https?:\/\//.test(attachmentUrl)) return attachmentUrl;
+
+    const link = this.linksAnexo.get(attachmentUrl);
+    if (link) return link;
+
+    if (!this.anexosCarregando.has(attachmentUrl)) {
+      this.anexosCarregando.add(attachmentUrl);
+      this.storageService.getDownloadUrl(attachmentUrl).subscribe({
+        next: (url) => {
+          this.linksAnexo.set(attachmentUrl, url);
+          this.mensagens = this.mensagens.map((item) =>
+            item.attachmentUrl === attachmentUrl ? { ...item, anexoUrl: url } : item,
+          );
+          this.cdr.markForCheck();
+        },
+        error: (error) => console.error('Erro ao carregar anexo:', error),
+        complete: () => this.anexosCarregando.delete(attachmentUrl),
+      });
+    }
+    return null;
   }
 
   private formatHour(value: string) {
@@ -267,9 +294,9 @@ export class ChatDetails implements OnInit, OnDestroy {
     }
 
     try {
-      const attachmentUrl = await this.chatService.uploadAttachment(file);
+      const fileKey = await this.chatService.uploadAttachment(file);
       const attachmentType = file.type.startsWith('image/') ? 'IMAGE' : 'OTHER';
-      this.chatService.sendAttachmentMessage(this.chatId, attachmentUrl, attachmentType).subscribe({
+      this.chatService.sendAttachmentMessage(this.chatId, fileKey, attachmentType).subscribe({
         next: (message) => {
           this.adicionarMensagens([message]);
         },

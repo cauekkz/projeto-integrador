@@ -86,7 +86,9 @@ public class ContractService {
             throw new AccessDeniedException("Motorista não possui essa escola");
         }
 
-        boolean hasActiveOrPending = userDriverContractRepository.existsByDriverUserIdAndStudentIdAndContractStatusIn(driverId, request.studentId(), List.of(ContractStatus.PENDING, ContractStatus.ACTIVE));
+        boolean hasActiveOrPending = userDriverContractRepository
+                .existsByDriverUserIdAndStudentIdAndContractStatusIn(driverId, request.studentId(), 
+                List.of(ContractStatus.PENDING, ContractStatus.ACTIVE));
 
         if (hasActiveOrPending) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe um contrato pendente ou ativo para este motorista e aluno");

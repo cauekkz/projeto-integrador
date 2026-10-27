@@ -596,8 +596,8 @@ req "foto: anexo privado do chat como foto" 400 PUT /api/users/update-photo "$R1
 req "foto: R2 usando a foto do R1" 400 PUT /api/users/update-photo "$R2" "{\"fileKey\":\"$PHOTO\"}"
 req "foto: sem fileKey" 400 PUT /api/users/update-photo "$R1" '{}'
 req "foto: R1 atualiza" 200 PUT /api/users/update-photo "$R1" "{\"fileKey\":\"$PHOTO\"}"
-req "D2 ve o usuario R1" 200 GET "/api/users/$R1_ID" "$D2"
-assert "usuario traz photoKey" "[ \"\$(echo \"\$BODY\" | jq -r .photoKey)\" = \"$PHOTO\" ]"
+req "R1 ve a foto no me" 200 GET /api/users/me "$R1"
+assert "me traz photoKey" "[ \"\$(echo \"\$BODY\" | jq -r .photoKey)\" = \"$PHOTO\" ]"
 req "D1 ve a foto no chat" 200 GET /api/chats "$D1"
 assert "chat traz otherUserPhotoKey" "echo \"\$BODY\" | jq -e '.content[] | select(.otherUserPhotoKey==\"$PHOTO\")' >/dev/null"
 req "D2 (sem chat com R1) baixa a foto" 200 GET "/api/storage/download-url?fileKey=$PHOTO" "$D2"
@@ -608,9 +608,9 @@ PHOTO2=$(echo "$BODY" | jq -r .fileKey)
 check "foto nova: upload" 200 "$(curl -s -o /dev/null -w '%{http_code}' -X PUT -H 'Content-Type: image/jpeg' --data-binary @"$IMG" "$(echo "$BODY" | jq -r .uploadUrl)")"
 req "foto: troca pela nova" 200 PUT /api/users/update-photo "$R1" "{\"fileKey\":\"$PHOTO2\"}"
 assert "foto antiga apagada do bucket" "! docker exec vanroute-minio sh -c 'ls /data/vanroute-audit/$PHOTO' >/dev/null 2>&1 && docker exec vanroute-minio sh -c 'ls /data/vanroute-audit/$PHOTO2' >/dev/null 2>&1"
-req "GET usuario" 200 GET "/api/users/$R1_ID" "$R1"
-assert "GET usuario nao expoe passwordHash" "! echo \"\$BODY\" | grep -qi 'passwordHash\|\\\$2a\\\$'"
-req "GET usuario inexistente" 404 GET "/api/users/00000000-0000-0000-0000-000000000000" "$R1"
+req "GET /users/{id} removido (expunha CPF, e-mail e telefone)" "40[0-9]" GET "/api/users/$R1_ID" "$R1"
+req "me" 200 GET /api/users/me "$R1"
+assert "me nao expoe passwordHash" "! echo \"\$BODY\" | grep -qi 'passwordHash\|\\\$2a\\\$'"
 req "envia codigo de atualizacao" 200 POST /api/users/send-code-updateUser "$R2"
 req "R2 ve seus dados (me)" 200 GET /api/users/me "$R2"; R2_ID=$(echo "$BODY" | jq -r .id)
 UCODE=$(redis GET "User:SendCodeUser:$R2_ID")

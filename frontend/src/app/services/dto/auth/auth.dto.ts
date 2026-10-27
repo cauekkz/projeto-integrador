@@ -1,6 +1,9 @@
+// login e refresh devolvem o mesmo par: o token dura 15 min, o refreshToken troca por um par novo
 export interface tokenResponse {
   token: string;
   expiresIn: number;
+  refreshToken: string;
+  refreshExpiresIn: number;
 }
 
 export interface loginRequest {
@@ -8,6 +11,14 @@ export interface loginRequest {
   passwordHash: string;
 }
 
+export interface addressRequest {
+  street: string;
+  number: number | null;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zipCode: string;
+}
 
 export interface createUserRequest {
   name: string;
@@ -16,6 +27,7 @@ export interface createUserRequest {
   confirmPassword: string;
   cpf: string;
   phone: string;
+  address: addressRequest;
 }
 
 export interface verifyEmailRequest {
@@ -29,7 +41,10 @@ export interface updateUserRequest {
   code: string;
 }
 
-export interface updatePasswordRequest {
-  newPassword: string;
+// esqueci a senha (rota publica): o usuario e achado pelo e-mail que recebeu o codigo
+export interface forgotPasswordRequest {
+  email: string;
   code: string;
+  password: string;
+  confirmPassword: string;
 }

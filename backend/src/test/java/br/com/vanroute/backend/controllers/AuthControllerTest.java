@@ -133,6 +133,22 @@ class AuthControllerTest {
     }
 
     @Test
+    void shouldRejectVerifyEmailWhenCodeIsNotSixDigits() throws Exception {
+        mockMvc.perform(post("/api/auth/verify-email")
+                        .contentType(APPLICATION_JSON)
+                        .content("""
+                            {
+                                "email": "carolina@example.com",
+                                "code": "12ab"
+                            }
+                        """))
+                .andExpect(status().isBadRequest());
+
+        verify(emailVerificationService, never()).verifyCode(any(), any());
+        verify(userService, never()).saveUser(any());
+    }
+
+    @Test
     void shouldResendVerificationCode() throws Exception {
         User user = new User();
         user.setEmail(EMAIL);
@@ -171,5 +187,24 @@ class AuthControllerTest {
 
         verify(emailVerificationService, never())
                 .generateAndSendCode(any(), any());
+    }
+
+    @Test
+    void shouldSendForgotPasswordCode() throws Exception {
+        mockMvc.perform(post("/api/auth/forgot-password/send-code").param("email", EMAIL))
+                .andExpect(status().isOk());
+
+        verify(userService).sendForgotPasswordCode(EMAIL);
+    }
+
+    @Test
+    void shouldResetPassword() throws Exception {
+        mockMvc.perform(post("/api/auth/forgot-password")
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"email\":\"" + EMAIL + "\",\"code\":\"123456\",\"password\":\"Nova@1234\",\"confirmPassword\":\"Nova@1234\"}"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Senha alterada com sucesso!"));
+
+        verify(userService).resetPassword(any());
     }
 }

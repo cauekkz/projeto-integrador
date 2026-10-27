@@ -12,6 +12,7 @@ import java.util.UUID;
 
 public interface StudentStopRepository extends JpaRepository<StudentStop, UUID> {
     boolean existsByStudentIdAndStopId(UUID studentId, UUID stopId);
+    List<StudentStop> findByStudentIdAndStopRouteId(UUID studentId, UUID routeId);
     List<StudentStop> findByStudentIdAndStopRouteIdAndAction(UUID studentId, UUID routeId, StudentStopAction action);
     List<StudentStop> findByStopId(UUID stopId);
 

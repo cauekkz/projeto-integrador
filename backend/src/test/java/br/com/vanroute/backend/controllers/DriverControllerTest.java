@@ -7,6 +7,8 @@ import br.com.vanroute.backend.services.DriverService;
 import br.com.vanroute.backend.services.EmailVerificationService;
 import br.com.vanroute.backend.services.IcpValidationService;
 import org.junit.jupiter.api.BeforeEach;
+import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -115,14 +117,15 @@ public class DriverControllerTest {
 
     @Test
     void shouldReturnLinkCodeOfAuthenticatedDriver() throws Exception {
-        when(driverService.getLinkCodeByCpf("12345678901")).thenReturn("ABC23XYZ9");
+        UUID userId = UUID.randomUUID();
+        when(driverService.getLinkCode(userId)).thenReturn("ABC23XYZ9");
 
         mockMvc.perform(get("/api/driver/link-code")
-                .principal(new UsernamePasswordAuthenticationToken("12345678901", null)))
+                .principal(new UsernamePasswordAuthenticationToken(userId.toString(), null)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.linkCode").value("ABC23XYZ9"));
 
-        verify(driverService, times(1)).getLinkCodeByCpf("12345678901");
+        verify(driverService, times(1)).getLinkCode(userId);
     }
 
 }

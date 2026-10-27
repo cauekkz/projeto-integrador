@@ -4,7 +4,6 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ActivatedRoute, Router, convertToParamMap } from '@angular/router';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ChatWebSocketService } from './chat.service';
-import { AuthService } from './auth.service';
 import { authInterceptor } from '../interceptor/auth.interceptor';
 import { PopUpService } from '../shared/pop-up';
 import { DriverLinkCode } from '../pages/driver-link-code/driver-link-code';
@@ -159,11 +158,10 @@ describe('Fluxo de código de conversa (motorista <-> responsável)', () => {
       ]),
     );
 
-    it('marca como "minha" pela UUID do usuário (o token só tem o cpf)', () => {
+    it('marca como "minha" pelo id que vem do /users/me', () => {
       const chatService = TestBed.inject(ChatWebSocketService);
       vi.spyOn(chatService, 'connect').mockImplementation(() => {});
       vi.spyOn(chatService, 'disconnect').mockImplementation(() => {});
-      vi.spyOn(TestBed.inject(AuthService), 'getUserIdFromToken').mockReturnValue('12345678901');
 
       const fixture = TestBed.createComponent(ChatDetails);
       fixture.detectChanges();
@@ -174,7 +172,7 @@ describe('Fluxo de código de conversa (motorista <-> responsável)', () => {
         totalPages: 1,
         last: true,
       });
-      http.expectOne(`${API}/users/12345678901`).flush({ id: 'responsible-uuid' });
+      http.expectOne(`${API}/users/me`).flush({ id: 'responsible-uuid', photoKey: null });
       http.expectOne(`${API}/chats/chat-uuid/messages?page=0&size=30`).flush({
         content: [
           { id: 'm1', senderId: 'driver-uuid', content: 'Oi', sentAt: '2026-10-26T10:00:00', attachmentUrl: null, attachmentType: null, payload: null },
