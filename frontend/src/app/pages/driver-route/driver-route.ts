@@ -3,7 +3,7 @@ import { Location, CommonModule } from '@angular/common';
 import { ProfileSelect } from '../../components/profile-select/profile-select';
 import { Footer } from '../../shared/footer/footer';
 import { AuthService } from '../../services/auth.service';
-import { User } from '../../models/user.model';
+import { UserMe } from '../../models/user.model';
 
 @Component({
   selector: 'app-driver-route',
@@ -14,7 +14,7 @@ import { User } from '../../models/user.model';
 })
 export class DriverRoute implements OnInit {
   mostrarPerfil = false;
-  usuarioLogado: User | null = null;
+  usuarioLogado: UserMe | null = null;
   alunosEsperandoAberto = false;
   alunosEmbarcadosAberto = false;
 
@@ -38,16 +38,13 @@ export class DriverRoute implements OnInit {
   ) {}
 
   ngOnInit() {
-    const userId = this.authService.getUserIdFromToken();
-    if (userId) {
-      this.authService.getUserByID(userId).subscribe({
-        next: (user) => {
-          this.usuarioLogado = user;
-          this.cdr.detectChanges();
-        },
-        error: (err) => console.error('Erro ao buscar motorista:', err),
-      });
-    }
+    this.authService.getMe().subscribe({
+      next: (user) => {
+        this.usuarioLogado = user;
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Erro ao buscar motorista:', err),
+    });
   }
 
   voltar() {

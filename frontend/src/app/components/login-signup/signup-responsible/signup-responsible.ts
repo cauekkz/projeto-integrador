@@ -5,14 +5,14 @@ import { AuthService } from '../../../services/auth.service';
 import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
 import { CommonModule } from '@angular/common';
-import { CpfMaskDirective, PhoneMaskDirective, NameFormatDirective } from '../../../shared/directives';
+import { CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective } from '../../../shared/directives';
 import { PopUpService } from '../../../shared/pop-up';
 import { limparMascara } from '../../../shared/utils';
 
 @Component({
   selector: 'app-signup-responsible',
   standalone: true,
-  imports: [FormsModule, Header, Button, CommonModule, CpfMaskDirective, PhoneMaskDirective, NameFormatDirective],
+  imports: [FormsModule, Header, Button, CommonModule, CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective],
   templateUrl: './signup-responsible.html',
   styleUrl: './signup-responsible.css',
 })
@@ -35,6 +35,9 @@ export class SignupResponsible {
   confirmPassInvalido: boolean = false;
   phoneInvalido: boolean = false;
   passwordsDontMatch: boolean = false;
+  cepInvalido: boolean = false;
+  streetInvalido: boolean = false;
+  cityInvalido: boolean = false;
 
   enteredCpf = '';
   enteredName = '';
@@ -42,6 +45,14 @@ export class SignupResponsible {
   enteredPass = '';
   enteredConfirmPass = '';
   enteredPhone = '';
+
+  // o backend exige o endereco no cadastro (ele vira coordenada pro mapa da rota)
+  enteredCep = '';
+  enteredStreet = '';
+  enteredNumber = '';
+  enteredNeighborhood = '';
+  enteredCity = '';
+  enteredState = '';
 
   verification(value: string): boolean {
     return value.trim() === '';
@@ -58,6 +69,9 @@ export class SignupResponsible {
     this.passInvalido = this.verification(this.enteredPass);
     this.confirmPassInvalido = this.verification(this.enteredConfirmPass);
     this.phoneInvalido = this.verification(this.enteredPhone);
+    this.cepInvalido = this.verification(this.enteredCep);
+    this.streetInvalido = this.verification(this.enteredStreet);
+    this.cityInvalido = this.verification(this.enteredCity);
 
     if (
       this.cpfInvalido ||
@@ -65,7 +79,10 @@ export class SignupResponsible {
       this.emailInvalido ||
       this.passInvalido ||
       this.confirmPassInvalido ||
-      this.phoneInvalido
+      this.phoneInvalido ||
+      this.cepInvalido ||
+      this.streetInvalido ||
+      this.cityInvalido
     ) {
       this.popUpService.show('Por favor, preencha todos os campos obrigatórios.', 'warning', 'Campos Incompletos');
       return;
@@ -86,6 +103,14 @@ export class SignupResponsible {
       phone: limparMascara(this.enteredPhone),
       password: this.enteredPass,
       confirmPassword: this.enteredConfirmPass,
+      address: {
+        zipCode: limparMascara(this.enteredCep),
+        street: this.enteredStreet.trim(),
+        number: Number.parseInt(this.enteredNumber, 10) || null,
+        neighborhood: this.enteredNeighborhood.trim(),
+        city: this.enteredCity.trim(),
+        state: this.enteredState.trim().toUpperCase(),
+      },
     };
 
     this.authService.createUser(data).subscribe({
