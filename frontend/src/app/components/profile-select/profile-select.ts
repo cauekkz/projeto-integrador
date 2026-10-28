@@ -40,6 +40,17 @@ export class ProfileSelect {
     this.router.navigate(['/driver-code']);
   }
 
+  // motorista cadastra as escolas que atende (usadas no contrato e na rota)
+  irParaEscolas() {
+    this.fecharEvent.emit();
+    this.router.navigate(['/driver-schools']);
+  }
+
+  irParaContratos() {
+    this.fecharEvent.emit();
+    this.router.navigate(['/contracts']);
+  }
+
   sairDaConta() {
     this.authService.logout();
     this.router.navigate(['/']);

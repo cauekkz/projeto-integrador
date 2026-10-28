@@ -1,0 +1,31 @@
+<header class="topo">
+  @if (mostrarVoltar()) {
+    <button type="button" class="voltar" aria-label="Voltar" (click)="voltarEvent.emit()">
+      <i class="bi bi-chevron-left" aria-hidden="true"></i>
+    </button>
+  }
+
+  <div class="caixa">
+    <ol class="migalhas">
+      @for (item of trilha(); track $index; let ultimo = $last) {
+        <li [class.atual]="ultimo" [attr.aria-current]="ultimo ? 'page' : null">
+          {{ item }}
+          @if (!ultimo) {
+            <i class="bi bi-chevron-right" aria-hidden="true"></i>
+          }
+        </li>
+      }
+    </ol>
+
+    <span class="usuario">
+      <img [src]="foto()" alt="">
+      <span>{{ nome() }}</span>
+    </span>
+
+    @if (mostrarSino()) {
+      <button type="button" class="sino" aria-label="Notificações">
+        <i class="bi bi-bell" aria-hidden="true"></i>
+      </button>
+    }
+  </div>
+</header>
