@@ -1,0 +1,70 @@
+@let c = contrato();
+
+<article class="card" aria-label="Contrato enviado">
+  <header class="topo">
+    <span class="icone" aria-hidden="true"><i class="bi bi-file-earmark-text"></i></span>
+    <div>
+      <h3>Contrato enviado</h3>
+      <span class="subtitulo">Transporte escolar</span>
+    </div>
+  </header>
+
+  @if (podeDecidir()) {
+    <p class="texto">Um contrato foi enviado para você. Confira as informações abaixo.</p>
+  } @else {
+    <p class="texto">
+      Você enviou um contrato{{ c ? ' para ' + c.responsibleName : '' }}. Confira as informações abaixo.
+    </p>
+  }
+
+  <hr class="divisor">
+
+  @if (carregando()) {
+    <p class="aviso" role="status">Carregando contrato...</p>
+  } @else if (erroCarregar() || !c) {
+    <p class="aviso erro" role="alert">
+      Não foi possível carregar o contrato.
+      <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+    </p>
+  } @else {
+    <div class="resumo">
+      <strong>{{ c.studentName }}</strong>
+      <span>{{ c.schoolName }} · {{ periodicidade() }}</span>
+    </div>
+
+    @if (pendente()) {
+      <button type="button" class="btn btn-azul" (click)="visualizar()">Visualizar contrato</button>
+      @if (podeDecidir()) {
+        <button type="button" class="btn btn-decisao" (click)="abrirDecisao()">Decisão</button>
+      } @else {
+        <span class="status pendente">Aguardando decisão</span>
+      }
+    } @else if (statusInfo(); as info) {
+      <span [class]="'resultado ' + info.classe" role="status">{{ info.texto }}</span>
+    }
+  }
+
+  <footer class="rodape">
+    @if (hora()) {
+      <span>{{ hora() }}</span>
+    }
+    <span>Enviado</span>
+    <i class="bi bi-check2-all" aria-hidden="true"></i>
+  </footer>
+</article>
+
+@if (decisaoAberta()) {
+  <div class="overlay" role="dialog" aria-modal="true" aria-label="Decisão sobre o contrato" (click)="fecharDecisao()">
+    <div class="decisao" (click)="$event.stopPropagation()">
+      @if (erroDecisao()) {
+        <p class="aviso erro" role="alert">{{ erroDecisao() }}</p>
+      }
+      <button type="button" class="btn btn-azul" [disabled]="decidindo()" (click)="decidir(true)">
+        {{ decidindo() ? 'Enviando...' : 'Aceitar contrato' }}
+      </button>
+      <button type="button" class="btn btn-negar" [disabled]="decidindo()" (click)="decidir(false)">
+        Negar contrato
+      </button>
+    </div>
+  </div>
+}
