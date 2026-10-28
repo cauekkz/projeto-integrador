@@ -1,0 +1,105 @@
+@let c = contrato();
+
+<div class="pagina">
+  <app-trail-header [trilha]="['Contrato', 'Análise contrato']" [mostrarVoltar]="false" [mostrarSino]="true" />
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <p class="aviso" role="status">Carregando contrato...</p>
+    } @else if (erroCarregar() || !c) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar o contrato.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else {
+      <section class="titulo">
+        <div class="titulo-linha">
+          <h1>Transporte escolar</h1>
+          @if (statusInfo(); as info) {
+            <span [class]="'status ' + info.classe">
+              <i class="bi bi-check2" aria-hidden="true"></i>
+              {{ info.texto }}
+            </span>
+          }
+        </div>
+        <p>Consulte os dados do contrato enviado.</p>
+      </section>
+
+      <section class="card">
+        <div class="pessoa">
+          <img src="/testee.jpg" alt="">
+          <div>
+            <span class="rotulo">Responsável</span>
+            <strong>{{ c.responsibleName }}</strong>
+          </div>
+        </div>
+        <hr class="divisor">
+        <div class="pessoa">
+          <img src="/testee.jpg" alt="">
+          <div>
+            <span class="rotulo">Dependente</span>
+            <strong>{{ c.studentName }}</strong>
+          </div>
+        </div>
+        <hr class="divisor">
+        <div>
+          <span class="rotulo">Escola</span>
+          <strong>{{ c.schoolName }}</strong>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="dados-titulo">
+        <h2 id="dados-titulo">Dados do contrato</h2>
+        <dl class="grade">
+          <div><dt>Periodicidade</dt><dd>{{ periodicidade() }}</dd></div>
+          <div><dt>Valor</dt><dd>{{ valor(c.value) }}</dd></div>
+        </dl>
+        <hr class="divisor">
+        <dl class="grade">
+          <div><dt>Data de início</dt><dd>{{ data(c.startDate) }}</dd></div>
+          <div><dt>Data de término</dt><dd>{{ data(c.endDate) }}</dd></div>
+        </dl>
+      </section>
+
+      <section class="anexo-secao" aria-labelledby="anexo-titulo">
+        <h2 id="anexo-titulo">Anexo</h2>
+        @if (!c.documentFileKey) {
+          <div class="anexo">
+            <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+            <div>
+              <strong>Nenhum PDF anexado</strong>
+              <span>O envio de um PDF é opcional.</span>
+            </div>
+          </div>
+        } @else if (linkPdf(); as link) {
+          <a class="anexo" [href]="link" target="_blank" rel="noopener noreferrer">
+            <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+            <div>
+              <strong>Abrir PDF do contrato</strong>
+              <span>Toque para visualizar o documento.</span>
+            </div>
+          </a>
+        } @else if (carregandoPdf()) {
+          <div class="anexo">
+            <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+            <div><strong>Carregando PDF...</strong></div>
+          </div>
+        } @else {
+          <div class="anexo">
+            <i class="bi bi-file-earmark-x" aria-hidden="true"></i>
+            <div>
+              <strong>Não foi possível carregar o PDF</strong>
+              <span>Tente abrir o contrato novamente.</span>
+            </div>
+          </div>
+        }
+      </section>
+    }
+  </main>
+
+  <footer class="rodape">
+    <button type="button" class="btn-voltar" (click)="voltar()">
+      {{ chatId ? 'Voltar à conversa' : 'Voltar' }}
+    </button>
+  </footer>
+</div>

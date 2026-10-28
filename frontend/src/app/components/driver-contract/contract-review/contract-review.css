@@ -1,0 +1,28 @@
+:host {
+  display: block;
+}
+
+.revisao {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cabecalho-responsavel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: #111827;
+}
+
+.cabecalho-responsavel > i {
+  margin-left: auto;
+  padding-right: 8px;
+  font-size: 0.9rem;
+}

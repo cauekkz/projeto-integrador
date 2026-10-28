@@ -1,0 +1,176 @@
+/* estilos comuns das etapas do contrato (componentes desta pasta e a pagina pages/driver-contract) */
+
+.card {
+  border: 1px solid #d6dee8;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #ffffff;
+}
+
+.divisor {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 0;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.campo > label,
+.campo > .rotulo {
+  font-size: 0.85rem;
+  color: #5b6b82;
+}
+
+.caixa {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 0 14px;
+  background: #f8fafc;
+  border: 1px solid #d6dee8;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+  min-width: 0;
+}
+
+.caixa:focus-within {
+  border-color: #0066cc;
+}
+
+.caixa.invalida {
+  border-color: #dc2626;
+}
+
+.caixa input,
+.caixa select {
+  flex: 1;
+  min-width: 0;
+  height: 56px;
+  border: none;
+  background: transparent;
+  outline: none;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.caixa input {
+  cursor: text;
+}
+
+.caixa select:invalid,
+.caixa select option[value=''] {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* a seta do select fica por cima do campo sem roubar o clique */
+.caixa .seta {
+  position: absolute;
+  right: 14px;
+  pointer-events: none;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.caixa select {
+  padding-right: 28px;
+}
+
+.texto-caixa {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.avatar.grande {
+  width: 46px;
+  height: 46px;
+}
+
+.avatar-iniciais {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e0ecfb;
+  color: #0b5cb8;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.avatar.grande.avatar-iniciais {
+  font-size: 0.95rem;
+}
+
+.erro-campo {
+  font-size: 0.8rem;
+  color: #dc2626;
+}
+
+/* barra cinza dos "Visualizar ..." */
+.expansivel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 16px 0 44px;
+  border: none;
+  border-radius: 10px;
+  background: #f3f4f6;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #111827;
+  cursor: pointer;
+  text-align: left;
+}
+
+.expansivel:hover {
+  background: #eceef1;
+}
+
+.expansivel i {
+  font-size: 0.9rem;
+}
+
+.responsavel-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.responsavel-info .rotulo {
+  font-size: 0.8rem;
+  color: #5b6b82;
+}
+
+.responsavel-info strong {
+  font-size: 0.9rem;
+  color: #0f172a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

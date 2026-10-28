@@ -1,0 +1,75 @@
+<div class="pagina">
+  <app-trail-header [trilha]="[ehMotorista ? 'Motoristas' : 'Responsável', 'Contratos']" (voltarEvent)="voltar()" />
+
+  <div class="abas" role="tablist" aria-label="Filtrar contratos">
+    @for (aba of abas; track aba.id) {
+      <button
+        type="button"
+        role="tab"
+        class="aba"
+        [class.ativa]="abaAtiva() === aba.id"
+        [attr.aria-selected]="abaAtiva() === aba.id"
+        (click)="abaAtiva.set(aba.id)"
+      >
+        {{ aba.label }}
+      </button>
+    }
+  </div>
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <p class="aviso" role="status">Carregando contratos...</p>
+    } @else if (erroCarregar()) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar os contratos.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else if (!filtrados().length) {
+      <p class="aviso">Nenhum contrato por aqui.</p>
+    } @else {
+      <ul class="grade">
+        @for (c of filtrados(); track c.contractId) {
+          @let info = statusInfo[c.status];
+          <li class="card">
+            <div class="capa">
+              <img src="/van.jpg" alt="">
+              <span class="chip">
+                <i [class]="'bi ' + info.icone" aria-hidden="true"></i>
+                {{ info.texto }}
+              </span>
+              <span class="chip direita">{{ periodicidade(c.periodicity) }}</span>
+            </div>
+
+            <div class="corpo">
+              <h2>Transporte escolar</h2>
+              <p class="parte">
+                @if (ehMotorista) {
+                  Responsável: {{ c.responsibleName }}
+                } @else {
+                  Motorista: {{ c.driverName }}
+                }
+              </p>
+
+              <hr class="divisor">
+
+              <div class="aluno">
+                <img src="/testee.jpg" alt="">
+                <div>
+                  <strong>{{ c.studentName }}</strong>
+                  <span>{{ c.schoolName }}</span>
+                </div>
+              </div>
+
+              <button type="button" class="btn-ver" (click)="visualizar(c)">
+                Visualizar contrato
+                <i class="bi bi-arrow-right" aria-hidden="true"></i>
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </main>
+
+  <app-footer [tipoUsuario]="ehMotorista ? 'motorista' : 'responsavel'" tipo="mapa" />
+</div>

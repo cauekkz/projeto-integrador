@@ -1,0 +1,85 @@
+<section class="escolas" aria-labelledby="escolas-titulo">
+  <div class="cabecalho">
+    <div>
+      <h2 id="escolas-titulo">Minhas escolas</h2>
+      <p>Escolas que você atende. Elas aparecem na hora de montar um contrato.</p>
+    </div>
+  </div>
+
+  @if (carregando()) {
+    <p class="aviso" role="status">Carregando escolas...</p>
+  } @else if (erroCarregar()) {
+    <div class="aviso erro" role="alert">
+      {{ erroCarregar() }}
+      <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+    </div>
+  } @else {
+    @if (escolas().length) {
+      <ul class="lista">
+        @for (escola of escolas(); track escola.id) {
+          <li class="escola">
+            <span class="icone" aria-hidden="true"><i class="bi bi-mortarboard"></i></span>
+            <div class="escola-info">
+              <strong>{{ escola.name }}</strong>
+              @if (endereco(escola)) {
+                <span>{{ endereco(escola) }}</span>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    } @else {
+      <p class="aviso">Você ainda não cadastrou nenhuma escola.</p>
+    }
+  }
+
+  @if (formularioAberto()) {
+    <form class="formulario" (ngSubmit)="salvar()" novalidate>
+      <div class="field">
+        <input type="text" placeholder="Nome da escola" name="schoolName" [(ngModel)]="form.name" maxlength="150" required>
+      </div>
+      <div class="field">
+        <input type="text" placeholder="Telefone (opcional)" name="schoolPhone" [(ngModel)]="form.phone" appPhoneMask>
+      </div>
+      <div class="field">
+        <input type="email" placeholder="E-mail (opcional)" name="schoolEmail" [(ngModel)]="form.email">
+      </div>
+      <div class="field">
+        <input type="text" inputmode="numeric" placeholder="CEP" name="schoolZip" [(ngModel)]="form.zipCode" appCepMask required>
+      </div>
+      <div class="field">
+        <input type="text" placeholder="Rua" name="schoolStreet" [(ngModel)]="form.street" required>
+      </div>
+      <div class="linha">
+        <div class="field">
+          <input type="text" inputmode="numeric" placeholder="Número" name="schoolNumber" [(ngModel)]="form.number">
+        </div>
+        <div class="field">
+          <input type="text" placeholder="Bairro" name="schoolNeighborhood" [(ngModel)]="form.neighborhood" maxlength="100">
+        </div>
+      </div>
+      <div class="linha">
+        <div class="field">
+          <input type="text" placeholder="Cidade" name="schoolCity" [(ngModel)]="form.city" maxlength="100" required>
+        </div>
+        <div class="field">
+          <input type="text" placeholder="UF" name="schoolState" [(ngModel)]="form.state" maxlength="2">
+        </div>
+      </div>
+
+      @if (erro()) {
+        <p class="aviso erro" role="alert">{{ erro() }}</p>
+      }
+
+      <button class="btn-primary" type="submit" [disabled]="salvando()">
+        {{ salvando() ? 'Salvando...' : 'Salvar escola' }}
+      </button>
+      <button class="btn-secondary" type="button" [disabled]="salvando()" (click)="cancelar()">Cancelar</button>
+    </form>
+  } @else {
+    <button class="btn-adicionar" type="button" (click)="abrirFormulario()">
+      <i class="bi bi-plus-lg" aria-hidden="true"></i>
+      Adicionar escola
+    </button>
+  }
+</section>

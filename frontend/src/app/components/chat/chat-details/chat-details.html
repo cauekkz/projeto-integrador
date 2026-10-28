@@ -18,40 +18,58 @@
       <p class="chat-aviso">Nenhuma mensagem ainda. Envie a primeira!</p>
     }
     @for (msg of mensagens; track msg.id) {
-      <div class="msg-wrapper" [class.minha]="msg.minha">
-        <div class="msg-balao" [class.minha]="msg.minha">
-          @if (msg.attachmentType === 'IMAGE' && msg.anexoUrl) {
-            <img
-              [src]="msg.anexoUrl"
-              alt="Imagem enviada no chat"
-              [style.max-width.%]="100"
-              [style.max-height.px]="320"
-              style="object-fit: contain"
-            >
-          } @else if (msg.anexoUrl) {
-            <a [href]="msg.anexoUrl" target="_blank" rel="noopener noreferrer">
-              {{ msg.texto || 'Abrir anexo' }}
-            </a>
-          }
-          @if (msg.texto && msg.attachmentType === 'IMAGE') {
-            <span class="msg-texto">{{ msg.texto }}</span>
-          } @else if (msg.texto && !msg.attachmentUrl) {
-            <span class="msg-texto">{{ msg.texto }}</span>
-          }
-          <span class="msg-hora">
-            {{ msg.hora }}
-            @if (msg.minha) {
-              <i class="bi bi-check2-all" [class.lida]="msg.lida"></i>
-            }
-          </span>
+      @if (msg.tipo === 'PROPOSAL' && msg.contractId) {
+        <div class="msg-wrapper" [class.minha]="msg.minha">
+          <app-contract-proposal-card
+            [chatId]="chatId"
+            [contractId]="msg.contractId"
+            [hora]="msg.hora"
+            [podeDecidir]="podeDecidirContrato"
+            [decisao]="decisoesContrato.get(msg.contractId) ?? null"
+          />
         </div>
-      </div>
+      } @else if ((msg.tipo === 'APPROVAL' || msg.tipo === 'REJECTION') && !msg.attachmentUrl) {
+        <p class="msg-sistema" [class.recusado]="msg.tipo === 'REJECTION'">
+          <i class="bi" [class.bi-check-circle]="msg.tipo === 'APPROVAL'" [class.bi-x-circle]="msg.tipo === 'REJECTION'"></i>
+          {{ msg.texto || (msg.tipo === 'APPROVAL' ? 'Contrato aceito' : 'Contrato recusado') }} · {{ msg.hora }}
+        </p>
+      } @else {
+        <div class="msg-wrapper" [class.minha]="msg.minha">
+          <div class="msg-balao" [class.minha]="msg.minha">
+            @if (msg.attachmentType === 'IMAGE' && msg.anexoUrl) {
+              <img
+                [src]="msg.anexoUrl"
+                alt="Imagem enviada no chat"
+                [style.max-width.%]="100"
+                [style.max-height.px]="320"
+                style="object-fit: contain"
+              >
+            } @else if (msg.anexoUrl) {
+              <a [href]="msg.anexoUrl" target="_blank" rel="noopener noreferrer">
+                {{ msg.texto || 'Abrir anexo' }}
+              </a>
+            }
+            @if (msg.texto && msg.attachmentType === 'IMAGE') {
+              <span class="msg-texto">{{ msg.texto }}</span>
+            } @else if (msg.texto && !msg.attachmentUrl) {
+              <span class="msg-texto">{{ msg.texto }}</span>
+            }
+            <span class="msg-hora">
+              {{ msg.hora }}
+              @if (msg.minha) {
+                <i class="bi bi-check2-all" [class.lida]="msg.lida"></i>
+              }
+            </span>
+          </div>
+        </div>
+      }
     }
   </div>
 
   @if (erroEnvio) {
     <p class="chat-aviso erro" role="alert">{{ erroEnvio }}</p>
   }
+
 
   <div class="input-bar">
     <input
@@ -63,16 +81,59 @@
       [disabled]="!!erroCarregar"
       (keydown.enter)="enviar()"
     >
+
     <input
       #attachmentInput
       type="file"
       hidden
       (change)="selecionarImagem($event)"
     >
-    <button class="btn-icon" type="button" (click)="attachmentInput.click()" aria-label="Enviar anexo">
-      <i class="bi bi-credit-card"></i>
+
+    <!-- Botão e menu de anexos -->
+    <div class="attachment-container">
+
+      <button
+        class="btn-icon"
+        type="button"
+        (click)="toggleAttachmentMenu()"
+        aria-label="Abrir opções de anexo"
+        [attr.aria-expanded]="showAttachmentMenu"
+      >
+        <i class="bi bi-credit-card"></i>
+      </button>
+
+      @if (showAttachmentMenu) {
+        <div class="attachment-menu">
+
+          @if (podeCriarContrato) {
+            <button
+              type="button"
+              class="attachment-option"
+              (click)="criarContrato()"
+            >
+              <i class="bi bi-folder"></i>
+              <span>Criar contrato</span>
+            </button>
+          }
+
+          <button
+            type="button"
+            class="attachment-option"
+            (click)="enviarMidia(attachmentInput)"
+          >
+            <i class="bi bi-file-earmark-plus"></i>
+            <span>Enviar mídia</span>
+          </button>
+
+        </div>
+      }
+
+    </div>
+
+    <button class="btn-icon" type="button" aria-label="Gravar áudio">
+      <i class="bi bi-mic"></i>
     </button>
-    <button class="btn-icon"><i class="bi bi-mic"></i></button>
   </div>
+
 
 </div>

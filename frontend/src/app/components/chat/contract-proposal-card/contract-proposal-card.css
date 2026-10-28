@@ -1,0 +1,247 @@
+:host {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #d6dee8;
+  border-radius: 14px;
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #eaf2fd;
+  color: #0b66d8;
+  font-size: 1.3rem;
+}
+
+.topo h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.subtitulo {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.texto {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #1f2937;
+}
+
+.divisor {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 0;
+}
+
+.resumo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.resumo strong {
+  font-size: 0.95rem;
+  color: #0f172a;
+  overflow-wrap: anywhere;
+}
+
+.resumo span {
+  font-size: 0.85rem;
+  color: #64748b;
+  overflow-wrap: anywhere;
+}
+
+.btn {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 12px;
+  font-size: 0.98rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-azul {
+  border: none;
+  background: #0b66d8;
+  color: #ffffff;
+}
+
+.btn-azul:hover:not(:disabled) {
+  background: #0052a3;
+}
+
+.btn-decisao {
+  border: 1px solid #eadf2a;
+  background: #fefed6;
+  color: #111827;
+}
+
+.btn-decisao:hover:not(:disabled) {
+  background: #fcfcc0;
+}
+
+.btn-negar {
+  border: none;
+  background: #ff0000;
+  color: #ffffff;
+}
+
+.btn-negar:hover:not(:disabled) {
+  background: #dc0000;
+}
+
+/* resultado da decisao: pilula larga ACEITO / NEGADO */
+.resultado {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.resultado.aceito {
+  border: 1.5px solid #4ade3a;
+  background: #ebfde8;
+  color: #111827;
+}
+
+.resultado.negado {
+  border: 1.5px solid #ef1c3c;
+  background: #ffe8e8;
+  color: #111827;
+}
+
+.resultado.neutro {
+  border: 1.5px solid #cbd5e1;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.status {
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.status.pendente {
+  background: #fefed6;
+  color: #854d0e;
+}
+
+.status.aceito {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status.recusado {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.status.neutro {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.rodape {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.rodape span + span::before {
+  content: '·';
+  margin-right: 4px;
+}
+
+.aviso {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.aviso.erro {
+  color: #b91c1c;
+}
+
+.link {
+  border: none;
+  background: transparent;
+  color: #0b66d8;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+
+/* ---------- decisao: botoes por cima do chat desfocado ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.decisao {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.decisao .btn {
+  min-height: 44px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+}
+
+.decisao .aviso {
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #ffffff;
+}

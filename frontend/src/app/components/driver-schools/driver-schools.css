@@ -1,0 +1,163 @@
+.escolas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cabecalho h2 {
+  color: #1f2937;
+  font-size: 1.1rem;
+}
+
+.cabecalho p {
+  margin-top: 4px;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.lista {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.escola {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid #bcd4f7;
+  border-radius: 12px;
+  min-width: 0;
+}
+
+.icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #eaf2fd;
+  color: #1565d8;
+  font-size: 1.1rem;
+}
+
+.escola-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.escola-info strong {
+  font-size: 0.95rem;
+  color: #1f2937;
+  overflow-wrap: anywhere;
+}
+
+.escola-info span {
+  font-size: 0.8rem;
+  color: #64748b;
+  overflow-wrap: anywhere;
+}
+
+.aviso {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.aviso.erro {
+  color: #b91c1c;
+}
+
+.link {
+  border: none;
+  background: transparent;
+  color: #1565d8;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.linha {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.field input {
+  width: 100%;
+  min-width: 0;
+  height: 52px;
+  border: 1.5px solid #bcd4f7;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-size: 0.95rem;
+  color: #1f2937;
+  outline: none;
+  background: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field input:focus {
+  border-color: #1565d8;
+  box-shadow: 0 0 0 3px rgba(21, 101, 216, 0.15);
+}
+
+.btn-adicionar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 52px;
+  border: 1.5px dashed #1565d8;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1565d8;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-adicionar:hover {
+  background: #f5f9ff;
+}
+
+.btn-primary,
+.btn-secondary {
+  width: 100%;
+  height: 52px;
+  border: none;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: #1565d8;
+  color: #ffffff;
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #1565d8;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

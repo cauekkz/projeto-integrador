@@ -1,0 +1,72 @@
+<div class="pagina">
+  <nav class="progresso" aria-label="Etapas do contrato">
+    <button
+      type="button"
+      class="voltar"
+      [attr.aria-label]="indiceEtapa() === 0 ? 'Cancelar e voltar ao chat' : 'Voltar para a etapa anterior'"
+      [disabled]="enviando()"
+      (click)="voltar()"
+    >
+      <i class="bi bi-chevron-left" aria-hidden="true"></i>
+    </button>
+
+    <div class="trilha">
+      <ol class="migalhas">
+        <li>Motorista<i class="bi bi-chevron-right" aria-hidden="true"></i></li>
+        <li>Montar contrato<i class="bi bi-chevron-right atual" aria-hidden="true"></i></li>
+        <li class="atual" aria-current="step">{{ etapaLabel() }}</li>
+      </ol>
+      <div
+        class="barra"
+        role="progressbar"
+        aria-label="Progresso do contrato"
+        [attr.aria-valuenow]="indiceEtapa() + 1"
+        aria-valuemin="1"
+        aria-valuemax="3"
+      >
+        <div class="barra-preenchida" [style.width.%]="progresso()"></div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <p class="aviso" role="status">Carregando dados do contrato...</p>
+    } @else if (erroCarregar()) {
+      <div class="aviso erro" role="alert">
+        <p>{{ erroCarregar() }}</p>
+        <button type="button" class="tentar-novamente" (click)="carregarDados()">Tentar novamente</button>
+      </div>
+    } @else {
+      @switch (draft.etapa()) {
+        @case ('aluno') {
+          <app-contract-student-data />
+        }
+        @case ('contrato') {
+          <app-contract-details />
+        }
+        @case ('midia') {
+          <section class="card">
+            <app-contract-review secao="aluno" />
+            <hr class="divisor">
+            <app-contract-review secao="contrato" />
+            <hr class="divisor">
+            <app-contract-attachment [bloqueado]="enviando()" />
+          </section>
+        }
+      }
+
+      @if (erroEnvio()) {
+        <p class="aviso erro" role="alert">{{ erroEnvio() }}</p>
+      }
+    }
+  </main>
+
+  <footer class="rodape">
+    <app-button
+      [texto]="ultimaEtapa() ? (enviando() ? 'Enviando...' : 'Salvar e enviar') : 'Próxima etapa'"
+      [disabled]="carregando() || !!erroCarregar() || enviando()"
+      (clickEvent)="avancar()"
+    />
+  </footer>
+</div>

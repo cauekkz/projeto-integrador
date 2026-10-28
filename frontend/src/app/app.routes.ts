@@ -138,6 +138,35 @@ export const routes: Routes = [
     canActivate: [routeGuard, roleGuard],
     data: { rolesPermitted: ['ROLE_DRIVER'] },
   },
+  {
+    // motorista monta a proposta de contrato pro responsavel do chat (o backend tambem barra quem nao e motorista)
+    path: 'driver-contract/:chatId',
+    // carregada sob demanda: so o motorista usa e deixa o bundle inicial menor
+    loadComponent: () => import('./pages/driver-contract/driver-contract-page').then((m) => m.DriverContractPage),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
+  },
+  {
+    // aba "Adicionar escola" do profile select
+    path: 'driver-schools',
+    loadComponent: () => import('./pages/driver-schools/driver-schools-page').then((m) => m.DriverSchoolsPage),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
+  },
+  {
+    // aba "Contratos" do profile select (o backend devolve so os contratos do usuario logado)
+    path: 'contracts',
+    loadComponent: () => import('./pages/contracts/contracts').then((m) => m.Contracts),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+  },
+  {
+    // analise do contrato; ?chatId= faz o botao voltar pra conversa (so as partes do contrato conseguem ver)
+    path: 'contract/:contractId',
+    loadComponent: () => import('./pages/contract-view/contract-view').then((m) => m.ContractView),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+  },
   // qualquer url que nao bate com nada acima cai na 404 (tem que ser a ultima)
   {
     path: '**',

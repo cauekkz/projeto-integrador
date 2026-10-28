@@ -1,0 +1,77 @@
+@let responsavel = draft.responsavel();
+@let erros = draft.errosAluno();
+
+<section class="card">
+  <div class="responsavel">
+    @if (responsavel?.fotoUrl) {
+      <img class="avatar grande" [src]="responsavel?.fotoUrl" alt="">
+    } @else {
+      <span class="avatar grande avatar-iniciais" aria-hidden="true">{{ iniciais(responsavel?.nome) }}</span>
+    }
+    <div class="responsavel-info">
+      <span class="rotulo">Responsável</span>
+      <strong>{{ responsavel?.nome }}</strong>
+    </div>
+  </div>
+
+  <hr class="divisor">
+
+  <div class="campo">
+    <label for="contrato-dependente">Dependente</label>
+    <div class="caixa" [class.invalida]="draft.mostrarErros() && erros.aluno">
+      @if (draft.aluno(); as aluno) {
+        <span class="avatar avatar-iniciais" aria-hidden="true">{{ iniciais(aluno.name) }}</span>
+      }
+      <select
+        id="contrato-dependente"
+        required
+        [value]="draft.studentId()"
+        [disabled]="!draft.alunos().length"
+        (change)="selecionarAluno($event)"
+      >
+        <option value="" disabled>
+          {{ draft.alunos().length ? 'Selecione o dependente' : 'Nenhum dependente disponível' }}
+        </option>
+        @for (aluno of draft.alunos(); track aluno.id) {
+          <option [value]="aluno.id" [selected]="aluno.id === draft.studentId()">{{ aluno.name }}</option>
+        }
+      </select>
+      <i class="bi bi-chevron-down seta" aria-hidden="true"></i>
+    </div>
+    @if (!draft.alunos().length) {
+      <span class="ajuda">
+        Este responsável ainda não tem dependentes cadastrados em que ele seja o responsável principal.
+      </span>
+    } @else if (draft.mostrarErros() && erros.aluno) {
+      <span class="erro-campo" role="alert">{{ erros.aluno }}</span>
+    }
+  </div>
+
+  <div class="campo">
+    <label for="contrato-escola">Escola</label>
+    <div class="caixa" [class.invalida]="draft.mostrarErros() && erros.escola">
+      <select
+        id="contrato-escola"
+        required
+        [value]="draft.schoolId()"
+        [disabled]="!draft.escolas().length"
+        (change)="selecionarEscola($event)"
+      >
+        <option value="" disabled>
+          {{ draft.escolas().length ? 'Selecione a escola' : 'Nenhuma escola cadastrada' }}
+        </option>
+        @for (escola of draft.escolas(); track escola.id) {
+          <option [value]="escola.id" [selected]="escola.id === draft.schoolId()">{{ escola.name }}</option>
+        }
+      </select>
+      <i class="bi bi-chevron-down seta" aria-hidden="true"></i>
+    </div>
+    @if (!draft.escolas().length) {
+      <span class="ajuda">
+        Cadastre as escolas que você atende em <a routerLink="/profile-info/motorista">Meu perfil</a> para poder montar o contrato.
+      </span>
+    } @else if (draft.mostrarErros() && erros.escola) {
+      <span class="erro-campo" role="alert">{{ erros.escola }}</span>
+    }
+  </div>
+</section>
