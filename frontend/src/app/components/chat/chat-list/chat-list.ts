@@ -5,6 +5,7 @@ import { Header } from '../../../shared/header/header';
 import { Footer } from '../../../shared/footer/footer';
 import { ChatWebSocketService } from '../../../services/chat.service';
 import { AuthService } from '../../../services/auth.service';
+import { StorageService } from '../../../services/storage.service';
 
 @Component({
   selector: 'app-chat-list',
@@ -29,6 +30,7 @@ export class ChatList implements OnInit {
     private route: ActivatedRoute,
     private chatService: ChatWebSocketService,
     private authService: AuthService,
+    private storageService: StorageService,
     private cdr: ChangeDetectorRef,
   ) {}
 
@@ -64,6 +66,7 @@ export class ChatList implements OnInit {
         this.carregandoInicial = false;
         this.erroAoCarregar = false;
         this.cdr.markForCheck();
+        this.carregarFotos(response.content ?? []);
 
         if (novasConversas.length) {
           forkJoin(
@@ -115,6 +118,21 @@ export class ChatList implements OnInit {
     if (chegouAoFim) {
       this.carregarConversas();
     }
+  }
+
+  // o chat traz so a chave da foto do contato; o link de leitura sai do storage (sem foto fica o placeholder)
+  private carregarFotos(chats: Array<{ id: string; otherUserPhotoKey: string | null }>) {
+    chats
+      .filter((chat) => chat.otherUserPhotoKey)
+      .forEach((chat) => {
+        this.storageService.getDownloadUrl(chat.otherUserPhotoKey!).subscribe({
+          next: (url) => {
+            this.conversas = this.conversas.map((c) => (c.id === chat.id ? { ...c, foto: url } : c));
+            this.cdr.markForCheck();
+          },
+          error: () => {},
+        });
+      });
   }
 
   abrirConversa(conversa: { id: string; nome: string; foto: string }) {

@@ -20,9 +20,11 @@
       </div>
     }
 
-    @for (conversa of conversas; track conversa.id) {
+    @for (conversa of conversas; track conversa.id; let i = $index) {
       <div
         class="conversa-item"
+        animate.enter="entrar-subindo"
+        [style.--i]="i"
         role="button"
         tabindex="0"
         (click)="abrirConversa(conversa)"

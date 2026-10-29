@@ -34,7 +34,7 @@
   }
 
   @if (formularioAberto()) {
-    <form class="formulario" (ngSubmit)="salvar()" novalidate>
+    <form class="formulario" animate.enter="entrar-subindo" (ngSubmit)="salvar()" novalidate>
       <div class="field">
         <input type="text" placeholder="Nome da escola" name="schoolName" [(ngModel)]="form.name" maxlength="150" required>
       </div>

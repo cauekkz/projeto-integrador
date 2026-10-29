@@ -105,6 +105,7 @@
 
 @if (mostrarPerfil) {
   <app-profile-select
+    animate.leave="sair-perfil"
     tipoUsuario="responsavel"
     [usuario]="usuarioLogado"
     (fecharEvent)="fecharPerfil()">

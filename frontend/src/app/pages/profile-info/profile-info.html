@@ -3,7 +3,27 @@
 
   <div class="profile-wrapper">
     <div class="avatar-container">
-      <img [src]="usuario.photoUrl || '/testee.jpg'" class="avatar-grande" alt="Foto do usuário">
+      <input
+        #fotoInput
+        type="file"
+        accept="image/png, image/jpeg, image/webp"
+        hidden
+        (change)="selecionarFoto($event)"
+      >
+      <button
+        type="button"
+        class="avatar-botao"
+        [class.enviando]="enviandoFoto"
+        [disabled]="enviandoFoto"
+        [attr.aria-label]="enviandoFoto ? 'Enviando foto...' : 'Trocar foto de perfil'"
+        (click)="fotoInput.click()"
+      >
+        <img [src]="fotoPreview || usuario.photoUrl || '/testee.jpg'" class="avatar-grande" alt="Foto do usuário">
+        @if (enviandoFoto) {
+          <span class="avatar-carregando" aria-hidden="true"></span>
+        }
+        <span class="avatar-camera" aria-hidden="true"><i class="bi bi-camera-fill"></i></span>
+      </button>
     </div>
 
     <div class="hero">

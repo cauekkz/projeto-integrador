@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { jwtDecode } from 'jwt-decode';
 import { UserMe } from '../models/user.model';
-import { catchError, finalize, map, Observable, of, shareReplay, switchMap, tap, throwError } from 'rxjs';
+import { catchError, finalize, firstValueFrom, map, Observable, of, shareReplay, switchMap, tap, throwError } from 'rxjs';
 import {
   tokenResponse,
   loginRequest,
@@ -206,6 +206,34 @@ export class AuthService {
         );
       }),
     );
+  }
+
+  // foto de perfil: pede o link de upload, sobe direto pro bucket, salva no usuario e devolve o link de leitura
+  // (o backend so aceita imagem e apaga a foto antiga)
+  async updateProfilePhoto(file: File): Promise<string> {
+    const contentType = file.type || 'image/jpeg';
+    const upload = await firstValueFrom(
+      this.http.get<{ uploadUrl: string; fileKey: string }>(`${this.apiUrl}/users/photo-upload-url`, {
+        params: { fileName: file.name, contentType },
+        context: new HttpContext().set(SKIP_ERROR_POPUP, true),
+      }),
+    );
+
+    const resposta = await fetch(upload.uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: file,
+    });
+    if (!resposta.ok) {
+      throw new Error(`Falha ao enviar a foto para o armazenamento (${resposta.status}).`);
+    }
+
+    await firstValueFrom(
+      this.http.put(`${this.apiUrl}/users/update-photo`, { fileKey: upload.fileKey }, {
+        context: new HttpContext().set(SKIP_ERROR_POPUP, true),
+      }),
+    );
+    return firstValueFrom(this.storageService.getDownloadUrl(upload.fileKey));
   }
 
   deleteUser(id: string) {

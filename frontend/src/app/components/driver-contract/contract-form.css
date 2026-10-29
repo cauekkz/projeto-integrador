@@ -87,8 +87,40 @@
   font-size: 0.9rem;
 }
 
+/* a caixa ja e o campo: tira borda, fundo e anel de foco do select global (src/styles.css) */
 .caixa select {
-  padding-right: 28px;
+  padding: 0 28px 0 0;
+  border-radius: 0;
+}
+
+.caixa select:hover:not(:disabled),
+.caixa select:focus,
+.caixa select:disabled {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.caixa {
+  transition: border-color var(--dur-rapida) ease, box-shadow var(--dur-rapida) ease;
+}
+
+.caixa:focus-within {
+  box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.15);
+}
+
+.caixa .seta {
+  transition: rotate var(--dur-media) var(--ease-suave);
+}
+
+/* select customizavel: a seta da caixa ja existe, some a do select; e gira enquanto a lista esta aberta */
+@supports (appearance: base-select) {
+  .caixa select::picker-icon {
+    display: none;
+  }
+
+  .caixa:has(select:open) .seta {
+    rotate: 180deg;
+  }
 }
 
 .texto-caixa {
