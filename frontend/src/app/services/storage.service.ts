@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { map, Observable } from 'rxjs';
 import { SKIP_ERROR_POPUP } from '../interceptor/http-context';
+import { API_URL, urlDoStorage } from './api';
 
 // o bucket e privado: o backend guarda so a chave (fileKey) e gera um link de leitura que vale 15 min
 @Injectable({
   providedIn: 'root',
 })
 export class StorageService {
-  private apiUrl = 'http://localhost:9090/api/storage';
+  private apiUrl = `${API_URL}/storage`;
 
   constructor(private http: HttpClient) {}
 
@@ -19,6 +20,6 @@ export class StorageService {
         params: { fileKey },
         context: new HttpContext().set(SKIP_ERROR_POPUP, true),
       })
-      .pipe(map((response) => response.downloadUrl));
+      .pipe(map((response) => urlDoStorage(response.downloadUrl)));
   }
 }

@@ -4,13 +4,13 @@ import { firstValueFrom, map, Observable, of, Subject, switchMap } from 'rxjs';
 import { ChatMessage, ChatPage, ChatSummary, DriverLinkCode } from '../models/chat-message';
 import { SKIP_ERROR_POPUP } from '../interceptor/http-context';
 import { AuthService } from './auth.service';
+import { API_URL, urlDoStorage, wsUrl } from './api';
 
 @Injectable({
   providedIn: 'root',
 })
 export class ChatWebSocketService {
-  private apiUrl = 'http://localhost:9090/api';
-  private wsUrl = 'ws://localhost:9090';
+  private apiUrl = API_URL;
 
   private socket?: WebSocket;
   // chat que a tela quer aberto: se sair antes do token chegar, nao abre o socket
@@ -82,7 +82,7 @@ export class ChatWebSocketService {
   }
 
   private abrirSocket(chatId: string, token: string): void {
-    const url = `${this.wsUrl}/chat/${chatId}?token=${encodeURIComponent(token)}`;
+    const url = `${wsUrl('/chat/' + chatId)}?token=${encodeURIComponent(token)}`;
     this.socket = new WebSocket(url);
 
     this.socket.onopen = () => {};
@@ -140,7 +140,7 @@ export class ChatWebSocketService {
       throw new Error('O servidor não retornou os dados necessários para enviar o anexo.');
     }
 
-    const response = await fetch(upload.uploadUrl, {
+    const response = await fetch(urlDoStorage(upload.uploadUrl), {
       method: 'PUT',
       headers: { 'Content-Type': contentType },
       body: file,

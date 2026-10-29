@@ -1,5 +1,5 @@
 .not-found {
-  min-height: 100vh;
+  min-height: 100dvh;
   padding: 40px 16px;
   display: flex;
   flex-direction: column;

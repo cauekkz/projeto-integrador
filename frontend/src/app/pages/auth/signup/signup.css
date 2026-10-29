@@ -1,7 +1,7 @@
 .sucesso-container {
   width: 100%;
   max-width: 400px;
-  min-height: 100vh;
+  min-height: 100dvh;
   margin: 0 auto;
   padding: 100px 24px 10px;
   display: flex;

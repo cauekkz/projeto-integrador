@@ -14,6 +14,7 @@ import {
 import { limparMascara } from '../shared/utils';
 import { SKIP_ERROR_POPUP } from '../interceptor/http-context';
 import { StorageService } from './storage.service';
+import { API_URL, urlDoStorage } from './api';
 
 const TOKEN_KEY = 'token';
 const REFRESH_TOKEN_KEY = 'refreshToken';
@@ -24,7 +25,7 @@ const MARGEM_EXPIRACAO_MS = 10_000;
   providedIn: 'root',
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:9090/api';
+  private apiUrl = API_URL;
 
   // varias chamadas podem dar 401 juntas: todas esperam o mesmo refresh
   private refreshEmAndamento$: Observable<string> | null = null;
@@ -219,7 +220,7 @@ export class AuthService {
       }),
     );
 
-    const resposta = await fetch(upload.uploadUrl, {
+    const resposta = await fetch(urlDoStorage(upload.uploadUrl), {
       method: 'PUT',
       headers: { 'Content-Type': contentType },
       body: file,

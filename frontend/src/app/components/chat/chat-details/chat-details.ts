@@ -421,8 +421,11 @@ export class ChatDetails implements OnInit, OnDestroy {
     });
   }
 
-  enviar() {
+  enviar(campo?: HTMLInputElement) {
     const text = this.mensagem.trim();
+
+    // mantem o teclado aberto depois de enviar; ele so fecha quando a pessoa toca fora
+    campo?.focus();
 
     if (!text || !this.chatId || this.enviando) {
       return;

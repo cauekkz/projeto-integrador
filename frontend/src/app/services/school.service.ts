@@ -3,13 +3,14 @@ import { HttpClient, HttpContext } from '@angular/common/http';
 import { SKIP_ERROR_POPUP } from '../interceptor/http-context';
 import { limparMascara } from '../shared/utils';
 import { schoolRequest, schoolResponse } from './dto/school/school.dto';
+import { API_URL } from './api';
 
 // escolas que o motorista atende (o motorista sai do jwt)
 @Injectable({
   providedIn: 'root',
 })
 export class SchoolService {
-  private apiUrl = 'http://localhost:9090/api/school';
+  private apiUrl = `${API_URL}/school`;
 
   constructor(private http: HttpClient) {}
 
