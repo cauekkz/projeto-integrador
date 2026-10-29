@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
+import { NotificationService } from '../../services/notification.service';
 import { UserMe } from '../../models/user.model';
 import { StudentService } from '../../services/student.service';
 import { AuthService } from '../../services/auth.service';
@@ -18,6 +19,9 @@ export class HomeScreen implements OnInit {
   meusDependentes: any[] = [];
   usuarioLogado: UserMe | null = null;
 
+  // badge do sino: nao lidas de verdade (GET /api/notifications/unread-count + WebSocket)
+  protected notificacoes = inject(NotificationService);
+
   constructor(
     private authService: AuthService,
     private studentService: StudentService,
@@ -27,6 +31,7 @@ export class HomeScreen implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.notificacoes.iniciar();
     // voltando de "codigo de conversa"/"vincular motorista" reabre o painel do perfil
     this.mostrarPerfil = this.route.snapshot.queryParamMap.get('perfil') === 'aberto';
 

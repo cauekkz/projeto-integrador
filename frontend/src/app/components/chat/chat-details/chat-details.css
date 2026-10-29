@@ -1,11 +1,18 @@
+/* a tela tem a altura do aparelho: so a lista de mensagens rola e o header fica sempre em cima */
 .screen {
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   background: white;
 }
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -52,6 +59,7 @@
 
 .mensagens {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   padding: 16px;

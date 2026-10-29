@@ -1,0 +1,90 @@
+<button
+  type="button"
+  class="bolinha"
+  [class.oculta]="aberto() && arrasto() === null"
+  [class.arrastando]="arrasto() !== null"
+  [style.opacity]="1 - progresso() * 2"
+  [style.transform]="'translateX(-50%) translateY(' + -progresso() * 40 + 'px) scale(' + (1 - progresso() * 0.3) + ')'"
+  [attr.tabindex]="aberto() ? -1 : 0"
+  [attr.aria-hidden]="aberto()"
+  aria-label="Arraste para cima para ver os passageiros"
+  (pointerdown)="iniciarArrasto($event)"
+  (pointermove)="arrastar($event)"
+  (pointerup)="soltar()"
+  (pointercancel)="soltar()"
+  (keydown.enter)="alternar()"
+  (keydown.space)="$event.preventDefault(); alternar()"
+>
+  <i class="bi bi-chevron-up" aria-hidden="true"></i>
+</button>
+
+<section
+  #painel
+  class="painel"
+  [class.aberto]="aberto()"
+  [class.arrastando]="arrasto() !== null"
+  [style.transform]="transform()"
+  aria-label="Passageiros da rota"
+  [attr.aria-hidden]="!aberto() && arrasto() === null"
+  [attr.inert]="!aberto() && arrasto() === null ? '' : null"
+>
+  <button
+    type="button"
+    class="puxador"
+    [attr.aria-expanded]="aberto()"
+    aria-label="Fechar lista de passageiros"
+    (pointerdown)="iniciarArrasto($event)"
+    (pointermove)="arrastar($event)"
+    (pointerup)="soltar()"
+    (pointercancel)="soltar()"
+    (keydown.enter)="alternar()"
+    (keydown.space)="$event.preventDefault(); alternar()"
+  >
+    <span class="alca" aria-hidden="true"></span>
+  </button>
+
+  <div class="abas" role="tablist" aria-label="Situação dos passageiros">
+    <button
+      type="button"
+      role="tab"
+      class="aba"
+      [class.ativa]="aba() === 'embarcados'"
+      [attr.aria-selected]="aba() === 'embarcados'"
+      (click)="selecionarAba('embarcados')"
+    >
+      <span class="icone" aria-hidden="true">
+        <i class="bi bi-person-fill"></i>
+        <i class="bi bi-check-circle-fill mini"></i>
+      </span>
+      Embarcados
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="aba"
+      [class.ativa]="aba() === 'esperando'"
+      [attr.aria-selected]="aba() === 'esperando'"
+      (click)="selecionarAba('esperando')"
+    >
+      <span class="icone" aria-hidden="true">
+        <i class="bi bi-person-fill"></i>
+        <i class="bi bi-clock-fill mini"></i>
+      </span>
+      Esperando
+    </button>
+  </div>
+
+  <ul class="lista" role="tabpanel">
+    @for (p of lista(); track p.nome) {
+      <li class="passageiro">
+        <img [src]="p.foto || '/testee.jpg'" alt="">
+        <strong>{{ p.nome }}</strong>
+        <span>{{ p.endereco }}</span>
+      </li>
+    } @empty {
+      <li class="vazio">
+        {{ aba() === 'embarcados' ? 'Nenhum passageiro embarcado ainda.' : 'Ninguém esperando embarque.' }}
+      </li>
+    }
+  </ul>
+</section>
