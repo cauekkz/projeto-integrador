@@ -6,15 +6,20 @@ export interface PopUpItem {
   title: string;
   message: string;
   durationMs: number;
+  // quantas vezes a mesma notificacao chegou enquanto estava na tela
+  repeticoes: number;
 }
+
+const JANELA_DUPLICADA_MS = 300;
 
 @Injectable({
   providedIn: 'root',
 })
 export class PopUpService {
   readonly popups = signal<PopUpItem[]>([]);
-  private lastShowTimestamp = 0;
-  private lastShowMessage = '';
+  private timers = new Map<string, ReturnType<typeof setTimeout>>();
+  // ultima vez que cada card foi mostrado/contado
+  private ultimaVez = new Map<string, number>();
 
   show(
     message: string,
@@ -22,17 +27,6 @@ export class PopUpService {
     title?: string,
     durationMs: number = 4500
   ): string {
-    const now = Date.now();
-
-    if (this.lastShowMessage === message && now - this.lastShowTimestamp < 300) {
-      return '';
-    }
-
-    this.lastShowMessage = message;
-    this.lastShowTimestamp = now;
-
-    const id = Math.random().toString(36).substring(2, 9) + now.toString(36);
-
     const defaultTitle =
       title ||
       (type === 'error'
@@ -43,23 +37,50 @@ export class PopUpService {
             ? 'Sucesso'
             : 'Informação');
 
+    // mesma notificacao ainda na tela: nao empilha outra, so conta a repeticao e renova o tempo
+    const existente = this.popups().find(
+      (item) => item.type === type && item.title === defaultTitle && item.message === message
+    );
+    if (existente) {
+      // a mesma chamada costuma chegar 2x seguidas (interceptor + tela, clique + submit): nao conta como repeticao
+      const agora = Date.now();
+      if (agora - (this.ultimaVez.get(existente.id) ?? 0) < JANELA_DUPLICADA_MS) {
+        return existente.id;
+      }
+      this.ultimaVez.set(existente.id, agora);
+      this.popups.update((current) =>
+        current.map((item) =>
+          item.id === existente.id ? { ...item, repeticoes: item.repeticoes + 1, durationMs } : item
+        )
+      );
+      this.agendarRemocao(existente.id, durationMs);
+      return existente.id;
+    }
+
+    const id = Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+
     const item: PopUpItem = {
       id,
       type,
       title: defaultTitle,
       message,
       durationMs,
+      repeticoes: 1,
     };
 
     this.popups.update((current) => [...current, item]);
-
-    if (durationMs > 0) {
-      setTimeout(() => {
-        this.remove(id);
-      }, durationMs);
-    }
+    this.ultimaVez.set(id, Date.now());
+    this.agendarRemocao(id, durationMs);
 
     return id;
+  }
+
+  private agendarRemocao(id: string, durationMs: number): void {
+    clearTimeout(this.timers.get(id));
+    this.timers.delete(id);
+    if (durationMs > 0) {
+      this.timers.set(id, setTimeout(() => this.remove(id), durationMs));
+    }
   }
 
   showError(error: any, defaultMessage: string = 'Ocorreu um erro ao processar a requisição.'): void {
@@ -105,10 +126,16 @@ export class PopUpService {
   }
 
   remove(id: string): void {
+    clearTimeout(this.timers.get(id));
+    this.timers.delete(id);
+    this.ultimaVez.delete(id);
     this.popups.update((current) => current.filter((item) => item.id !== id));
   }
 
   clear(): void {
+    this.timers.forEach((timer) => clearTimeout(timer));
+    this.timers.clear();
+    this.ultimaVez.clear();
     this.popups.set([]);
   }
 }

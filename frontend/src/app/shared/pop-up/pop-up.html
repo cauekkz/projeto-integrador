@@ -33,7 +33,15 @@
 
       <div class="popup-content">
         @if (popup.title) {
-          <strong class="popup-title">{{ popup.title }}</strong>
+          <strong class="popup-title">
+            {{ popup.title }}
+            @if (popup.repeticoes > 1) {
+              <!-- recria o selo a cada repeticao pra animacao tocar de novo -->
+              @for (n of [popup.repeticoes]; track n) {
+                <span class="popup-contador" [attr.aria-label]="'Repetido ' + n + ' vezes'">{{ n }}x</span>
+              }
+            }
+          </strong>
         }
         <p class="popup-message">{{ popup.message }}</p>
       </div>
