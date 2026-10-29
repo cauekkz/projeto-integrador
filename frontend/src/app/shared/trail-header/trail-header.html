@@ -23,7 +23,7 @@
     </span>
 
     @if (mostrarSino()) {
-      <button type="button" class="sino" aria-label="Notificações">
+      <button type="button" class="sino" aria-label="Notificações" (click)="notificacoes.abrirTela()">
         <i class="bi bi-bell" aria-hidden="true"></i>
         @if (notificacoes.naoLidas()) {
           <span class="badge" [attr.aria-label]="notificacoes.naoLidas() + ' não lidas'">{{ notificacoes.rotulo() }}</span>

@@ -1,0 +1,86 @@
+<div class="tela">
+  <header class="topo">
+    <button type="button" class="btn-voltar" (click)="voltar()" aria-label="Voltar">
+      <i class="bi bi-chevron-left" aria-hidden="true"></i>
+    </button>
+    <h1>Notificações</h1>
+    <button
+      type="button"
+      class="btn-ler-todas"
+      [disabled]="!temNaoLidas()"
+      (click)="marcarTodas()"
+    >
+      Marcar todas como lidas
+    </button>
+  </header>
+
+  <div class="abas" role="tablist" aria-label="Filtrar notificações">
+    <button type="button" role="tab" class="aba" [class.ativa]="abaAtiva() === 'todas'"
+            [attr.aria-selected]="abaAtiva() === 'todas'" (click)="trocarAba('todas')">Todas</button>
+    <button type="button" role="tab" class="aba" [class.ativa]="abaAtiva() === 'mensagens'"
+            [attr.aria-selected]="abaAtiva() === 'mensagens'" (click)="trocarAba('mensagens')">Mensagens</button>
+    <button type="button" role="tab" class="aba" [class.ativa]="abaAtiva() === 'avisos'"
+            [attr.aria-selected]="abaAtiva() === 'avisos'" (click)="trocarAba('avisos')">Avisos</button>
+  </div>
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <div class="estado" role="status">
+        <span class="spinner" aria-hidden="true"></span>
+        Carregando notificações...
+      </div>
+    } @else if (erro()) {
+      <div class="estado">
+        <i class="bi bi-wifi-off" aria-hidden="true"></i>
+        <p>Não foi possível carregar suas notificações.</p>
+        <button type="button" class="btn-tentar" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else {
+      <!-- recria a lista ao trocar de aba pra animacao tocar de novo -->
+      @for (aba of [abaAtiva()]; track aba) {
+        @if (itens().length) {
+          <ul class="lista">
+            @for (item of itens(); track item.chave; let i = $index) {
+              <li class="entrar-subindo" [style.--i]="i">
+                <button type="button" class="item" [class.nao-lida]="!item.lida" (click)="abrir(item)">
+                  <span class="icone" [attr.data-cor]="item.cor" aria-hidden="true">
+                    <i [class]="'bi ' + item.icone"></i>
+                  </span>
+                  <span class="texto">
+                    <span class="linha-titulo">
+                      <strong>{{ item.titulo }}</strong>
+                      <time>{{ tempo(item.data) }}</time>
+                    </span>
+                    <span class="mensagem">{{ item.texto }}</span>
+                  </span>
+                  @if (!item.lida) {
+                    <span class="ponto" aria-label="Não lida"></span>
+                  }
+                </button>
+              </li>
+            }
+          </ul>
+
+          @if (temMais() && abaAtiva() !== 'mensagens') {
+            <button type="button" class="btn-mais" [disabled]="carregandoMais()" (click)="carregarMais()">
+              {{ carregandoMais() ? 'Carregando...' : 'Ver mais antigas' }}
+            </button>
+          }
+        } @else {
+          <div class="estado entrar-fade">
+            <i class="bi bi-bell-slash" aria-hidden="true"></i>
+            <p>
+              @switch (abaAtiva()) {
+                @case ('mensagens') { Nenhuma mensagem nova por aqui. }
+                @case ('avisos') { Nenhum aviso por enquanto. }
+                @default { Você não tem notificações. }
+              }
+            </p>
+          </div>
+        }
+      }
+    }
+  </main>
+
+  <app-footer [tipoUsuario]="tipoUsuario" />
+</div>

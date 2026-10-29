@@ -2,7 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { CepMaskDirective, PhoneMaskDirective } from '../../shared/directives';
-import { PopUpService } from '../../shared/pop-up';
+import { mensagemDoBackend, PopUpService } from '../../shared/pop-up';
 import { limparMascara } from '../../shared/utils';
 import { SchoolService } from '../../services/school.service';
 import { schoolResponse } from '../../services/dto/school/school.dto';
@@ -133,6 +133,7 @@ export class DriverSchools implements OnInit {
     const status = error instanceof HttpErrorResponse ? error.status : 0;
     if (status === 409) return 'Você já atende esta escola.';
     if (status === 0) return 'Sem conexão com o servidor. Tente novamente.';
+    if (status === 400) return mensagemDoBackend(error) ?? 'Confira o endereço e tente novamente.';
     // o backend busca as coordenadas pelo endereco: endereco nao encontrado tambem cai aqui
     return 'Não foi possível adicionar a escola. Confira o endereço e tente novamente.';
   }

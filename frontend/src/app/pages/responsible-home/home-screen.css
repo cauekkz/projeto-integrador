@@ -169,6 +169,7 @@
 
 .rota-card {
   position: relative;
+  cursor: pointer;
   width: 336px;
   background: #ffffff;
   border-radius: 16px;
@@ -468,4 +469,47 @@
     width: calc(100% - 32px);
     height: 205px;
   }
+}
+
+/* botao com os dependentes: fotos sobrepostas */
+.dependentes-pilha {
+  width: auto;
+  min-width: 50px;
+  padding: 0 6px;
+}
+
+.dep-foto {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+}
+
+.avatar .dep-foto {
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+}
+
+.dep-foto + .dep-foto {
+  margin-left: -12px;
+}
+
+.dep-iniciais,
+.dep-mais {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #1565d8;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.dep-mais {
+  background: #e2e8f0;
+  color: #334155;
 }

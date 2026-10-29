@@ -1,6 +1,6 @@
 import { Directive, ElementRef, HostListener, OnInit, Optional, Self } from '@angular/core';
 import { NgControl } from '@angular/forms';
-import { formatarCpf } from '../utils/mask.utils';
+import { formatarCpf } from '../utils';
 
 @Directive({
   selector: '[appCpfMask]',

@@ -5,14 +5,14 @@ import { AuthService } from '../../../services/auth.service';
 import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
 import { ForgotPassword } from '../../../components/login-signup/forgot-password/forgot-password';
-import { CpfMaskDirective } from '../../../shared/directives';
+import { CpfMaskDirective, PasswordToggleDirective } from '../../../shared/directives';
 import { PopUpService } from '../../../shared/pop-up';
 import { limparMascara } from '../../../shared/utils';
 
 @Component({
   selector: 'app-login-form',
   standalone: true,
-  imports: [FormsModule, Header, Button, ForgotPassword, CpfMaskDirective],
+  imports: [FormsModule, Header, Button, ForgotPassword, CpfMaskDirective, PasswordToggleDirective],
   templateUrl: './login-form.html',
   styleUrl: './login-form.css',
 })

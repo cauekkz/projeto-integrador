@@ -1,6 +1,6 @@
 import { Directive, ElementRef, HostListener, OnInit, Optional, Self } from '@angular/core';
 import { NgControl } from '@angular/forms';
-import { formatarTelefone } from '../utils/mask.utils';
+import { formatarTelefone } from '../utils';
 
 @Directive({
   selector: '[appPhoneMask]',

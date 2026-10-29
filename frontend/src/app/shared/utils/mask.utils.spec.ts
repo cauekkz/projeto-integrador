@@ -6,7 +6,7 @@ import {
   formatarCep,
   formatarData,
   dataParaIso,
-} from './mask.utils';
+} from '.';
 
 describe('mask.utils', () => {
   describe('limparMascara', () => {

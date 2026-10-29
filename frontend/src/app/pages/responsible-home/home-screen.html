@@ -1,7 +1,7 @@
 <div class="screen">
   <div class="topbar">
     <div class="user-info">
-      <div class="notif-wrapper">
+      <div class="notif-wrapper sino-clicavel" role="button" tabindex="0" aria-label="Abrir notificações" (click)="notificacoes.abrirTela()" (keydown.enter)="notificacoes.abrirTela()">
         <div class="avatar notification">
           <i class="bi bi-bell"></i>
         </div>
@@ -33,14 +33,21 @@
           Responsável
         </span>
       } @else {
-        <div class="avatar avatar1">
-          <img
-            src="/addStudent.svg"
-            alt="Estudante"
-          />
+        <!-- com dependentes: as fotos deles empilhadas no lugar do icone de adicionar -->
+        <div class="avatar avatar1 dependentes-pilha" [attr.aria-label]="rotuloDependentes()">
+          @for (dep of meusDependentes.slice(0, 3); track dep.id) {
+            @if (dep.photoUrl) {
+              <img class="dep-foto" [src]="dep.photoUrl" alt="" />
+            } @else {
+              <span class="dep-foto dep-iniciais" aria-hidden="true">{{ iniciais(dep.name) }}</span>
+            }
+          }
+          @if (meusDependentes.length > 3) {
+            <span class="dep-foto dep-mais" aria-hidden="true">+{{ meusDependentes.length - 3 }}</span>
+          }
         </div>
         <span class="role">
-          Responsável
+          {{ rotuloDependentes() }}
         </span>
       }
     </div>
@@ -49,7 +56,8 @@
 
   <!-- isso é um component -->
   <div class="content">
-    <div class="rota-card">
+    <div class="rota-card" role="link" tabindex="0" aria-label="Ver a rota do motorista"
+         (click)="irParaRota()" (keydown.enter)="irParaRota()">
       <div class="rota-header">
         <span class="dot"></span>
         <span class="status-text">
@@ -87,12 +95,7 @@
           </p>
         </div>
 
-        <div class="van-notif" (click)="irParaChat(); $event.stopPropagation()">
-          <i class="bi bi-chat-fill"></i>
-          <span class="van-badge">
-            1
-          </span>
-        </div>
+
       </div>
     </div>
   </div>

@@ -167,6 +167,20 @@ export const routes: Routes = [
     canActivate: [routeGuard, roleGuard],
     data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
   },
+  {
+    // rota do motorista vista pelo responsavel (botao do meio do footer e card do mapa da home)
+    path: 'responsible-route',
+    loadComponent: () => import('./pages/responsible-route/responsible-route').then((m) => m.ResponsibleRoute),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_RESPONSIBLE'] },
+  },
+  {
+    // aba de notificacoes (clicar no sino): avisos do backend + mensagens novas das conversas
+    path: 'notifications',
+    loadComponent: () => import('./pages/notifications/notifications').then((m) => m.Notifications),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+  },
   // qualquer url que nao bate com nada acima cai na 404 (tem que ser a ultima)
   {
     path: '**',

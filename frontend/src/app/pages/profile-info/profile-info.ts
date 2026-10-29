@@ -4,7 +4,7 @@ import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Header } from '../../shared/header/header';
-import { PhoneMaskDirective } from '../../shared/directives';
+import { PhoneMaskDirective, PasswordToggleDirective } from '../../shared/directives';
 import { PopUpService } from '../../shared/pop-up';
 import { formatarCpf, formatarTelefone, limparMascara } from '../../shared/utils';
 
@@ -17,7 +17,7 @@ const TAMANHO_MAX_FOTO = 5 * 1024 * 1024;
 @Component({
   selector: 'app-profile-info',
   standalone: true,
-  imports: [Header, FormsModule, PhoneMaskDirective],
+  imports: [Header, FormsModule, PhoneMaskDirective, PasswordToggleDirective],
   templateUrl: './profile-info.html',
   styleUrl: './profile-info.css',
 })

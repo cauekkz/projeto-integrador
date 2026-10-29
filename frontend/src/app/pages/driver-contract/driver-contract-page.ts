@@ -3,7 +3,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, firstValueFrom, forkJoin, map, Observable, of, switchMap } from 'rxjs';
 import { Button } from '../../shared/button/button';
-import { PopUpService } from '../../shared/pop-up';
+import { mensagemDoBackend, PopUpService } from '../../shared/pop-up';
 import { ChatSummary } from '../../models/chat-message';
 import { ChatWebSocketService } from '../../services/chat.service';
 import { ContractService } from '../../services/contract.service';
@@ -248,11 +248,12 @@ export class DriverContractPage implements OnInit {
       case 0:
         return 'Sem conexão com o servidor. Verifique sua internet e tente novamente.';
       case 400:
-        return 'Este responsável não é o responsável principal do dependente, ou você não participa desta conversa.';
+        // varios motivos caem em 400 (rota nao passa pela escola, ponto errado, responsavel sem vinculo): usa o do backend
+        return mensagemDoBackend(error) ?? 'Confira o dependente, a rota e os pontos escolhidos.';
       case 401:
         return 'Sua sessão expirou. Entre novamente.';
       case 403:
-        return 'Esta escola não está vinculada ao seu perfil de motorista.';
+        return mensagemDoBackend(error) ?? 'Esta escola não está vinculada ao seu perfil de motorista.';
       case 409:
         return 'Já existe um contrato pendente ou ativo com este dependente.';
       default:
