@@ -1,6 +1,6 @@
 <div class="popup-container">
   @for (popup of popUpService.popups(); track popup.id) {
-    <div class="popup-card" [ngClass]="popup.type" role="alert">
+    <div class="popup-card" [ngClass]="popup.type" role="alert" animate.leave="popup-sair">
       <div class="popup-icon">
         @if (popup.type === 'error') {
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

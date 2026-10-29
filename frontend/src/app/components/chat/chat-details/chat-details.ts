@@ -111,7 +111,8 @@ export class ChatDetails implements OnInit, OnDestroy {
       return;
     }
 
-    if (!state?.nomeContato) {
+    // entrou sem passar pela lista (ou a foto ainda nao tinha carregado la): busca nome e foto do contato
+    if (!state?.nomeContato || this.fotoContato === '/testee.jpg') {
       this.carregarNomeContato();
     }
 
@@ -177,6 +178,15 @@ export class ChatDetails implements OnInit, OnDestroy {
         if (chat?.otherUserName) {
           this.nomeContato = chat.otherUserName;
           this.cdr.markForCheck();
+        }
+        if (chat?.otherUserPhotoKey) {
+          this.storageService.getDownloadUrl(chat.otherUserPhotoKey).subscribe({
+            next: (url) => {
+              this.fotoContato = url;
+              this.cdr.markForCheck();
+            },
+            error: () => {},
+          });
         }
       },
       error: (error) =>

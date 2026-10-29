@@ -40,7 +40,7 @@
         <span class="status pendente">Aguardando decisão</span>
       }
     } @else if (statusInfo(); as info) {
-      <span [class]="'resultado ' + info.classe" role="status">{{ info.texto }}</span>
+      <span [class]="'resultado ' + info.classe" animate.enter="entrar-escala" role="status">{{ info.texto }}</span>
     }
   }
 
@@ -54,8 +54,8 @@
 </article>
 
 @if (decisaoAberta()) {
-  <div class="overlay" role="dialog" aria-modal="true" aria-label="Decisão sobre o contrato" (click)="fecharDecisao()">
-    <div class="decisao" (click)="$event.stopPropagation()">
+  <div class="overlay" animate.enter="entrar-fade" animate.leave="sair-fade" role="dialog" aria-modal="true" aria-label="Decisão sobre o contrato" (click)="fecharDecisao()">
+    <div class="decisao" animate.enter="entrar-escala" (click)="$event.stopPropagation()">
       @if (erroDecisao()) {
         <p class="aviso erro" role="alert">{{ erroDecisao() }}</p>
       }

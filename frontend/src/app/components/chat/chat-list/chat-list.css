@@ -19,6 +19,7 @@
   padding: 14px 20px;
   cursor: pointer;
   border-bottom: 1px solid #f1f5f9;
+  transition: background-color var(--dur-rapida) ease;
 }
 
 .conversa-item:hover {

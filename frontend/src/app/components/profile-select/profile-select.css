@@ -88,3 +88,30 @@
 .menu-item.danger i {
   color: #e61212;
 }
+
+/* ---------- abrir / fechar ---------- */
+
+/* display block pra opacidade do animate.leave (classe sair-perfil vem da pagina) valer pro conteudo */
+:host {
+  display: block;
+}
+
+.sheet-entrar {
+  animation: sheet-subir var(--dur-media) var(--ease-suave) both;
+}
+
+:host(.sair-perfil) {
+  animation: fade-sair 200ms ease both;
+}
+
+:host(.sair-perfil) .sheet {
+  animation: sheet-descer 200ms ease both;
+}
+
+@keyframes sheet-subir {
+  from { transform: translateY(100%); }
+}
+
+@keyframes sheet-descer {
+  to { transform: translateY(100%); }
+}

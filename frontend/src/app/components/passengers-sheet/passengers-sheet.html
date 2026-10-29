@@ -74,9 +74,10 @@
     </button>
   </div>
 
+  @for (atual of [aba()]; track atual) {
   <ul class="lista" role="tabpanel">
-    @for (p of lista(); track p.nome) {
-      <li class="passageiro">
+    @for (p of lista(); track p.nome; let i = $index) {
+      <li class="passageiro" animate.enter="entrar-subindo" [style.--i]="i">
         <img [src]="p.foto || '/testee.jpg'" alt="">
         <strong>{{ p.nome }}</strong>
         <span>{{ p.endereco }}</span>
@@ -87,4 +88,5 @@
       </li>
     }
   </ul>
+  }
 </section>

@@ -141,6 +141,7 @@
   font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color var(--dur-media) ease, color var(--dur-media) ease;
 }
 
 .aba.ativa {

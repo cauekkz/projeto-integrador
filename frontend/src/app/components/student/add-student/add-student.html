@@ -2,12 +2,44 @@
   @if (etapa === 'form') {
     <app-header titulo="Suas informações" (voltarEvent)="voltar()"></app-header>
 
-    <div class="photo-card" (click)="abrirBottomSheet()">
-      <div class="photo-content">
-        <img src="/Camera.png" alt="" class="camera-icon" />
-        <p>Coloque uma foto do seu dependente</p>
+    <!-- sem "capture": no celular abre direto a galeria -->
+    <input
+      #fotoInput
+      type="file"
+      accept="image/png, image/jpeg, image/webp"
+      hidden
+      (change)="selecionarFoto($event)"
+    />
+    <section class="photo-card" [class.com-foto]="fotoPreview">
+      <button
+        type="button"
+        class="photo-avatar"
+        [attr.aria-label]="fotoPreview ? 'Trocar foto do dependente' : 'Escolher foto do dependente na galeria'"
+        (click)="fotoInput.click()"
+      >
+        @if (fotoPreview) {
+          <img [src]="fotoPreview" alt="Foto do dependente" class="photo-preview" />
+        } @else {
+          <i class="bi bi-person-fill photo-vazio" aria-hidden="true"></i>
+        }
+        <span class="photo-badge" aria-hidden="true">
+          <i class="bi" [class.bi-pencil-fill]="fotoPreview" [class.bi-image-fill]="!fotoPreview"></i>
+        </span>
+      </button>
+
+      <div class="photo-texto">
+        <strong>Foto do dependente</strong>
+        <span>{{ fotoPreview ? 'Toque na foto para trocar' : 'Toque para escolher da galeria' }}</span>
+        <small>PNG, JPG ou WEBP · até 5 MB</small>
       </div>
-    </div>
+
+      @if (fotoPreview) {
+        <button type="button" class="photo-remover" (click)="removerFoto()">
+          <i class="bi bi-trash3" aria-hidden="true"></i>
+          Remover
+        </button>
+      }
+    </section>
 
     <form class="form">
       <div class="field">
@@ -79,7 +111,7 @@
       </div>
 
       <div class="bottom-actions">
-        <app-button texto="Pronto" tipo="primary" (clickEvent)="pronto()"></app-button>
+        <app-button [texto]="salvando ? 'Salvando...' : 'Pronto'" tipo="primary" [disabled]="salvando" (clickEvent)="pronto()"></app-button>
         <app-button texto="Tenho um código" tipo="secondary" (clickEvent)="vincularDependente()"></app-button>
       </div>
     </form>
@@ -105,19 +137,3 @@
   }
 </div>
 
-@if (mostrarBottomSheet) {
-  <div class="overlay" (click)="fecharBottomSheet()"></div>
-  <div class="bottom-sheet">
-    <h2>Selecione de onde vem a foto</h2>
-    <div class="sheet-options">
-      <button class="sheet-btn" (click)="fecharBottomSheet()">
-        <img src="/Add%20Image.svg" alt="" />
-        Galeria
-      </button>
-      <button class="sheet-btn" (click)="fecharBottomSheet()">
-        <img src="/Camera.png" alt="" />
-        Tirar com a câmera
-      </button>
-    </div>
-  </div>
-}

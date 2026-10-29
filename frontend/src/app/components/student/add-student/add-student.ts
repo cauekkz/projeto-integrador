@@ -1,4 +1,4 @@
-import { Component, ChangeDetectorRef } from '@angular/core';
+import { Component, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Header } from '../../../shared/header/header';
@@ -7,6 +7,10 @@ import { StudentService } from '../../../services/student.service';
 import { NameFormatDirective, DateMaskDirective, CepMaskDirective } from '../../../shared/directives';
 import { dataParaIso, limparMascara } from '../../../shared/utils';
 import { PopUpService } from '../../../shared/pop-up';
+import { StudentPhotoService } from '../../../services/student-photo.service';
+
+const TIPOS_FOTO = ['image/png', 'image/jpeg', 'image/webp'];
+const TAMANHO_MAX_FOTO = 5 * 1024 * 1024;
 
 @Component({
   selector: 'app-add-student',
@@ -15,7 +19,7 @@ import { PopUpService } from '../../../shared/pop-up';
   templateUrl: './add-student.html',
   styleUrl: './add-student.css',
 })
-export class AddStudent {
+export class AddStudent implements OnDestroy {
   etapa: 'form' | 'code' = 'form';
 
   enteredName = '';
@@ -30,16 +34,23 @@ export class AddStudent {
   enteredCity = '';
   enteredState = '';
   maxObs = 1200;
-  mostrarBottomSheet = false;
+  // foto escolhida da galeria; e guardada pelo StudentPhotoService depois que o dependente e criado
+  fotoPreview: string | null = null;
+  private fotoArquivo: File | null = null;
 
   codigoGerado = '';
   copiado = false;
+  // trava o "Pronto" enquanto cria: sem isso um clique duplo criava dois dependentes
+  salvando = false;
+  // dependente ja criado mas o codigo falhou: tentar de novo so gera o codigo, nao cria outro
+  private studentIdCriado: string | null = null;
 
   constructor(
     private studentService: StudentService,
     private router: Router,
     private cdr: ChangeDetectorRef,
     private popUpService: PopUpService,
+    private studentPhotoService: StudentPhotoService,
   ) {}
 
   voltar() {
@@ -47,6 +58,8 @@ export class AddStudent {
   }
 
   pronto() {
+    if (this.salvando) return;
+
     const obrigatorios = [this.enteredName, this.enteredBirthdate, this.enteredRelationType,
       this.enteredCep, this.enteredStreet, this.enteredCity];
     if (obrigatorios.some((valor) => !valor.trim())) {
@@ -70,23 +83,42 @@ export class AddStudent {
       },
     };
 
+    this.salvando = true;
+
+    if (this.studentIdCriado) {
+      this.gerarCodigo(this.studentIdCriado, data.relationType);
+      return;
+    }
+
     this.studentService.createStudent(data).subscribe({
-      next: (studentResponsible) => {
+      next: async (studentResponsible) => {
         const studentId = studentResponsible.studentResponseDTO.id;
-        this.studentService
-          .generateStudentLink({
-            id: studentId,
-            relationType: data.relationType,
-          })
-          .subscribe({
-            next: (codigo) => {
-              this.codigoGerado = codigo;
-              this.etapa = 'code';
-              this.cdr.detectChanges();
-            },
-          });
+        this.studentIdCriado = studentId;
+        if (this.fotoArquivo && !(await this.studentPhotoService.salvar(studentId, this.fotoArquivo))) {
+          this.popUpService.show('O dependente foi criado, mas a foto não pôde ser salva.', 'warning', 'Foto não salva');
+        }
+        this.gerarCodigo(studentId, data.relationType);
       },
+      // o popup de erro ja vem do interceptor; so libera o botao pra tentar de novo
+      error: () => this.liberar(),
     });
+  }
+
+  private gerarCodigo(studentId: string, relationType: string) {
+    this.studentService.generateStudentLink({ id: studentId, relationType }).subscribe({
+      next: (codigo) => {
+        this.codigoGerado = codigo;
+        this.etapa = 'code';
+        this.salvando = false;
+        this.cdr.detectChanges();
+      },
+      error: () => this.liberar(),
+    });
+  }
+
+  private liberar() {
+    this.salvando = false;
+    this.cdr.detectChanges();
   }
 
   copiarCodigo() {
@@ -103,11 +135,34 @@ export class AddStudent {
     this.router.navigate(['/dependentes']);
   }
 
-  abrirBottomSheet() {
-    this.mostrarBottomSheet = true;
+  selecionarFoto(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const arquivo = input.files?.[0];
+    input.value = '';
+    if (!arquivo) return;
+
+    if (!TIPOS_FOTO.includes(arquivo.type)) {
+      this.popUpService.show('Escolha uma imagem PNG, JPG ou WEBP.', 'warning', 'Formato inválido');
+      return;
+    }
+    if (arquivo.size > TAMANHO_MAX_FOTO) {
+      this.popUpService.show('A foto pode ter no máximo 5 MB.', 'warning', 'Imagem muito grande');
+      return;
+    }
+
+    if (this.fotoPreview) URL.revokeObjectURL(this.fotoPreview);
+    this.fotoPreview = URL.createObjectURL(arquivo);
+    this.fotoArquivo = arquivo;
   }
-  fecharBottomSheet() {
-    this.mostrarBottomSheet = false;
+
+  removerFoto() {
+    if (this.fotoPreview) URL.revokeObjectURL(this.fotoPreview);
+    this.fotoPreview = null;
+    this.fotoArquivo = null;
+  }
+
+  ngOnDestroy() {
+    if (this.fotoPreview) URL.revokeObjectURL(this.fotoPreview);
   }
 
   vincularDependente() {
