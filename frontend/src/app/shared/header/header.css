@@ -105,6 +105,11 @@
   padding: 0;
 }
 
+.bell-btn:hover,
+.doc-button:hover {
+  background: #f1f5f9;
+}
+
 .doc-button i {
   font-size: 1.1rem;
   color: #334155;
@@ -130,6 +135,10 @@
 .back-button i {
   font-size: 2rem;
   color: #1f2937;
+}
+
+.back-button:hover i {
+  color: #1565d8;
 }
 
 h1 {

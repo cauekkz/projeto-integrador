@@ -84,13 +84,19 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 16px 0 100px;
+  /* card centralizado no espaco entre a topbar e o footer fixo */
+  justify-content: center;
+  padding: 16px 16px calc(100px + env(safe-area-inset-bottom));
   box-sizing: border-box;
   flex: 1;
-  margin-top: 100px;
   cursor: pointer;
   user-select: none;
+}
 
+.rota-link {
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 
@@ -119,7 +125,8 @@
 }
 
 .driver-card-wrapper {
-  width: 330px;
+  width: 100%;
+  max-width: 400px;
   background: #ffffff;
   border-radius: 28px;
   padding: 16px 14px 20px;
@@ -162,7 +169,8 @@
   z-index: 2;
   width: 90%;
   max-width: 100%;
-  height: 210px;
+  /* altura acompanha a largura do card */
+  aspect-ratio: 3 / 2;
   margin: 0 auto;
   border-radius: 20px;
   overflow: hidden;
@@ -263,6 +271,11 @@
   flex-shrink: 0;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
   cursor: pointer;
+  transition: var(--transicao-botao);
+}
+
+.chat-btn:hover {
+  background: #eff6ff;
 }
 
 .chat-btn i {

@@ -131,8 +131,10 @@
           {{ copiado ? 'Copiado!' : 'Copiar' }}
         </button>
       </div>
+    </div>
 
-      <app-button texto="Concluir" tipo="primary" (clickEvent)="concluir()"></app-button>
+    <div class="botoes">
+      <app-button texto="Concluir" tipo="primary" posicao="top" (clickEvent)="concluir()"></app-button>
     </div>
   }
 </div>
