@@ -6,13 +6,14 @@ import {
   getMyChildrenRequest,
   studentResponsibleResponse,
 } from './dto/student/student.dto';
+import { API_URL } from './api';
 
 
 @Injectable({
   providedIn: 'root',
 })
 export class StudentService {
-  private apiUrl = 'http://localhost:9090/api/student';
+  private apiUrl = `${API_URL}/student`;
 
   constructor(private http: HttpClient) {}
 

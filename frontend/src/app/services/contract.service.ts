@@ -8,13 +8,14 @@ import {
   contractProposalResponse,
   contractSummaryResponse,
 } from './dto/contract/contract.dto';
+import { API_URL } from './api';
 
 // a proposta de contrato nasce dentro do chat (docs/FLUXO_CONTRATO.md)
 @Injectable({
   providedIn: 'root',
 })
 export class ContractService {
-  private apiUrl = 'http://localhost:9090/api';
+  private apiUrl = API_URL;
 
   constructor(private http: HttpClient) {}
 

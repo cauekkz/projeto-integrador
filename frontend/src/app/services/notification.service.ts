@@ -7,6 +7,7 @@ import { SKIP_ERROR_POPUP } from '../interceptor/http-context';
 import { AuthService } from './auth.service';
 import { ChatWebSocketService } from './chat.service';
 import { ChatPage } from '../models/chat-message';
+import { API_URL, wsUrl } from './api';
 
 // NotificationResponseDTO do backend (GET /api/notifications)
 export interface Notificacao {
@@ -42,8 +43,8 @@ const PREFIXO_CHAT_VISTO = 'vanroute.chatVisto.';
   providedIn: 'root',
 })
 export class NotificationService {
-  private apiUrl = 'http://localhost:9090/api/notifications';
-  private wsUrl = 'ws://localhost:9090/notifications';
+  private apiUrl = `${API_URL}/notifications`;
+  private wsUrl = wsUrl('/notifications');
   private semPopup = () => ({ context: new HttpContext().set(SKIP_ERROR_POPUP, true) });
 
   private http = inject(HttpClient);
