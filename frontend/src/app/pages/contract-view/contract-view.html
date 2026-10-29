@@ -12,7 +12,7 @@
         <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
       </div>
     } @else {
-      <section class="titulo">
+      <section class="titulo" animate.enter="entrar-subindo">
         <div class="titulo-linha">
           <h1>Transporte escolar</h1>
           @if (statusInfo(); as info) {
@@ -25,7 +25,7 @@
         <p>Consulte os dados do contrato enviado.</p>
       </section>
 
-      <section class="card">
+      <section class="card" animate.enter="entrar-subindo" style="--i: 1">
         <div class="pessoa">
           <img src="/testee.jpg" alt="">
           <div>
@@ -48,7 +48,7 @@
         </div>
       </section>
 
-      <section class="card" aria-labelledby="dados-titulo">
+      <section class="card" aria-labelledby="dados-titulo" animate.enter="entrar-subindo" style="--i: 2">
         <h2 id="dados-titulo">Dados do contrato</h2>
         <dl class="grade">
           <div><dt>Periodicidade</dt><dd>{{ periodicidade() }}</dd></div>
@@ -61,7 +61,7 @@
         </dl>
       </section>
 
-      <section class="anexo-secao" aria-labelledby="anexo-titulo">
+      <section class="anexo-secao" aria-labelledby="anexo-titulo" animate.enter="entrar-subindo" style="--i: 3">
         <h2 id="anexo-titulo">Anexo</h2>
         @if (!c.documentFileKey) {
           <div class="anexo">

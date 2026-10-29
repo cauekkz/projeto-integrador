@@ -25,12 +25,14 @@
         <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
       </div>
     } @else if (!filtrados().length) {
-      <p class="aviso">Nenhum contrato por aqui.</p>
+      <p class="aviso" animate.enter="entrar-fade">Nenhum contrato por aqui.</p>
     } @else {
+      <!-- recria a lista ao trocar de aba pra os cards entrarem animados de novo -->
+      @for (aba of [abaAtiva()]; track aba) {
       <ul class="grade">
-        @for (c of filtrados(); track c.contractId) {
+        @for (c of filtrados(); track c.contractId; let i = $index) {
           @let info = statusInfo[c.status];
-          <li class="card">
+          <li class="card" animate.enter="entrar-subindo" [style.--i]="i">
             <div class="capa">
               <img src="/van.jpg" alt="">
               <span class="chip">
@@ -68,6 +70,7 @@
           </li>
         }
       </ul>
+      }
     }
   </main>
 

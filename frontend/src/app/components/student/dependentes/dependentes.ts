@@ -5,6 +5,7 @@ import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
 import { StudentService } from '../../../services/student.service';
 import { Router } from '@angular/router';
+import { StudentPhotoService } from '../../../services/student-photo.service';
 
 @Component({
   selector: 'app-dependentes',
@@ -21,6 +22,7 @@ export class Dependentes implements OnInit {
   constructor(
     private studentService: StudentService,
     private router: Router,
+    private studentPhotoService: StudentPhotoService,
   ) {}
 
   ngOnInit() {
@@ -35,8 +37,11 @@ export class Dependentes implements OnInit {
       })
       .subscribe({
         next: (resposta: any) => {
-          console.log('resposta:', resposta);
-          this.dependentes.set(resposta?.content ?? resposta ?? []);
+          const lista: any[] = resposta?.content ?? resposta ?? [];
+          // foto escolhida no cadastro (guardada neste navegador ate o backend ter foto de aluno)
+          this.dependentes.set(
+            lista.map((d) => ({ ...d, photoUrl: d.photoUrl || this.studentPhotoService.obter(d.id) })),
+          );
           this.carregando.set(false);
         },
         error: (err) => {

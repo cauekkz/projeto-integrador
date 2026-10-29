@@ -36,6 +36,18 @@
   }
 }
 
+/* animate.leave: sai deslizando pro mesmo lado que entrou */
+.popup-card.popup-sair {
+  animation: slideOutRight 0.2s ease both;
+}
+
+@keyframes slideOutRight {
+  to {
+    opacity: 0;
+    transform: translateX(40px) scale(0.96);
+  }
+}
+
 .popup-card.error {
   background-color: #fef2f2;
   border-color: #fecaca;
