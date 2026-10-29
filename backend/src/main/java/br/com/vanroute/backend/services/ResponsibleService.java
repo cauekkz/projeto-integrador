@@ -6,12 +6,10 @@ import br.com.vanroute.backend.dtos.user.ResponsibleRequestDTO;
 import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.models.address.Address;
-import br.com.vanroute.backend.models.address.ResponsibleAddress;
 import br.com.vanroute.backend.models.user.Responsible;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
-import br.com.vanroute.backend.repositories.ResponsibleAddressRepository;
 import br.com.vanroute.backend.repositories.ResponsibleRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
@@ -23,15 +21,13 @@ public class ResponsibleService {
     private final UserService userService;
     private final AddressService addressService;
     private final MapService mapService;
-    private final ResponsibleAddressRepository responsibleAddressRepository;
     private final EmailVerificationService emailVerificationService;
 
-    public ResponsibleService(ResponsibleRepository responsibleRepository, UserService userService, AddressService addressService, MapService mapService, ResponsibleAddressRepository responsibleAddressRepository, EmailVerificationService emailVerificationService) {
+    public ResponsibleService(ResponsibleRepository responsibleRepository, UserService userService, AddressService addressService, MapService mapService, EmailVerificationService emailVerificationService) {
         this.responsibleRepository = responsibleRepository;
         this.userService = userService;
         this.addressService = addressService;
         this.mapService = mapService;
-        this.responsibleAddressRepository = responsibleAddressRepository;
         this.emailVerificationService = emailVerificationService;
     }
 
@@ -55,11 +51,7 @@ public class ResponsibleService {
         Coordenadas cords = mapService.searchCoord(address);
         address.setLatitude(cords.latitude());
         address.setLongitude(cords.longitude());
-        ResponsibleAddress responsibleAddress = new ResponsibleAddress();
-        responsibleAddress.setResponsible(responsible);
-        responsibleAddress.setAddress(address);
         Responsible newResponsible = responsibleRepository.save(responsible);
-        responsibleAddressRepository.save(responsibleAddress);
 
         // dentro da transacao: se o envio falhar, o cadastro e desfeito
         emailVerificationService.generateAndSendCode("verificationEmail:email:" + user.getEmail(), user.getEmail());

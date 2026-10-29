@@ -6,6 +6,7 @@ import br.com.vanroute.backend.exceptions.BadRequestException;
 import br.com.vanroute.backend.models.contract.UserDriverContract;
 import br.com.vanroute.backend.models.contract.enums.ContractStatus;
 import br.com.vanroute.backend.models.route.RouteStop;
+import br.com.vanroute.backend.models.school.SchoolStop;
 import br.com.vanroute.backend.models.shared.enums.WeekDay;
 import br.com.vanroute.backend.models.student.enums.StudentStopAction;
 import br.com.vanroute.backend.models.student.enums.StudentStopLocationType;
@@ -98,6 +99,8 @@ public class StudentStopService {
                     .findFirstByDriverUserIdAndStudentIdAndContractStatus(driver.getUserId(), studentStop.getStudent().getId(), ContractStatus.ACTIVE)
                     .orElseThrow(() -> new AccessDeniedException("Não existe contrato ativo com esse aluno"));
             checkSchoolLocation(StudentStopLocationType.SCHOOL, routeStopId, contract.getSchool().getId());
+        } else if (studentStop.getLocationType() != null) {
+            checkSchoolLocation(studentStop.getLocationType(), routeStopId, null);
         }
         if (studentStopRepository.existsByStudentIdAndStopId(studentStop.getStudent().getId(), routeStopId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Student is already registered at this stop.");
@@ -160,12 +163,15 @@ public class StudentStopService {
         );
     }
 
-    // embarque/desembarque marcado como SCHOOL tem que ser no ponto da escola do contrato
+    // SCHOOL tem que ser no ponto da escola do contrato; HOME/OTHER nao pode ser em ponto que tem escola
     private void checkSchoolLocation(StudentStopLocationType locationType, UUID routeStopId, UUID schoolId) {
-        if (locationType == StudentStopLocationType.SCHOOL
-                && schoolStopRepository.findByStopId(routeStopId).stream()
-                .noneMatch(schoolStop -> schoolStop.getSchool().getId().equals(schoolId))) {
-            throw new BadRequestException("Ponto SCHOOL precisa ser o ponto da escola do contrato");
+        List<SchoolStop> schoolStops = schoolStopRepository.findByStopId(routeStopId);
+        if (locationType == StudentStopLocationType.SCHOOL) {
+            if (schoolStops.stream().noneMatch(schoolStop -> schoolStop.getSchool().getId().equals(schoolId))) {
+                throw new BadRequestException("Ponto SCHOOL precisa ser o ponto da escola do contrato");
+            }
+        } else if (!schoolStops.isEmpty()) {
+            throw new BadRequestException("Ponto de escola só aceita aluno marcado como SCHOOL");
         }
     }
 

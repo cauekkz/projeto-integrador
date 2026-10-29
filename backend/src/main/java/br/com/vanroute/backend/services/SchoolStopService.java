@@ -1,9 +1,11 @@
 package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.dtos.route.stops.SchoolStopResponseDTO;
+import br.com.vanroute.backend.exceptions.BadRequestException;
 import br.com.vanroute.backend.models.route.RouteStop;
 import br.com.vanroute.backend.models.school.School;
 import br.com.vanroute.backend.models.school.SchoolStop;
+import br.com.vanroute.backend.models.student.enums.StudentStopLocationType;
 import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.repositories.DriverSchoolsRepository;
 import br.com.vanroute.backend.repositories.RouteStopRepository;
@@ -17,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.EnumSet;
 import java.util.UUID;
 
 @Service
@@ -53,6 +56,10 @@ public class SchoolStopService {
         }
         if (schoolStopRepository.findFirstByStopRouteIdAndSchoolId(route.getRoute().getId(), schoolId).isPresent()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Essa escola já está nessa rota");
+        }
+        if (studentStopRepository.existsByStopIdAndLocationTypeIn(routeStopId,
+                EnumSet.of(StudentStopLocationType.HOME, StudentStopLocationType.OTHER))) {
+            throw new BadRequestException("Esse ponto tem aluno marcado como HOME/OTHER, não pode virar ponto de escola");
         }
 
         SchoolStop schoolStop = new SchoolStop();
