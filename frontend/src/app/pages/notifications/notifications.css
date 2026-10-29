@@ -38,6 +38,10 @@
   cursor: pointer;
 }
 
+.btn-voltar:hover {
+  background: #f1f5f9;
+}
+
 .btn-ler-todas {
   border: none;
   background: transparent;
@@ -46,6 +50,10 @@
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+.btn-ler-todas:hover:not(:disabled) {
+  color: #0052a3;
 }
 
 .btn-ler-todas:disabled {
@@ -72,7 +80,11 @@
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--dur-media) ease, color var(--dur-media) ease;
+  transition: var(--transicao-botao);
+}
+
+.aba:not(.ativa):hover {
+  background: #f1f5f9;
 }
 
 .aba.ativa {
@@ -251,6 +263,11 @@
   display: block;
   width: 100%;
   margin-top: 12px;
+}
+
+.btn-tentar:hover,
+.btn-mais:hover:not(:disabled) {
+  background: #eff6ff;
 }
 
 .btn-mais:disabled {

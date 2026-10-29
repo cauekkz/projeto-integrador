@@ -104,6 +104,14 @@
   font-weight: 500;
 }
 
+.btn-verificar:hover:not(:disabled) {
+  background: #0052a3;
+}
+
+.btn-reenviar:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
 @media (max-width: 380px) {
   .code-input {
     width: 28px;

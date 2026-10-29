@@ -11,16 +11,23 @@
   cursor: pointer;
 }
 
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: white;
+}
+
 .code-container {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 100vw;
-  min-height: 100vh;
-  padding: 40px 24px;
-  gap: 20px;
-
+  gap: 16px;
+  /* padrao das telas de codigo: o bloco centraliza no espaco acima dos botoes fixos (code-input),
+     entao os quadradinhos ficam um pouco acima do meio da tela */
+  padding: 24px 24px 200px;
 }
 .instrucao {
   text-align: center;
@@ -102,6 +109,10 @@
   left: 24px;
   right: 24px;
   width: calc(100% - 48px);
+}
+
+.btn-verificar:hover:not(:disabled) {
+  background: #0052a3;
 }
 
 

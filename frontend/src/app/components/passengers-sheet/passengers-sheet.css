@@ -141,7 +141,11 @@
   font-size: 0.72rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--dur-media) ease, color var(--dur-media) ease;
+  transition: var(--transicao-botao);
+}
+
+.aba:not(.ativa):hover {
+  background: #f1f5f9;
 }
 
 .aba.ativa {
