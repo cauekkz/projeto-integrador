@@ -51,6 +51,7 @@ export class Footer implements OnInit {
       this.abaAtiva = '';
     }
   }
+  // o visual agora e o mesmo em todas as telas; mantido so pra nao quebrar quem ainda passa tipo="mapa"
   @Input() tipo: 'normal' | 'mapa' = 'normal';
 
   clicarHome() {

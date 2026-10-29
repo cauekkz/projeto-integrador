@@ -92,7 +92,25 @@
   object-fit: cover;
 }
 
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #ef1111;
+  color: #ffffff;
+  font-size: 0.6rem;
+  font-weight: 700;
+}
+
 .sino {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
