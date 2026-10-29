@@ -1,2 +1,7 @@
 .idea/application-local.properties
 application-local.properties
+
+# lixo e configuracao pessoal de IA: nao sobe pro repositorio
+*.zip
+.mcp.json
+.claude/
