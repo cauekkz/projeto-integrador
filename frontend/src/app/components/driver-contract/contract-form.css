@@ -101,7 +101,28 @@
 }
 
 .caixa {
-  transition: border-color var(--dur-rapida) ease, box-shadow var(--dur-rapida) ease;
+  transition:
+    border-color var(--dur-rapida) ease,
+    box-shadow var(--dur-rapida) ease,
+    background-color var(--dur-rapida) ease;
+}
+
+.caixa:has(select:not(:disabled)):not(:focus-within, .invalida):hover {
+  border-color: #b9c6d6;
+  background: #f1f5f9;
+}
+
+.caixa:has(select:not(:disabled)):hover .seta,
+.caixa:has(select:focus-visible) .seta {
+  color: #0066cc;
+}
+
+.caixa:has(select:disabled) {
+  opacity: 0.7;
+}
+
+.caixa:has(select:disabled) select {
+  cursor: not-allowed;
 }
 
 .caixa:focus-within {
@@ -114,6 +135,28 @@
 
 /* select customizavel: a seta da caixa ja existe, some a do select; e gira enquanto a lista esta aberta */
 @supports (appearance: base-select) {
+  /* o appearance: none de cima desligava a lista customizada do styles.css: aqui volta pra base-select */
+  .caixa select {
+    appearance: base-select;
+    display: flex;
+    align-items: center;
+  }
+
+  /* a lista abre colada na caixa inteira (com avatar e padding), nao so no select de dentro */
+  .caixa {
+    anchor-name: --caixa;
+    anchor-scope: --caixa;
+  }
+
+  .caixa select::picker(select) {
+    position-anchor: --caixa;
+    min-width: anchor-size(width);
+    max-height: 280px;
+    margin-top: 6px;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
   .caixa select::picker-icon {
     display: none;
   }

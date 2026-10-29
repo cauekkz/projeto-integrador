@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
 import { StudentService } from '../../../services/student.service';
-import { NameFormatDirective, DateMaskDirective, CepMaskDirective } from '../../../shared/directives';
+import { NameFormatDirective, DateMaskDirective, CepMaskDirective, CepBuscaDirective, EnderecoCep } from '../../../shared/directives';
 import { dataParaIso, limparMascara } from '../../../shared/utils';
 import { PopUpService } from '../../../shared/pop-up';
 import { StudentPhotoService } from '../../../services/student-photo.service';
@@ -15,7 +15,7 @@ const TAMANHO_MAX_FOTO = 5 * 1024 * 1024;
 @Component({
   selector: 'app-add-student',
   standalone: true,
-  imports: [FormsModule, Header, Button, NameFormatDirective, DateMaskDirective, CepMaskDirective],
+  imports: [FormsModule, Header, Button, NameFormatDirective, DateMaskDirective, CepMaskDirective, CepBuscaDirective],
   templateUrl: './add-student.html',
   styleUrl: './add-student.css',
 })
@@ -55,6 +55,14 @@ export class AddStudent implements OnDestroy {
 
   voltar() {
     this.router.navigate(['/responsible-home']);
+  }
+
+  // CEP achado no ViaCEP: preenche o que veio (CEP de cidade pequena pode vir sem rua/bairro)
+  preencherEndereco(endereco: EnderecoCep) {
+    if (endereco.rua) this.enteredStreet = endereco.rua;
+    if (endereco.bairro) this.enteredNeighborhood = endereco.bairro;
+    if (endereco.cidade) this.enteredCity = endereco.cidade;
+    if (endereco.uf) this.enteredState = endereco.uf;
   }
 
   pronto() {

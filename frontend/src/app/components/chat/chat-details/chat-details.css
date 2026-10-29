@@ -106,6 +106,96 @@
   color: white;
 }
 
+/* ---------- anexos (video, PDF, outros) ---------- */
+
+.anexo-video {
+  display: block;
+  width: 260px;
+  max-width: 100%;
+  max-height: 320px;
+  border-radius: 12px;
+  background: #0f172a;
+}
+
+.anexo-pdf {
+  display: flex;
+  flex-direction: column;
+  width: 240px;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  text-decoration: none;
+  transition: box-shadow var(--dur-media) var(--ease-suave);
+}
+
+.anexo-pdf:hover {
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+}
+
+/* so a primeira pagina aparece: o clique vai pro link do card, nao pro leitor do iframe */
+.anexo-pdf-previa {
+  display: block;
+  width: 100%;
+  height: 300px;
+  border: none;
+  background: #f1f5f9;
+  pointer-events: none;
+}
+
+.anexo-rodape,
+.anexo-arquivo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.anexo-rodape span,
+.anexo-arquivo span {
+  flex: 1;
+}
+
+.anexo-rodape .bi-file-earmark-pdf-fill {
+  font-size: 1.2rem;
+  color: #dc2626;
+}
+
+.anexo-rodape .bi-box-arrow-up-right,
+.anexo-arquivo .bi-download {
+  color: #64748b;
+}
+
+.anexo-arquivo {
+  min-width: 200px;
+  border-radius: 12px;
+  background: #ffffff;
+  text-decoration: none;
+  transition: background-color var(--dur-media) var(--ease-suave);
+}
+
+.anexo-arquivo:hover {
+  background: #eff6ff;
+}
+
+.anexo-arquivo .bi-file-earmark-fill {
+  font-size: 1.2rem;
+  color: #1565d8;
+}
+
+.anexo-carregando {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.msg-balao.minha .anexo-carregando {
+  color: rgba(255, 255, 255, 0.8);
+}
+
 .msg-hora {
   font-size: 0.7rem;
   color: #94a3b8;

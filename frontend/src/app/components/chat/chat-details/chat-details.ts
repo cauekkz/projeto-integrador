@@ -11,6 +11,7 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { of, Subscription } from 'rxjs';
 import { ChatMessage } from '../../../models/chat-message';
 import { ChatWebSocketService } from '../../../services/chat.service';
@@ -68,6 +69,8 @@ export class ChatDetails implements OnInit, OnDestroy {
     attachmentUrl: string | null;
     attachmentType: string | null;
     anexoUrl: string | null;
+    // como o anexo aparece no balao (o backend so diferencia IMAGE; video e PDF chegam como OTHER)
+    tipoAnexo: TipoAnexo | null;
     sentAt: string;
     // REGULAR_CHAT, PROPOSAL, APPROVAL, REJECTION...; o contractId vem no payload das mensagens de contrato
     tipo: string;
@@ -76,6 +79,9 @@ export class ChatDetails implements OnInit, OnDestroy {
 
   private linksAnexo = new Map<string, string>();
   private anexosCarregando = new Set<string>();
+  // o iframe do PDF precisa de SafeResourceUrl; guardado pra nao recarregar o PDF a cada deteccao de mudanca
+  private previasPdf = new Map<string, SafeResourceUrl>();
+  private sanitizer = inject(DomSanitizer);
 
   constructor(
     private route: ActivatedRoute,
@@ -338,6 +344,7 @@ export class ChatDetails implements OnInit, OnDestroy {
       attachmentUrl: message.attachmentUrl,
       attachmentType: message.attachmentType,
       anexoUrl: this.linkDoAnexo(message.attachmentUrl),
+      tipoAnexo: tipoDoAnexo(message.attachmentType, message.attachmentUrl),
       sentAt: message.sentAt,
       tipo: message.messageType || 'REGULAR_CHAT',
       contractId: this.contractIdDoPayload(message.payload),
@@ -389,6 +396,16 @@ export class ChatDetails implements OnInit, OnDestroy {
     }
 
     return null;
+  }
+
+  // link do storage vem do proprio backend (URL assinada); sem a barra/miniaturas do leitor de PDF
+  previaPdf(url: string): SafeResourceUrl {
+    let previa = this.previasPdf.get(url);
+    if (!previa) {
+      previa = this.sanitizer.bypassSecurityTrustResourceUrl(`${url}#toolbar=0&navpanes=0&view=FitH`);
+      this.previasPdf.set(url, previa);
+    }
+    return previa;
   }
 
   private formatHour(value: string) {
@@ -467,4 +484,19 @@ export class ChatDetails implements OnInit, OnDestroy {
       console.error('Erro ao enviar arquivo:', error);
     }
   }
+}
+
+type TipoAnexo = 'imagem' | 'video' | 'pdf' | 'arquivo';
+
+const EXTENSOES_VIDEO = ['mp4', 'webm', 'mov', 'm4v', 'ogv', '3gp'];
+
+// a chave do arquivo guarda a extensao original (StorageService do backend: uuid + .ext)
+function tipoDoAnexo(attachmentType: string | null, attachmentUrl: string | null): TipoAnexo | null {
+  if (!attachmentUrl) return null;
+  if (attachmentType === 'IMAGE') return 'imagem';
+
+  const extensao = attachmentUrl.split(/[?#]/)[0].split('.').pop()?.toLowerCase() ?? '';
+  if (EXTENSOES_VIDEO.includes(extensao)) return 'video';
+  if (extensao === 'pdf' || attachmentType === 'CONTRACT_DOCUMENT') return 'pdf';
+  return 'arquivo';
 }

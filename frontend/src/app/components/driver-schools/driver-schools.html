@@ -45,14 +45,14 @@
         <input type="email" placeholder="E-mail (opcional)" name="schoolEmail" [(ngModel)]="form.email">
       </div>
       <div class="field">
-        <input type="text" inputmode="numeric" placeholder="CEP" name="schoolZip" [(ngModel)]="form.zipCode" appCepMask required>
+        <input type="text" inputmode="numeric" placeholder="CEP" name="schoolZip" [(ngModel)]="form.zipCode" appCepMask appCepBusca (enderecoCep)="preencherEndereco($event); ($event.rua ? numeroInput : ruaInput).focus()" required>
       </div>
       <div class="field">
-        <input type="text" placeholder="Rua" name="schoolStreet" [(ngModel)]="form.street" required>
+        <input #ruaInput type="text" placeholder="Rua" name="schoolStreet" [(ngModel)]="form.street" required>
       </div>
       <div class="linha">
         <div class="field">
-          <input type="text" inputmode="numeric" placeholder="Número" name="schoolNumber" [(ngModel)]="form.number">
+          <input #numeroInput type="text" inputmode="numeric" placeholder="Número" name="schoolNumber" [(ngModel)]="form.number">
         </div>
         <div class="field">
           <input type="text" placeholder="Bairro" name="schoolNeighborhood" [(ngModel)]="form.neighborhood" maxlength="100">

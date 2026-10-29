@@ -44,14 +44,28 @@
                 [style.max-height.px]="320"
                 style="object-fit: contain"
               >
-            } @else if (msg.anexoUrl) {
-              <a [href]="msg.anexoUrl" target="_blank" rel="noopener noreferrer">
-                {{ msg.texto || 'Abrir anexo' }}
+            } @else if (msg.tipoAnexo === 'video' && msg.anexoUrl) {
+              <video class="anexo-video" [src]="msg.anexoUrl" controls preload="metadata" playsinline></video>
+            } @else if (msg.tipoAnexo === 'pdf' && msg.anexoUrl) {
+              <!-- primeira pagina do PDF; tocar em qualquer lugar do card abre o arquivo inteiro -->
+              <a class="anexo-pdf" [href]="msg.anexoUrl" target="_blank" rel="noopener noreferrer" aria-label="Abrir PDF">
+                <iframe class="anexo-pdf-previa" [src]="previaPdf(msg.anexoUrl)" title="Prévia do PDF" tabindex="-1" loading="lazy"></iframe>
+                <span class="anexo-rodape">
+                  <i class="bi bi-file-earmark-pdf-fill" aria-hidden="true"></i>
+                  <span>Documento PDF</span>
+                  <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+                </span>
               </a>
+            } @else if (msg.anexoUrl) {
+              <a class="anexo-arquivo" [href]="msg.anexoUrl" target="_blank" rel="noopener noreferrer">
+                <i class="bi bi-file-earmark-fill" aria-hidden="true"></i>
+                <span>Arquivo</span>
+                <i class="bi bi-download" aria-hidden="true"></i>
+              </a>
+            } @else if (msg.attachmentUrl) {
+              <span class="anexo-carregando">Carregando anexo...</span>
             }
-            @if (msg.texto && msg.attachmentType === 'IMAGE') {
-              <span class="msg-texto">{{ msg.texto }}</span>
-            } @else if (msg.texto && !msg.attachmentUrl) {
+            @if (msg.texto) {
               <span class="msg-texto">{{ msg.texto }}</span>
             }
             <span class="msg-hora">
