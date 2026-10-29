@@ -1,0 +1,531 @@
+.screen {
+  position: relative;
+  min-height: 100dvh;
+  background: #f1f5f9;
+  font-family: 'Inter', sans-serif;
+}
+
+.mapa-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.mapa-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---------- topo (mesmo vidro do driver-route) ---------- */
+
+.topbar {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  max-width: 448px;
+  margin: 0 auto;
+  padding: 12px;
+  border-radius: 33px;
+  background: rgba(160, 160, 160, 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.circulo {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.75);
+  color: #1f2937;
+  font-size: 1rem;
+}
+
+button.circulo {
+  cursor: pointer;
+  transition: transform var(--dur-rapida) ease;
+}
+
+button.circulo:active {
+  transform: scale(0.94);
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.notif-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  padding: 2px 5px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.status {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(239, 248, 254, 0.75);
+  --cor-status: #2563eb;
+}
+
+.status[data-status='embarcado'] { --cor-status: #d97706; }
+.status[data-status='entregue'] { --cor-status: #16a34a; }
+
+.dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--cor-status);
+}
+
+/* pulso em volta do ponto: a rota esta acontecendo agora */
+.dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--cor-status);
+  opacity: 0;
+  animation: pulso 1.8s ease-out infinite;
+}
+
+@keyframes pulso {
+  0% { transform: scale(0.6); opacity: 0.7; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+.status-texto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--cor-status);
+  transition: color var(--dur-media) ease;
+}
+
+/* ---------- escolha do dependente ---------- */
+
+.dependentes {
+  position: fixed;
+  top: 92px;
+  left: 16px;
+  right: 16px;
+  z-index: 40;
+  display: flex;
+  gap: 8px;
+  max-width: 448px;
+  margin: 0 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.chip {
+  flex-shrink: 0;
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #334155;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+  transition: background-color var(--dur-media) ease, color var(--dur-media) ease, transform var(--dur-rapida) ease;
+}
+
+.chip:active {
+  transform: scale(0.95);
+}
+
+.chip.ativo {
+  background: #1565d8;
+  border-color: #1565d8;
+  color: #ffffff;
+}
+
+/* ---------- painel de baixo (fica acima do footer flutuante) ---------- */
+
+.painel {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(100px + env(safe-area-inset-bottom));
+  z-index: 60;
+  max-width: 448px;
+  max-height: calc(100dvh - 220px);
+  margin: 0 auto;
+  overflow-y: auto;
+  padding: 16px;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.16);
+  overscroll-behavior: contain;
+}
+
+.painel-conteudo {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.previsao {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.previsao-rotulo {
+  display: block;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.previsao-tempo {
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #0f172a;
+}
+
+.previsao-dependente {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #e8f1fd;
+  color: #1565d8;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.progresso {
+  height: 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.progresso-barra {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1565d8, #3b82f6);
+  transition: width var(--dur-media) var(--ease-suave);
+}
+
+.motorista {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: #e8f3ff;
+}
+
+.motorista-foto {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.motorista-foto.iniciais {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1565d8;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.motorista-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.motorista-info strong {
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.motorista-info > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  color: #475569;
+}
+
+.placa {
+  margin-right: 4px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0f172a;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.btn-chat {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: #1565d8;
+  color: #ffffff;
+  font-size: 1.05rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(21, 101, 216, 0.3);
+  transition: transform var(--dur-rapida) ease;
+}
+
+.btn-chat:active {
+  transform: scale(0.93);
+}
+
+.btn-paradas {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 12px;
+  background: #f3f4f6;
+  color: #111827;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--dur-rapida) ease;
+}
+
+.btn-paradas:hover {
+  background: #eceef1;
+}
+
+.seta {
+  transition: rotate var(--dur-media) var(--ease-suave);
+  rotate: 180deg;
+}
+
+.seta.aberta {
+  rotate: 0deg;
+}
+
+.btn-chat:focus-visible,
+.btn-paradas:focus-visible,
+.chip:focus-visible,
+button.circulo:focus-visible {
+  outline: 3px solid #1565d8;
+  outline-offset: 2px;
+}
+
+/* ---------- linha do tempo das paradas ---------- */
+
+.paradas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.parada {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-bottom: 16px;
+}
+
+.parada:last-child {
+  padding-bottom: 0;
+}
+
+/* trilho ligando as paradas */
+.parada::before {
+  content: '';
+  position: absolute;
+  top: 26px;
+  bottom: 0;
+  left: 12px;
+  width: 2px;
+  background: #e2e8f0;
+}
+
+.parada:last-child::before {
+  display: none;
+}
+
+.parada[data-situacao='feita']::before {
+  background: #1565d8;
+}
+
+.marcador {
+  position: relative;
+  z-index: 1;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #ffffff;
+  font-size: 0.8rem;
+}
+
+.parada[data-situacao='feita'] .marcador {
+  border-color: #1565d8;
+  background: #1565d8;
+}
+
+.parada[data-situacao='atual'] .marcador {
+  border-color: #1565d8;
+  background: #ffffff;
+  color: #1565d8;
+  box-shadow: 0 0 0 4px rgba(21, 101, 216, 0.15);
+}
+
+.parada-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+}
+
+.parada-info strong {
+  font-size: 0.88rem;
+  color: #0f172a;
+}
+
+.parada-info span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  color: #64748b;
+}
+
+.parada[data-situacao='feita'] .parada-info strong {
+  color: #64748b;
+}
+
+/* paradas do dependente em azul; as dos outros alunos ficam discretas */
+.parada:not(.anonima):not([data-situacao='feita']) .parada-info strong {
+  color: #1565d8;
+}
+
+.parada.anonima .marcador {
+  width: 18px;
+  height: 18px;
+  margin: 4px;
+  border-style: dashed;
+}
+
+.parada-anonima {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-style: italic;
+}
+
+.aviso-privacidade {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.parada-hora {
+  flex-shrink: 0;
+  padding-top: 3px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* ---------- telas pequenas ---------- */
+
+@media (max-width: 360px) {
+  .topbar {
+    left: 10px;
+    right: 10px;
+    padding: 10px;
+  }
+
+  .painel {
+    left: 10px;
+    right: 10px;
+    padding: 14px;
+  }
+
+  .previsao-tempo {
+    font-size: 1.35rem;
+  }
+
+  .status-texto {
+    font-size: 0.8rem;
+  }
+}

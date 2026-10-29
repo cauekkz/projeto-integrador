@@ -10,7 +10,52 @@ export interface PopUpItem {
   repeticoes: number;
 }
 
+// mensagens que o backend ainda manda em ingles (ou genericas do Spring) traduzidas pro usuario
+const TRADUCOES: Record<string, string> = {
+  'User not found': 'Usuário não encontrado.',
+  'Student not found': 'Dependente não encontrado.',
+  'Route not found': 'Rota não encontrada.',
+  "Route doesn't exists": 'Rota não encontrada.',
+  'Trip not found': 'Viagem não encontrada.',
+  'Stop not found': 'Ponto não encontrado.',
+  'Route stop not found': 'Ponto da rota não encontrado.',
+  'Student stop not found': 'Ponto do aluno não encontrado.',
+  'School stop not found': 'Ponto da escola não encontrado.',
+  'School not found.': 'Escola não encontrada.',
+  'Student is already registered at this stop.': 'O aluno já está cadastrado neste ponto.',
+  'Driver already linked to this school': 'Você já atende esta escola.',
+  'Route does not belong to this driver': 'Esta rota não pertence a você.',
+  'Access Denied': 'Você não tem permissão para realizar esta ação.',
+};
+
+// "trip" aparece no meio de varias mensagens em portugues do backend
+function ajustarTermos(mensagem: string): string {
+  return mensagem.replace(/\btrip\b/gi, 'viagem');
+}
+
+/**
+ * Mensagem que o backend escreveu pro erro (ExceptionResponse.message ou ResponseStatusException.reason),
+ * ja traduzida. Devolve null quando nao tem mensagem aproveitavel: sem corpo, texto tecnico do Angular
+ * ("Http failure response...") ou o "Invalid request content." do @Valid, que nao diz o campo.
+ */
+export function mensagemDoBackend(error: unknown): string | null {
+  const corpo = (error as { error?: unknown } | null)?.error;
+  const bruta =
+    typeof corpo === 'string'
+      ? corpo
+      : (corpo as { message?: unknown } | null)?.message ?? (corpo as { detail?: unknown } | null)?.detail;
+
+  if (typeof bruta !== 'string') return null;
+  const mensagem = bruta.trim();
+  if (!mensagem || mensagem.startsWith('{') || mensagem.startsWith('<')) return null;
+  if (mensagem.includes('Http failure') || mensagem === 'Invalid request content.') return null;
+
+  return TRADUCOES[mensagem] ?? ajustarTermos(mensagem);
+}
+
 const JANELA_DUPLICADA_MS = 300;
+// erros de negocio que o backend ainda devolve como 500 (IllegalStateException/RuntimeException)
+const MENSAGENS_500_PARA_USUARIO = ['Código incorreto ou expirado.', 'Não foi possível gerar um código único.'];
 
 @Injectable({
   providedIn: 'root',
@@ -94,35 +139,36 @@ export class PopUpService {
       return;
     }
 
-    const status = error.status;
-    let message = defaultMessage;
-
-    const backendMessage =
-      typeof error.error === 'string'
-        ? error.error
-        : error.error?.message || error.error?.error || error.message;
+    const status: number | undefined = error.status;
+    const backendMessage = mensagemDoBackend(error);
 
     if (status === 0) {
-      message = 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet.';
+      this.show('Não foi possível conectar ao servidor. Verifique sua conexão com a internet.', 'error', 'Sem conexão');
     } else if (status === 400) {
-      message = backendMessage || 'Dados inválidos. Por favor, verifique as informações preenchidas.';
+      this.show(backendMessage || 'Dados inválidos. Verifique as informações preenchidas.', 'error', 'Dados inválidos');
     } else if (status === 401) {
-      message = backendMessage || 'E-mail, CPF ou senha inválidos.';
+      // 401 de rota logada vira "sessao expirada" no interceptor; aqui chega o do login
+      this.show(backendMessage || 'CPF ou senha inválidos.', 'error', 'Acesso negado');
     } else if (status === 403) {
-      message = 'Sua sessão expirou ou você não tem permissão para realizar esta ação.';
+      this.show(backendMessage || 'Você não tem permissão para realizar esta ação.', 'error', 'Sem permissão');
     } else if (status === 404) {
-      message = backendMessage || 'Usuário ou recurso não encontrado.';
+      this.show(backendMessage || 'Não encontramos o que você procurou.', 'error', 'Não encontrado');
     } else if (status === 409) {
-      message = backendMessage || 'Este e-mail ou CPF já está cadastrado no sistema.';
+      this.show(backendMessage || 'Esta ação conflita com dados já cadastrados.', 'warning', 'Não foi possível concluir');
     } else if (status === 422) {
-      message = backendMessage || 'Informações inválidas. Verifique os dados inseridos.';
-    } else if (status >= 500) {
-      message = 'Ocorreu um erro no servidor. Tente novamente mais tarde.';
-    } else if (typeof backendMessage === 'string' && backendMessage.trim() && !backendMessage.includes('Http failure')) {
-      message = backendMessage;
+      this.show(backendMessage || 'Informações inválidas. Verifique os dados inseridos.', 'error', 'Dados inválidos');
+    } else if (status === 503) {
+      this.show(backendMessage || 'Serviço indisponível agora. Tente mais tarde.', 'error', 'Serviço indisponível');
+    } else if (status !== undefined && status >= 500) {
+      // 500 traz a mensagem crua da exception (as vezes tecnica): so mostra as que sao pro usuario
+      const message =
+        backendMessage && MENSAGENS_500_PARA_USUARIO.includes(backendMessage)
+          ? backendMessage
+          : 'Ocorreu um erro no servidor. Tente novamente mais tarde.';
+      this.show(message, 'error', 'Erro no servidor');
+    } else {
+      this.show(backendMessage || defaultMessage, 'error');
     }
-
-    this.show(message, 'error');
   }
 
   remove(id: string): void {

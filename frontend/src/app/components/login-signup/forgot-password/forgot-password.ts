@@ -5,6 +5,7 @@ import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
 import { AuthService } from '../../../services/auth.service';
 import { PopUpService } from '../../../shared/pop-up';
+import { PasswordToggleDirective } from '../../../shared/directives';
 
 // mesma regra do backend: maiuscula, minuscula, numero e caractere especial, 8+ caracteres
 const SENHA_FORTE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
@@ -14,7 +15,7 @@ const SENHA_FORTE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [FormsModule, CodeInput, Header, Button],
+  imports: [FormsModule, CodeInput, Header, Button, PasswordToggleDirective],
   templateUrl: './forgot-password.html',
   styleUrl: './forgot-password.css',
 })

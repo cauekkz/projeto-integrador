@@ -1,6 +1,6 @@
 import { Directive, ElementRef, HostListener, OnInit, Optional, Self } from '@angular/core';
 import { NgControl } from '@angular/forms';
-import { formatarCep } from '../utils/mask.utils';
+import { formatarCep } from '../utils';
 
 @Directive({
   selector: '[appCepMask]',

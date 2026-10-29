@@ -1,6 +1,6 @@
 import { Directive, ElementRef, HostListener, OnInit, Optional, Self } from '@angular/core';
 import { NgControl } from '@angular/forms';
-import { formatarData } from '../utils/mask.utils';
+import { formatarData } from '../utils';
 
 @Directive({
   selector: '[appDateMask]',

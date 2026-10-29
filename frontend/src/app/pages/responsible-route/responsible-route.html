@@ -1,0 +1,145 @@
+<div class="screen">
+  <div class="mapa-fullscreen">
+    <img src="/mapa-placeholder.png" alt="Mapa com a posição da van" class="mapa-img">
+  </div>
+
+  <header class="topbar">
+    <button type="button" class="circulo" (click)="irParaPerfil()" aria-label="Abrir perfil">
+      <img [src]="usuarioLogado?.photoUrl || '/testee.jpg'" class="avatar" alt="">
+    </button>
+
+    <div class="status" [attr.data-status]="rota().status" role="status">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="status-texto">{{ statusTexto() }}</span>
+    </div>
+
+    <div class="notif-wrapper sino-clicavel" role="button" tabindex="0" aria-label="Abrir notificações" (click)="notificacoes.abrirTela()" (keydown.enter)="notificacoes.abrirTela()">
+      <span class="circulo" aria-hidden="true"><i class="bi bi-bell-fill"></i></span>
+      @if (notificacoes.naoLidas()) {
+        <span class="badge" [attr.aria-label]="notificacoes.naoLidas() + ' notificações não lidas'">{{ notificacoes.rotulo() }}</span>
+      }
+    </div>
+  </header>
+
+  @if (rotas().length > 1) {
+    <div class="dependentes" role="tablist" aria-label="Dependentes">
+      @for (r of rotas(); track r.dependente; let i = $index) {
+        <button
+          type="button"
+          role="tab"
+          class="chip"
+          [class.ativo]="i === selecionado()"
+          [attr.aria-selected]="i === selecionado()"
+          (click)="selecionar(i)"
+        >
+          {{ r.dependente }}
+        </button>
+      }
+    </div>
+  }
+
+  <section class="painel" aria-label="Rota do motorista">
+    <!-- recria o conteudo ao trocar de dependente pra animacao tocar de novo -->
+    @for (r of [rota()]; track r.dependente) {
+      <div class="painel-conteudo entrar-fade">
+        <div class="previsao">
+          <div>
+            <span class="previsao-rotulo">
+              {{ r.status === 'a-caminho' ? 'Chega na sua casa em' : 'Chega na escola em' }}
+            </span>
+            <strong class="previsao-tempo">{{ r.minutos }} min</strong>
+          </div>
+          <span class="previsao-dependente">
+            <i class="bi bi-backpack2-fill" aria-hidden="true"></i>
+            {{ r.dependente }}
+          </span>
+        </div>
+
+        <div class="progresso" role="progressbar" aria-label="Paradas concluídas"
+             [attr.aria-valuenow]="progresso()" aria-valuemin="0" aria-valuemax="100">
+          <span class="progresso-barra" [style.width.%]="progresso()"></span>
+        </div>
+
+        <div class="motorista">
+          @if (r.motorista.foto) {
+            <img [src]="r.motorista.foto" class="motorista-foto" alt="">
+          } @else {
+            <span class="motorista-foto iniciais" aria-hidden="true">{{ iniciais(r.motorista.nome) }}</span>
+          }
+          <div class="motorista-info">
+            <strong>{{ r.motorista.nome }}</strong>
+            <span>
+              <span class="placa">{{ r.van.placa }}</span>
+              {{ r.van.descricao }}
+            </span>
+          </div>
+          <button type="button" class="btn-chat" (click)="irParaChat()" aria-label="Conversar com o motorista">
+            <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="btn-paradas"
+          [attr.aria-expanded]="paradasAbertas()"
+          aria-controls="lista-paradas"
+          (click)="alternarParadas()"
+        >
+          <span>{{ paradasAbertas() ? 'Esconder paradas' : 'Ver paradas da rota' }} ({{ paradasDoDependente() }})</span>
+          <i class="bi bi-chevron-up seta" [class.aberta]="paradasAbertas()" aria-hidden="true"></i>
+        </button>
+
+        @if (paradasAbertas()) {
+          <ol id="lista-paradas" class="paradas" animate.enter="entrar-fade" animate.leave="sair-fade">
+            @for (p of r.paradas; track $index; let i = $index) {
+              <li
+                class="parada entrar-subindo"
+                [class.anonima]="p.tipo === 'outras'"
+                [attr.data-situacao]="p.situacao"
+                [style.--i]="i"
+              >
+                <span class="marcador" aria-hidden="true">
+                  @if (p.situacao === 'feita') {
+                    <i class="bi bi-check-lg"></i>
+                  } @else if (p.situacao === 'atual') {
+                    <i class="bi bi-truck-front-fill"></i>
+                  }
+                </span>
+                @if (p.tipo === 'dependente') {
+                  <div class="parada-info">
+                    <strong>{{ p.titulo }}</strong>
+                    <span>{{ p.endereco }}</span>
+                  </div>
+                  <time class="parada-hora">{{ p.horario }}</time>
+                } @else {
+                  <!-- parada de outro aluno: sem nome, endereco nem horario -->
+                  <div class="parada-info">
+                    <span class="parada-anonima">
+                      <i class="bi bi-shield-lock-fill" aria-hidden="true"></i>
+                      {{ textoOutras(p.quantidade, p.situacao) }}
+                    </span>
+                  </div>
+                }
+              </li>
+            }
+          </ol>
+          <p class="aviso-privacidade">
+            <i class="bi bi-lock-fill" aria-hidden="true"></i>
+            Por segurança, você vê só as paradas do seu dependente.
+          </p>
+        }
+      </div>
+    }
+  </section>
+
+  <app-footer tipoUsuario="responsavel" />
+</div>
+
+@if (mostrarPerfil) {
+  <app-profile-select
+    animate.leave="sair-perfil"
+    tipoUsuario="responsavel"
+    [usuario]="usuarioLogado"
+    (fecharEvent)="fecharPerfil()"
+  />
+}
