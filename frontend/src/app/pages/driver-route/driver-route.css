@@ -103,3 +103,14 @@
   font-weight: 700;
   color: #2563eb;
 }
+
+/* arrastando a bolinha ou painel aberto: footer some rapido (so opacidade; transform quebraria o position: fixed dele) */
+.footer-wrap {
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.footer-wrap.escondido {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}

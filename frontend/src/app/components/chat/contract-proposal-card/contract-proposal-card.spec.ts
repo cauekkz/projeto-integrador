@@ -100,7 +100,7 @@ describe('ContractProposalCard (card do contrato no chat)', () => {
     fixture.detectChanges();
 
     expect(card.status()).toBe('ACTIVE');
-    expect(fixture.nativeElement.textContent).toContain('Contrato aceito');
+    expect(fixture.nativeElement.textContent).toContain('Aceito');
     expect(fixture.nativeElement.textContent).not.toContain('Decisão');
   });
 
@@ -120,6 +120,6 @@ describe('ContractProposalCard (card do contrato no chat)', () => {
     const fixture = criar(true);
     fixture.componentRef.setInput('decisao', 'ACTIVE');
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Contrato aceito');
+    expect(fixture.nativeElement.textContent).toContain('Aceito');
   });
 });

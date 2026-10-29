@@ -1,4 +1,5 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
+import { NotificationService } from '../../services/notification.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Footer } from '../../shared/footer/footer';
 import { ProfileSelect } from '../../components/profile-select/profile-select';
@@ -17,6 +18,9 @@ export class DriverHome implements OnInit {
   mostrarPerfil = false;
   usuarioLogado: UserMe | null = null;
 
+  // badge do sino: nao lidas de verdade (GET /api/notifications/unread-count + WebSocket)
+  protected notificacoes = inject(NotificationService);
+
   constructor(
     private router: Router,
     private authService: AuthService,
@@ -25,6 +29,7 @@ export class DriverHome implements OnInit {
   ) {}
 
   ngOnInit() {
+    this.notificacoes.iniciar();
     // voltando de "codigo de conversa"/"vincular motorista" reabre o painel do perfil
     this.mostrarPerfil = this.route.snapshot.queryParamMap.get('perfil') === 'aberto';
 

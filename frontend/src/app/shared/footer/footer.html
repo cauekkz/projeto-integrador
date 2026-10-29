@@ -1,47 +1,28 @@
-<div class="bottombar" [class.mapa]="tipo === 'mapa'">
-  @if (tipoUsuario === 'responsavel') {
-    <button
-      class="tab"
-      [class.active]="abaAtiva === 'home'"
-      (click)="clicarHome()">
-      <i class="bi bi-house-door-fill"></i>
-    </button>
+<nav class="bottombar" aria-label="Navegação principal">
+  <button
+    type="button"
+    class="tab"
+    aria-label="Início"
+    [class.active]="abaAtiva === 'home'"
+    (click)="clicarHome()">
+    <i class="bi bi-house-door-fill" aria-hidden="true"></i>
+  </button>
 
-    <button
-      class="tab"
-      [class.active]="abaAtiva === 'meio'"
-      (click)="selecionarAba('meio')">
-      <i class="bi bi-bus-front"></i>
-    </button>
+  <button
+    type="button"
+    class="tab"
+    [attr.aria-label]="tipoUsuario === 'motorista' ? 'Rota' : 'Transporte'"
+    [class.active]="abaAtiva === 'meio'"
+    (click)="selecionarAba('meio')">
+    <i class="bi bi-truck-front-fill" aria-hidden="true"></i>
+  </button>
 
-    <button
-      class="tab"
-      [class.active]="abaAtiva === 'config'"
-      (click)="selecionarAba('config')">
-      <i class="bi bi-chat-dots-fill"></i>
-    </button>
-  }
-
-  @if (tipoUsuario === 'motorista') {
-    <button
-      class="tab"
-      [class.active]="abaAtiva === 'home'"
-      (click)="clicarHome()">
-      <i class="bi bi-house-door-fill"></i>
-    </button>
-
-    <button
-      class="tab"
-      [class.active]="abaAtiva === 'meio'"
-      (click)="selecionarAba('meio')">
-      <i class="bi bi-map-fill"></i>
-    </button>
-
-    <button
-      class="tab"
-      [class.active]="abaAtiva === 'config'"
-      (click)="selecionarAba('config')">
-      <i class="bi bi-chat-dots-fill"></i>
-    </button>
-  }
-</div>
+  <button
+    type="button"
+    class="tab"
+    aria-label="Conversas"
+    [class.active]="abaAtiva === 'config'"
+    (click)="selecionarAba('config')">
+    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+  </button>
+</nav>

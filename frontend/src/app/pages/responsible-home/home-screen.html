@@ -5,6 +5,9 @@
         <div class="avatar notification">
           <i class="bi bi-bell"></i>
         </div>
+        @if (notificacoes.naoLidas()) {
+          <span class="badge" [attr.aria-label]="notificacoes.naoLidas() + ' notificações não lidas'">{{ notificacoes.rotulo() }}</span>
+        }
       </div>
 
       <div class="user-name" (click)="irParaPerfil()">

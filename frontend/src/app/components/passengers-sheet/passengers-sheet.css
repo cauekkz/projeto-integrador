@@ -1,0 +1,226 @@
+:host {
+  display: block;
+}
+
+/* ---------- bolinha (painel fechado) ---------- */
+
+.bolinha {
+  position: fixed;
+  left: 50%;
+  bottom: calc(96px + env(safe-area-inset-bottom));
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border: none;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #0C66DB;
+  font-size: 1.5rem;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+  cursor: grab;
+  touch-action: none;
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* durante o arrasto ela acompanha o dedo sem atraso */
+.bolinha.arrastando {
+  cursor: grabbing;
+  transition: none;
+}
+
+.bolinha.oculta {
+  pointer-events: none;
+}
+
+.bolinha i {
+  animation: sobe 1.6s ease-in-out infinite;
+}
+
+/* seta "chamando" pra cima */
+@keyframes sobe {
+  0%, 100% { transform: translateY(2px); }
+  50% { transform: translateY(-3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bolinha i {
+    animation: none;
+  }
+}
+
+.bolinha:focus-visible {
+  outline: 3px solid #0C66DB;
+  outline-offset: 3px;
+}
+
+/* ---------- painel ---------- */
+
+/* fechado fica todo abaixo da tela (translateY 100%); abre por cima de onde estava o footer */
+.painel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  height: min(62dvh, 520px);
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 12px calc(16px + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 -6px 20px rgba(15, 23, 42, 0.08);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.painel.arrastando {
+  transition: none;
+}
+
+.puxador {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-shrink: 0;
+  width: 100%;
+  height: 32px;
+  border: none;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+
+.painel.arrastando .puxador {
+  cursor: grabbing;
+}
+
+.alca {
+  width: 44px;
+  height: 4px;
+  border-radius: 999px;
+  background: #9ca3af;
+}
+
+.puxador:focus-visible {
+  outline: 2px solid #0C66DB;
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+/* ---------- abas ---------- */
+
+.abas {
+  display: flex;
+  align-self: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 4px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.aba {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 84px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #111827;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.aba.ativa {
+  background: #dbe7f7;
+  color: #0C66DB;
+}
+
+.icone {
+  position: relative;
+  display: inline-flex;
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.icone .mini {
+  position: absolute;
+  right: -7px;
+  bottom: -1px;
+  font-size: 0.75rem;
+  background: #ffffff;
+  border-radius: 50%;
+  outline: 2px solid #ffffff;
+}
+
+/* ---------- lista ---------- */
+
+.lista {
+  flex: 1;
+  min-height: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 2px 2px 8px;
+  overflow-y: auto;
+  touch-action: pan-y;
+}
+
+.passageiro {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) minmax(0, auto);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+.passageiro img {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.passageiro strong {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #111827;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.passageiro span {
+  max-width: 150px;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vazio {
+  text-align: center;
+  font-size: 0.88rem;
+  color: #64748b;
+  padding: 16px 8px;
+}
