@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { CepMaskDirective, PhoneMaskDirective } from '../../shared/directives';
+import { CepBuscaDirective, CepMaskDirective, EnderecoCep, PhoneMaskDirective } from '../../shared/directives';
 import { mensagemDoBackend, PopUpService } from '../../shared/pop-up';
 import { limparMascara } from '../../shared/utils';
 import { SchoolService } from '../../services/school.service';
@@ -27,7 +27,7 @@ function formularioVazio() {
 @Component({
   selector: 'app-driver-schools',
   standalone: true,
-  imports: [FormsModule, CepMaskDirective, PhoneMaskDirective],
+  imports: [FormsModule, CepMaskDirective, CepBuscaDirective, PhoneMaskDirective],
   templateUrl: './driver-schools.html',
   styleUrl: './driver-schools.css',
 })
@@ -68,6 +68,14 @@ export class DriverSchools implements OnInit {
     this.form = formularioVazio();
     this.erro.set('');
     this.formularioAberto.set(true);
+  }
+
+  // CEP achado no ViaCEP: preenche o que veio (CEP de cidade pequena pode vir sem rua/bairro)
+  preencherEndereco(endereco: EnderecoCep) {
+    if (endereco.rua) this.form.street = endereco.rua;
+    if (endereco.bairro) this.form.neighborhood = endereco.bairro;
+    if (endereco.cidade) this.form.city = endereco.cidade;
+    if (endereco.uf) this.form.state = endereco.uf;
   }
 
   cancelar() {
