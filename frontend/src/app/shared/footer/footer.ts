@@ -30,7 +30,7 @@ export class Footer implements OnInit {
 
     // rotas do responsável
     const homeResponsavel = ['/responsible-home', '/home-screen'];
-    const meioResponsavel: string[] = []; // coloque aqui a rota do mapa do responsável
+    const meioResponsavel = ['/responsible-route'];
 
     // rotas do motorista
     const homeMotorista = ['/driver-home'];
@@ -65,7 +65,7 @@ export class Footer implements OnInit {
       if (this.tipoUsuario === 'motorista') {
         this.router.navigate(['/driver-route']);
       } else {
-        this.router.navigate(['/responsible-home']);
+        this.router.navigate(['/responsible-route']);
       }
     }
 

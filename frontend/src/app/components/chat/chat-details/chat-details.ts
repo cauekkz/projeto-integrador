@@ -5,7 +5,8 @@ import {
   ElementRef,
   OnDestroy,
   OnInit,
-  ViewChild
+  ViewChild,
+  inject,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -15,6 +16,7 @@ import { ChatMessage } from '../../../models/chat-message';
 import { ChatWebSocketService } from '../../../services/chat.service';
 import { AuthService } from '../../../services/auth.service';
 import { StorageService } from '../../../services/storage.service';
+import { NotificationService } from '../../../services/notification.service';
 import { ContractStatus } from '../../../services/dto/contract/contract.dto';
 import { ContractProposalCard } from '../contract-proposal-card/contract-proposal-card';
 
@@ -26,6 +28,7 @@ import { ContractProposalCard } from '../contract-proposal-card/contract-proposa
   styleUrl: './chat-details.css',
 })
 export class ChatDetails implements OnInit, OnDestroy {
+  private notificacoes = inject(NotificationService);
   chatId = '';
   mensagem = '';
   nomeContato = 'Contato';
@@ -110,6 +113,8 @@ export class ChatDetails implements OnInit, OnDestroy {
     if (!this.chatId) {
       return;
     }
+    // abriu a conversa: a notificacao de mensagem dela fica lida
+    this.notificacoes.marcarConversaVista(this.chatId);
 
     // entrou sem passar pela lista (ou a foto ainda nao tinha carregado la): busca nome e foto do contato
     if (!state?.nomeContato || this.fotoContato === '/testee.jpg') {
@@ -205,6 +210,8 @@ export class ChatDetails implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    // o que chegou com a conversa aberta tambem ja foi visto
+    if (this.chatId) this.notificacoes.marcarConversaVista(this.chatId);
     this.chatService.disconnect();
     this.subscription?.unsubscribe();
   }

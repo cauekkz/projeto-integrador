@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { NotificationService } from '../../services/notification.service';
 import { UserMe } from '../../models/user.model';
 import { StudentService } from '../../services/student.service';
+import { StudentPhotoService } from '../../services/student-photo.service';
 import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Footer } from '../../shared/footer/footer';
@@ -21,6 +22,7 @@ export class HomeScreen implements OnInit {
 
   // badge do sino: nao lidas de verdade (GET /api/notifications/unread-count + WebSocket)
   protected notificacoes = inject(NotificationService);
+  private studentPhotoService = inject(StudentPhotoService);
 
   constructor(
     private authService: AuthService,
@@ -48,12 +50,30 @@ export class HomeScreen implements OnInit {
   carregarDependentes() {
     this.studentService.getMyChildren().subscribe({
       next: (resposta: any) => {
-        this.meusDependentes = resposta?.content ?? resposta ?? [];
+        const lista: any[] = resposta?.content ?? resposta ?? [];
+        // foto escolhida no cadastro (guardada neste navegador ate o backend ter foto de aluno)
+        this.meusDependentes = lista.map((d) => ({ ...d, photoUrl: d.photoUrl || this.studentPhotoService.obter(d.id) }));
+        this.cdr.detectChanges();
       },
       error: () => {
         this.meusDependentes = [];
       },
     });
+  }
+
+  // 1 dependente: o primeiro nome dele; mais: a quantidade
+  rotuloDependentes(): string {
+    if (this.meusDependentes.length === 1) return (this.meusDependentes[0]?.name ?? '').split(' ')[0] || 'Dependente';
+    return `${this.meusDependentes.length} dependentes`;
+  }
+
+  iniciais(nome: string | undefined): string {
+    return (nome ?? '')
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((parte) => parte[0].toUpperCase())
+      .join('') || '?';
   }
 
   abrirFluxoDependente() {
@@ -73,6 +93,10 @@ export class HomeScreen implements OnInit {
     if (this.route.snapshot.queryParamMap.has('perfil')) {
       this.router.navigate([], { queryParams: {}, replaceUrl: true });
     }
+  }
+
+  irParaRota() {
+    this.router.navigate(['/responsible-route']);
   }
 
   irParaChat() {

@@ -5,14 +5,14 @@ import { AuthService } from '../../../services/auth.service';
 import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
 import { CommonModule } from '@angular/common';
-import { CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective } from '../../../shared/directives';
+import { CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective, PasswordToggleDirective } from '../../../shared/directives';
 import { PopUpService } from '../../../shared/pop-up';
 import { limparMascara } from '../../../shared/utils';
 
 @Component({
   selector: 'app-signup-responsible',
   standalone: true,
-  imports: [FormsModule, Header, Button, CommonModule, CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective],
+  imports: [FormsModule, Header, Button, CommonModule, CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective, PasswordToggleDirective],
   templateUrl: './signup-responsible.html',
   styleUrl: './signup-responsible.css',
 })

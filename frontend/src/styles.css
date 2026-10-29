@@ -246,3 +246,68 @@ select option:disabled {
     color: #0b66d8;
   }
 }
+
+/* ---------- olhinho dos inputs de senha (shared/directives/password-toggle.directive.ts) ---------- */
+
+.senha-wrap {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.senha-wrap > input {
+  width: 100%;
+}
+
+/* o Edge tem um olho proprio: esconde pra nao ficar dois */
+.senha-wrap > input::-ms-reveal,
+.senha-wrap > input::-ms-clear {
+  display: none;
+}
+
+/* > aumenta a especificidade: o CSS de button das telas nao sobrescreve o olho */
+.senha-wrap > .senha-olho {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow: none;
+  color: #64748b;
+  font-size: 1.15rem;
+  cursor: pointer;
+  translate: 0 -50%;
+  transition: color var(--dur-rapida) ease, background-color var(--dur-rapida) ease;
+}
+
+.senha-wrap > .senha-olho:hover {
+  color: #1565d8;
+  background-color: rgba(21, 101, 216, 0.08);
+}
+
+.senha-wrap > .senha-olho:focus-visible {
+  outline: 2px solid #1565d8;
+  outline-offset: 1px;
+}
+
+.senha-wrap > .senha-olho:active {
+  scale: 0.92;
+}
+
+/* sinos das telas: abrem a aba de notificacoes */
+.sino-clicavel {
+  cursor: pointer;
+  border-radius: 50%;
+}
+
+.sino-clicavel:focus-visible {
+  outline: 3px solid #1565d8;
+  outline-offset: 2px;
+}

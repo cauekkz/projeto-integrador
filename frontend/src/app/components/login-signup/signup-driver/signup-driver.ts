@@ -4,14 +4,14 @@ import { RegisterService } from '../../../services/register.service';
 import { AuthService } from '../../../services/auth.service';
 import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
-import { PhoneMaskDirective, NameFormatDirective } from '../../../shared/directives';
+import { PhoneMaskDirective, NameFormatDirective, PasswordToggleDirective } from '../../../shared/directives';
 import { PopUpService } from '../../../shared/pop-up';
 import { limparMascara } from '../../../shared/utils';
 
 @Component({
   selector: 'app-signup-driver',
   standalone: true,
-  imports: [FormsModule, Header, Button, PhoneMaskDirective, NameFormatDirective],
+  imports: [FormsModule, Header, Button, PhoneMaskDirective, NameFormatDirective, PasswordToggleDirective],
   templateUrl: './signup-driver.html',
   styleUrl: './signup-driver.css',
 })
