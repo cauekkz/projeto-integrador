@@ -1,5 +1,5 @@
 .login-container {
-  min-height: 100vh;
+  min-height: 100dvh;
   max-width: 1200px;
   margin: 0 auto;
   padding: 40px;
@@ -15,7 +15,7 @@
 
 .bottom-container {
   margin-top: auto;
-  padding-top: 24px;
+  padding-top: 40px;
   padding-bottom: 16px;
   width: 100%;
   max-width: 500px;
@@ -29,6 +29,7 @@
   font-weight: 700;
   color: #1f2937;
   margin-right: 15%;
+  margin-top: -20px;
 }
 
 .back-button {
@@ -82,21 +83,21 @@ input {
 
   .login-container {
     padding: 24px 14px;
-    height: 100vh;
   }
 
   .header h1 {
     font-size: 1.9rem;
   }
 
+  /* margens acompanham a altura da tela: em celular baixo nao sobra rolagem */
   .content {
-    margin-top: 70px;
+    margin: clamp(16px, 7dvh, 70px) auto 0;
     max-width: 380px;
   }
 
   .content h2 {
     font-size: 1.9rem;
-    margin-bottom: 60px;
+    margin-bottom: clamp(20px, 5dvh, 60px);
   }
 
   input {

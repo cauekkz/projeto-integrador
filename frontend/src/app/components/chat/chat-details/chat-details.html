@@ -87,13 +87,14 @@
 
   <div class="input-bar">
     <input
+      #mensagemInput
       type="text"
       placeholder="Digite sua mensagem"
       aria-label="Mensagem"
       [(ngModel)]="mensagem"
       name="mensagem"
       [disabled]="!!erroCarregar"
-      (keydown.enter)="enviar()"
+      (keydown.enter)="enviar(mensagemInput)"
     >
 
     <input
@@ -150,7 +151,8 @@
       type="button"
       aria-label="Enviar mensagem"
       [disabled]="!mensagem.trim() || enviando || !!erroCarregar"
-      (click)="enviar()"
+      (mousedown)="$event.preventDefault()"
+      (click)="enviar(mensagemInput)"
     >
       <i class="bi bi-send-fill"></i>
     </button>
