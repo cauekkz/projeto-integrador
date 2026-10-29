@@ -5,14 +5,14 @@ import { AuthService } from '../../../services/auth.service';
 import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
 import { CommonModule } from '@angular/common';
-import { CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective, PasswordToggleDirective } from '../../../shared/directives';
+import { CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective, CepBuscaDirective, EnderecoCep, PasswordToggleDirective } from '../../../shared/directives';
 import { PopUpService } from '../../../shared/pop-up';
 import { limparMascara } from '../../../shared/utils';
 
 @Component({
   selector: 'app-signup-responsible',
   standalone: true,
-  imports: [FormsModule, Header, Button, CommonModule, CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective, PasswordToggleDirective],
+  imports: [FormsModule, Header, Button, CommonModule, CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective, CepBuscaDirective, PasswordToggleDirective],
   templateUrl: './signup-responsible.html',
   styleUrl: './signup-responsible.css',
 })
@@ -53,6 +53,14 @@ export class SignupResponsible {
   enteredNeighborhood = '';
   enteredCity = '';
   enteredState = '';
+
+  // CEP achado no ViaCEP: preenche o que veio (CEP de cidade pequena pode vir sem rua/bairro)
+  preencherEndereco(endereco: EnderecoCep) {
+    if (endereco.rua) this.enteredStreet = endereco.rua;
+    if (endereco.bairro) this.enteredNeighborhood = endereco.bairro;
+    if (endereco.cidade) this.enteredCity = endereco.cidade;
+    if (endereco.uf) this.enteredState = endereco.uf;
+  }
 
   verification(value: string): boolean {
     return value.trim() === '';

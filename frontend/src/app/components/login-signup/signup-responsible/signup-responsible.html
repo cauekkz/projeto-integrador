@@ -46,7 +46,7 @@
 
     <div class="field">
       <label>CEP</label>
-      <input type="text" placeholder="00000-000" [(ngModel)]="enteredCep" name="cep" appCepMask />
+      <input type="text" inputmode="numeric" placeholder="00000-000" [(ngModel)]="enteredCep" name="cep" appCepMask appCepBusca (enderecoCep)="preencherEndereco($event); ($event.rua ? numeroInput : ruaInput).focus()" />
 
       @if (cepInvalido) {
         <p class="error-message">O CEP é obrigatório!</p>
@@ -55,7 +55,7 @@
 
     <div class="field">
       <label>Rua</label>
-      <input type="text" placeholder="Nome da rua" [(ngModel)]="enteredStreet" name="street" />
+      <input #ruaInput type="text" placeholder="Nome da rua" [(ngModel)]="enteredStreet" name="street" />
 
       @if (streetInvalido) {
         <p class="error-message">A rua é obrigatória!</p>
@@ -64,7 +64,7 @@
 
     <div class="field">
       <label>Número</label>
-      <input type="text" inputmode="numeric" placeholder="Número" [(ngModel)]="enteredNumber" name="number" />
+      <input #numeroInput type="text" inputmode="numeric" placeholder="Número" [(ngModel)]="enteredNumber" name="number" />
     </div>
 
     <div class="field">
