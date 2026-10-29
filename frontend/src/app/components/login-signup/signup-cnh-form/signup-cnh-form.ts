@@ -16,20 +16,6 @@ export class SignupCnhForm {
 
   constructor(protected registerService: RegisterService) {}
 
-  mostrarBottomSheet = false;
-
-  abrirBottomSheet() {
-    this.mostrarBottomSheet = true;
-  }
-  fecharBottomSheet() {
-    this.mostrarBottomSheet = false;
-  }
-
-  onUploadConcluido() {
-    this.mostrarBottomSheet = false;
-    this.prontoEvent.emit();
-  }
-
   pronto() {
     if (this.registerService.selectedFile == null) return;
     this.prontoEvent.emit();
@@ -46,7 +32,9 @@ export class SignupCnhForm {
     }
   }
 
-  delete() {
+  delete(input: HTMLInputElement) {
     this.registerService.selectedFile = null;
+    // limpa o input pra conseguir escolher o mesmo PDF de novo
+    input.value = '';
   }
 }

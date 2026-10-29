@@ -99,7 +99,7 @@
         aria-label="Abrir opções de anexo"
         [attr.aria-expanded]="showAttachmentMenu"
       >
-        <i class="bi bi-credit-card"></i>
+        <i class="bi bi-paperclip"></i>
       </button>
 
       @if (showAttachmentMenu) {
@@ -130,8 +130,15 @@
 
     </div>
 
-    <button class="btn-icon" type="button" aria-label="Gravar áudio">
-      <i class="bi bi-mic"></i>
+    <!-- o backend nao tem audio (AttachmentType: IMAGE, CONTRACT_DOCUMENT, OTHER), entao no lugar do microfone fica o enviar -->
+    <button
+      class="btn-enviar"
+      type="button"
+      aria-label="Enviar mensagem"
+      [disabled]="!mensagem.trim() || enviando || !!erroCarregar"
+      (click)="enviar()"
+    >
+      <i class="bi bi-send-fill"></i>
     </button>
   </div>
 

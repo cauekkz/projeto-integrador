@@ -1,5 +1,5 @@
 .link-code-container {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: white;
@@ -13,7 +13,9 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 120px 16px 40px;
+  justify-content: center;
+  /* bloco centraliza no espaco acima dos botoes fixos: fica um pouco acima do meio da tela */
+  padding: 24px 16px 200px;
   gap: 16px;
 }
 
@@ -68,10 +70,6 @@ h1 {
 
 }
 
-.espaco{
-  margin-top: 380px;
-}
-
 @keyframes girar {
   to {
     transform: rotate(360deg);
@@ -94,6 +92,22 @@ h1 {
   background: #fef2f2;
   color: #b91c1c;
   font-size: 0.9rem;
+}
+
+/* botoes fixos embaixo, igual ao code-input; posicao="top" no app-button da 16px entre eles */
+.botoes {
+  position: fixed;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  background: white;
+  z-index: 10;
 }
 
 @media (prefers-reduced-motion: reduce) {

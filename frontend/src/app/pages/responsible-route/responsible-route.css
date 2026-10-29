@@ -55,7 +55,7 @@
 
 button.circulo {
   cursor: pointer;
-  transition: transform var(--dur-rapida) ease;
+  transition: var(--transicao-botao);
 }
 
 button.circulo:active {
@@ -328,7 +328,11 @@ button.circulo:active {
   font-size: 1.05rem;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(21, 101, 216, 0.3);
-  transition: transform var(--dur-rapida) ease;
+  transition: var(--transicao-botao);
+}
+
+.btn-chat:hover {
+  background: #0052a3;
 }
 
 .btn-chat:active {
@@ -350,7 +354,7 @@ button.circulo:active {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color var(--dur-rapida) ease;
+  transition: var(--transicao-botao);
 }
 
 .btn-paradas:hover {

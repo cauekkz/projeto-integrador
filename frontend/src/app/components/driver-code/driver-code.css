@@ -1,5 +1,5 @@
 .driver-code-container {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: white;
@@ -11,8 +11,11 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 250px;
+  justify-content: center;
   gap: 16px;
+  /* padrao das telas de codigo: o bloco centraliza no espaco acima dos botoes fixos (code-input),
+     entao os quadradinhos ficam um pouco acima do meio da tela */
+  padding: 24px 24px 200px;
 }
 
 h1 {

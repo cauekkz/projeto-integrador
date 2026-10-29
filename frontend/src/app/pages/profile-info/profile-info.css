@@ -29,6 +29,7 @@
   object-fit: cover;
   border: 4px solid #ffffff;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+  transition: filter var(--dur-media) var(--ease-suave);
   background: #cfd8e3;
   transition: filter var(--dur-media) ease;
 }
@@ -42,7 +43,7 @@
   border-radius: 50%;
   background: transparent;
   cursor: pointer;
-  transition: transform var(--dur-rapida) ease;
+  transition: var(--transicao-botao);
 }
 
 .avatar-botao:hover:not(:disabled) .avatar-grande {
@@ -222,7 +223,11 @@
   cursor: pointer;
   font-family: 'Inter', sans-serif;
   box-shadow: 0 4px 14px rgba(0, 20, 60, 0.35);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  transition: var(--transicao-botao);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #0052a3;
 }
 
 .btn-primary:active {
@@ -245,6 +250,10 @@
 }
 
 .btn-primary:disabled,
+.btn-secondary:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
 .btn-secondary:disabled {
   opacity: 0.6;
   cursor: not-allowed;

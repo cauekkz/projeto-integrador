@@ -20,12 +20,6 @@
         </span>
       </div>
 
-      <app-button
-        [texto]="copiado() ? 'Código copiado!' : 'Copiar código'"
-        tipo="primary"
-        (clickEvent)="copiarCodigo()">
-      </app-button>
-
       <p class="feedback" role="status" aria-live="polite">
         @if (copiado()) {
           <i class="bi bi-check-circle-fill" aria-hidden="true"></i> Código copiado para a área de transferência
@@ -39,11 +33,21 @@
         <span>{{ erro() }}</span>
       </div>
 
-      @if (!codigo()) {
-        <app-button texto="Tentar novamente"  class="espaco" (clickEvent)="carregarCodigo()"></app-button>
-      }
     }
+  </div>
 
-    <app-button texto="Voltar ao perfil" tipo="secondary" (clickEvent)="voltarAoPerfil()"></app-button>
+  <div class="botoes">
+    @if (!carregando() && codigo()) {
+      <app-button
+        [texto]="copiado() ? 'Código copiado!' : 'Copiar código'"
+        tipo="primary"
+        posicao="top"
+        (clickEvent)="copiarCodigo()">
+      </app-button>
+    }
+    @if (!carregando() && erro() && !codigo()) {
+      <app-button texto="Tentar novamente" posicao="top" (clickEvent)="carregarCodigo()"></app-button>
+    }
+    <app-button texto="Voltar ao perfil" tipo="secondary" posicao="top" (clickEvent)="voltarAoPerfil()"></app-button>
   </div>
 </div>

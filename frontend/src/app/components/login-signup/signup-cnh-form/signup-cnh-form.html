@@ -2,7 +2,7 @@
 
   <app-header titulo="Validação de CNH" (voltarEvent)="voltar()" />
 
-  <div class="upload-card" (click)="abrirBottomSheet()">
+  <div class="upload-card" (click)="fileInput.click()">
     <div class="upload-content">
       <div class="upload-icon">
         <img src="/AddFile.png" alt="">
@@ -14,12 +14,13 @@
       }
     </div>
   </div>
+  <input #fileInput type="file" accept=".pdf" hidden (change)="onFileSelected($event)">
 
   <div class="bottom-actions">
     <app-button
       texto="Excluir PDF"
       tipo="danger"
-      (clickEvent)="delete()">
+      (clickEvent)="delete(fileInput)">
     </app-button>
 
     <app-button
@@ -30,17 +31,3 @@
   </div>
 
 </div>
-
-@if (mostrarBottomSheet) {
-  <div class="overlay" (click)="fecharBottomSheet()"></div>
-  <div class="bottom-sheet">
-    <h2>Selecione de onde vem sua CNH</h2>
-    <div class="sheet-options">
-      <button class="sheet-btn" (click)="fileInput.click()">
-        <img src="/AddFile.png" alt="">
-        Enviar PDF
-      </button>
-      <input #fileInput type="file" accept=".pdf" hidden (change)="onFileSelected($event)">
-    </div>
-  </div>
-}

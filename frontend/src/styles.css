@@ -83,6 +83,27 @@
   to { opacity: 0; transform: scale(0.96); }
 }
 
+/* botoes: cor so muda no hover, sempre com transicao suave.
+   cores de hover usadas nas telas: azul #0052a3 | branco/transparente com texto azul #eff6ff | neutro #f1f5f9 */
+:root {
+  /* telas que precisam de transition propria no botao usam essa lista pra nao perder a da cor */
+  --transicao-botao:
+    background-color var(--dur-media) var(--ease-suave),
+    color var(--dur-media) var(--ease-suave),
+    border-color var(--dur-media) var(--ease-suave),
+    box-shadow var(--dur-media) var(--ease-suave),
+    opacity var(--dur-media) var(--ease-suave),
+    transform var(--dur-rapida) ease;
+}
+
+button {
+  transition: var(--transicao-botao);
+}
+
+button i {
+  transition: color var(--dur-media) var(--ease-suave);
+}
+
 /* quem pediu menos movimento no sistema nao ve animacao nenhuma */
 @media (prefers-reduced-motion: reduce) {
   *,

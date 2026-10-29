@@ -35,6 +35,10 @@
   color: #1f2937;
 }
 
+.back-button:hover i {
+  color: #1565d8;
+}
+
 .contato-avatar {
   width: 38px;
   height: 38px;
@@ -153,6 +157,40 @@
   font-size: 1.3rem;
   color: #64748b;
   padding: 4px;
+}
+
+.contrato-btn:hover,
+.btn-icon:hover {
+  color: #1565d8;
+}
+
+.btn-enviar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #1565d8;
+  color: #ffffff;
+  font-size: 1.05rem;
+  cursor: pointer;
+}
+
+.btn-enviar:hover:not(:disabled) {
+  background: #0052a3;
+}
+
+.btn-enviar:active:not(:disabled) {
+  transform: scale(0.93);
+}
+
+/* continua azul mesmo sem texto; so nao reage ao hover/clique */
+.btn-enviar:disabled {
+  cursor: default;
 }
 
 .chat-aviso {

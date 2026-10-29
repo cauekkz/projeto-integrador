@@ -80,6 +80,10 @@
   width: 22px;
 }
 
+.menu-item:hover {
+  background: #f8fafc;
+}
+
 .menu-item.danger {
   color: #e61212;
   border-bottom: none;

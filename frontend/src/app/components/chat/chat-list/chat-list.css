@@ -85,3 +85,7 @@
   cursor: pointer;
   font-family: 'Inter', sans-serif;
 }
+
+.btn-estado:hover {
+  background: #0052a3;
+}

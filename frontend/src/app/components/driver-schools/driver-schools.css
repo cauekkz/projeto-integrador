@@ -157,6 +157,14 @@
 }
 
 .btn-primary:disabled,
+.btn-primary:hover:not(:disabled) {
+  background: #0052a3;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
 .btn-secondary:disabled {
   opacity: 0.6;
   cursor: not-allowed;

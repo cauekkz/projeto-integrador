@@ -203,10 +203,32 @@
 
 
 .code-result {
+  flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  /* bloco centraliza no espaco acima dos botoes fixos: fica um pouco acima do meio da tela */
   gap: 20px;
-  margin-top: 12px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding-bottom: 200px;
+}
+
+/* botoes fixos embaixo, igual ao code-input; posicao="top" no app-button da 16px entre eles */
+.botoes {
+  position: fixed;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  background: white;
+  z-index: 10;
 }
 
 .code-instrucao {
@@ -245,6 +267,10 @@
   padding: 8px 14px;
   border-radius: 8px;
   cursor: pointer;
+}
+
+.btn-copy:hover {
+  background: #0052a3;
 }
 
 .bottom-actions {
