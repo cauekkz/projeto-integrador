@@ -273,4 +273,34 @@ class StudentStopServiceTest {
         assertThrows(ResponseStatusException.class,
                 () -> studentStopService.updateWeekdays(editing.getId(), EnumSet.of(WeekDay.FRIDAY), authentication));
     }
+
+    @Test
+    void homeLocationCannotBeTheSchoolStop() {
+        activeContract();
+        schoolInRoute(true);
+        SchoolStop schoolStop = new SchoolStop();
+        schoolStop.setSchool(school);
+        when(schoolStopRepository.findByStopId(stop.getId())).thenReturn(List.of(schoolStop));
+
+        assertThrows(BadRequestException.class,
+                () -> studentStopService.createStudentStop(boarding, student.getId(), stop.getId(), authentication));
+        verify(studentStopRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldNotMoveHomeStudentToTheSchoolStop() {
+        StudentStop studentStop = existingStudentStop();
+        studentStop.setLocationType(StudentStopLocationType.HOME);
+        RouteStop schoolPoint = new RouteStop();
+        schoolPoint.setId(UUID.randomUUID());
+        schoolPoint.setRoute(stop.getRoute());
+        when(routeStopRepository.findById(schoolPoint.getId())).thenReturn(Optional.of(schoolPoint));
+        SchoolStop schoolStop = new SchoolStop();
+        schoolStop.setSchool(school);
+        when(schoolStopRepository.findByStopId(schoolPoint.getId())).thenReturn(List.of(schoolStop));
+
+        assertThrows(BadRequestException.class,
+                () -> studentStopService.moveStudentStop(studentStop.getId(), schoolPoint.getId(), authentication));
+        assertSame(stop, studentStop.getStop());
+    }
 }

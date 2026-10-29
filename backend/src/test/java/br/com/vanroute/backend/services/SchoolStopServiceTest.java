@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.exceptions.BadRequestException;
 import br.com.vanroute.backend.models.route.Route;
 import br.com.vanroute.backend.models.route.RouteStop;
 import br.com.vanroute.backend.models.school.School;
@@ -27,6 +28,8 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -88,6 +91,16 @@ class SchoolStopServiceTest {
         when(schoolStopRepository.findFirstByStopRouteIdAndSchoolId(stop.getRoute().getId(), school.getId())).thenReturn(Optional.of(new SchoolStop()));
 
         assertThrows(ResponseStatusException.class, () -> schoolStopService.addSchoolStop(school.getId(), stop.getId(), authentication));
+    }
+
+    @Test
+    void shouldRejectStopWithHomeOrOtherStudents() {
+        when(driverSchoolsRepository.existsByDriverUserIdAndSchoolId(driver.getUserId(), school.getId())).thenReturn(true);
+        when(schoolStopRepository.findFirstByStopRouteIdAndSchoolId(stop.getRoute().getId(), school.getId())).thenReturn(Optional.empty());
+        when(studentStopRepository.existsByStopIdAndLocationTypeIn(eq(stop.getId()), anyCollection())).thenReturn(true);
+
+        assertThrows(BadRequestException.class, () -> schoolStopService.addSchoolStop(school.getId(), stop.getId(), authentication));
+        verify(schoolStopRepository, never()).save(any());
     }
 
     private SchoolStop existingSchoolStop() {

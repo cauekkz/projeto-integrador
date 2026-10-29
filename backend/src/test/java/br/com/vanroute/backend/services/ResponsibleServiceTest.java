@@ -9,7 +9,6 @@ import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.repositories.ResponsibleRepository;
-import br.com.vanroute.backend.repositories.ResponsibleAddressRepository;
 import br.com.vanroute.backend.dtos.geocode.Coordenadas;
 import br.com.vanroute.backend.dtos.student.AddressRequestDTO;
 import br.com.vanroute.backend.models.address.Address;
@@ -44,9 +43,6 @@ class ResponsibleServiceTest {
 
     @Mock
     private MapService mapService;
-
-    @Mock
-    private ResponsibleAddressRepository responsibleAddressRepository;
 
     @Mock
     private EmailVerificationService emailVerificationService;
