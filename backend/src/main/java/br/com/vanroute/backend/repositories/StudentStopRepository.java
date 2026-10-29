@@ -3,10 +3,12 @@ package br.com.vanroute.backend.repositories;
 import br.com.vanroute.backend.models.route.Route;
 import br.com.vanroute.backend.models.student.StudentStop;
 import br.com.vanroute.backend.models.student.enums.StudentStopAction;
+import br.com.vanroute.backend.models.student.enums.StudentStopLocationType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,6 +24,7 @@ public interface StudentStopRepository extends JpaRepository<StudentStop, UUID> 
     @Query("SELECT DISTINCT ss.stop.route FROM StudentStop ss WHERE ss.student.id = :studentId")
     List<Route> findRoutesOfStudent(@Param("studentId") UUID studentId);
     boolean existsByStopId(UUID stopId);
+    boolean existsByStopIdAndLocationTypeIn(UUID stopId, Collection<StudentStopLocationType> locationTypes);
 
     // algum aluno dessa rota tem contrato ativo com essa escola
     @Query("SELECT CASE WHEN COUNT(ss) > 0 THEN true ELSE false END FROM StudentStop ss, UserDriverContract u " +
