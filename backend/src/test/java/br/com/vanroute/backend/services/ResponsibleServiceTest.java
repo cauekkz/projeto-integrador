@@ -75,8 +75,10 @@ class ResponsibleServiceTest {
         when(userService.createUser(any(UserCreateDTO.class))).thenReturn(createdUser);
         Address address = new Address();
         address.setStreet("Avenida Paulista");
-        when(addressService.addAddress(any())).thenReturn(address);
-        when(mapService.searchCoord(any(Address.class))).thenReturn(new Coordenadas(-23.56, -46.65));
+        // o AddressService devolve o endereco ja com a coordenada (novo ou reaproveitado)
+        address.setLatitude(-23.56);
+        address.setLongitude(-46.65);
+        when(addressService.findOrCreate(any())).thenReturn(address);
 
         Responsible savedResponsible = new Responsible();
         savedResponsible.setUser(createdUser);

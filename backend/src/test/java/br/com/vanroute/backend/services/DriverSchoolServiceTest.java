@@ -65,7 +65,7 @@ class DriverSchoolServiceTest {
         assertSame(driver, captor.getValue().getDriver());
         assertSame(existing, captor.getValue().getSchool());
         verify(schoolRepository, never()).save(any());
-        verify(addressService, never()).addAddress(any());
+        verify(addressService, never()).findOrCreate(any());
     }
 
     @Test
