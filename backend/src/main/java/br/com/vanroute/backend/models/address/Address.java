@@ -34,6 +34,10 @@ public class Address {
     @Column
     private Double longitude;
 
+    // rua+numero+cep+cidade+uf sem acento/maiuscula: o mesmo endereco digitado de novo cai no mesmo registro
+    @Column(name = "address_key", length = 400)
+    private String addressKey;
+
         public UUID getId() {
         return id;
     }
@@ -105,9 +109,12 @@ public class Address {
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }
+
+    public String getAddressKey() {
+        return addressKey;
+    }
+
+    public void setAddressKey(String addressKey) {
+        this.addressKey = addressKey;
+    }
 }
-
-
-
-
-

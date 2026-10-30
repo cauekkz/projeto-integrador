@@ -25,9 +25,11 @@ import br.com.vanroute.backend.dtos.student.StudentLinkRequestDTO;
 import br.com.vanroute.backend.dtos.student.StudentCodeRequestDTO;
 import br.com.vanroute.backend.dtos.student.AllStudentsFilterRequestDTO;
 import br.com.vanroute.backend.dtos.user.StudentRequestDTO;
-import br.com.vanroute.backend.models.student.StudentResponsible;
 import br.com.vanroute.backend.services.StudentLinkService;
 import br.com.vanroute.backend.services.StudentService;
+import br.com.vanroute.backend.services.StudentAddressService;
+import br.com.vanroute.backend.dtos.student.StudentAddressRequestDTO;
+import br.com.vanroute.backend.dtos.student.StudentPlaceResponseDTO;
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.Page;
@@ -41,13 +43,36 @@ public class StudentController {
     private final StudentLinkService studentLinkService;
     private final StudentAbsenceService studentAbsenceService;
     private final TripService tripService;
+    private final StudentAddressService studentAddressService;
 
     public StudentController(StudentService studentService, StudentLinkService studentLinkService,
-                             StudentAbsenceService studentAbsenceService, TripService tripService) {
+                             StudentAbsenceService studentAbsenceService, TripService tripService,
+                             StudentAddressService studentAddressService) {
         this.studentService = studentService;
         this.studentLinkService = studentLinkService;
         this.studentAbsenceService = studentAbsenceService;
         this.tripService = tripService;
+        this.studentAddressService = studentAddressService;
+    }
+
+    // enderecos onde o aluno e buscado/deixado (o motorista escolhe entre eles ao criar o ponto da rota)
+    @GetMapping("/{studentId}/addresses")
+    public List<StudentPlaceResponseDTO> addresses(@PathVariable UUID studentId, Authentication authentication) {
+        return studentAddressService.list(studentId, AuthenticatedUser.id(authentication));
+    }
+
+    // novo endereco (address) ou reaproveitado (addressId: de um irmao ou o de cobranca do responsavel)
+    @PostMapping("/{studentId}/addresses")
+    public ResponseEntity<StudentPlaceResponseDTO> addAddress(@PathVariable UUID studentId, @Valid @RequestBody StudentAddressRequestDTO request,
+                                                              Authentication authentication) {
+        return ResponseEntity.status(201).body(studentAddressService.add(studentId, request, AuthenticatedUser.id(authentication)));
+    }
+
+    // tira o endereco do aluno (apaga so a ligacao): ele sai dos pontos de casa com esse endereco e o motorista e avisado
+    @DeleteMapping("/{studentId}/addresses/{studentAddressId}")
+    public ResponseEntity<Void> removeAddress(@PathVariable UUID studentId, @PathVariable UUID studentAddressId, Authentication authentication) {
+        studentAddressService.remove(studentId, studentAddressId, AuthenticatedUser.id(authentication));
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/create-student")

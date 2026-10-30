@@ -5,7 +5,6 @@ import org.springframework.security.access.AccessDeniedException;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.vanroute.backend.dtos.geocode.Coordenadas;
 import br.com.vanroute.backend.dtos.route.AddressResponseDTO;
 import br.com.vanroute.backend.dtos.school.SchoolRequestDTO;
 import br.com.vanroute.backend.dtos.school.SchoolResponseDTO;
@@ -28,15 +27,13 @@ public class DriverSchoolService {
 
     private final SchoolRepository schoolRepository;
     private final AddressService addressService;
-    private final MapService mapService;
     private final DriverRepository driverRepository;
     private final DriverSchoolsRepository driverSchoolsRepository;
 
     public DriverSchoolService(SchoolRepository schoolRepository,
-                               AddressService addressService, MapService mapService, DriverRepository driverRepository, DriverSchoolsRepository driverSchoolsRepository) {
+                               AddressService addressService, DriverRepository driverRepository, DriverSchoolsRepository driverSchoolsRepository) {
         this.schoolRepository = schoolRepository;
         this.addressService = addressService;
-        this.mapService = mapService;
         this.driverRepository = driverRepository;
         this.driverSchoolsRepository = driverSchoolsRepository;
     }
@@ -61,12 +58,7 @@ public class DriverSchoolService {
             return school;
         }
 
-        Address address = addressService.addAddress(dto.addressRequestDTO());
-
-        Coordenadas cords = mapService.searchCoord(address);
-
-        address.setLatitude(cords.latitude());
-        address.setLongitude(cords.longitude());
+        Address address = addressService.findOrCreate(dto.addressRequestDTO());
 
 
         School school = new School();

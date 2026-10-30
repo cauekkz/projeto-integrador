@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.models.student.StudentAddress;
 import java.util.UUID;
 import java.util.List;
 import br.com.vanroute.backend.dtos.student.ChildSummaryResponseDTO;
@@ -77,6 +78,9 @@ public class StudentServiceTest {
     @Mock
     private br.com.vanroute.backend.repositories.StudentStopRepository studentStopRepository;
 
+    @Mock
+    private StudentAddressService studentAddressService;
+
     @InjectMocks
     private StudentService studentService;
 
@@ -93,13 +97,19 @@ public class StudentServiceTest {
     @Test
     void testCreateStudentWithRelation_PersistsAdminRelation() {
         AddressRequestDTO addressDto = new AddressRequestDTO("Rua Teste", "01000-000", "São Paulo", "Centro", 10, "SP", null, null);
-        StudentRequestDTO requestDTO = new StudentRequestDTO("John Doe", "Notes", LocalDate.of(2015, 1, 1), RelationType.FINANCIAL, addressDto);
+        StudentRequestDTO requestDTO = new StudentRequestDTO("John Doe", "Notes", LocalDate.of(2015, 1, 1), RelationType.FINANCIAL, addressDto, null, null, null);
         Address address = new Address();
         address.setStreet("Rua Teste");
         responsible.setAddress(address);
 
-        when(addressService.addAddress(addressDto)).thenReturn(address);
-        when(mapService.searchCoord(any(Address.class))).thenReturn(new Coordenadas(-23.5, -46.6));
+        // o endereco vira o "Casa" do aluno (regras do endereco no StudentAddressServiceTest)
+        when(studentAddressService.resolve(addressDto, null, RESPONSIBLE_ID)).thenReturn(address);
+        when(studentAddressService.attach(any(), eq(address), any())).thenAnswer(inv -> {
+            StudentAddress sa = new StudentAddress();
+            sa.setAddress(address);
+            sa.setLabel("Casa");
+            return sa;
+        });
         when(responsibleRepository.findById(RESPONSIBLE_ID)).thenReturn(Optional.of(responsible));
 
         studentService.createStudentWithRelation(requestDTO, RESPONSIBLE_ID);
@@ -109,16 +119,16 @@ public class StudentServiceTest {
         assertTrue(captor.getValue().isAdmin());
         assertEquals(RelationType.FINANCIAL, captor.getValue().getRelationType());
         assertEquals(responsible, captor.getValue().getResponsible());
-        assertEquals(-23.5, address.getLatitude());
+        verify(studentAddressService).attach(any(), eq(address), any());
     }
 
     @Test
     void testCreateStudentWithRelation_ResponsibleNotFound() {
         AddressRequestDTO addressDto = new AddressRequestDTO("Rua Teste", "01000-000", "São Paulo", "Centro", 10, "SP", null, null);
-        StudentRequestDTO requestDTO = new StudentRequestDTO("John", "Notes", LocalDate.of(2015, 1, 1), RelationType.LEGAL, addressDto);
+        StudentRequestDTO requestDTO = new StudentRequestDTO("John", "Notes", LocalDate.of(2015, 1, 1), RelationType.LEGAL, addressDto, null, null, null);
 
-        when(addressService.addAddress(addressDto)).thenReturn(new Address());
-        when(mapService.searchCoord(any(Address.class))).thenReturn(new Coordenadas(-23.5, -46.6));
+        when(studentAddressService.resolve(addressDto, null, OTHER_ID)).thenReturn(new Address());
+        when(studentAddressService.attach(any(), any(), any())).thenReturn(new StudentAddress());
         when(responsibleRepository.findById(OTHER_ID)).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class,
