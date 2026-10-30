@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.vanroute.backend.dtos.user.ResponsibleRequestDTO;
 import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
-import br.com.vanroute.backend.services.EmailVerificationService;
 import br.com.vanroute.backend.services.ResponsibleService;
 
 @RestController
@@ -16,11 +15,9 @@ import br.com.vanroute.backend.services.ResponsibleService;
 public class ResponsibleController {
 
     private final ResponsibleService responsibleService;
-    private final EmailVerificationService emailVerificationService;
 
-    public ResponsibleController(ResponsibleService responsibleService, EmailVerificationService emailVerificationService) {
+    public ResponsibleController(ResponsibleService responsibleService) {
         this.responsibleService = responsibleService;
-        this.emailVerificationService = emailVerificationService;
     }
 
     @PostMapping("/auth/signup")
