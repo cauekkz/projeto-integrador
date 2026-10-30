@@ -4,6 +4,7 @@ Guia para quem consome a API, principalmente o front. Para cada endpoint criado 
 
 Outros guias:
 - **[`docs/FLUXO_FRONT.md`](../docs/FLUXO_FRONT.md)**: como montar o front (telas, a ordem das chamadas, os WebSockets e a renovação do token);
+- [`docs/FLUXO_ROTA.md`](../docs/FLUXO_ROTA.md): endereços, rota e pontos, do cadastro até a rota pronta (cada entidade, DTO e verificação);
 - [`docs/FLUXO_TRIP.md`](../docs/FLUXO_TRIP.md): execução da rota, faltas e notificações, com todas as entradas e saídas;
 - [`docs/FLUXO_CONTRATO.md`](../docs/FLUXO_CONTRATO.md): contrato passo a passo.
 
@@ -34,6 +35,22 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 
 ## 1. Configuração da rota
 
+### O que mudou (endereços e montagem da rota)
+| Antes | Agora |
+|---|---|
+| o motorista **digitava o endereço** de cada ponto | ele **escolhe** um endereço do aluno ou a escola; endereço digitado é recusado (400) |
+| cada ponto criava **outro registro** de endereço e buscava a coordenada de novo na API de mapas | o ponto usa **o mesmo registro** do aluno ou da escola: zero cópia, zero chamada |
+| a coordenada do ponto podia não bater com a casa (erro de digitação) e quebrar a regra de 1 km | é a coordenada exata da casa ou da escola |
+| o motorista podia pôr a criança num endereço que o pai nunca informou | só nos endereços que o pai cadastrou |
+| o aluno tinha 1 endereço, salvo e nunca usado | o aluno tem **vários** endereços com apelido ("Casa", "Avó", "Natação"), e é deles que nascem os pontos |
+| digitar o mesmo endereço de novo criava outro registro | o **mesmo CEP + número** reaproveita o endereço que já existe |
+| montar a rota em 2 passos (criar o ponto e depois ligar o aluno), na ordem certa por conta do motorista | **1 passo:** "adicionar aluno na rota". O backend cria ou reaproveita o ponto e põe na ordem certa. A escola entra quando o aluno embarca ou desce nela (`SCHOOL`) |
+| `schools.address_id` era único | duas escolas no mesmo prédio dividem o endereço |
+| a escola entrava na rota à parte | a escola entra quando o aluno embarca ou desce nela (`locationType: SCHOOL`): cria se não existe, reaproveita se existe. `HOME`/`OTHER` não cria escola |
+| a posição do ponto era sempre "no fim" | automática (embarque antes de onde o aluno desce, desembarque no fim) ou escolhida com `orderIndex` |
+| `POST /{routeId}/stops`, `POST /stop/{routeStopId}/add-student/{studentId}` e `POST /stop/{routeStopId}/add-school/{schoolId}` | **removidas**: tudo entra pelo `POST /{routeId}/add-student/{studentId}`. O ponto nasce do endereço do aluno (`HOME`/`OTHER`) ou é a escola do contrato (`SCHOOL`) |
+| cada alteração devolvia uma coisa (o ponto, o student stop, `204`) | **toda alteração da rota** (pôr aluno, trocar ordem, mover, dias, excluir) devolve `{ stops, pending }`: a rota inteira e o que ainda falta |
+
 ### Conceitos
 - **Rota (`route`)** é a *configuração* de uma viagem, por exemplo "Ida manhã" ou "Volta tarde". Ida e volta são rotas diferentes. Só o motorista que criou a rota pode ver e alterar.
 - **Ponto (`route stop`)** é onde a van para: um endereço e uma ordem (`orderIndex`). A ordem diz só quem vem antes de quem. Um ponto pode ter vários alunos e escolas.
@@ -46,13 +63,42 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 
 ### Passo a passo (motorista)
 ```
-1. POST /api/route/create-route                            cria a rota
-2. POST /api/route/{routeId}/stops                         cria os pontos (entram no fim)
-3. POST /api/route/stop/{routeStopId}/add-school/{schoolId}    liga a escola a um ponto
-4. POST /api/route/stop/{routeStopId}/add-student/{studentId}  liga o aluno a um ponto (embarque e desembarque)
-5. GET  /api/route/{routeId}/pending                       confere se falta embarque/desembarque em algum dia
-6. ajustes: swap-order, move, weekdays e os DELETEs
+1. POST /api/route/create-route                        cria a rota ("Ida manha"; a volta e outra rota)
+2. GET  /api/route/stop-options                        alunos dele (com os enderecos)
+3. POST /api/route/{routeId}/add-student/{studentId}   "adicionar aluno na rota" (1 passo, de novo pro desembarque)
+4. GET  /api/route/{routeId}/pending                   lista vazia = rota pronta pra viagem
+5. ajustes: swap-order, move, weekdays e os DELETEs
 ```
+Esse é o **único** jeito de criar ponto: não existe ponto sem aluno. Duas escolas no mesmo prédio caem no mesmo ponto quando o aluno de cada uma entra na rota.
+
+### Adicionar aluno na rota (1 passo)
+`POST /api/route/{routeId}/add-student/{studentId}`
+```json
+{ "action": "BOARDING", "locationType": "HOME", "studentAddressId": "<Casa da Ana>", "weekdays": ["MONDAY", "TUESDAY"] }
+{ "action": "ALIGHTING", "locationType": "SCHOOL" }
+```
+- **`HOME`/`OTHER`:** manda o `studentAddressId` (um endereço desse aluno, de `stop-options`).
+- **`SCHOOL`:** não manda endereço; o ponto é o da **escola do contrato**.
+- Sem `weekdays` = todos os dias.
+- `orderIndex` (opcional, a partir de 1): a posição do ponto **se ele for criado agora**. Sem ele, a posição é automática (abaixo). Ponto que já existe não se mexe (para isso, `swap-order`). Posição que quebra a ordem embarque → desembarque dá `400`.
+
+O backend:
+1. acha o ponto: **`HOME`/`OTHER`** = o ponto daquele endereço do aluno; **`SCHOOL`** = o ponto da escola do contrato (route stop + school stop). Se a rota já tem, **usa o mesmo** (irmãos na mesma casa e alunos da mesma escola caem no mesmo ponto); senão, cria. `HOME`/`OTHER` **nunca** cria a escola;
+2. põe o ponto novo **na ordem certa**: um **embarque** entra **antes** de onde o aluno desce (antes dos desembarques dele e, se não é na escola, antes da escola do contrato, se ela já está na rota), e os de baixo descem uma posição. Um **desembarque** entra no fim. O backend **não sabe se a rota é ida ou volta**: olha só a ação desse aluno;
+3. cria **um** student stop, só com a ação que você mandou (embarque e desembarque são duas chamadas), com as regras da seção "Regras do aluno na rota". Se algo falhar, **nada fica gravado**.
+
+O que o backend garante sempre é a **ordem** (embarque antes do desembarque); o lugar de cada ponto é decisão do motorista, que pode reordenar depois (`swap-order`, `move`).
+
+→ `200`: `{ "stops": [...], "pending": [...] }` (veja "Resposta das alterações").
+- **400:** `SCHOOL` com `studentAddressId`, `HOME`/`OTHER` sem ele, endereço de outro aluno, ou quebra de alguma regra (ordem, ponto de escola...).
+- **403:** sem contrato ativo com o aluno, ou a rota é de outro motorista.
+- **409:** a mesma ação no mesmo dia, ou o aluno já está nesse ponto.
+
+**Exemplo, rota de volta:**
+1. Ana desce em casa: cria a casa (1). A rota fica com a pendência "Ana sem embarque".
+2. Ana embarca na escola: cria a escola **antes** de onde ela desce: escola (1), casa (2).
+3. O irmão desce em casa: usa o ponto 2 (é o mesmo endereço).
+4. O irmão embarca na escola: usa o ponto 1 (a mesma escola).
 
 ### Criar rota
 `POST /api/route/create-route`
@@ -64,13 +110,49 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 { "id": "uuid", "name": "Ida Manhã", "driverName": "Nome do motorista" }
 ```
 
-### Criar pontos
-`POST /api/route/{routeId}/stops` (recebe uma lista; cada ponto entra **no fim** da rota)
+### Endereços: quem cadastra o quê
+| Endereço | Quem cadastra | Pra quê |
+|---|---|---|
+| do **responsável** (`responsibles.address_id`) | o pai, no cadastro | **cobrança** (pagamento, contrato). Não entra na rota |
+| do **aluno** (`student_addresses`, vários, com apelido) | o pai | **onde o aluno é buscado ou deixado**: "Casa", "Casa da avó", "Inglês de terça" |
+| da **escola** | o motorista, ao cadastrar a escola | o ponto da escola |
+
+O ponto da rota **não tem endereço digitado**: ele usa o mesmo endereço do aluno ou da escola, sem buscar a coordenada de novo na API de mapas. Os **dias da semana** continuam no student stop.
+
+**Endereço sem repetição:** todo endereço novo passa pelo mesmo lugar (`AddressService.findOrCreate`). O endereço é o mesmo quando tem **o mesmo CEP e o mesmo número**; o jeito de escrever a rua não importa. Se o CEP termina em `000` (pode ser o CEP único de uma cidade pequena), ele compara também a rua e a cidade. Então:
+- se **já existe** um endereço com essa chave, **só liga nele** (não cria outro e não chama a API de mapas);
+- se não existe, cria e busca a coordenada uma vez.
+
+"Avenida Paulista, 1000, 01310-100" e "AV. PAULISTA, 1000, 01310100" são o mesmo endereço. A coordenada que vier do app é ignorada: quem define é a busca. Como o endereço é compartilhado, ele **nunca é editado**; mudou o endereço, liga num novo.
+
+**Endereços do aluno (responsável):**
+
+| Endpoint | O que faz |
+|---|---|
+| `GET /api/student/{id}/addresses` | `[{ id, label, address }]`, os ativos. O `id` é o `studentAddressId` |
+| `POST /api/student/{id}/addresses` `{label, address}` | endereço novo (busca a coordenada uma vez). `201` |
+| `POST /api/student/{id}/addresses` `{label, addressId}` | **reaproveita** um endereço que já existe: de um irmão ou o de cobrança do responsável. Irmãos na mesma casa ficam no mesmo ponto. `403` se o endereço não é dele nem de um filho dele; `409` se o aluno já tem esse endereço |
+| `DELETE /api/student/{id}/addresses/{studentAddressId}` | tira o endereço do aluno: apaga **só a ligação** (o endereço continua pra quem mais usa, ex.: o irmão). O aluno **sai dos pontos de casa** com esse endereço (a rota fica com pendência), e o motorista recebe a notificação `ROUTE` "Endereço removido". `409` se for o último endereço do aluno, ou se tiver uma viagem rodando com ele agora |
+
+No cadastro do aluno (`POST /api/student/create-student`):
+- **um endereço:** `address` (novo) **ou** `addressId` (reaproveita o do irmão ou o seu), e `addressLabel` (opcional). Vira o "Casa";
+- **vários de uma vez:** `"addresses": [{ "label": "Casa", "addressId": "..." }, { "label": "Natação", "address": { ... } }]`. O primeiro sem apelido vira "Casa". O mesmo endereço duas vezes dá `400`.
+
+### Quem pode entrar na rota
+`GET /api/route/stop-options` (motorista):
 ```json
-[ { "address": { "street": "Rua A", "zipCode": "01000-000", "city": "São Paulo",
-                 "neighborhood": "Centro", "number": 10, "state": "SP" } } ]
+{ "students": [ { "studentId": "...", "studentName": "Ana",
+                  "addresses": [ { "id": "<studentAddressId>", "label": "Casa", "address": { ... } } ] } ] }
 ```
-→ `200`: lista de pontos (formato abaixo). O endereço é geocodificado, e um endereço que não é encontrado retorna `400`.
+Só aparecem os alunos com contrato **ativo** com ele. O `id` de cada endereço é o `studentAddressId` do `add-student`. A escola não aparece: é sempre a do contrato.
+
+### Resposta das alterações
+Tudo que altera a rota (`add-student`, `swap-order`, `move`, `weekdays` e os três `DELETE`) devolve `200` com a rota inteira **já alterada** e as pendências:
+```json
+{ "stops":   [ { "id": "...", "orderIndex": 1, "address": { ... }, "students": [ ... ], "schools": [ ... ] } ],
+  "pending": [ { "studentId": "...", "studentName": "Ana", "missingBoarding": [], "missingAlighting": ["FRIDAY"] } ] }
+```
+`pending` vazio = rota pronta. Com pendência a **viagem não inicia** (veja "Iniciar"), então o front pode mostrar o aviso na hora ("Ana: falta desembarque na sexta").
 
 **Formato de um ponto** (também é o formato do GET):
 ```json
@@ -86,34 +168,26 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 ```
 Os `id` de `students` e `schools` são os usados para mover e excluir.
 
-### Ligar escola ao ponto
-`POST /api/route/stop/{routeStopId}/add-school/{schoolId}` (sem corpo)
-→ `200`: `{ "id": "uuid do school stop", "schoolId": "...", "stopId": "..." }`
-- **403:** a escola não é do motorista (`/api/school/my-schools`).
-- **409:** a escola já está nessa rota.
+### Regras do aluno na rota
+O `studentId` vem de `GET /api/contract/my-contracts?status=ACTIVE`, a lista de alunos com quem o motorista tem contrato ativo. `weekdays` vale em qualquer `locationType` (inclusive `SCHOOL`: "desce na escola só seg/qua") e, sem ele, vale todos os dias (segunda a domingo).
 
-### Ligar aluno ao ponto
-O `studentId` vem de `GET /api/contract/my-contracts?status=ACTIVE`, a lista de alunos com quem o motorista tem contrato ativo.
-
-`POST /api/route/stop/{routeStopId}/add-student/{studentId}`
-```json
-{ "action": "BOARDING", "locationType": "HOME", "weekdays": ["MONDAY", "WEDNESDAY"] }
-```
-`weekdays` é opcional e, sem ele, vale todos os dias (segunda a domingo). O front manda um array de strings.
-
-→ `200`:
-```json
-{ "id": "...", "studentId": "...", "studentName": "Ana", "stopId": "...", "locationType": "HOME", "action": "BOARDING", "weekdays": ["MONDAY", "WEDNESDAY"] }
-```
-
-Regras:
+Regras (no `add-student` e também no `move`, que muda o aluno de ponto):
+- **400:** `HOME`/`OTHER` num endereço que **não é um endereço cadastrado do aluno**, ou num ponto de escola.
 - **403:** não existe contrato **ATIVO** entre o motorista e o aluno.
-- **400:** a rota não tem um school stop da **escola do contrato**.
-- **400:** `locationType: SCHOOL` fora do ponto que tem a escola do contrato.
+- **400:** `SCHOOL` fora do ponto da **escola do contrato** (no `add-student` ele já escolhe o ponto certo).
+- **400:** o embarque ficaria **depois** do desembarque na ordem da rota.
 - **409:** o aluno já tem a mesma ação nessa rota **num dos mesmos dias**. Pode haver, por exemplo, embarque na esquina A seg/qua e na esquina B ter/qui; não pode haver dois embarques na segunda.
 - **409:** o aluno já está nesse ponto.
 
 O caso comum é **um** embarque e **um** desembarque, sem dias.
+
+### Limitações conhecidas (por enquanto)
+- **Um ponto por endereço na rota.** Se a van precisa passar **duas vezes** no mesmo endereço na mesma rota, não dá: o segundo uso cai no mesmo ponto.
+- **Uma escola por rota.** Se a van precisa parar na mesma escola **duas vezes** (deixar alguém lá antes de buscar outros alunos e voltar depois), não dá para ter um segundo ponto dessa escola.
+
+Nos dois casos, o caminho hoje é dividir em duas rotas.
+
+O que o front precisa mudar está em [`docs/FLUXO_FRONT.md`, seção 11](../docs/FLUXO_FRONT.md#11-o-que-o-front-precisa-mudar-endereços-e-rota).
 
 ### Ajustes
 | Endpoint | Corpo | O que faz |
@@ -121,9 +195,11 @@ O caso comum é **um** embarque e **um** desembarque, sem dias.
 | `PUT /api/route/stop/{routeStopId}/swap-order` | `{ "orderIndex": 1 }` | **Troca** o ponto com o que está na posição pedida. Ex.: 10 ↔ 1, o resto não muda. `400` se não houver ponto na posição |
 | `PUT /api/route/student-stop/{studentStopId}/move` | `{ "routeStopId": "..." }` | Muda o aluno para outro ponto **da mesma rota** (`400` se for de outra rota). Se for `SCHOOL`, o destino precisa ser o ponto da escola |
 | `PUT /api/route/student-stop/{studentStopId}/weekdays` | `{ "weekdays": ["TUESDAY"] }` | Troca os dias **desse** student stop (vazio = todos). `409` se bater com outro embarque/desembarque do aluno |
-| `DELETE /api/route/student-stop/{studentStopId}` | — | Remove o aluno do ponto, sem regra. `204` |
-| `DELETE /api/route/school-stop/{schoolStopId}` | — | Remove a escola do ponto. `409` se algum aluno da rota tem contrato com ela. `204` |
-| `DELETE /api/route/stop/{routeStopId}` | — | Remove o ponto. `409` se ainda tem aluno ou escola. Os pontos de baixo sobem uma posição. `204` |
+| `DELETE /api/route/student-stop/{studentStopId}` | — | Remove o aluno do ponto, sem regra |
+| `DELETE /api/route/school-stop/{schoolStopId}` | — | Remove a escola do ponto. `409` se algum aluno dela ainda embarca ou desce ali (`SCHOOL`) |
+| `DELETE /api/route/stop/{routeStopId}` | — | Remove o ponto. `409` se ainda tem aluno ou escola. Os pontos de baixo sobem uma posição |
+
+Todos devolvem `{ stops, pending }` (seção "Resposta das alterações").
 
 ### Consultas
 | Endpoint | Quem | Retorno |
@@ -133,7 +209,7 @@ O caso comum é **um** embarque e **um** desembarque, sem dias.
 | `GET /api/route/{id}` | dono da rota | `{ id, name, driverName }` |
 | `GET /api/route/{routeId}/pending` | dono da rota | `[{ studentId, studentName, missingBoarding: [...], missingAlighting: [...] }]`: dias em que o aluno aparece mas falta embarque ou desembarque. Lista vazia = rota completa |
 | `GET /api/student/{studentId}/routes` | responsável do aluno | `[{ id, name }]`: só o nome das rotas em que o filho está |
-| `GET /api/school/my-schools` | motorista | `[{ id, name, phone, email, address }]`: o endereço ajuda a criar o ponto da escola |
+| `GET /api/school/my-schools` | motorista | `[{ id, name, phone, email, address }]` |
 
 ---
 
@@ -167,7 +243,7 @@ A **trip** é a viagem de uma rota num dia. Cada aluno do dia vira um **boarding
 **Iniciar:** `POST /api/trip/start/{routeId}` com `{ "latitude", "longitude", "vehicleId"? }`, a posição atual do GPS do motorista.
 - **Regras:**
   - só o motorista da rota;
-  - a rota não pode ter pendências;
+  - a rota não pode ter pendências: `400` dizendo quem e o que falta ("Ana sem desembarque [FRIDAY]");
   - a van é a enviada ou a **van padrão da rota** (`PUT /api/route/{routeId}/set-vehicle/{vehicleId}`), e tem que ser uma van ativa do motorista.
 - **Alunos do dia:** quem tem student stop nessa rota com o dia de hoje. Quem tem **falta avisada** já entra `ABSENT`.
 - **Pontos:** só os que têm aluno hoje, na ordem. Escola sem aluno no dia é pulada.
@@ -321,7 +397,7 @@ Quem pode baixar:
 3. PUT /api/users/update-photo   { "fileKey": "profile/{seuId}/....jpeg" }   → { "photoKey": "..." }
 ```
 - Só aceita chave da sua própria pasta e que já exista no bucket; a foto antiga é apagada.
-- `GET /api/users/{id}` traz `photoKey`; para exibir, use o `download-url`.
+- O `photoKey` dos outros vem no `GET /api/chats` (`otherUserPhotoKey`); a sua vem no `/me`. Para exibir, use o `download-url`. (O `GET /api/users/{id}` foi removido.)
 
 ---
 
@@ -333,7 +409,7 @@ Quem pode baixar:
   - envia o código de verificação por e-mail; o login só funciona depois do `POST /api/auth/verify-email`.
 - **Cadastro de aluno** (`POST /api/student/create-student`): não tem mais `weekdays`; os dias ficam no student stop.
 - **Escola** (`POST /api/school/add-school`): se a escola (nome + rua) já existe, o motorista é **vinculado** a ela, e não dá mais erro. `409` se já estiver vinculado.
-- **Caminho removido:** `POST /api/student-stop/{studentId}/{routeStopId}` virou `POST /api/route/stop/{routeStopId}/add-student/{studentId}`.
+- **Caminho removido:** `POST /api/student-stop/{studentId}/{routeStopId}` virou `POST /api/route/stop/{routeStopId}/add-student/{studentId}`, que depois também saiu: hoje é `POST /api/route/{routeId}/add-student/{studentId}`.
 - **JWT:** agora expira (`JWT_EXPIRATION`, padrão 15 min), e token vencido dá `401`. O `sub` passou a ser o **id do usuário** (antes era o CPF). Tokens antigos dão `401`; basta logar de novo.
 - **Renovar o token sem senha:** o login agora também devolve `refreshToken` (30 dias, `JWT_REFRESH_EXPIRATION`). Com token vencido (`401`), o front chama `POST /api/auth/refresh` `{"refreshToken"}`, recebe um par novo (o usado deixa de valer) e repete a chamada. `POST /api/auth/logout` `{"refreshToken"}` apaga. No Redis fica só o hash do refreshToken. Passo a passo pro front em `docs/FLUXO_TRIP.md`, seção 4.10.
 - **Notificações:** `GET /api/notifications`, `GET /api/notifications/unread-count`, `PUT /api/notifications/{id}/read`, `PUT /api/notifications/read-all` e o WebSocket `ws://<host>/notifications?token=<jwt>` (veja `docs/FLUXO_TRIP.md`, seção 6).

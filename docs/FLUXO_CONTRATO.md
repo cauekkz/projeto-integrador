@@ -124,7 +124,7 @@ Se o contrato já foi aceito ou recusado, dá **409**.
 ### 8. Depois
 
 - `GET /api/contract/my-contracts` (`?status=ACTIVE` opcional) lista os contratos do usuário logado, motorista ou pai.
-- Com o contrato `ACTIVE`, o motorista consegue colocar o aluno na rota (`PUT /api/route/stop/{id}/add-student/{studentId}`).
+- Com o contrato `ACTIVE`, o motorista consegue colocar o aluno na rota (`POST /api/route/{routeId}/add-student/{studentId}`).
 
 ## Notificações do contrato
 

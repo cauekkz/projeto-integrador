@@ -14,7 +14,7 @@ O `pending` da rota só olhava os dias, não a ordem.
 
 **Correção:** `RouteService.checkBoardingBeforeAlighting` — por aluno e por dia, o ponto de embarque precisa ter `orderIndex` menor que o de desembarque. Retorna 400 com
 `"O embarque de <aluno> precisa vir antes do desembarque na ordem da rota"`. A regra roda em:
-- ligar aluno a um ponto (`POST /api/route/stop/{routeStopId}/add-student/{studentId}`)
+- pôr o aluno na rota (`POST /api/route/{routeId}/add-student/{studentId}`)
 - mover aluno de ponto (`PUT /api/route/student-stop/{id}/move`)
 - trocar os dias do aluno (`PUT /api/route/student-stop/{id}/weekdays`)
 - trocar a ordem dos pontos (`PUT /api/route/stop/{routeStopId}/swap-order`) — a troca pode inverter a ordem de algum aluno
@@ -73,6 +73,22 @@ Nova query: `StudentStopRepository.existsByStopIdAndLocationTypeIn`.
 Suíte do backend: **184 testes passando**.
 
 ---
+
+## 1b. Endereços: feito na branch `feature/student-addresses` (29/10)
+
+A proposta da seção 3 foi feita com uma diferença: **os endereços de busca ficam no aluno**, e não no responsável. O endereço do responsável continua sendo **só o de cobrança**.
+- **Aluno:** tem **vários** endereços com apelido ("Casa", "Casa da avó", "Inglês de terça"), na `student_addresses`, que ganhou `label` e `created_at` (migration **V26**). Tirar um endereço apaga só a ligação. O item 2.1 **não** apaga a tabela: ela passou a ser a base dos pontos.
+- **Endereço sem repetição:** todo endereço novo passa por `AddressService.findOrCreate`. Se já existe um igual (mesmo **CEP + número**; com CEP terminado em `000`, também a rua e a cidade), só liga nele, sem duplicar e sem chamar a API de mapas. A coordenada mandada pelo app é ignorada. A V26 calcula a chave dos endereços antigos e tira o `UNIQUE (address_id)` de `schools` (duas escolas no mesmo prédio dividem o endereço).
+- **Irmãos:** o segundo filho **reaproveita** o endereço do primeiro (`addressId`), sem digitar de novo. Os dois caem no mesmo ponto.
+- **Ponto da rota (resolve 2.2 e 2.3):** o motorista não digita endereço. Ele escolhe um endereço de aluno com contrato ativo ou uma escola dele (`GET /api/route/stop-options`). O ponto usa a **mesma** coordenada, sem chamar a API de mapas de novo, e o ponto da escola já nasce ligado a ela.
+- **Regras:**
+  - aluno de casa (`HOME`/`OTHER`) só entra em ponto que é endereço dele;
+  - escola só fica no ponto com o endereço dela;
+  - um ponto por endereço na rota.
+- **Responsável tira um endereço que está na rota (resolve 3.5):** o aluno sai desses pontos, a rota fica com pendência e o motorista recebe a notificação `ROUTE`. Não deixa apagar o último endereço, nem com uma viagem rodando com ele.
+- **Adicionar aluno na rota em 1 passo:** `POST /api/route/{routeId}/add-student/{studentId}` cria ou reaproveita o ponto (o endereço do aluno, ou a escola do contrato num `SCHOOL`) e põe na ordem certa.
+- **Testes:** 204 unitários e 469 de API passando. O que o front precisa mudar: `docs/FLUXO_FRONT.md`, seção 11.
+- **Front:** o cadastro de aluno aceita `addressId`; a tela de criar ponto vira uma escolha (`stop-options`); falta uma tela de endereços do filho.
 
 ## 2. Precisa mudar (ainda não feito)
 

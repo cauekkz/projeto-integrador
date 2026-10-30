@@ -133,11 +133,11 @@ splash
 Minhas rotas ── GET /api/route/get-all-routes-and-stops
  └─ Nova rota ── POST /api/route/create-route {name}       (ex.: "Ida manhã"; a volta é outra rota)
      └─ Editor da rota ── GET /api/route/{routeId}/stops    (pontos em ordem, com alunos e escolas)
-         ├─ + ponto ............ POST /api/route/{routeId}/stops [{address}]   (entra no fim)
-         ├─ + escola no ponto .. POST /api/route/stop/{stopId}/add-school/{schoolId}
-         ├─ + aluno no ponto ... POST /api/route/stop/{stopId}/add-student/{studentId}
-         │                        {action: BOARDING|ALIGHTING, locationType: HOME|SCHOOL|OTHER, weekdays?}
-         │                        alunos possíveis = GET /api/contract/my-contracts?status=ACTIVE
+         ├─ + aluno na rota .... GET /api/route/stop-options   (alunos dele com os endereços)
+         │                        POST /api/route/{routeId}/add-student/{studentId}
+         │                        {action, locationType, studentAddressId?, weekdays?}   → devolve {stops, pending}
+         │                        o backend cria/reaproveita o ponto (SCHOOL = a escola do contrato) e põe na ordem certa
+         │                        (tela: "Ana · Casa · embarca · seg-sex"; depois "Ana · Escola · desce")
          ├─ trocar ordem ....... PUT /api/route/stop/{stopId}/swap-order {orderIndex}
          ├─ mover aluno ........ PUT /api/route/student-stop/{id}/move {routeStopId}
          ├─ dias do aluno ...... PUT /api/route/student-stop/{id}/weekdays {weekdays}
@@ -196,7 +196,8 @@ Finalizar → POST /api/trip/{tripId}/finish → fecha o WebSocket e para o GPS
 | Tela | Chamadas |
 |---|---|
 | Meus filhos | `GET /api/student/my-children` (paginado: `content[]`) |
-| Cadastrar filho | `POST /api/student/create-student` `{name, birthDate, relationType, address, notes?}`. `relationType`: `FINANCIAL`, `LEGAL` ou `WITHDRAWAL` |
+| Cadastrar filho | `POST /api/student/create-student` `{name, birthDate, relationType, notes?, address \| addressId, addressLabel?}`. `relationType`: `FINANCIAL`, `LEGAL` ou `WITHDRAWAL`. O endereço vira o "Casa" do filho. Pro irmão, mande o `addressId` da casa do outro (sem digitar de novo) |
+| Endereços do filho (onde é buscado/deixado) | `GET /api/student/{id}/addresses`; novo: `POST .../addresses {label, address}` ou reaproveitado: `{label, addressId}`; tirar: `DELETE .../addresses/{id}` (apaga só a ligação; o motorista é avisado e escolhe o novo ponto). No cadastro do filho dá pra mandar vários de uma vez (`addresses: [...]`). **Dica de tela:** antes do campo de endereço, mostre os endereços que a família já tem (o seu de cobrança e os dos outros filhos) pra escolher, em vez de digitar de novo. Se digitar igual, o backend reaproveita sozinho |
 | Dividir com outro responsável | quem cadastrou: `POST /api/student/generate-link` `{id, relationType}` → devolve um código. O outro responsável: `POST /api/student/confirm-link` `{code}` |
 | Rotas do filho | `GET /api/student/{id}/routes` → `[{id, name}]` |
 
@@ -310,3 +311,44 @@ Pra mostrar: GET /api/storage/download-url?fileKey=... → downloadUrl (vale 15 
 - **Cota da API de mapas:** a chave grátis tem um limite diário (200 rotas). Quando ele acaba:
   - o cadastro de endereço dá **503**;
   - a trip continua funcionando, mas **sem a linha e sem o tempo**: trate `path`/`etaSeconds` `null` mostrando só a van.
+
+## 11. O que o front precisa mudar (endereços e rota)
+O backend da branch `feature/student-addresses` mudou endereços e montagem da rota. Hoje o front **não chama nenhuma rota de ponto**, então nada quebrou; a lista abaixo é o que falta fazer para usar o que mudou. Detalhes de cada endpoint: `backend/README.md`, seção 1, e `docs/FLUXO_ROTA.md`.
+
+### Responsável: filho e endereços
+| Onde | O que mudar |
+|---|---|
+| `services/dto/student/student.dto.ts` (`createStudentRequest`) | `address` passou a ser **opcional**. Novos campos: `addressId?` (reaproveita um endereço da família), `addressLabel?` (apelido, padrão "Casa") e `addresses?: { label?, address?, addressId? }[]` (vários de uma vez). Mande **um** jeito: `address`, `addressId` ou `addresses` |
+| `services/dto/student/student.dto.ts` (`studentResponsibleResponse`) | `studentResponseDTO` agora traz `studentAddressResponseDTO: { id, label, address }` (o endereço "Casa") |
+| `components/student/add-student` | continua funcionando como está (`address` vira o "Casa"). Melhoria: antes do formulário, mostrar os endereços que a família já tem (`GET /api/student/{id}/addresses` dos outros filhos) e mandar `addressId` em vez de digitar de novo |
+| tela nova: **endereços do filho** | `GET /api/student/{id}/addresses` → `[{ id, label, address }]`; adicionar: `POST .../addresses` `{ label, address }` ou `{ label, addressId }` (`409` se o filho já tem esse endereço); tirar: `DELETE .../addresses/{id}` (`409` se é o último ou tem viagem rodando com ele) |
+| mensagens | mesmo **CEP + número** = mesmo endereço: o backend reaproveita sozinho. A latitude/longitude mandada pelo app é ignorada |
+
+### Motorista: montar a rota (tela ainda não existe; `pages/driver-route` tem só o TODO)
+| Ação | Chamada |
+|---|---|
+| criar a rota | `POST /api/route/create-route` `{ name }` |
+| escolher aluno e endereço | `GET /api/route/stop-options` → `{ students: [{ studentId, studentName, addresses: [{ id, label, address }] }] }`. **Não tem mais `schools`** |
+| pôr o aluno na rota | `POST /api/route/{routeId}/add-student/{studentId}` `{ action, locationType, studentAddressId?, weekdays?, orderIndex? }`. **Uma chamada por ação**: embarque e desembarque são duas. `SCHOOL` não manda endereço (é a escola do contrato, criada se ainda não está na rota) |
+| trocar ordem / mover / dias | `PUT /api/route/stop/{id}/swap-order`, `PUT /api/route/student-stop/{id}/move`, `PUT /api/route/student-stop/{id}/weekdays` |
+| excluir | `DELETE /api/route/student-stop/{id}`, `/school-stop/{id}`, `/stop/{id}`: agora devolvem **`200` com corpo**, não `204` |
+
+**Resposta de toda alteração:** `{ stops: RouteStopResponse[], pending: RoutePendingResponse[] }`. A tela redesenha a rota com `stops` (não precisa de outro GET) e mostra `pending` como aviso: "Ana: falta desembarque na sexta". `pending` vazio = rota pronta.
+
+**Iniciar a viagem** com pendência dá `400` com a mensagem dizendo quem e o que falta: mostre a `message`.
+
+**Não use mais** (foram removidas): `POST /api/route/{routeId}/stops`, `POST /api/route/stop/{id}/add-student/{studentId}`, `POST /api/route/stop/{id}/add-school/{schoolId}`.
+
+**Tipos sugeridos** (`services/dto/route/route.dto.ts`):
+```ts
+export interface RouteEditResponse { stops: RouteStop[]; pending: RoutePending[]; }
+export interface RoutePending { studentId: string; studentName: string; missingBoarding: WeekDay[]; missingAlighting: WeekDay[]; }
+export interface AddStudentToRouteRequest {
+  action: 'BOARDING' | 'ALIGHTING';
+  locationType: 'HOME' | 'SCHOOL' | 'OTHER';
+  studentAddressId?: string;   // só HOME/OTHER
+  weekdays?: WeekDay[];        // sem = todos os dias
+  orderIndex?: number;         // sem = automático
+}
+```
+
