@@ -21,7 +21,6 @@ import br.com.vanroute.backend.exceptions.BadRequestException;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import br.com.vanroute.backend.repositories.ChatMessageRepository;
 import br.com.vanroute.backend.repositories.DocumentRepository;
-import br.com.vanroute.backend.repositories.UserRepository;
 import org.springframework.security.access.AccessDeniedException;
 //IA FIRST
 import java.time.Duration;
@@ -43,15 +42,13 @@ public class StorageService {
 
     private final ChatMessageRepository chatMessageRepository;
     private final DocumentRepository documentRepository;
-    private final UserRepository userRepository;
 
     public StorageService(S3Client s3Client, S3Presigner s3Presigner, ChatMessageRepository chatMessageRepository,
-                          DocumentRepository documentRepository, UserRepository userRepository) {
+                          DocumentRepository documentRepository) {
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
         this.chatMessageRepository = chatMessageRepository;
         this.documentRepository = documentRepository;
-        this.userRepository = userRepository;
     }
 
     @PostConstruct
