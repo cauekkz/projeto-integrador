@@ -46,6 +46,10 @@ public class TripWebSocketHandler extends TextWebSocketHandler implements Messag
             return;
         }
         UUID tripId = tripId(session.getUri());
+        if (tripId == null) {
+            session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Trip invalida"));
+            return;
+        }
         TripLiveService.Access access;
         try {
             access = tripLiveService.access(tripId, UUID.fromString(session.getPrincipal().getName()));
@@ -64,7 +68,7 @@ public class TripWebSocketHandler extends TextWebSocketHandler implements Messag
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         UUID tripId = tripId(session.getUri());
         TripLiveService.Access access = (TripLiveService.Access) session.getAttributes().get(ACCESS);
-        WebSocketSession safe = sessions.getOrDefault(tripId, Map.of()).get(session.getId());
+        WebSocketSession safe = tripId == null ? null : sessions.getOrDefault(tripId, Map.of()).get(session.getId());
         if (access == null || safe == null) {
             return;
         }
@@ -99,7 +103,7 @@ public class TripWebSocketHandler extends TextWebSocketHandler implements Messag
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         UUID tripId = tripId(session.getUri());
-        Map<String, WebSocketSession> tripSessions = sessions.get(tripId);
+        Map<String, WebSocketSession> tripSessions = tripId == null ? null : sessions.get(tripId);
         if (tripSessions != null) {
             tripSessions.remove(session.getId());
             if (tripSessions.isEmpty()) {
@@ -125,8 +129,13 @@ public class TripWebSocketHandler extends TextWebSocketHandler implements Messag
         session.sendMessage(new TextMessage(objectMapper.writeValueAsString(Map.of("type", "error", "message", String.valueOf(text)))));
     }
 
+    // null se o fim da URL nao e um UUID (ex.: /trip/null): a conexao fecha com 1003 em vez de estourar 1011
     private static UUID tripId(URI uri) {
         String[] parts = uri.getPath().split("/");
-        return UUID.fromString(parts[parts.length - 1]);
+        try {
+            return UUID.fromString(parts[parts.length - 1]);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 }
