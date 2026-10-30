@@ -60,8 +60,9 @@ SQL
 school() { # school TOKEN_MOTORISTA NOME RUA CEP BAIRRO NUM -> id
   api POST /api/school/add-school "$1" "{\"name\":\"$2 $RUN\",\"phone\":\"1133334444\",\"email\":\"escola$RANDOM.$RUN@teste.local\",\"addressRequestDTO\":$(addr "$3" "$4" "$5" "$6")}" | jq -r .id
 }
-kid() { # kid TOKEN_PAI NOME RUA CEP BAIRRO NUM -> id do aluno
-  api POST /api/student/create-student "$1" "{\"name\":\"$2\",\"birthDate\":\"2016-05-10\",\"relationType\":\"FINANCIAL\",\"address\":$(addr "$3" "$4" "$5" "$6")}" | jq -r .studentResponseDTO.id
+kid() { # kid TOKEN_PAI NOME RUA CEP BAIRRO NUM -> "id do aluno  id do endereco Casa dele"
+  api POST /api/student/create-student "$1" "{\"name\":\"$2\",\"birthDate\":\"2016-05-10\",\"relationType\":\"FINANCIAL\",\"address\":$(addr "$3" "$4" "$5" "$6")}" \
+    | jq -r '"\(.studentResponseDTO.id) \(.studentResponseDTO.studentAddressResponseDTO.id)"'
 }
 contract() { # contract TOKEN_MOTORISTA LINK ESCOLA TOKEN_PAI ALUNO: chat pelo codigo do motorista, proposta e aceite
   local parentId; parentId=$(api GET /api/users/me "$4" | jq -r .id)
@@ -69,11 +70,9 @@ contract() { # contract TOKEN_MOTORISTA LINK ESCOLA TOKEN_PAI ALUNO: chat pelo c
   local c; c=$(api POST "/api/chats/$chat/contract" "$1" "{\"responsibleId\":\"$parentId\",\"studentId\":\"$5\",\"schoolId\":\"$3\",\"contract\":{\"periodicity\":\"MONTHLY\",\"value\":350.00,\"startDate\":\"2027-02-01\",\"endDate\":\"2027-06-30\"},\"document\":{\"url\":\"demo\",\"type\":\"TRANSPORT_CONTRACT\"}}" | jq -r .contract.contractId)
   api PUT "/api/chats/$chat/contracts/$c/accept" "$4" >/dev/null
 }
-stop() { # stop TOKEN_MOTORISTA ROTA RUA CEP BAIRRO NUM -> id do ponto
-  api POST "/api/route/$2/stops" "$1" "[{\"address\":$(addr "$3" "$4" "$5" "$6")}]" | jq -r '.[0].id'
-}
-put_student() { # put_student TOKEN_MOTORISTA PONTO ALUNO ACAO LOCAL
-  api POST "/api/route/stop/$2/add-student/$3" "$1" "{\"action\":\"$4\",\"locationType\":\"$5\"}" >/dev/null
+# "adicionar aluno na rota" num passo so: o backend usa/cria o ponto do endereco na ordem certa e liga o aluno
+add_student() { # add_student TOKEN_MOTORISTA ROTA ALUNO ACAO LOCAL [ID_ENDERECO_DO_ALUNO]
+  api POST "/api/route/$2/add-student/$3" "$1" "{\"action\":\"$4\",\"locationType\":\"$5\"${6:+,\"studentAddressId\":\"$6\"}}" >/dev/null
 }
 
 echo "== IDA (manha): casa -> casa -> escola"
@@ -85,20 +84,17 @@ echo "motorista, van e escola..."
 read -r D_CPF D LINK VAN PLATE <<<"$(driver 'Motorista Demo')"
 SCHOOL=$(school "$D" 'Escola Demo' 'Rua Vergueiro' '01504-000' 'Liberdade' 1000)
 echo "filhos e contratos..."
-K1=$(kid "$P1" 'Aluno Demo Um' 'Rua Augusta' '01304-000' 'Consolacao' 500)
-K2=$(kid "$P2" 'Aluna Demo Dois' 'Rua Haddock Lobo' '01414-000' 'Cerqueira Cesar' 400)
+read -r K1 K1_HOME <<<"$(kid "$P1" 'Aluno Demo Um' 'Rua Augusta' '01304-000' 'Consolacao' 500)"
+read -r K2 K2_HOME <<<"$(kid "$P2" 'Aluna Demo Dois' 'Rua Haddock Lobo' '01414-000' 'Cerqueira Cesar' 400)"
 contract "$D" "$LINK" "$SCHOOL" "$P1" "$K1"
 contract "$D" "$LINK" "$SCHOOL" "$P2" "$K2"
 echo "rota..."
 ROUTE=$(api POST /api/route/create-route "$D" '{"name":"Ida Manha"}' | jq -r .id)
-S1=$(stop "$D" "$ROUTE" 'Rua Augusta' '01304-000' 'Consolacao' 500)
-S2=$(stop "$D" "$ROUTE" 'Rua Haddock Lobo' '01414-000' 'Cerqueira Cesar' 400)
-S3=$(stop "$D" "$ROUTE" 'Rua Vergueiro' '01504-000' 'Liberdade' 1000)
-api POST "/api/route/stop/$S3/add-school/$SCHOOL" "$D" >/dev/null
-put_student "$D" "$S1" "$K1" BOARDING HOME
-put_student "$D" "$S2" "$K2" BOARDING HOME
-put_student "$D" "$S3" "$K1" ALIGHTING SCHOOL
-put_student "$D" "$S3" "$K2" ALIGHTING SCHOOL
+# num passo so: o backend cria os pontos na ordem (casa 1, casa 2, escola) e liga os alunos
+add_student "$D" "$ROUTE" "$K1" BOARDING HOME "$K1_HOME"
+add_student "$D" "$ROUTE" "$K2" BOARDING HOME "$K2_HOME"
+add_student "$D" "$ROUTE" "$K1" ALIGHTING SCHOOL
+add_student "$D" "$ROUTE" "$K2" ALIGHTING SCHOOL
 api PUT "/api/route/$ROUTE/set-vehicle/$VAN" "$D" >/dev/null
 
 echo "== VOLTA (tarde): escola -> casa -> casa (outro motorista e outros pais)"
@@ -109,20 +105,17 @@ echo "motorista, van e escola..."
 read -r D2_CPF D2 LINK2 VAN2 PLATE2 <<<"$(driver 'Motorista Demo Volta')"
 SCHOOL2=$(school "$D2" 'Escola Demo Volta' 'Rua Teodoro Sampaio' '05405-000' 'Pinheiros' 1000)
 echo "filhos e contratos..."
-K3=$(kid "$P3" 'Aluno Demo Tres' 'Rua dos Pinheiros' '05422-000' 'Pinheiros' 500)
-K4=$(kid "$P4" 'Aluna Demo Quatro' 'Rua Cardeal Arcoverde' '05407-000' 'Pinheiros' 800)
+read -r K3 K3_HOME <<<"$(kid "$P3" 'Aluno Demo Tres' 'Rua dos Pinheiros' '05422-000' 'Pinheiros' 500)"
+read -r K4 K4_HOME <<<"$(kid "$P4" 'Aluna Demo Quatro' 'Rua Cardeal Arcoverde' '05407-000' 'Pinheiros' 800)"
 contract "$D2" "$LINK2" "$SCHOOL2" "$P3" "$K3"
 contract "$D2" "$LINK2" "$SCHOOL2" "$P4" "$K4"
 echo "rota..."
 ROUTE2=$(api POST /api/route/create-route "$D2" '{"name":"Volta Tarde"}' | jq -r .id)
-V1=$(stop "$D2" "$ROUTE2" 'Rua Teodoro Sampaio' '05405-000' 'Pinheiros' 1000)
-V2=$(stop "$D2" "$ROUTE2" 'Rua dos Pinheiros' '05422-000' 'Pinheiros' 500)
-V3=$(stop "$D2" "$ROUTE2" 'Rua Cardeal Arcoverde' '05407-000' 'Pinheiros' 800)
-api POST "/api/route/stop/$V1/add-school/$SCHOOL2" "$D2" >/dev/null
-put_student "$D2" "$V1" "$K3" BOARDING SCHOOL
-put_student "$D2" "$V1" "$K4" BOARDING SCHOOL
-put_student "$D2" "$V2" "$K3" ALIGHTING HOME
-put_student "$D2" "$V3" "$K4" ALIGHTING HOME
+# volta: a escola entra antes das casas sozinha
+add_student "$D2" "$ROUTE2" "$K3" ALIGHTING HOME "$K3_HOME"
+add_student "$D2" "$ROUTE2" "$K4" ALIGHTING HOME "$K4_HOME"
+add_student "$D2" "$ROUTE2" "$K3" BOARDING SCHOOL
+add_student "$D2" "$ROUTE2" "$K4" BOARDING SCHOOL
 api PUT "/api/route/$ROUTE2/set-vehicle/$VAN2" "$D2" >/dev/null
 
 jq -n --arg d "$D_CPF" --arg p1 "$P1_CPF" --arg p2 "$P2_CPF" --arg route "$ROUTE" --arg k1 "$K1" --arg k2 "$K2" --arg plate "$PLATE" \
