@@ -1,11 +1,10 @@
 package br.com.vanroute.backend.services;
 
-import br.com.vanroute.backend.dtos.geocode.Coordenadas;
-import br.com.vanroute.backend.dtos.route.AddRouteStopRequest;
+import br.com.vanroute.backend.models.school.School;
+import br.com.vanroute.backend.dtos.route.RouteEditResponse;
 import br.com.vanroute.backend.dtos.route.RoutePendingResponse;
 import br.com.vanroute.backend.dtos.route.RouteStopResponse;
 import br.com.vanroute.backend.dtos.route.UpdateRouteStopOrderRequest;
-import br.com.vanroute.backend.dtos.student.AddressRequestDTO;
 import br.com.vanroute.backend.exceptions.BadRequestException;
 import br.com.vanroute.backend.models.address.Address;
 import br.com.vanroute.backend.models.route.Route;
@@ -34,8 +33,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,15 +46,14 @@ import static org.mockito.Mockito.when;
 class RouteServiceTest {
 
     @Mock private RouteRepository routeRepository;
-    @Mock private AddressRepository addressRepository;
     @Mock private RouteStopRepository routeStopRepository;
     @Mock private DriverRepository driverRepository;
     @Mock private RouteDriverRepository routeDriverRepository;
-    @Mock private AddressService addressService;
-    @Mock private MapService mapService;
     @Mock private StudentStopRepository studentStopRepository;
     @Mock private SchoolStopRepository schoolStopRepository;
     @Mock private Authentication authentication;
+    @Mock private StudentAddressRepository studentAddressRepository;
+    @Mock private UserDriverContractRepository userDriverContractRepository;
 
     @InjectMocks
     private RouteService routeService;
@@ -106,17 +106,59 @@ class RouteServiceTest {
     }
 
     @Test
-    void newStopGoesToTheEnd() {
-        when(routeRepository.findById(route.getId())).thenReturn(Optional.of(route));
+    void stopAtReusesTheStopOfThatAddress() {
+        Address address = new Address();
+        address.setId(UUID.randomUUID());
+        when(routeStopRepository.findFirstByRouteIdAndAddressId(route.getId(), address.getId())).thenReturn(Optional.of(b));
+
+        assertSame(b, routeService.stopAt(route, address, null, null));
+        verify(routeStopRepository, never()).save(any());
+    }
+
+    @Test
+    void stopAtInsertsInTheMiddleAndPushesTheOthersDown() {
+        Address address = new Address();
+        address.setId(UUID.randomUUID());
+        when(routeStopRepository.findFirstByRouteIdAndAddressId(route.getId(), address.getId())).thenReturn(Optional.empty());
         when(routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId())).thenReturn(List.of(a, b, c, d));
-        when(addressService.addAddress(any())).thenReturn(new Address());
-        when(mapService.searchCoord(any(Address.class))).thenReturn(new Coordenadas(-23.5, -46.6));
         when(routeStopRepository.save(any(RouteStop.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        List<RouteStopResponse> response = routeService.addRouteStop(route.getId(),
-                List.of(new AddRouteStopRequest(new AddressRequestDTO("Rua", "0", "SP", null, 1, "SP", null, null))), authentication);
+        RouteStop created = routeService.stopAt(route, address, null, 2);
 
-        assertEquals(5, response.get(0).orderIndex());
+        assertEquals(2, created.getOrderIndex());
+        // 1 fica; 2, 3 e 4 descem uma posicao
+        assertEquals(List.of(1, 3, 4, 5), List.of(a.getOrderIndex(), b.getOrderIndex(), c.getOrderIndex(), d.getOrderIndex()));
+    }
+
+    @Test
+    void stopAtWithASchoolLinksTheSchoolToTheStop() {
+        School school = new School();
+        school.setId(UUID.randomUUID());
+        Address address = new Address();
+        address.setId(UUID.randomUUID());
+        when(routeStopRepository.findFirstByRouteIdAndAddressId(route.getId(), address.getId())).thenReturn(Optional.empty());
+        when(routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId())).thenReturn(List.of(a, b));
+        when(routeStopRepository.save(any(RouteStop.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(schoolStopRepository.findFirstByStopRouteIdAndSchoolId(route.getId(), school.getId())).thenReturn(Optional.empty());
+
+        RouteStop created = routeService.stopAt(route, address, school, null);
+
+        assertEquals(3, created.getOrderIndex());
+        verify(schoolStopRepository).save(argThat(link -> link.getStop() == created && link.getSchool() == school));
+    }
+
+    @Test
+    void secondSchoolAtTheSameAddressJoinsTheExistingStop() {
+        School school = new School();
+        school.setId(UUID.randomUUID());
+        Address address = new Address();
+        address.setId(UUID.randomUUID());
+        when(routeStopRepository.findFirstByRouteIdAndAddressId(route.getId(), address.getId())).thenReturn(Optional.of(b));
+        when(schoolStopRepository.findFirstByStopRouteIdAndSchoolId(route.getId(), school.getId())).thenReturn(Optional.empty());
+
+        assertSame(b, routeService.stopAt(route, address, school, null));
+        verify(routeStopRepository, never()).save(any());
+        verify(schoolStopRepository).save(argThat(link -> link.getStop() == b && link.getSchool() == school));
     }
 
     @Test
@@ -128,6 +170,25 @@ class RouteServiceTest {
 
         verify(routeStopRepository).delete(b);
         assertEquals(List.of(1, 2, 3), List.of(a.getOrderIndex(), c.getOrderIndex(), d.getOrderIndex()));
+    }
+
+    @Test
+    void everyEditAnswersWithTheStopsAndWhatIsStillMissing() {
+        when(routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId())).thenReturn(List.of(a, b));
+        Student ana = new Student();
+        ana.setId(UUID.randomUUID());
+        ana.setName("Ana");
+        StudentStop boarding = new StudentStop();
+        boarding.setStudent(ana);
+        boarding.setAction(StudentStopAction.BOARDING);
+        boarding.setWeekdays(EnumSet.allOf(WeekDay.class));
+        when(studentStopRepository.findByRouteWithStudent(route.getId())).thenReturn(List.of(boarding));
+
+        RouteEditResponse state = routeService.routeState(route.getId());
+
+        assertEquals(List.of(a.getId(), b.getId()), state.stops().stream().map(RouteStopResponse::id).toList());
+        // ana embarca todo dia e nao desce em nenhum
+        assertEquals(EnumSet.allOf(WeekDay.class), state.pending().get(0).missingAlighting());
     }
 
     @Test

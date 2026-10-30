@@ -1,12 +1,10 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.dtos.route.stops.AddStudentToRouteRequest;
+import br.com.vanroute.backend.dtos.route.RouteStopOptionsDTO;
 import br.com.vanroute.backend.dtos.route.*;
 import br.com.vanroute.backend.dtos.route.stops.MoveStudentStopRequestDTO;
-import br.com.vanroute.backend.dtos.route.stops.SchoolStopResponseDTO;
-import br.com.vanroute.backend.dtos.route.stops.StudentStopRequestDTO;
-import br.com.vanroute.backend.dtos.route.stops.StudentStopResponseDTO;
 import br.com.vanroute.backend.dtos.route.stops.UpdateWeekdaysRequestDTO;
-import br.com.vanroute.backend.services.MapService;
 import br.com.vanroute.backend.services.SchoolStopService;
 import br.com.vanroute.backend.services.StudentStopService;
 import br.com.vanroute.backend.services.RouteService;
@@ -23,14 +21,12 @@ import java.util.UUID;
 @RequestMapping("/api/route")
 public class RouteController {
     private final RouteService routeService;
-    private final MapService mapService;
     private final StudentStopService studentStopService;
     private final SchoolStopService schoolStopService;
 
-    public RouteController(RouteService routeService, MapService mapService,
+    public RouteController(RouteService routeService,
                            StudentStopService studentStopService, SchoolStopService schoolStopService) {
         this.routeService = routeService;
-        this.mapService = mapService;
         this.studentStopService = studentStopService;
         this.schoolStopService = schoolStopService;
     }
@@ -50,23 +46,8 @@ public class RouteController {
                 .body(response);
     }
 
-    @PostMapping("/{routeId}/stops")
-    public ResponseEntity<List<RouteStopResponse>> addRouteStops(
-            @PathVariable UUID routeId,
-            @RequestBody List<@Valid AddRouteStopRequest> requests,
-            Authentication authentication
-    ) {
-        List<RouteStopResponse> response = routeService.addRouteStop(
-                routeId,
-                requests,
-                authentication
-        );
-
-        return ResponseEntity.ok(response);
-    }
-
     @PutMapping("/stop/{routeStopId}/swap-order")
-    public ResponseEntity<RouteStopResponse> updateRouteStopOrder(
+    public ResponseEntity<RouteEditResponse> updateRouteStopOrder(
             @PathVariable UUID routeStopId,
             @RequestBody @Valid UpdateRouteStopOrderRequest request,
             Authentication authentication
@@ -74,49 +55,33 @@ public class RouteController {
         return ResponseEntity.ok(routeService.updateRouteStopOrder(routeStopId, request, authentication));
     }
 
-    @PostMapping("/stop/{routeStopId}/add-student/{studentId}")
-    public StudentStopResponseDTO createStudentStop(@PathVariable UUID routeStopId, @PathVariable UUID studentId,
-                                                    @Valid @RequestBody StudentStopRequestDTO studentStopRequestDTO,
-                                                    Authentication authentication) {
-        return studentStopService.createStudentStop(studentStopRequestDTO, studentId, routeStopId, authentication);
-    }
-
-    @PostMapping("/stop/{routeStopId}/add-school/{schoolId}")
-    public SchoolStopResponseDTO createSchoolStop(@PathVariable UUID routeStopId, @PathVariable UUID schoolId,
-                                                  Authentication authentication) {
-        return schoolStopService.addSchoolStop(schoolId, routeStopId, authentication);
-    }
-
     @PutMapping("/student-stop/{studentStopId}/move")
-    public StudentStopResponseDTO moveStudentStop(@PathVariable UUID studentStopId,
+    public RouteEditResponse moveStudentStop(@PathVariable UUID studentStopId,
                                                   @Valid @RequestBody MoveStudentStopRequestDTO request,
                                                   Authentication authentication) {
         return studentStopService.moveStudentStop(studentStopId, request.routeStopId(), authentication);
     }
 
     @PutMapping("/student-stop/{studentStopId}/weekdays")
-    public StudentStopResponseDTO updateWeekdays(@PathVariable UUID studentStopId,
+    public RouteEditResponse updateWeekdays(@PathVariable UUID studentStopId,
                                                  @RequestBody UpdateWeekdaysRequestDTO request,
                                                  Authentication authentication) {
         return studentStopService.updateWeekdays(studentStopId, request.weekdays(), authentication);
     }
 
     @DeleteMapping("/student-stop/{studentStopId}")
-    public ResponseEntity<Void> deleteStudentStop(@PathVariable UUID studentStopId, Authentication authentication) {
-        studentStopService.deleteStudentStop(studentStopId, authentication);
-        return ResponseEntity.noContent().build();
+    public RouteEditResponse deleteStudentStop(@PathVariable UUID studentStopId, Authentication authentication) {
+        return studentStopService.deleteStudentStop(studentStopId, authentication);
     }
 
     @DeleteMapping("/school-stop/{schoolStopId}")
-    public ResponseEntity<Void> deleteSchoolStop(@PathVariable UUID schoolStopId, Authentication authentication) {
-        schoolStopService.deleteSchoolStop(schoolStopId, authentication);
-        return ResponseEntity.noContent().build();
+    public RouteEditResponse deleteSchoolStop(@PathVariable UUID schoolStopId, Authentication authentication) {
+        return schoolStopService.deleteSchoolStop(schoolStopId, authentication);
     }
 
     @DeleteMapping("/stop/{routeStopId}")
-    public ResponseEntity<Void> deleteRouteStop(@PathVariable UUID routeStopId, Authentication authentication) {
-        routeService.deleteRouteStop(routeStopId, authentication);
-        return ResponseEntity.noContent().build();
+    public RouteEditResponse deleteRouteStop(@PathVariable UUID routeStopId, Authentication authentication) {
+        return routeService.deleteRouteStop(routeStopId, authentication);
     }
 
     // van padrao da rota (a trip usa ela quando o motorista nao escolhe outra)
@@ -124,6 +89,21 @@ public class RouteController {
     public ResponseEntity<RouteResponse> setDefaultVehicle(@PathVariable UUID routeId, @PathVariable UUID vehicleId,
                                                            Authentication authentication) {
         return ResponseEntity.ok(routeService.setDefaultVehicle(routeId, vehicleId, authentication));
+    }
+
+    // "adicionar aluno na rota" num passo so: usa/cria o ponto do endereco (na ordem certa), garante a escola do
+    // contrato na rota e liga o aluno. Devolve os pontos atualizados e as pendencias
+    @PostMapping("/{routeId}/add-student/{studentId}")
+    public RouteEditResponse addStudentToRoute(@PathVariable UUID routeId, @PathVariable UUID studentId,
+                                                     @RequestBody @Valid AddStudentToRouteRequest request,
+                                                     Authentication authentication) {
+        return studentStopService.addStudentToRoute(routeId, studentId, request, authentication);
+    }
+
+    // quem o motorista pode pôr na rota: alunos com contrato ativo e os enderecos de cada um (o studentAddressId)
+    @GetMapping("/stop-options")
+    public RouteStopOptionsDTO stopOptions(Authentication authentication) {
+        return routeService.stopOptions(authentication);
     }
 
     @GetMapping("/{routeId}/pending")
