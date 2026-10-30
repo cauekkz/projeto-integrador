@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.dtos.route.RoutePendingResponse;
 import br.com.vanroute.backend.dtos.trip.*;
 import br.com.vanroute.backend.exceptions.BadRequestException;
 import br.com.vanroute.backend.models.route.Route;
@@ -82,8 +83,14 @@ public class TripService {
         Route route = routeRepository.findById(routeId)
                 .orElseThrow(() -> new EntityNotFoundException("Route not found"));
         Driver driver = routeOwner(routeId, driverId);
-        if (!routeService.pendingOf(routeId).isEmpty()) {
-            throw new BadRequestException("A rota tem alunos sem embarque ou desembarque em algum dia");
+        // configuracao incompleta (aluno com embarque e sem desembarque num dia, ou o contrario): nao inicia
+        List<RoutePendingResponse> pending = routeService.pendingOf(routeId);
+        if (!pending.isEmpty()) {
+            throw new BadRequestException("A rota tem alunos sem embarque ou desembarque em algum dia: " + pending.stream()
+                    .map(p -> p.studentName()
+                            + (p.missingBoarding().isEmpty() ? "" : " sem embarque " + p.missingBoarding())
+                            + (p.missingAlighting().isEmpty() ? "" : " sem desembarque " + p.missingAlighting()))
+                    .collect(Collectors.joining("; ")));
         }
 
         LocalDate today = LocalDate.now(ZONE);
