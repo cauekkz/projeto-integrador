@@ -322,6 +322,8 @@ Se outra pessoa mandar, recebe `{"type":"error","message":"Só o motorista envia
 | `STUDENT_DELIVERED` | o motorista marca o desembarque | os pais do aluno | "Ana chegou na escola" / "chegou em casa" | `tripId`, `studentIds` |
 | `STUDENT_ABSENT` | o motorista marca como ausente | os pais do aluno | "Ana não embarcou" | `tripId`, `studentIds` |
 | `ABSENCE_REPORTED` | o pai avisa ou desfaz uma falta | os motoristas da rota | "Falta avisada" / "Falta desfeita" | `chatId`, `studentId`, `routeId`, `date`, `canceled` |
+| `OCCURRENCE` | o motorista registra uma ocorrência na viagem (`POST /api/trip/{tripId}/occurrences`) | os pais de **todos** os alunos da viagem | "Ocorrência na viagem: trânsito" / "Ida Manhã: acidente na marginal" | `tripId`, `occurrenceId`, `type` |
+| `DRIVER_NOTICE` | o motorista avisa um grupo (`POST /api/driver/groups/{id}/notice`) | os pais dos alunos do grupo | "Aviso do motorista" / "Carlos avisou que não vai buscar Ana hoje. Motivo: ..." | `groupId`, `driverId`, `date`, `studentIds` |
 
 - "Pais" são **todos os responsáveis** do aluno, não só o principal.
 - **Irmãos viram uma notificação só:** "A van está indo buscar Ana e Caio".
@@ -415,7 +417,7 @@ bash backend/api-tests/demo/run-demo.sh
 # se a cota diária da chave de mapas acabou: DEMO_MAPS=sim bash backend/api-tests/demo/run-demo.sh
 ```
 Esse comando faz tudo sozinho:
-1. Sobe o Postgres, o Redis e o MinIO (docker compose) e cria o banco **isolado** `vanroute_audit`. O seu `vanroute_db` não é tocado.
+1. Sobe o Postgres, o Redis e o MinIO (docker compose). Usa o banco normal `vanroute_db`, com dados fictícios; para zerar, `docker compose down -v`.
 2. Recompila o backend se o código mudou.
 3. Sobe um **e-mail falso** (`stubs.py`), pro cadastro dos pais funcionar sem mandar e-mail de verdade.
 4. Sobe o backend na 9090:
