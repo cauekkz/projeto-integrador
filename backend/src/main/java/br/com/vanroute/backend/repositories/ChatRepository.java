@@ -13,6 +13,10 @@ import org.springframework.data.domain.Pageable;
 public interface ChatRepository extends JpaRepository<Chat, UUID> {
     Optional<Chat> findByUserOneIdAndUserTwoId(UUID userOneId, UUID userTwoId);
 
+    // os dois ja conversaram (em qualquer ordem)
+    @Query("SELECT COUNT(c) > 0 FROM Chat c WHERE (c.userOne.id = :a AND c.userTwo.id = :b) OR (c.userOne.id = :b AND c.userTwo.id = :a)")
+    boolean existsBetween(@Param("a") UUID a, @Param("b") UUID b);
+
     @Query("SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END " +
             "FROM Chat c WHERE c.id = :chatId " +
             "AND (c.userOne.id = :userId OR c.userTwo.id = :userId)")
