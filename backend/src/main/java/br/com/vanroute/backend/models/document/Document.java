@@ -19,7 +19,6 @@ public class Document {
     @Column(columnDefinition = "TEXT")
     private String url;
 
-    private Integer version;
 
     @Column(name = "entity_id")
     private UUID entityId;
@@ -59,13 +58,6 @@ public class Document {
         this.url = url;
     }
 
-    public Integer getVersion() {
-        return version;
-    }
-
-    public void setVersion(Integer version) {
-        this.version = version;
-    }
 
     public UUID getEntityId() {
         return entityId;

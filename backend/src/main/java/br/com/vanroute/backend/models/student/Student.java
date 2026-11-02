@@ -30,10 +30,6 @@ public class    Student {
 //    @ManyToOne
 //    @JoinColumn(name = "school_id", nullable = true)
 //    private School school;                                                                            
-//
-//    @ManyToOne
-//    @JoinColumn(name = "class_id", nullable = true)
-//    private SchoolClass schoolClass;
 
     public UUID getId() {
         return id;
@@ -65,14 +61,6 @@ public class    Student {
 //
 //    public void setSchool(School school) {
 //        this.school = school;
-//    }
-//
-//    public SchoolClass getSchoolClass() {
-//        return schoolClass;
-//    }
-//
-//    public void setSchoolClass(SchoolClass schoolClass) {
-//        this.schoolClass = schoolClass;
 //    }
 
     public void setName(String name){

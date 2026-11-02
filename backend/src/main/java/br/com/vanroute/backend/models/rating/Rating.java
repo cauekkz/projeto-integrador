@@ -3,7 +3,6 @@ package br.com.vanroute.backend.models.rating;
 import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.models.user.Responsible;
 import jakarta.persistence.*;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -15,13 +14,13 @@ public class Rating {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(precision = 3, scale = 2)
-    private BigDecimal score;
+    @Column(nullable = false)
+    private Integer score;
 
     @Column(columnDefinition = "TEXT")
     private String comment;
 
-    @Column()
+    @Column(nullable = false)
     private LocalDateTime date;
 
     @ManyToOne
@@ -40,11 +39,11 @@ public class Rating {
         this.id = id;
     }
 
-    public BigDecimal getScore() {
+    public Integer getScore() {
         return score;
     }
 
-    public void setScore(BigDecimal score) {
+    public void setScore(Integer score) {
         this.score = score;
     }
 
