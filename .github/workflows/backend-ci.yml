@@ -1,0 +1,20 @@
+name: Backend CI
+
+on:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:                        
+          distribution: temurin      
+          java-version: 21
+          cache: maven   
+      - name: Sobe Postgres, Redis e MinIO
+        run: docker compose up -d --wait db redis minio
+      - name: Testes unitários
+        working-directory: backend
+        run: ./mvnw -B test
