@@ -1,12 +1,13 @@
 package br.com.vanroute.backend.dtos.user;
 
+import org.springframework.web.multipart.MultipartFile;
+
+import br.com.vanroute.backend.validators.password.PasswordMatch;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Pattern;
-import org.springframework.web.multipart.MultipartFile;
-import br.com.vanroute.backend.validators.password.PasswordMatch;
+import jakarta.validation.constraints.Size;                                                                 
 @PasswordMatch
 public class DriverRequestDTO {
     //@NotBlank(message = "O tipo do motorista é obrigatório")

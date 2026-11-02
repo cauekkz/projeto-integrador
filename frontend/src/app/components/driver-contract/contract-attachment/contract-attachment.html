@@ -1,0 +1,39 @@
+<input
+  #pdfInput
+  type="file"
+  accept="application/pdf,.pdf"
+  hidden
+  (change)="selecionar($event)"
+>
+
+@if (draft.pdf(); as pdf) {
+  <div class="anexo anexo-escolhido">
+    <i class="bi bi-file-earmark-pdf-fill icone-pdf" aria-hidden="true"></i>
+    <div class="anexo-info">
+      <span class="anexo-nome" [title]="pdf.name">{{ pdf.name }}</span>
+      <span class="anexo-tamanho">{{ tamanho(pdf.size) }}</span>
+    </div>
+    <div class="anexo-acoes">
+      <button type="button" class="acao" [disabled]="bloqueado()" (click)="pdfInput.click()">Trocar</button>
+      <button
+        type="button"
+        class="acao acao-remover"
+        [disabled]="bloqueado()"
+        aria-label="Remover PDF"
+        (click)="remover()"
+      >
+        <i class="bi bi-trash3" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+} @else {
+  <button type="button" class="anexo anexo-vazio" [disabled]="bloqueado()" (click)="pdfInput.click()">
+    <i class="bi bi-file-earmark-plus-fill icone-adicionar" aria-hidden="true"></i>
+    <span class="anexo-titulo">Envie um PDF junto ao contrato</span>
+    <span class="anexo-opcional">opcional</span>
+  </button>
+}
+
+@if (erro()) {
+  <span class="erro" role="alert">{{ erro() }}</span>
+}

@@ -1,0 +1,50 @@
+<div class="screen">
+
+  <div class="topbar">
+    <div class="notif-wrapper">
+      <div class="bell-btn" (click)="irParaPerfil()">
+        <img [src]="usuarioLogado?.photoUrl || '/testee.jpg'" class="avatar" alt="Foto do motorista">
+      </div>
+    </div>
+
+    <div class="info">
+      <span class="dot"></span>
+      <span class="status-text">Em percurso</span>
+    </div>
+
+    <div class="notif-wrapper sino-clicavel" role="button" tabindex="0" aria-label="Abrir notificações" (click)="notificacoes.abrirTela()" (keydown.enter)="notificacoes.abrirTela()">
+      <div class="bell-btn">
+        <i class="bi bi-bell-fill"></i>
+      </div>
+      @if (notificacoes.naoLidas()) {
+        <span class="badge" [attr.aria-label]="notificacoes.naoLidas() + ' notificações não lidas'">{{ notificacoes.rotulo() }}</span>
+      }
+    </div>
+  </div>
+
+  <div class="mapa-fullscreen">
+    <img src="/mapa-placeholder.png" alt="Mapa" class="mapa-img">
+  </div>
+
+  <app-passengers-sheet
+    [embarcados]="alunosEmbarcados"
+    [esperando]="alunosEsperando"
+    (footerOcultoChange)="footerOculto = $event"
+  />
+
+  <div class="footer-wrap" [class.escondido]="footerOculto" [attr.aria-hidden]="footerOculto">
+    <app-footer tipoUsuario="motorista" abaAtiva="meio" tipo="mapa" />
+  </div>
+
+</div>
+
+@if (mostrarPerfil) {
+  <app-profile-select
+    animate.leave="sair-perfil"
+    tipoUsuario="motorista"
+    [usuario]="usuarioLogado"
+    (fecharEvent)="fecharPerfil()"
+  />
+}
+
+

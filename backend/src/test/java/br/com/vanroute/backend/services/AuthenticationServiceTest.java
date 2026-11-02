@@ -3,10 +3,13 @@ package br.com.vanroute.backend.services;
 import br.com.vanroute.backend.config.TokenProvider;
 import br.com.vanroute.backend.dtos.user.LoginRequestDTO;
 import br.com.vanroute.backend.dtos.user.token.TokenResponseDTO;
+import br.com.vanroute.backend.exceptions.InvalidCredentialsException;
+import br.com.vanroute.backend.models.user.User;
+import br.com.vanroute.backend.models.user.enums.UserStatus;
 import br.com.vanroute.backend.repositories.RolesRepository;
 import br.com.vanroute.backend.repositories.UserRepository;
+import br.com.vanroute.backend.exceptions.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,6 +22,8 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,6 +51,9 @@ class AuthenticationServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private RefreshTokenService refreshTokenService;
+
     @BeforeEach
     void setup() {
         ReflectionTestUtils.setField(
@@ -56,43 +64,102 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    @Order(1)
-    void shouldLoginSuccessfully() throws Exception {
+    void shouldLoginSuccessfullyWhenUserIsActive() throws Exception {
         LoginRequestDTO request = new LoginRequestDTO("12312312312", "123123");
 
-        Authentication authentication = mock(Authentication.class);
+        User user = new User();
+        user.setCpf("12312312312");
+        user.setStatus(UserStatus.ACTIVE);
+        when(userRepository.findByCpf("12312312312")).thenReturn(Optional.of(user));
 
+        Authentication authentication = mock(Authentication.class);
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
         when(tokenProvider.generateToken(authentication)).thenReturn("jwt-token");
+        when(refreshTokenService.create(any())).thenReturn("refresh-token");
 
         ResponseEntity<TokenResponseDTO> response = authenticationService.login(request);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals(
-                "jwt-token",
-                response.getBody().token()
-        );
-
+        assertEquals("jwt-token", response.getBody().token());
+        assertEquals("refresh-token", response.getBody().refreshToken());
     }
 
     @Test
-    @Order(2)
-    void shouldThrowExceptionWhenCredentialsAreInvalid(){
-        LoginRequestDTO request =
-                new LoginRequestDTO("12345678900", "senhaErrada");
+    void refreshGivesANewPairForAnActiveUser() {
+        User user = new User();
+        java.util.UUID id = java.util.UUID.randomUUID();
+        user.setId(id);
+        user.setStatus(UserStatus.ACTIVE);
+        when(refreshTokenService.consume("old")).thenReturn(id);
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+        when(tokenProvider.generateToken(user)).thenReturn("new-jwt");
+        when(refreshTokenService.create(id)).thenReturn("new-refresh");
+
+        TokenResponseDTO tokens = authenticationService.refresh("old");
+
+        assertEquals("new-jwt", tokens.token());
+        assertEquals("new-refresh", tokens.refreshToken());
+    }
+
+    @Test
+    void refreshIsRefusedForABlockedUser() {
+        User user = new User();
+        java.util.UUID id = java.util.UUID.randomUUID();
+        user.setStatus(UserStatus.CHECK_EMAIL);
+        when(refreshTokenService.consume("old")).thenReturn(id);
+        when(userRepository.findById(id)).thenReturn(Optional.of(user));
+
+        assertThrows(InvalidCredentialsException.class, () -> authenticationService.refresh("old"));
+    }
+
+    @Test
+    void shouldThrowWhenUserIsNotFound() {
+        LoginRequestDTO request = new LoginRequestDTO("12345678900", "senhaErrada");
+        when(userRepository.findByCpf("12345678900")).thenReturn(Optional.empty());
+
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
+                () -> authenticationService.login(request)
+        );
+
+        assertEquals("Credenciais inválidas.", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowWhenEmailIsNotVerified() {
+        LoginRequestDTO request = new LoginRequestDTO("12345678900", "senha123");
+
+        User user = new User();
+        user.setCpf("12345678900");
+        user.setStatus(UserStatus.CHECK_EMAIL);
+        when(userRepository.findByCpf("12345678900")).thenReturn(Optional.of(user));
+
+        BadRequestException exception = assertThrows(
+                BadRequestException.class,
+                () -> authenticationService.login(request)
+        );
+
+        assertEquals("Verifique seu e-mail antes de fazer login.", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenCredentialsAreInvalid() {
+        LoginRequestDTO request = new LoginRequestDTO("12345678900", "senhaErrada");
+
+        User user = new User();
+        user.setCpf("12345678900");
+        user.setStatus(UserStatus.ACTIVE);
+        when(userRepository.findByCpf("12345678900")).thenReturn(Optional.of(user));
 
         when(authenticationManager.authenticate(any()))
                 .thenThrow(new BadCredentialsException("Bad credentials"));
 
-        Exception exception = assertThrows(
-                Exception.class,
+        InvalidCredentialsException exception = assertThrows(
+                InvalidCredentialsException.class,
                 () -> authenticationService.login(request)
         );
 
-        assertEquals(
-                "Credenciais inválidas.",
-                exception.getMessage()
-        );
+        assertEquals("Credenciais inválidas.", exception.getMessage());
     }
 }

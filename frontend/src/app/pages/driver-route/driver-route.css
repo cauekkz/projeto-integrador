@@ -1,0 +1,116 @@
+.screen {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #f1f5f9;
+}
+.topbar {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 25px 11px 24px 11px;
+  border-radius: 33px;
+  background: rgba(160, 160, 160, 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.info {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(239, 248, 254, 0.55);
+  border-radius: 999px;
+  padding:10px 68px 10px 30px;
+}
+
+.bell-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.notif-wrapper {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 5px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+}
+
+
+.mapa-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
+
+.mapa-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background: #2563eb;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-text {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+/* arrastando a bolinha ou painel aberto: footer some rapido (so opacidade; transform quebraria o position: fixed dele) */
+.footer-wrap {
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.footer-wrap.escondido {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}

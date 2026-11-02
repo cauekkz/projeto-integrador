@@ -1,0 +1,18 @@
+<div class="student-code-container">
+  <app-header titulo="Dependentes" (voltarEvent)="voltar()"></app-header>
+
+  <div class="content">
+    <h1>Digite seu código para vincular ao seu responsável</h1>
+    <p class="description">
+      Digite o código de estudante que foi gerado para seu responsável.
+    </p>
+
+    <app-code-input
+      [length]="9"
+      [separadores]="[3, 6]"
+      instrucao=""
+      textoBotao="Confirmar"
+      (codigoVerificado)="confirmar($event)"
+    />
+  </div>
+</div>

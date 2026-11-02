@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,10 +15,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import br.com.vanroute.backend.dtos.user.DriverRequestDTO;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
+import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
 import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.DriverApprovalStatus;
 import br.com.vanroute.backend.repositories.DriverRepository;
+import br.com.vanroute.backend.utils.CodeGenerator;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 class DriverServiceTest {
@@ -31,13 +36,15 @@ class DriverServiceTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private CodeGenerator codeGenerator;
+
     private DriverRequestDTO generateDriverRequestDTO() {
         DriverRequestDTO dto = new DriverRequestDTO();
         dto.setName("Harry Kane");
         dto.setEmail("harry@example.com");
         dto.setPassword("england123!");
         dto.setPhone("11999999999");
-        //dto.setDriverType("OWNER");
         return dto;
     }
 
@@ -46,29 +53,27 @@ class DriverServiceTest {
         String cpf = "12345678900";
         DriverRequestDTO requestDTO = generateDriverRequestDTO();
 
-        when(userService.findByCpf(cpf)).thenReturn(Optional.empty());
-
         User user = new User();
-        user.setCpf(cpf);   
+        user.setCpf(cpf);
         user.setName(requestDTO.getName());
         user.setEmail(requestDTO.getEmail());
-        
+
         when(userService.createUser(any(UserCreateDTO.class))).thenReturn(user);
+        when(codeGenerator.generateCode()).thenReturn("ABC123XYZ");
 
         Driver mockedDriver = new Driver();
         mockedDriver.setUser(user);
         mockedDriver.setApprovalStatus(DriverApprovalStatus.APPROVED);
 
-        when(driverRepository.save(any(Driver.class))).thenReturn(mockedDriver);
+        when(driverRepository.saveAndFlush(any(Driver.class))).thenReturn(mockedDriver);
 
         Driver result = driverService.createDriver(requestDTO, cpf);
 
         assertNotNull(result);
         assertEquals(user, result.getUser());
         assertEquals(DriverApprovalStatus.APPROVED, result.getApprovalStatus());
-        verify(userService, times(1)).findByCpf(cpf);
         verify(userService, times(1)).createUser(any(UserCreateDTO.class));
-        verify(driverRepository, times(1)).save(any(Driver.class));
+        verify(driverRepository, times(1)).saveAndFlush(any(Driver.class));
     }
 
     @Test
@@ -76,17 +81,36 @@ class DriverServiceTest {
         String cpf = "12345678900";
         DriverRequestDTO requestDTO = generateDriverRequestDTO();
 
-        when(userService.findByCpf(cpf)).thenReturn(Optional.of(new User()));
+        when(userService.createUser(any(UserCreateDTO.class)))
+                .thenThrow(new UserOrDriverOrResponsibleAlreadyRegisteredException("Usuario/Motorista já cadastrado"));
 
-
-        Exception exception = assertThrows(RuntimeException.class, () -> {
+        Exception exception = assertThrows(UserOrDriverOrResponsibleAlreadyRegisteredException.class, () -> {
             driverService.createDriver(requestDTO, cpf);
         });
 
         assertEquals("Usuario/Motorista já cadastrado", exception.getMessage());
-        verify(userService, times(1)).findByCpf(cpf);
-        verify(userService, never()).createUser(any(UserCreateDTO.class));
-        verify(driverRepository, never()).save(any(Driver.class));
+        verify(userService, times(1)).createUser(any(UserCreateDTO.class));
+        verify(driverRepository, never()).saveAndFlush(any(Driver.class));
     }
-        
+
+    @Test
+    void shouldReturnLinkCodeOfDriverById() {
+        UUID userId = UUID.randomUUID();
+        Driver driver = new Driver();
+        driver.setLinkCode("ABC23XYZ9");
+        when(driverRepository.findById(userId)).thenReturn(Optional.of(driver));
+
+        assertEquals("ABC23XYZ9", driverService.getLinkCode(userId));
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenUserIsNotADriver() {
+        UUID userId = UUID.randomUUID();
+        when(driverRepository.findById(userId)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> driverService.getLinkCode(userId));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+    }
 }

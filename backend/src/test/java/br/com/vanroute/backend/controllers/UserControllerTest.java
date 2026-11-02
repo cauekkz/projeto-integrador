@@ -1,0 +1,144 @@
+package br.com.vanroute.backend.controllers;
+
+import br.com.vanroute.backend.dtos.user.UpdateUser;
+import br.com.vanroute.backend.models.user.User;
+import br.com.vanroute.backend.services.UserService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@ExtendWith(MockitoExtension.class)
+class UserControllerTest {
+
+    private static final UUID USER_ID = UUID.fromString("44444444-4444-4444-4444-444444444444");
+
+    private MockMvc mockMvc;
+
+    @Mock
+    private UserService userService;
+
+    @Mock
+    private Authentication authentication;
+
+    @InjectMocks
+    private UserController userController;
+
+    private User user;
+
+    @BeforeEach
+    void setUp() {
+
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(userController)
+                .build();
+
+        user = new User();
+        user.setId(UUID.randomUUID());
+        user.setName("Mbappé");
+        user.setEmail("mbappe@teste.com");
+        user.setCpf("12345678901");
+    }
+
+    // =========================================================
+    // POST /api/users/send-code-updateUser
+    // =========================================================
+
+    @Test
+    void shouldSendCodeToUserSuccessfully() throws Exception {
+
+        when(authentication.getName())
+                .thenReturn(USER_ID.toString());
+
+        doNothing()
+                .when(userService)
+                .sendCodeToUser(USER_ID);
+
+        mockMvc.perform(
+                        post("/api/users/send-code-updateUser")
+                                .principal(authentication)
+                )
+                .andExpect(status().isOk());
+
+        verify(authentication, atLeastOnce())
+                .getName();
+
+        verify(userService)
+                .sendCodeToUser(USER_ID);
+    }
+
+    // =========================================================
+    // PUT /api/users/update-user
+    // =========================================================
+
+    @Test
+    void shouldUpdateUserSuccessfully() throws Exception {
+
+        when(authentication.getName())
+                .thenReturn(USER_ID.toString());
+
+        when(userService.updateUser(
+                any(UpdateUser.class),
+                eq(USER_ID)
+        )).thenReturn("User updated successfully");
+
+        mockMvc.perform(
+                        put("/api/users/update-user")
+                                .principal(authentication)
+                                .contentType("application/json")
+                                .content("""
+                                    {
+                                        "email": "novoemail@teste.com",
+                                        "phone": "11888888888",
+                                        "code": "123456"
+                                    }
+                                """)
+                )
+                .andExpect(status().isOk());
+
+        verify(authentication, atLeastOnce())
+                .getName();
+
+        verify(userService)
+                .updateUser(
+                        any(UpdateUser.class),
+                        eq(USER_ID)
+                );
+    }
+
+    // =========================================================
+    // DELETE /api/users/{id}/{code}
+    // =========================================================
+
+    @Test
+    void shouldDeleteUserSuccessfully() throws Exception {
+
+        UUID id = UUID.randomUUID();
+        String code = "123456";
+
+        doNothing()
+                .when(userService)
+                .deleteById(id, code);
+
+        mockMvc.perform(
+                        delete("/api/users/{id}/{code}", id, code)
+                )
+                .andExpect(status().isNoContent());
+
+        verify(userService)
+                .deleteById(id, code);
+    }
+}

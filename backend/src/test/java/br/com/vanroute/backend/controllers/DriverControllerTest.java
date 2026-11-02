@@ -1,10 +1,14 @@
 package br.com.vanroute.backend.controllers;
 
 import br.com.vanroute.backend.models.user.Driver;
+import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.services.DocumentOcrExtractionService;
 import br.com.vanroute.backend.services.DriverService;
+import br.com.vanroute.backend.services.EmailVerificationService;
 import br.com.vanroute.backend.services.IcpValidationService;
 import org.junit.jupiter.api.BeforeEach;
+import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,13 +16,17 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +43,9 @@ public class DriverControllerTest {
     @Mock
     private DocumentOcrExtractionService documentOcrExtractionService;
 
+    @Mock
+    private EmailVerificationService emailVerificationService;
+
     @InjectMocks
     private DriverController driverController;
 
@@ -48,54 +59,73 @@ public class DriverControllerTest {
                 "documentPdf",
                 "cnh.pdf",
                 MediaType.APPLICATION_PDF_VALUE,
-                "There should be a law.".getBytes()
-        );
+                "There should be a law.".getBytes());
     }
 
     @Test
     void shouldCreateDriverSuccessfully() throws Exception {
         doNothing().when(icpValidationService).validateCnhSignature(any());
         when(documentOcrExtractionService.extractFromCnh(any())).thenReturn("12345678901");
-        
+
+        User user = new User();
+        user.setEmail("neymar@teste.com");
         Driver mockedDriver = new Driver();
+        mockedDriver.setUser(user);
         when(driverService.createDriver(any(), anyString())).thenReturn(mockedDriver);
 
-        mockMvc.perform(multipart("/api/drivers/signup")
-                        .file(documentPdf)
-                        .param("name", "Neymar Junior")
-                        .param("email", "neymar@teste.com")
-                        .param("password", "Hexa2026123!")
-                        .param("confirmPassword", "Hexa2026123!")
-                        .param("phone", "11999999999")
-                        //.param("driverType", "B")
-                        .contentType(MediaType.MULTIPART_FORM_DATA))
+        mockMvc.perform(multipart("/api/driver/auth/signup")
+                .file(documentPdf)
+                .param("name", "Neymar Junior")
+                .param("email", "neymar@teste.com")
+                .param("password", "Hexa2026123!")
+                .param("confirmPassword", "Hexa2026123!")
+                .param("phone", "11999999999")
+                // .param("driverType", "B")
+                .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isCreated());
 
         verify(icpValidationService, times(1)).validateCnhSignature(any());
         verify(documentOcrExtractionService, times(1)).extractFromCnh(any());
         verify(driverService, times(1)).createDriver(any(), anyString());
+        verify(emailVerificationService, times(1)).generateAndSendCode(
+                eq("verificationEmail:email:neymar@teste.com"),
+                eq("neymar@teste.com")
+        );
     }
 
     @Test
     void shouldReturnUnprocessableEntityWhenSignatureIsInvalid() throws Exception {
         doThrow(new RuntimeException("Assinatura inválida")).when(icpValidationService).validateCnhSignature(any());
 
-        mockMvc.perform(multipart("/api/drivers/signup")
-                        .file(documentPdf)
-                        .param("name", "Neymar Junior")
-                        .param("email", "neymar@teste.com")
-                        .param("cnhNumber", "123456789")
-                        .param("password", "Hexa2026123!")
-                        .param("confirmPassword", "Hexa2026123!")
-                        .param("phone", "11999999999")
-                        //.param("driverType", "B")
-                        .contentType(MediaType.MULTIPART_FORM_DATA))
+        mockMvc.perform(multipart("/api/driver/auth/signup")
+                .file(documentPdf)
+                .param("name", "Neymar Junior")
+                .param("email", "neymar@teste.com")
+                .param("cnhNumber", "123456789")
+                .param("password", "Hexa2026123!")
+                .param("confirmPassword", "Hexa2026123!")
+                .param("phone", "11999999999")
+                // .param("driverType", "B")
+                .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isUnprocessableEntity());
 
         verify(icpValidationService, times(1)).validateCnhSignature(any());
         verify(documentOcrExtractionService, never()).extractFromCnh(any());
         verify(driverService, never()).createDriver(any(), anyString());
+        verify(emailVerificationService, never()).generateAndSendCode(any(), any());
     }
 
+    @Test
+    void shouldReturnLinkCodeOfAuthenticatedDriver() throws Exception {
+        UUID userId = UUID.randomUUID();
+        when(driverService.getLinkCode(userId)).thenReturn("ABC23XYZ9");
+
+        mockMvc.perform(get("/api/driver/link-code")
+                .principal(new UsernamePasswordAuthenticationToken(userId.toString(), null)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.linkCode").value("ABC23XYZ9"));
+
+        verify(driverService, times(1)).getLinkCode(userId);
+    }
 
 }

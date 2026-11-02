@@ -7,27 +7,30 @@ import br.com.vanroute.backend.dtos.user.DriverRequestDTO;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.models.user.User;
+import br.com.vanroute.backend.models.user.enums.DriverApprovalStatus;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.repositories.DriverRepository;
-import br.com.vanroute.backend.models.user.enums.DriverApprovalStatus;
-import br.com.vanroute.backend.models.user.enums.DriverType;
+import jakarta.transaction.Transactional;
+import br.com.vanroute.backend.utils.CodeGenerator;
+import java.util.UUID;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class DriverService {
 
     private final DriverRepository driverRepository;
     private final UserService userService;
-
-    public DriverService(DriverRepository driverRepository, UserService userService) {
+    private final CodeGenerator codeGenerator;
+    public DriverService(DriverRepository driverRepository, UserService userService, CodeGenerator codeGenerator) {
         this.driverRepository = driverRepository;
         this.userService = userService;
+        this.codeGenerator = codeGenerator;
     }
 
+    @Transactional
     public Driver createDriver(DriverRequestDTO driverRequestDto, String cpf) {
-
-        if (userService.findByCpf((cpf)).isPresent()) {
-            throw new UserOrDriverOrResponsibleAlreadyRegisteredException("Usuario/Motorista já cadastrado");
-        }
 
         UserCreateDTO userDto = new UserCreateDTO();
         userDto.setName(driverRequestDto.getName());
@@ -37,13 +40,32 @@ public class DriverService {
         userDto.setPhone(driverRequestDto.getPhone());
         userDto.setRole(RoleTypeEnum.ROLE_DRIVER);
 
-        User user = this.userService.createUser(userDto);
+        User user = userService.createUser(userDto);
+
         Driver driver = new Driver();
         driver.setUser(user);
-        // aprova geral por enquanto fds
         driver.setApprovalStatus(DriverApprovalStatus.APPROVED);
-        driverRepository.save(driver);
-        return driver;
 
+        for (int attempt = 0; attempt < 5; attempt++) {
+
+            String linkCode = codeGenerator.generateCode();
+            driver.setLinkCode(linkCode);
+
+            try {
+                return driverRepository.saveAndFlush(driver);
+
+            } catch (DataIntegrityViolationException e) {
+            }
+        }
+
+        throw new RuntimeException("Não foi possível gerar um código único.");
     }
+
+    // codigo de conversa do motorista autenticado (gerado no cadastro), pelo id do jwt
+    public String getLinkCode(UUID userId) {
+        return driverRepository.findById(userId)
+                .map(Driver::getLinkCode)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Motorista não encontrado."));
+    }
+
 }

@@ -9,6 +9,9 @@ import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.repositories.ResponsibleRepository;
+import br.com.vanroute.backend.dtos.geocode.Coordenadas;
+import br.com.vanroute.backend.dtos.student.AddressRequestDTO;
+import br.com.vanroute.backend.models.address.Address;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +38,15 @@ class ResponsibleServiceTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private AddressService addressService;
+
+    @Mock
+    private MapService mapService;
+
+    @Mock
+    private EmailVerificationService emailVerificationService;
+
     private ResponsibleRequestDTO requestDTO;
 
     @BeforeEach
@@ -46,6 +58,7 @@ class ResponsibleServiceTest {
         requestDTO.setConfirmPassword("SenhaForte123!");
         requestDTO.setCpf("12345678901");
         requestDTO.setPhone("11999999999");
+        requestDTO.setAddressRequestDTO(new AddressRequestDTO("Avenida Paulista", "01310-100", "São Paulo", "Bela Vista", 1000, "SP", null, null));
     }
 
     @Test
@@ -60,6 +73,10 @@ class ResponsibleServiceTest {
         createdUser.setRoles(Set.of(role));
 
         when(userService.createUser(any(UserCreateDTO.class))).thenReturn(createdUser);
+        Address address = new Address();
+        address.setStreet("Avenida Paulista");
+        when(addressService.addAddress(any())).thenReturn(address);
+        when(mapService.searchCoord(any(Address.class))).thenReturn(new Coordenadas(-23.56, -46.65));
 
         Responsible savedResponsible = new Responsible();
         savedResponsible.setUser(createdUser);
@@ -87,6 +104,9 @@ class ResponsibleServiceTest {
         assertEquals(RoleTypeEnum.ROLE_RESPONSIBLE, userDto.getRole());
 
         verify(responsibleRepository, times(1)).save(any(Responsible.class));
+        verify(emailVerificationService, times(1))
+                .generateAndSendCode("verificationEmail:email:carolina@example.com", "carolina@example.com");
+        assertEquals(-23.56, response.address().latitude());
     }
 
     @Test

@@ -1,14 +1,18 @@
 package br.com.vanroute.backend.models.student;
 
-import br.com.vanroute.backend.models.school.School;
-import br.com.vanroute.backend.models.school.SchoolClass;
-import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.UUID;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 @Entity
 @Table(name = "students")
-public class Student {
+public class    Student {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -17,16 +21,19 @@ public class Student {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(nullable = false)
+    private String name;
+
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
-
-    @ManyToOne
-    @JoinColumn(name = "school_id", nullable = false)
-    private School school;
-
-    @ManyToOne
-    @JoinColumn(name = "class_id", nullable = false)
-    private SchoolClass schoolClass;
+//
+//    @ManyToOne
+//    @JoinColumn(name = "school_id", nullable = true)
+//    private School school;                                                                            
+//
+//    @ManyToOne
+//    @JoinColumn(name = "class_id", nullable = true)
+//    private SchoolClass schoolClass;
 
     public UUID getId() {
         return id;
@@ -52,20 +59,26 @@ public class Student {
         this.birthDate = birthDate;
     }
 
-    public School getSchool() {
-        return school;
-    }
+//    public School getSchool() {
+//        return school;
+//    }
+//
+//    public void setSchool(School school) {
+//        this.school = school;
+//    }
+//
+//    public SchoolClass getSchoolClass() {
+//        return schoolClass;
+//    }
+//
+//    public void setSchoolClass(SchoolClass schoolClass) {
+//        this.schoolClass = schoolClass;
+//    }
 
-    public void setSchool(School school) {
-        this.school = school;
+    public void setName(String name){
+        this.name = name;
     }
-
-    public SchoolClass getSchoolClass() {
-        return schoolClass;
+    public String getName(){
+        return this.name;
     }
-
-    public void setSchoolClass(SchoolClass schoolClass) {
-        this.schoolClass = schoolClass;
-    }
-
 }

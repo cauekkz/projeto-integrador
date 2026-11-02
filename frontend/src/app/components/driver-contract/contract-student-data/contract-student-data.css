@@ -1,0 +1,16 @@
+.responsavel {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.ajuda {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.ajuda a {
+  color: #0066cc;
+  font-weight: 600;
+}

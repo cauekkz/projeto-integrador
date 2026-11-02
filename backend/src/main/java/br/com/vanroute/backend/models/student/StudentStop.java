@@ -1,7 +1,15 @@
 package br.com.vanroute.backend.models.student;
 
+import br.com.vanroute.backend.models.shared.WeekDaysConverter;
+import br.com.vanroute.backend.models.shared.enums.WeekDay;
+import java.util.EnumSet;
+import java.util.Set;
+
 import br.com.vanroute.backend.models.route.RouteStop;
+import br.com.vanroute.backend.models.student.enums.StudentStopAction;
+import br.com.vanroute.backend.models.student.enums.StudentStopLocationType;
 import jakarta.persistence.*;
+
 import java.util.UUID;
 
 @Entity
@@ -12,8 +20,18 @@ public class StudentStop {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column()
-    private String type;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "location_type", nullable = false)
+    private StudentStopLocationType locationType;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "action", nullable = false)
+    private StudentStopAction action;
+
+    // dias em que o aluno usa esse ponto; padrao: todos
+    @Convert(converter = WeekDaysConverter.class)
+    @Column(name = "weekdays", nullable = false)
+    private Set<WeekDay> weekdays = EnumSet.allOf(WeekDay.class);
 
     @ManyToOne
     @JoinColumn(name = "student_id", nullable = false)
@@ -31,12 +49,20 @@ public class StudentStop {
         this.id = id;
     }
 
-    public String getType() {
-        return type;
+    public StudentStopLocationType getLocationType() {
+        return locationType;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setLocationType(StudentStopLocationType locationType) {
+        this.locationType = locationType;
+    }
+
+    public StudentStopAction getAction() {
+        return action;
+    }
+
+    public void setAction(StudentStopAction action) {
+        this.action = action;
     }
 
     public Student getStudent() {
@@ -55,4 +81,11 @@ public class StudentStop {
         this.stop = stop;
     }
 
+    public Set<WeekDay> getWeekdays() {
+        return weekdays;
+    }
+
+    public void setWeekdays(Set<WeekDay> weekdays) {
+        this.weekdays = weekdays;
+    }
 }

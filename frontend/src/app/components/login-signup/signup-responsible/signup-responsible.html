@@ -1,0 +1,128 @@
+<div class="signup-container">
+  <app-header titulo="Cadastrar responsável" (voltarEvent)="voltar()" />
+
+  <form class="form" (ngSubmit)="signup()">
+    <div class="field">
+      <label>Nome completo</label>
+      <input
+        type="text"
+        placeholder="Digite seu nome completo"
+        [(ngModel)]="enteredName"
+        name="name"
+        appNameFormat
+      />
+
+      @if (nameInvalido) {
+        <p class="error-message">O nome é obrigatório!</p>
+      }
+    </div>
+
+    <div class="field">
+      <label>CPF do responsável</label>
+      <input type="text" placeholder="000.000.000-00" [(ngModel)]="enteredCpf" name="cpf" appCpfMask />
+
+      @if (cpfInvalido) {
+        <p class="error-message">O CPF é obrigatório!</p>
+      }
+    </div>
+
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" placeholder="Digite seu e-mail" [(ngModel)]="enteredEmail" name="email" />
+
+      @if (emailInvalido) {
+        <p class="error-message">O e-mail é obrigatório!</p>
+      }
+    </div>
+
+    <div class="field">
+      <label>Telefone</label>
+      <input type="text" placeholder="(11) 99999-9999" [(ngModel)]="enteredPhone" name="phone" appPhoneMask />
+
+      @if (phoneInvalido) {
+        <p class="error-message">O telefone é obrigatório!</p>
+      }
+    </div>
+
+    <div class="field">
+      <label>CEP</label>
+      <input type="text" inputmode="numeric" placeholder="00000-000" [(ngModel)]="enteredCep" name="cep" appCepMask appCepBusca (enderecoCep)="preencherEndereco($event); ($event.rua ? numeroInput : ruaInput).focus()" />
+
+      @if (cepInvalido) {
+        <p class="error-message">O CEP é obrigatório!</p>
+      }
+    </div>
+
+    <div class="field">
+      <label>Rua</label>
+      <input #ruaInput type="text" placeholder="Nome da rua" [(ngModel)]="enteredStreet" name="street" />
+
+      @if (streetInvalido) {
+        <p class="error-message">A rua é obrigatória!</p>
+      }
+    </div>
+
+    <div class="field">
+      <label>Número</label>
+      <input #numeroInput type="text" inputmode="numeric" placeholder="Número" [(ngModel)]="enteredNumber" name="number" />
+    </div>
+
+    <div class="field">
+      <label>Bairro</label>
+      <input type="text" placeholder="Bairro" [(ngModel)]="enteredNeighborhood" name="neighborhood" />
+    </div>
+
+    <div class="field">
+      <label>Cidade</label>
+      <input type="text" placeholder="Cidade" [(ngModel)]="enteredCity" name="city" />
+
+      @if (cityInvalido) {
+        <p class="error-message">A cidade é obrigatória!</p>
+      }
+    </div>
+
+    <div class="field">
+      <label>Estado</label>
+      <input type="text" placeholder="UF" maxlength="2" [(ngModel)]="enteredState" name="state" />
+    </div>
+
+    <div class="field">
+      <label>Senha</label>
+      <input
+        type="password"
+        placeholder="Digite sua senha"
+        [(ngModel)]="enteredPass"
+        name="password"
+      />
+
+      @if (passInvalido) {
+        <p class="error-message">A senha é obrigatória!</p>
+      }
+    </div>
+
+    <div class="field">
+      <label>Confirmar senha</label>
+      <input
+        type="password"
+        placeholder="Digite a senha novamente"
+        [(ngModel)]="enteredConfirmPass"
+        name="confirmPassword"
+      />
+
+      @if (confirmPassInvalido) {
+        <p class="error-message">Confirme sua senha!</p>
+      }
+
+      @if (passwordsDontMatch) {
+        <p class="error-message">As senhas não são iguais!</p>
+      }
+    </div>
+
+    <app-button
+      texto="Criar uma conta"
+      tipo="primary"
+      posicao="bottom"
+      type="submit">
+    </app-button>
+  </form>
+</div>

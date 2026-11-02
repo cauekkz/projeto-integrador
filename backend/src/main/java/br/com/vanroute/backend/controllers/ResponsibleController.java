@@ -1,26 +1,31 @@
 package br.com.vanroute.backend.controllers;
 
-import br.com.vanroute.backend.dtos.user.ResponsibleRequestDTO;
-import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
-import br.com.vanroute.backend.models.user.Responsible;
-import br.com.vanroute.backend.services.ResponsibleService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import br.com.vanroute.backend.dtos.user.ResponsibleRequestDTO;
+import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
+import br.com.vanroute.backend.services.EmailVerificationService;
+import br.com.vanroute.backend.services.ResponsibleService;
 
 @RestController
 @RequestMapping("/api/responsible")
 public class ResponsibleController {
 
     private final ResponsibleService responsibleService;
+    private final EmailVerificationService emailVerificationService;
 
-    public ResponsibleController(ResponsibleService responsibleService) {
+    public ResponsibleController(ResponsibleService responsibleService, EmailVerificationService emailVerificationService) {
         this.responsibleService = responsibleService;
+        this.emailVerificationService = emailVerificationService;
     }
 
-    @PostMapping("/signup")
-    public ResponsibleResponseDTO signUp(@RequestBody ResponsibleRequestDTO responsibleRequestDTO){
+    @PostMapping("/auth/signup")
+    public ResponsibleResponseDTO signUp(@Valid @RequestBody ResponsibleRequestDTO responsibleRequestDTO){
         return responsibleService.createResponsible(responsibleRequestDTO);
+
     }
 }
