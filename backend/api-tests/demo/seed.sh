@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Cria um cenario pronto pra testar a execucao da rota na pagina demo (dados ficticios, base isolada).
-# Pre-requisitos: os mesmos do run-api-tests.sh (backend em DATABASE_NAME=vanroute_audit + stubs.py pro e-mail).
+# Pre-requisitos: os mesmos do run-api-tests.sh (backend no vanroute_db + stubs.py pro e-mail).
 #
 #   IDA:   1 motorista com van, 1 escola, 2 pais (1 filho cada, contrato ativo); rota "Ida Manha": casa -> casa -> escola
 #   VOLTA: outro motorista, outra escola, outros 2 pais; rota "Volta Tarde": escola -> casa -> casa (todos os dias da semana)
@@ -9,7 +9,7 @@
 # Saida: logins (CPF / Senha@123) e ids em api-tests/out/demo.json
 set -euo pipefail
 BASE=${BASE:-http://localhost:9090}
-DB=${DB:-vanroute_audit}
+DB=${DB:-vanroute_db}
 OUT="$(cd "$(dirname "$0")/.." && pwd)/out"; mkdir -p "$OUT"
 RUN=$RANDOM$RANDOM
 
@@ -46,10 +46,8 @@ HASH=""
 driver() { # driver NOME -> "cpf token linkCode vanId placa" (motorista e van por SQL, ja aprovados)
   local c; c=$(cpf); local plate; plate="DEM$(printf '%04d' $((RANDOM % 10000)))"
   sql -q <<SQL >/dev/null
-INSERT INTO roles_tb (nome) VALUES ('ROLE_DRIVER') ON CONFLICT (nome) DO NOTHING;
-WITH u AS (INSERT INTO users (id,name,password_hash,cpf,email,phone,status,created_at)
-           VALUES (gen_random_uuid(),'$1','$HASH','$c','motorista$RANDOM.$RUN@teste.local','21$RANDOM$RANDOM','ACTIVE',now()) RETURNING id)
-, r AS (INSERT INTO user_roles (user_id, role_id) SELECT u.id, (SELECT id FROM roles_tb WHERE nome='ROLE_DRIVER') FROM u)
+WITH u AS (INSERT INTO users (id,name,password_hash,cpf,email,phone,status,role,created_at)
+           VALUES (gen_random_uuid(),'$1','$HASH','$c','motorista$RANDOM.$RUN@teste.local','21$RANDOM$RANDOM','ACTIVE','ROLE_DRIVER',now()) RETURNING id)
 , d AS (INSERT INTO drivers (user_id, approval_status, link_code) SELECT id,'APPROVED',upper(substr(md5(random()::text),1,9)) FROM u RETURNING user_id)
 , v AS (INSERT INTO vehicles (id, plate, model, year, capacity, status) VALUES (gen_random_uuid(),'$plate','Van Demo',2020,15,'ACTIVE') RETURNING id)
 INSERT INTO driver_vehicles (id, driver_id, vehicle_id, start_date) SELECT gen_random_uuid(), d.user_id, v.id, current_date FROM d, v;
@@ -70,9 +68,14 @@ contract() { # contract TOKEN_MOTORISTA LINK ESCOLA TOKEN_PAI ALUNO: chat pelo c
   local c; c=$(api POST "/api/chats/$chat/contract" "$1" "{\"responsibleId\":\"$parentId\",\"studentId\":\"$5\",\"schoolId\":\"$3\",\"contract\":{\"periodicity\":\"MONTHLY\",\"value\":350.00,\"startDate\":\"2027-02-01\",\"endDate\":\"2027-06-30\"},\"document\":{\"url\":\"demo\",\"type\":\"TRANSPORT_CONTRACT\"}}" | jq -r .contract.contractId)
   api PUT "/api/chats/$chat/contracts/$c/accept" "$4" >/dev/null
 }
-# "adicionar aluno na rota" num passo so: o backend usa/cria o ponto do endereco na ordem certa e liga o aluno
+# "adicionar aluno na rota" num passo so, num ponto NOVO (o backend poe na ordem certa); devolve o id do ponto da escola
 add_student() { # add_student TOKEN_MOTORISTA ROTA ALUNO ACAO LOCAL [ID_ENDERECO_DO_ALUNO]
-  api POST "/api/route/$2/add-student/$3" "$1" "{\"action\":\"$4\",\"locationType\":\"$5\"${6:+,\"studentAddressId\":\"$6\"}}" >/dev/null
+  api POST "/api/route/$2/add-student/$3" "$1" "{\"action\":\"$4\",\"locationType\":\"$5\",\"newStop\":true${6:+,\"studentAddressId\":\"$6\"}}" \
+    | jq -r '.stops[] | select((.schools|length)>0) | .id' | head -1
+}
+# o aluno num ponto que ja existe (ex.: o segundo aluno na mesma escola)
+add_student_at() { # add_student_at TOKEN_MOTORISTA ROTA ALUNO ACAO LOCAL ID_DO_PONTO
+  api POST "/api/route/$2/add-student/$3" "$1" "{\"action\":\"$4\",\"locationType\":\"$5\",\"routeStopId\":\"$6\"}" >/dev/null
 }
 
 echo "== IDA (manha): casa -> casa -> escola"
@@ -90,11 +93,11 @@ contract "$D" "$LINK" "$SCHOOL" "$P1" "$K1"
 contract "$D" "$LINK" "$SCHOOL" "$P2" "$K2"
 echo "rota..."
 ROUTE=$(api POST /api/route/create-route "$D" '{"name":"Ida Manha"}' | jq -r .id)
-# num passo so: o backend cria os pontos na ordem (casa 1, casa 2, escola) e liga os alunos
-add_student "$D" "$ROUTE" "$K1" BOARDING HOME "$K1_HOME"
-add_student "$D" "$ROUTE" "$K2" BOARDING HOME "$K2_HOME"
-add_student "$D" "$ROUTE" "$K1" ALIGHTING SCHOOL
-add_student "$D" "$ROUTE" "$K2" ALIGHTING SCHOOL
+# o backend cria os pontos na ordem (casa 1, casa 2, escola) e liga os alunos; os dois descem no mesmo ponto da escola
+add_student "$D" "$ROUTE" "$K1" BOARDING HOME "$K1_HOME" >/dev/null
+add_student "$D" "$ROUTE" "$K2" BOARDING HOME "$K2_HOME" >/dev/null
+SCHOOL_STOP=$(add_student "$D" "$ROUTE" "$K1" ALIGHTING SCHOOL)
+add_student_at "$D" "$ROUTE" "$K2" ALIGHTING SCHOOL "$SCHOOL_STOP"
 api PUT "/api/route/$ROUTE/set-vehicle/$VAN" "$D" >/dev/null
 
 echo "== VOLTA (tarde): escola -> casa -> casa (outro motorista e outros pais)"
@@ -111,11 +114,11 @@ contract "$D2" "$LINK2" "$SCHOOL2" "$P3" "$K3"
 contract "$D2" "$LINK2" "$SCHOOL2" "$P4" "$K4"
 echo "rota..."
 ROUTE2=$(api POST /api/route/create-route "$D2" '{"name":"Volta Tarde"}' | jq -r .id)
-# volta: a escola entra antes das casas sozinha
-add_student "$D2" "$ROUTE2" "$K3" ALIGHTING HOME "$K3_HOME"
-add_student "$D2" "$ROUTE2" "$K4" ALIGHTING HOME "$K4_HOME"
-add_student "$D2" "$ROUTE2" "$K3" BOARDING SCHOOL
-add_student "$D2" "$ROUTE2" "$K4" BOARDING SCHOOL
+# volta: o embarque na escola entra antes de onde o aluno desce
+add_student "$D2" "$ROUTE2" "$K3" ALIGHTING HOME "$K3_HOME" >/dev/null
+add_student "$D2" "$ROUTE2" "$K4" ALIGHTING HOME "$K4_HOME" >/dev/null
+SCHOOL_STOP2=$(add_student "$D2" "$ROUTE2" "$K3" BOARDING SCHOOL)
+add_student_at "$D2" "$ROUTE2" "$K4" BOARDING SCHOOL "$SCHOOL_STOP2"
 api PUT "/api/route/$ROUTE2/set-vehicle/$VAN2" "$D2" >/dev/null
 
 jq -n --arg d "$D_CPF" --arg p1 "$P1_CPF" --arg p2 "$P2_CPF" --arg route "$ROUTE" --arg k1 "$K1" --arg k2 "$K2" --arg plate "$PLATE" \
