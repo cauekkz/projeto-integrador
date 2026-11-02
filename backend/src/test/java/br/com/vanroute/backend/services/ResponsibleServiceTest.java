@@ -4,12 +4,10 @@ import br.com.vanroute.backend.dtos.user.ResponsibleRequestDTO;
 import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.models.user.Responsible;
-import br.com.vanroute.backend.models.user.RolesEntity;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.repositories.ResponsibleRepository;
-import br.com.vanroute.backend.dtos.geocode.Coordenadas;
 import br.com.vanroute.backend.dtos.student.AddressRequestDTO;
 import br.com.vanroute.backend.models.address.Address;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,7 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Set;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -63,14 +61,12 @@ class ResponsibleServiceTest {
 
     @Test
     void shouldCreateResponsibleSuccessfully() {
-        RolesEntity role = RolesEntity.builder().nome(RoleTypeEnum.ROLE_RESPONSIBLE.name()).build();
-
         User createdUser = new User();
         createdUser.setName(requestDTO.getName());
         createdUser.setEmail(requestDTO.getEmail());
         createdUser.setCpf(requestDTO.getCpf());
         createdUser.setPhone(requestDTO.getPhone());
-        createdUser.setRoles(Set.of(role));
+        createdUser.setRole(RoleTypeEnum.ROLE_RESPONSIBLE);
 
         when(userService.createUser(any(UserCreateDTO.class))).thenReturn(createdUser);
         Address address = new Address();
@@ -93,7 +89,7 @@ class ResponsibleServiceTest {
         assertEquals(requestDTO.getCpf(), response.cpf());
         assertEquals(requestDTO.getPhone(), response.phone());
         assertEquals(FinancialStatus.PENDING, response.financialStatus());
-        assertEquals(Set.of(role), response.roleTypeEnum());
+        assertEquals(List.of("ROLE_RESPONSIBLE"), response.roles());
 
         ArgumentCaptor<UserCreateDTO> userDtoCaptor = ArgumentCaptor.forClass(UserCreateDTO.class);
         verify(userService, times(1)).createUser(userDtoCaptor.capture());

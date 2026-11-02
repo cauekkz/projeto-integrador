@@ -2,7 +2,6 @@ package br.com.vanroute.backend.controllers;
 
 import br.com.vanroute.backend.dtos.route.AddressResponseDTO;
 import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
-import br.com.vanroute.backend.models.user.RolesEntity;
 import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import br.com.vanroute.backend.services.EmailVerificationService;
 import br.com.vanroute.backend.services.ResponsibleService;
@@ -16,11 +15,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -50,9 +48,6 @@ class ResponsibleControllerTest {
     @Test
     void shouldCreateResponsibleSuccessfully() throws Exception {
         UUID userId = UUID.fromString("12345678-1234-1234-1234-123456789abc");
-        RolesEntity role = RolesEntity.builder()
-                .nome("ROLE_RESPONSIBLE")
-                .build();
 
         AddressResponseDTO address = new AddressResponseDTO(
                 userId,
@@ -72,7 +67,7 @@ class ResponsibleControllerTest {
                 "12345678901",
                 "11999999999",
                 FinancialStatus.PENDING,
-                Set.of(role),
+                List.of("ROLE_RESPONSIBLE"),
                 address
         );
 
