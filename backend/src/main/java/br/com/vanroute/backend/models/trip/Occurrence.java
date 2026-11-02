@@ -1,6 +1,5 @@
 package br.com.vanroute.backend.models.trip;
 
-import br.com.vanroute.backend.models.trip.enums.OccurrenceStatus;
 import br.com.vanroute.backend.models.trip.enums.OccurrenceType;
 import br.com.vanroute.backend.models.user.Driver;
 import jakarta.persistence.*;
@@ -15,16 +14,12 @@ public class Occurrence {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String description;
 
     @Enumerated(EnumType.STRING)
     @Column()
     private OccurrenceType type;
-
-    @Enumerated(EnumType.STRING)
-    @Column()
-    private OccurrenceStatus status;
 
     @Column(name = "date_time")
     private LocalDateTime dateTime;
@@ -61,13 +56,6 @@ public class Occurrence {
         this.type = type;
     }
 
-    public OccurrenceStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(OccurrenceStatus status) {
-        this.status = status;
-    }
 
     public LocalDateTime getDateTime() {
         return dateTime;
