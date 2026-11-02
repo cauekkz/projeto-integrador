@@ -3,10 +3,13 @@ package br.com.vanroute.backend.dtos.contract;
 import br.com.vanroute.backend.dtos.route.AddressResponseDTO;
 import br.com.vanroute.backend.models.contract.enums.ContractPeriodicity;
 import br.com.vanroute.backend.models.contract.enums.ContractStatus;
+import br.com.vanroute.backend.models.document.enums.DocumentStatus;
 import br.com.vanroute.backend.models.document.enums.DocumentType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 // o que o responsavel precisa ver pra decidir sobre a proposta
@@ -29,6 +32,12 @@ public record ContractDetailsResponseDTO(
         String responsibleName,
         // fileKey no MinIO; baixar via GET /api/storage/download-url
         String documentFileKey,
-        DocumentType documentType
+        DocumentType documentType,
+        // PENDING ate o responsavel aceitar; SIGNED (as duas partes assinaram) ou REJECTED
+        DocumentStatus documentStatus,
+        // quem assinou e quando; valid = os termos de hoje ainda sao os que foram assinados
+        List<SignatureItem> signatures
 ) {
+    public record SignatureItem(UUID userId, String name, LocalDateTime signedAt, boolean valid) {
+    }
 }

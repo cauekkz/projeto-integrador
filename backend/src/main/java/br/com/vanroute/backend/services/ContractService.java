@@ -19,6 +19,8 @@ import br.com.vanroute.backend.models.contract.Contract;
 import br.com.vanroute.backend.models.contract.UserDriverContract;
 import br.com.vanroute.backend.models.contract.enums.ContractStatus;
 import br.com.vanroute.backend.models.document.Document;
+import br.com.vanroute.backend.repositories.SignatureRepository;
+import br.com.vanroute.backend.models.document.Signature;
 import br.com.vanroute.backend.models.document.enums.DocumentEntityType;
 import br.com.vanroute.backend.models.document.enums.DocumentStatus;
 import br.com.vanroute.backend.models.document.enums.DocumentType;
@@ -54,6 +56,7 @@ public class ContractService {
     private final PaymentRepository paymentRepository;
     private final StudentResponsibleService studentResponsibleService;
     private final EntityManager entityManager;
+    private final SignatureRepository signatureRepository;
 
     public ContractService(
             ContractRepository contractRepository,
@@ -62,7 +65,9 @@ public class ContractService {
             DriverSchoolsRepository driverSchoolsRepository,
             PaymentRepository paymentRepository,
             StudentResponsibleService studentResponsibleService,
-            EntityManager entityManager) {
+            EntityManager entityManager,
+            SignatureRepository signatureRepository) {
+        this.signatureRepository = signatureRepository;
         this.contractRepository = contractRepository;
         this.documentRepository = documentRepository;
         this.userDriverContractRepository = userDriverContractRepository;
@@ -116,7 +121,6 @@ public class ContractService {
         
         Document document = new Document();
         document.setUrl(documentDto.url());
-        document.setVersion(1);
         document.setEntityId(contract.getId());
         
 
@@ -133,6 +137,9 @@ public class ContractService {
         document.setUploadedBy(uploaderUserRef);
 
         documentRepository.save(document);
+        // propor e assinar: o motorista assina os termos que mandou
+        sign(document, uploaderUserRef, termsHash(contract, driverId, request.responsibleId(), request.studentId(),
+                request.schoolId(), document.getUrl()));
 
         UserDriverContract userDriverContract = new UserDriverContract();
         userDriverContract.setResponsible(responsibleRef);
@@ -162,6 +169,11 @@ public class ContractService {
 
         contract.setStatus(ContractStatus.ACTIVE);
         contractRepository.save(contract);
+        // aceitar e assinar: o responsavel assina os mesmos termos e o documento fica assinado pelas duas partes
+        documentRepository.findFirstByEntityTypeAndEntityId(DocumentEntityType.CONTRACT, contractId).ifPresent(document -> {
+            sign(document, udc.getResponsible().getUser(), termsHash(udc, document.getUrl()));
+            document.setStatus(DocumentStatus.SIGNED);
+        });
 
         java.time.LocalDate ptr = contract.getStartDate();
         java.time.LocalDate end = contract.getEndDate();
@@ -200,6 +212,38 @@ public class ContractService {
 
         contract.setStatus(ContractStatus.CANCELED);
         contractRepository.save(contract);
+        documentRepository.findFirstByEntityTypeAndEntityId(DocumentEntityType.CONTRACT, contractId)
+                .ifPresent(document -> document.setStatus(DocumentStatus.REJECTED));
+    }
+
+    private void sign(Document document, User user, String hash) {
+        Signature signature = new Signature();
+        signature.setDocument(document);
+        signature.setUser(user);
+        signature.setSignedAt(LocalDateTime.now());
+        signature.setDocumentHash(hash);
+        signatureRepository.save(signature);
+    }
+
+    private static String termsHash(UserDriverContract udc, String documentUrl) {
+        return termsHash(udc.getContract(), udc.getDriver().getUserId(), udc.getResponsible().getUserId(),
+                udc.getStudent().getId(), udc.getSchool().getId(), documentUrl);
+    }
+
+    // SHA-256 dos termos (partes, aluno, escola, valor, periodo, documento): o que cada um assinou.
+    // Se alguem mudar o contrato no banco, o hash recalculado nao bate mais com o das assinaturas
+    static String termsHash(Contract contract, UUID driverId, UUID responsibleId, UUID studentId, UUID schoolId, String documentUrl) {
+        String terms = String.join("|", String.valueOf(contract.getId()), String.valueOf(driverId), String.valueOf(responsibleId),
+                String.valueOf(studentId), String.valueOf(schoolId), String.valueOf(contract.getPeriodicity()),
+                contract.getValue() == null ? "null" : contract.getValue().stripTrailingZeros().toPlainString(),
+                String.valueOf(contract.getStartDate()),
+                String.valueOf(contract.getEndDate()), String.valueOf(documentUrl));
+        try {
+            return java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(terms.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     // so as partes do contrato (responsavel e motorista) veem os detalhes
@@ -246,7 +290,13 @@ public class ContractService {
                 udc.getResponsible().getUserId(),
                 udc.getResponsible().getUser().getName(),
                 document == null ? null : document.getUrl(),
-                document == null ? null : document.getType()
+                document == null ? null : document.getType(),
+                document == null ? null : document.getStatus(),
+                document == null ? List.of() : signatureRepository.findByDocumentIdOrderBySignedAtAsc(document.getId()).stream()
+                        .map(signature -> new ContractDetailsResponseDTO.SignatureItem(signature.getUser().getId(),
+                                signature.getUser().getName(), signature.getSignedAt(),
+                                signature.getDocumentHash().equals(termsHash(udc, document.getUrl()))))
+                        .toList()
         );
     }
 
