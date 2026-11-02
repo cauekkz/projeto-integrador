@@ -57,7 +57,7 @@ public class ResponsibleService {
                 newResponsible.getUser().getCpf(),
                 newResponsible.getUser().getPhone(),
                 newResponsible.getFinancialStatus(),
-                newResponsible.getUser().getRoles(),
+                newResponsible.getUser().roleNames(),
                 new AddressResponseDTO(
                         address.getId(),
                         address.getStreet(),
