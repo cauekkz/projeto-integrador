@@ -95,15 +95,9 @@ class StudentStopServiceTest {
                 driver.getUserId(), student.getId(), ContractStatus.ACTIVE)).thenReturn(Optional.of(contract));
     }
 
-    private void schoolInRoute(boolean present) {
-        when(schoolStopRepository.findFirstByStopRouteIdAndSchoolId(stop.getRoute().getId(), school.getId()))
-                .thenReturn(present ? Optional.of(new SchoolStop()) : Optional.empty());
-    }
-
     @Test
     void homeStopMustBeAnAddressOfTheStudent() {
         activeContract();
-        schoolInRoute(true);
         when(studentAddressRepository.existsByStudentIdAndAddressId(student.getId(), stop.getAddress().getId())).thenReturn(false);
 
         BadRequestException e = assertThrows(BadRequestException.class, () -> studentStopService.createStudentStop(
@@ -115,7 +109,6 @@ class StudentStopServiceTest {
     @Test
     void shouldLinkStudentToStop() {
         activeContract();
-        schoolInRoute(true);
         when(studentStopRepository.save(any(StudentStop.class))).thenAnswer(inv -> inv.getArgument(0));
 
         StudentStopResponseDTO response = studentStopService.createStudentStop(boarding, student.getId(), stop.getId(), authentication);
@@ -127,7 +120,6 @@ class StudentStopServiceTest {
     @Test
     void shouldCheckOrderWithTheOtherStopsOfTheStudent() {
         activeContract();
-        schoolInRoute(true);
         StudentStop alighting = new StudentStop();
         alighting.setId(UUID.randomUUID());
         when(studentStopRepository.findByStudentIdAndStopRouteId(student.getId(), stop.getRoute().getId()))
@@ -151,10 +143,9 @@ class StudentStopServiceTest {
     }
 
     @Test
-    void homeIsAcceptedEvenBeforeTheSchoolIsInTheRoute() {
+    void homeIsAcceptedEvenWithoutTheSchoolInTheRoute() {
         // sem a escola o aluno fica sem desembarque: vira pendencia (a viagem nao inicia), nao erro
         activeContract();
-        schoolInRoute(false);
         when(studentStopRepository.save(any(StudentStop.class))).thenAnswer(inv -> inv.getArgument(0));
 
         assertEquals(stop.getId(), studentStopService.createStudentStop(boarding, student.getId(), stop.getId(), authentication).stopId());
@@ -163,7 +154,6 @@ class StudentStopServiceTest {
     @Test
     void shouldRejectSameActionOnOverlappingDays() {
         activeContract();
-        schoolInRoute(true);
         StudentStop existing = new StudentStop();
         existing.setWeekdays(EnumSet.of(WeekDay.MONDAY, WeekDay.WEDNESDAY));
         when(studentStopRepository.findByStudentIdAndStopRouteIdAndAction(student.getId(), stop.getRoute().getId(), StudentStopAction.BOARDING))
@@ -222,7 +212,6 @@ class StudentStopServiceTest {
     @Test
     void shouldAllowSameActionOnOtherDays() {
         activeContract();
-        schoolInRoute(true);
         StudentStop mondayWednesday = new StudentStop();
         mondayWednesday.setWeekdays(EnumSet.of(WeekDay.MONDAY, WeekDay.WEDNESDAY));
         when(studentStopRepository.findByStudentIdAndStopRouteIdAndAction(student.getId(), stop.getRoute().getId(), StudentStopAction.BOARDING))
@@ -239,7 +228,6 @@ class StudentStopServiceTest {
     @Test
     void withoutDaysMeansEveryDay() {
         activeContract();
-        schoolInRoute(true);
         when(studentStopRepository.save(any(StudentStop.class))).thenAnswer(inv -> inv.getArgument(0));
 
         StudentStopResponseDTO response = studentStopService.createStudentStop(boarding, student.getId(), stop.getId(), authentication);
@@ -250,7 +238,6 @@ class StudentStopServiceTest {
     @Test
     void schoolLocationMustBeTheContractSchoolStop() {
         activeContract();
-        schoolInRoute(true);
         when(schoolStopRepository.findByStopId(stop.getId())).thenReturn(List.of());
 
         StudentStopRequestDTO atSchool = new StudentStopRequestDTO(null, null, StudentStopLocationType.SCHOOL, StudentStopAction.ALIGHTING, null);
@@ -263,7 +250,6 @@ class StudentStopServiceTest {
     @Test
     void schoolLocationAtTheSchoolStopIsAccepted() {
         activeContract();
-        schoolInRoute(true);
         SchoolStop schoolStop = new SchoolStop();
         schoolStop.setSchool(school);
         when(schoolStopRepository.findByStopId(stop.getId())).thenReturn(List.of(schoolStop));
@@ -298,7 +284,6 @@ class StudentStopServiceTest {
     @Test
     void homeLocationCannotBeTheSchoolStop() {
         activeContract();
-        schoolInRoute(true);
         SchoolStop schoolStop = new SchoolStop();
         schoolStop.setSchool(school);
         when(schoolStopRepository.findByStopId(stop.getId())).thenReturn(List.of(schoolStop));

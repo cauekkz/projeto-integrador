@@ -1,6 +1,7 @@
 package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.models.school.School;
+import br.com.vanroute.backend.models.school.SchoolStop;
 import br.com.vanroute.backend.dtos.route.RouteEditResponse;
 import br.com.vanroute.backend.dtos.route.RoutePendingResponse;
 import br.com.vanroute.backend.dtos.route.RouteStopResponse;
@@ -34,6 +35,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -106,24 +108,26 @@ class RouteServiceTest {
     }
 
     @Test
-    void stopAtReusesTheStopOfThatAddress() {
-        Address address = new Address();
-        address.setId(UUID.randomUUID());
-        when(routeStopRepository.findFirstByRouteIdAndAddressId(route.getId(), address.getId())).thenReturn(Optional.of(b));
+    void newStopIsCreatedEvenWithAnotherStopAtTheSameAddress() {
+        // a van volta no mesmo endereco: o ponto novo nao reaproveita o que ja existe
+        when(routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId())).thenReturn(List.of(a, b));
+        when(routeStopRepository.save(any(RouteStop.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        assertSame(b, routeService.stopAt(route, address, null, null));
-        verify(routeStopRepository, never()).save(any());
+        RouteStop created = routeService.newStop(route, a.getAddress(), null, null);
+
+        assertNotSame(a, created);
+        assertSame(a.getAddress(), created.getAddress());
+        assertEquals(3, created.getOrderIndex());
     }
 
     @Test
-    void stopAtInsertsInTheMiddleAndPushesTheOthersDown() {
+    void newStopInsertsInTheMiddleAndPushesTheOthersDown() {
         Address address = new Address();
         address.setId(UUID.randomUUID());
-        when(routeStopRepository.findFirstByRouteIdAndAddressId(route.getId(), address.getId())).thenReturn(Optional.empty());
         when(routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId())).thenReturn(List.of(a, b, c, d));
         when(routeStopRepository.save(any(RouteStop.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        RouteStop created = routeService.stopAt(route, address, null, 2);
+        RouteStop created = routeService.newStop(route, address, null, 2);
 
         assertEquals(2, created.getOrderIndex());
         // 1 fica; 2, 3 e 4 descem uma posicao
@@ -131,34 +135,32 @@ class RouteServiceTest {
     }
 
     @Test
-    void stopAtWithASchoolLinksTheSchoolToTheStop() {
+    void newStopWithASchoolLinksTheSchoolEvenIfItIsAlreadyInAnotherStop() {
         School school = new School();
         school.setId(UUID.randomUUID());
         Address address = new Address();
         address.setId(UUID.randomUUID());
-        when(routeStopRepository.findFirstByRouteIdAndAddressId(route.getId(), address.getId())).thenReturn(Optional.empty());
         when(routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId())).thenReturn(List.of(a, b));
         when(routeStopRepository.save(any(RouteStop.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(schoolStopRepository.findFirstByStopRouteIdAndSchoolId(route.getId(), school.getId())).thenReturn(Optional.empty());
 
-        RouteStop created = routeService.stopAt(route, address, school, null);
+        RouteStop created = routeService.newStop(route, address, school, null);
 
         assertEquals(3, created.getOrderIndex());
         verify(schoolStopRepository).save(argThat(link -> link.getStop() == created && link.getSchool() == school));
     }
 
     @Test
-    void secondSchoolAtTheSameAddressJoinsTheExistingStop() {
+    void linkSchoolDoesNotLinkTwiceToTheSameStop() {
         School school = new School();
         school.setId(UUID.randomUUID());
-        Address address = new Address();
-        address.setId(UUID.randomUUID());
-        when(routeStopRepository.findFirstByRouteIdAndAddressId(route.getId(), address.getId())).thenReturn(Optional.of(b));
-        when(schoolStopRepository.findFirstByStopRouteIdAndSchoolId(route.getId(), school.getId())).thenReturn(Optional.empty());
+        SchoolStop link = new SchoolStop();
+        link.setSchool(school);
+        link.setStop(b);
+        when(schoolStopRepository.findByStopId(b.getId())).thenReturn(List.of(link));
 
-        assertSame(b, routeService.stopAt(route, address, school, null));
-        verify(routeStopRepository, never()).save(any());
-        verify(schoolStopRepository).save(argThat(link -> link.getStop() == b && link.getSchool() == school));
+        routeService.linkSchool(b, school);
+
+        verify(schoolStopRepository, never()).save(any());
     }
 
     @Test

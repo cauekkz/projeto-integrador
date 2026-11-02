@@ -12,6 +12,5 @@ public interface RouteStopRepository extends JpaRepository<RouteStop, UUID> {
     Optional<RouteStop> findFirstByRouteIdAndOrderIndex(UUID routeId, Integer orderIndex);
 
 
-    Optional<RouteStop> findFirstByRouteIdAndAddressId(UUID routeId, UUID addressId);
 
 }
