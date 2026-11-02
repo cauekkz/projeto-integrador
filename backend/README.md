@@ -1,12 +1,14 @@
-# VanRoute — Backend: rotas da API (o que mudou na branch `routeLogic`)
+# VanRoute — Backend: rotas da API
 
-Guia para quem consome a API, principalmente o front. Para cada endpoint criado ou alterado, mostra **o que mandar**, **o que volta** e **as regras**. O relatório completo da auditoria (bugs, testes, pendências) está em [`docs/RELATORIO_AUDITORIA_VANROUTE.md`](../docs/RELATORIO_AUDITORIA_VANROUTE.md).
+Guia para quem consome a API, principalmente o front. Para cada endpoint, mostra **o que mandar**, **o que volta** e **as regras**.
 
 Outros guias:
 - **[`docs/FLUXO_FRONT.md`](../docs/FLUXO_FRONT.md)**: como montar o front (telas, a ordem das chamadas, os WebSockets e a renovação do token);
 - [`docs/FLUXO_ROTA.md`](../docs/FLUXO_ROTA.md): endereços, rota e pontos, do cadastro até a rota pronta (cada entidade, DTO e verificação);
 - [`docs/FLUXO_TRIP.md`](../docs/FLUXO_TRIP.md): execução da rota, faltas e notificações, com todas as entradas e saídas;
-- [`docs/FLUXO_CONTRATO.md`](../docs/FLUXO_CONTRATO.md): contrato passo a passo.
+- [`docs/FLUXO_CONTRATO.md`](../docs/FLUXO_CONTRATO.md): contrato passo a passo (com a assinatura);
+- [`docs/PENDENCIAS_E_ERROS.md`](../docs/PENDENCIAS_E_ERROS.md): o que ainda falta no backend;
+- [`docs/SUGESTOES_FUTURAS.md`](../docs/SUGESTOES_FUTURAS.md): colunas pouco usadas e decisões para depois (pagamento, produção).
 
 Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: Bearer <token>`, exceto os de cadastro e login.
 
@@ -35,25 +37,9 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 
 ## 1. Configuração da rota
 
-### O que mudou (endereços e montagem da rota)
-| Antes | Agora |
-|---|---|
-| o motorista **digitava o endereço** de cada ponto | ele **escolhe** um endereço do aluno ou a escola; endereço digitado é recusado (400) |
-| cada ponto criava **outro registro** de endereço e buscava a coordenada de novo na API de mapas | o ponto usa **o mesmo registro** do aluno ou da escola: zero cópia, zero chamada |
-| a coordenada do ponto podia não bater com a casa (erro de digitação) e quebrar a regra de 1 km | é a coordenada exata da casa ou da escola |
-| o motorista podia pôr a criança num endereço que o pai nunca informou | só nos endereços que o pai cadastrou |
-| o aluno tinha 1 endereço, salvo e nunca usado | o aluno tem **vários** endereços com apelido ("Casa", "Avó", "Natação"), e é deles que nascem os pontos |
-| digitar o mesmo endereço de novo criava outro registro | o **mesmo CEP + número** reaproveita o endereço que já existe |
-| montar a rota em 2 passos (criar o ponto e depois ligar o aluno), na ordem certa por conta do motorista | **1 passo:** "adicionar aluno na rota". O backend cria ou reaproveita o ponto e põe na ordem certa. A escola entra quando o aluno embarca ou desce nela (`SCHOOL`) |
-| `schools.address_id` era único | duas escolas no mesmo prédio dividem o endereço |
-| a escola entrava na rota à parte | a escola entra quando o aluno embarca ou desce nela (`locationType: SCHOOL`): cria se não existe, reaproveita se existe. `HOME`/`OTHER` não cria escola |
-| a posição do ponto era sempre "no fim" | automática (embarque antes de onde o aluno desce, desembarque no fim) ou escolhida com `orderIndex` |
-| `POST /{routeId}/stops`, `POST /stop/{routeStopId}/add-student/{studentId}` e `POST /stop/{routeStopId}/add-school/{schoolId}` | **removidas**: tudo entra pelo `POST /{routeId}/add-student/{studentId}`. O ponto nasce do endereço do aluno (`HOME`/`OTHER`) ou é a escola do contrato (`SCHOOL`) |
-| cada alteração devolvia uma coisa (o ponto, o student stop, `204`) | **toda alteração da rota** (pôr aluno, trocar ordem, mover, dias, excluir) devolve `{ stops, pending }`: a rota inteira e o que ainda falta |
-
 ### Conceitos
 - **Rota (`route`)** é a *configuração* de uma viagem, por exemplo "Ida manhã" ou "Volta tarde". Ida e volta são rotas diferentes. Só o motorista que criou a rota pode ver e alterar.
-- **Ponto (`route stop`)** é onde a van para: um endereço e uma ordem (`orderIndex`). A ordem diz só quem vem antes de quem. Um ponto pode ter vários alunos e escolas.
+- **Ponto (`route stop`)** é uma parada da van: um endereço e uma ordem (`orderIndex`). A ordem diz só quem vem antes de quem. Um ponto pode ter vários alunos e escolas, e o mesmo endereço pode ter mais de um ponto na rota.
 - **School stop** liga uma escola a um ponto. A escola pode ficar no meio da rota.
 - **Student stop** liga um aluno a um ponto, com:
   - `action`: `BOARDING` (embarque) ou `ALIGHTING` (desembarque);
@@ -69,36 +55,55 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 4. GET  /api/route/{routeId}/pending                   lista vazia = rota pronta pra viagem
 5. ajustes: swap-order, move, weekdays e os DELETEs
 ```
-Esse é o **único** jeito de criar ponto: não existe ponto sem aluno. Duas escolas no mesmo prédio caem no mesmo ponto quando o aluno de cada uma entra na rota.
+Esse é o **único** jeito de criar ponto: não existe ponto sem aluno.
 
 ### Adicionar aluno na rota (1 passo)
-`POST /api/route/{routeId}/add-student/{studentId}`
+`POST /api/route/{routeId}/add-student/{studentId}`: põe **uma** ação do aluno (embarque e desembarque são duas chamadas) e diz **em qual ponto**. Um dos dois é obrigatório:
+- **`"newStop": true`:** cria um ponto novo, mesmo que já exista outro no mesmo endereço;
+- **`"routeStopId"`:** usa um ponto que já existe nessa rota (o front acha no `GET /{routeId}/stops`, pelo endereço).
+
 ```json
-{ "action": "BOARDING", "locationType": "HOME", "studentAddressId": "<Casa da Ana>", "weekdays": ["MONDAY", "TUESDAY"] }
-{ "action": "ALIGHTING", "locationType": "SCHOOL" }
+{ "action": "BOARDING",  "locationType": "HOME",   "newStop": true, "studentAddressId": "<Casa da Ana>", "weekdays": ["MONDAY", "TUESDAY"] }
+{ "action": "ALIGHTING", "locationType": "SCHOOL", "newStop": true }
+{ "action": "ALIGHTING", "locationType": "SCHOOL", "routeStopId": "<ponto da escola que já existe>" }
+{ "action": "BOARDING",  "locationType": "OTHER",  "newStop": true, "studentAddressId": "<Padaria>", "orderIndex": 3 }
 ```
-- **`HOME`/`OTHER`:** manda o `studentAddressId` (um endereço desse aluno, de `stop-options`).
-- **`SCHOOL`:** não manda endereço; o ponto é o da **escola do contrato**.
-- Sem `weekdays` = todos os dias.
-- `orderIndex` (opcional, a partir de 1): a posição do ponto **se ele for criado agora**. Sem ele, a posição é automática (abaixo). Ponto que já existe não se mexe (para isso, `swap-order`). Posição que quebra a ordem embarque → desembarque dá `400`.
+- **`HOME`/`OTHER`:**
+  - **ponto novo:** manda o `studentAddressId` (um endereço desse aluno, de `stop-options`);
+  - **ponto que já existe:** o ponto tem que ser num endereço do aluno.
+- **`SCHOOL`:** não manda endereço; é sempre a **escola do contrato**.
+  - **ponto novo:** cria o ponto no endereço da escola, já ligado a ela (mesmo que a escola já esteja em outro ponto);
+  - **ponto que já existe:** o ponto tem que ser no endereço da escola; ele liga a escola se ainda não estiver ligada.
+- **`HOME`/`OTHER` nunca cria escola.**
+- **Sem `weekdays`** = todos os dias.
+- **`orderIndex`** (só no ponto novo, a partir de 1): a posição. Sem ele, a posição é automática:
+  - **embarque:** entra **antes** de onde o aluno desce (antes dos desembarques dele e, se não é na escola, antes do primeiro ponto da escola do contrato);
+  - **desembarque:** entra no fim.
 
-O backend:
-1. acha o ponto: **`HOME`/`OTHER`** = o ponto daquele endereço do aluno; **`SCHOOL`** = o ponto da escola do contrato (route stop + school stop). Se a rota já tem, **usa o mesmo** (irmãos na mesma casa e alunos da mesma escola caem no mesmo ponto); senão, cria. `HOME`/`OTHER` **nunca** cria a escola;
-2. põe o ponto novo **na ordem certa**: um **embarque** entra **antes** de onde o aluno desce (antes dos desembarques dele e, se não é na escola, antes da escola do contrato, se ela já está na rota), e os de baixo descem uma posição. Um **desembarque** entra no fim. O backend **não sabe se a rota é ida ou volta**: olha só a ação desse aluno;
-3. cria **um** student stop, só com a ação que você mandou (embarque e desembarque são duas chamadas), com as regras da seção "Regras do aluno na rota". Se algo falhar, **nada fica gravado**.
+  Os de baixo descem uma posição. O backend **não sabe se a rota é ida ou volta**: olha só a ação desse aluno.
 
-O que o backend garante sempre é a **ordem** (embarque antes do desembarque); o lugar de cada ponto é decisão do motorista, que pode reordenar depois (`swap-order`, `move`).
+**A regra rígida é a ordem:** em cada dia, o embarque tem que vir **antes** do desembarque. Isso vale para o ponto novo, para o ponto que já existe, para a posição escolhida e para todo ajuste depois. Se algo falhar, **nada fica gravado**.
 
 → `200`: `{ "stops": [...], "pending": [...] }` (veja "Resposta das alterações").
-- **400:** `SCHOOL` com `studentAddressId`, `HOME`/`OTHER` sem ele, endereço de outro aluno, ou quebra de alguma regra (ordem, ponto de escola...).
+- **400:**
+  - nem `routeStopId` nem `newStop`, ou os dois;
+  - `orderIndex` num ponto que já existe;
+  - `SCHOOL` com `studentAddressId`;
+  - ponto novo de `HOME`/`OTHER` sem `studentAddressId`;
+  - endereço de outro aluno;
+  - ponto que não é no endereço certo;
+  - quebra da ordem.
 - **403:** sem contrato ativo com o aluno, ou a rota é de outro motorista.
+- **404:** o `routeStopId` não existe nessa rota.
 - **409:** a mesma ação no mesmo dia, ou o aluno já está nesse ponto.
 
-**Exemplo, rota de volta:**
-1. Ana desce em casa: cria a casa (1). A rota fica com a pendência "Ana sem embarque".
-2. Ana embarca na escola: cria a escola **antes** de onde ela desce: escola (1), casa (2).
-3. O irmão desce em casa: usa o ponto 2 (é o mesmo endereço).
-4. O irmão embarca na escola: usa o ponto 1 (a mesma escola).
+**Exemplo, a van volta na escola** (deixa a Ana, busca o Paulo e volta para deixar ele):
+1. Ana embarca em casa (`newStop`): casa (1).
+2. Ana desce na escola (`newStop`): escola (2).
+3. Paulo embarca na padaria (`newStop`, `orderIndex: 3`): padaria (3).
+4. Paulo desce na escola:
+   - **no ponto 2** (`routeStopId`): **400**, porque ele desceria antes de embarcar;
+   - **num ponto novo** (`newStop`): escola (4). A rota fica casa, escola, padaria, escola.
 
 ### Criar rota
 `POST /api/route/create-route`
@@ -131,11 +136,11 @@ O ponto da rota **não tem endereço digitado**: ele usa o mesmo endereço do al
 |---|---|
 | `GET /api/student/{id}/addresses` | `[{ id, label, address }]`, os ativos. O `id` é o `studentAddressId` |
 | `POST /api/student/{id}/addresses` `{label, address}` | endereço novo (busca a coordenada uma vez). `201` |
-| `POST /api/student/{id}/addresses` `{label, addressId}` | **reaproveita** um endereço que já existe: de um irmão ou o de cobrança do responsável. Irmãos na mesma casa ficam no mesmo ponto. `403` se o endereço não é dele nem de um filho dele; `409` se o aluno já tem esse endereço |
-| `DELETE /api/student/{id}/addresses/{studentAddressId}` | tira o endereço do aluno: apaga **só a ligação** (o endereço continua pra quem mais usa, ex.: o irmão). O aluno **sai dos pontos de casa** com esse endereço (a rota fica com pendência), e o motorista recebe a notificação `ROUTE` "Endereço removido". `409` se for o último endereço do aluno, ou se tiver uma viagem rodando com ele agora |
+| `POST /api/student/{id}/addresses` `{label, addressId}` | **reaproveita** um endereço que já existe: de outro filho ou o de cobrança do responsável (só evita digitar de novo; cada filho tem a própria lista). `403` se o endereço não é dele nem de um filho dele; `409` se o aluno já tem esse endereço |
+| `DELETE /api/student/{id}/addresses/{studentAddressId}` | tira o endereço do aluno: apaga **só a ligação** (o endereço continua pra quem mais usa). O aluno **sai dos pontos de casa** com esse endereço (a rota fica com pendência), e o motorista recebe a notificação `ROUTE` "Endereço removido". `409` se for o último endereço do aluno, ou se tiver uma viagem rodando com ele agora |
 
 No cadastro do aluno (`POST /api/student/create-student`):
-- **um endereço:** `address` (novo) **ou** `addressId` (reaproveita o do irmão ou o seu), e `addressLabel` (opcional). Vira o "Casa";
+- **um endereço:** `address` (novo) **ou** `addressId` (reaproveita um da família: de outro filho ou o seu), e `addressLabel` (opcional). Vira o "Casa";
 - **vários de uma vez:** `"addresses": [{ "label": "Casa", "addressId": "..." }, { "label": "Natação", "address": { ... } }]`. O primeiro sem apelido vira "Casa". O mesmo endereço duas vezes dá `400`.
 
 ### Quem pode entrar na rota
@@ -180,12 +185,6 @@ Regras (no `add-student` e também no `move`, que muda o aluno de ponto):
 - **409:** o aluno já está nesse ponto.
 
 O caso comum é **um** embarque e **um** desembarque, sem dias.
-
-### Limitações conhecidas (por enquanto)
-- **Um ponto por endereço na rota.** Se a van precisa passar **duas vezes** no mesmo endereço na mesma rota, não dá: o segundo uso cai no mesmo ponto.
-- **Uma escola por rota.** Se a van precisa parar na mesma escola **duas vezes** (deixar alguém lá antes de buscar outros alunos e voltar depois), não dá para ter um segundo ponto dessa escola.
-
-Nos dois casos, o caminho hoje é dividir em duas rotas.
 
 O que o front precisa mudar está em [`docs/FLUXO_FRONT.md`, seção 11](../docs/FLUXO_FRONT.md#11-o-que-o-front-precisa-mudar-endereços-e-rota).
 
@@ -316,8 +315,8 @@ A proposta nasce no chat. Criar, aceitar e recusar ficam no `ChatController`; a 
 |---|---|---|
 | `GET /api/chats/{chatId}/students` | só o **motorista** que participa do chat | `[{ id, name }]`: filhos do pai da conversa de que ele é admin (o botão "ver filhos" usado para escolher o aluno da proposta) |
 | `POST /api/chats/{chatId}/contract` | motorista | `201`: `{ message, userDriverContractId, contract }`, onde `contract` já vem completo (formato abaixo) |
-| `PUT /api/chats/{chatId}/contracts/{contractId}/accept` | responsável do contrato | `200`; o contrato fica `ACTIVE` e as parcelas são geradas |
-| `PUT /api/chats/{chatId}/contracts/{contractId}/reject` | responsável do contrato | `200`; o contrato fica `CANCELED` |
+| `PUT /api/chats/{chatId}/contracts/{contractId}/accept` | responsável do contrato | `200`; o contrato fica `ACTIVE`, as parcelas são geradas e o responsável **assina** (o documento fica `SIGNED`) |
+| `PUT /api/chats/{chatId}/contracts/{contractId}/reject` | responsável do contrato | `200`; o contrato fica `CANCELED` e o documento `REJECTED` |
 | `GET /api/contract/my-contracts?status=ACTIVE` | motorista ou responsável | `[{ contractId, userDriverContractId, status, periodicity, value, startDate, endDate, studentId, studentName, schoolId, schoolName, driverId, driverName, responsibleId, responsibleName }]`: os contratos em que o usuário é parte; `status` é opcional |
 | `GET /api/contract/{contractId}` | só as partes do contrato | detalhes (abaixo); os outros recebem `403` |
 
@@ -334,9 +333,57 @@ Detalhes do contrato:
   "value": 350.00, "startDate": "...", "endDate": "...",
   "studentId": "...", "studentName": "...", "schoolId": "...", "schoolName": "...", "schoolAddress": { ... },
   "driverId": "...", "driverName": "...", "responsibleId": "...", "responsibleName": "...",
-  "documentFileKey": "...", "documentType": "TRANSPORT_CONTRACT" }
+  "documentFileKey": "...", "documentType": "TRANSPORT_CONTRACT",
+  "documentStatus": "SIGNED",
+  "signatures": [ { "userId": "...", "name": "Carlos", "signedAt": "2027-01-20T10:00:00", "valid": true },
+                  { "userId": "...", "name": "Maria",  "signedAt": "2027-01-21T08:30:00", "valid": true } ] }
 ```
+**Assinatura:** propor é o motorista assinar, e aceitar é o responsável assinar. Cada assinatura guarda **quem, quando e o hash (SHA-256) dos termos**: as partes, o aluno, a escola, o valor, o período e o documento. É uma assinatura eletrônica simples, com registro de autoria e integridade. `valid` diz se os termos de hoje ainda são os que foram assinados; se alguém mudar o contrato no banco, vira `false`. `documentStatus`: `PENDING` até o aceite, `SIGNED` ou `REJECTED`.
 A mensagem PROPOSAL do chat traz só os IDs no `payload`. Para mostrar a proposta, o front chama `GET /api/contract/{contractId}` com o `contractId` do payload. Os dados vêm sempre atualizados do banco.
+
+---
+
+## 2b. Grupos, ocorrências, perfil do motorista e avaliação
+
+### Grupos do motorista
+O motorista agrupa os alunos dele como quiser ("Escola X manhã", "Irmãos Silva"). Um aluno pode estar em vários grupos. Só o próprio motorista vê e mexe; outro motorista recebe `404`, e responsável recebe `403`.
+
+| Endpoint | Corpo | O que faz |
+|---|---|---|
+| `GET /api/driver/groups` | — | `[{ id, name, students: [{ studentId, studentName }] }]` |
+| `POST /api/driver/groups` | `{ name }` | `201`. `409` se ele já tem um grupo com esse nome (sem diferenciar maiúscula) |
+| `PUT /api/driver/groups/{id}` | `{ name }` | renomeia |
+| `DELETE /api/driver/groups/{id}` | — | `204` (os alunos não são afetados) |
+| `POST /api/driver/groups/{id}/students/{studentId}` | — | põe o aluno. `403` sem contrato **ativo** com ele; `409` se já está |
+| `DELETE /api/driver/groups/{id}/students/{studentId}` | — | tira. `404` se não está |
+| `POST /api/driver/groups/{id}/notice` | `{ reason? }` (opcional, até 300) | **avisa o grupo**: cada responsável recebe a notificação `DRIVER_NOTICE` "Aviso do motorista": *"Carlos avisou que não vai buscar Ana e Pedro hoje. Motivo: van na oficina."* (só os filhos dele que estão no grupo; sem motivo, só a mensagem padrão). Devolve `{ notifiedResponsibles }`. `409` se o grupo está vazio |
+
+O aviso **não gera falta** nem mexe na rota: é só uma mensagem. Chega na hora pelo WebSocket `/notifications`.
+
+### Ocorrências na viagem
+| Endpoint | Quem | O que faz |
+|---|---|---|
+| `POST /api/trip/{tripId}/occurrences` `{ type, description }` | o motorista da viagem | registra e manda a notificação `OCCURRENCE` para os responsáveis de **todos** os alunos da viagem: "Ocorrência na viagem: trânsito" / "Ida Manhã: acidente na marginal". `201` com `{ id, tripId, type, description, dateTime, driverName }`. `409` se a viagem já terminou |
+| `GET /api/trip/{tripId}/occurrences` | o motorista ou um responsável de aluno da viagem | a lista, a mais nova primeiro |
+
+`type`: `VEHICLE`, `STUDENT`, `TRAFFIC`, `DISCIPLINARY`, `FINANCIAL`, `MEDICAL` ou `OTHER`. A notificação é em tempo real (WebSocket `/notifications`); o `GET` é o histórico.
+
+### Perfil do motorista e avaliação
+| Endpoint | Quem | O que faz |
+|---|---|---|
+| `GET /api/driver/{driverId}/profile` | o próprio motorista, ou um responsável que **já conversa** (chat) ou **tem contrato** com ele | perfil (abaixo); os outros recebem `403` |
+| `PUT /api/driver/{driverId}/rating` `{ score, comment? }` | responsável que **tem ou já teve contrato** com ele (`ACTIVE`, `INACTIVE`, `SUSPENDED` ou `OVERDUE`; proposta pendente ou recusada não conta) | cria ou **troca** a nota dele (uma por responsável por motorista). `score` de 1 a 5; `comment` até 500 |
+| `DELETE /api/driver/{driverId}/rating` | o responsável que avaliou | apaga a avaliação dele |
+
+```json
+{ "driverId": "...", "name": "Carlos", "photoKey": "profile/...", "memberSince": "2026-10-01",
+  "schools":  [ { "schoolId": "...", "name": "Escola X" } ],
+  "vehicles": [ { "model": "Sprinter", "color": "Branca", "plate": "ABC1D23", "capacity": 15 } ],
+  "ratingAverage": 4.7, "ratingCount": 3,
+  "myRating": { "score": 5, "comment": "Pontual", "date": "...", "responsibleName": "Maria" },
+  "recentRatings": [ { "score": 5, "comment": "Pontual", "date": "...", "responsibleName": "Maria" } ] }
+```
+O perfil **não tem** CPF, e-mail nem telefone (a conversa é pelo chat). De quem avaliou, aparece só o primeiro nome. `ratingAverage` é `null` sem avaliações.
 
 ---
 
@@ -397,40 +444,60 @@ Quem pode baixar:
 3. PUT /api/users/update-photo   { "fileKey": "profile/{seuId}/....jpeg" }   → { "photoKey": "..." }
 ```
 - Só aceita chave da sua própria pasta e que já exista no bucket; a foto antiga é apagada.
-- O `photoKey` dos outros vem no `GET /api/chats` (`otherUserPhotoKey`); a sua vem no `/me`. Para exibir, use o `download-url`. (O `GET /api/users/{id}` foi removido.)
+- O `photoKey` dos outros vem no `GET /api/chats` (`otherUserPhotoKey`); a sua vem no `/me`. Para exibir, use o `download-url`.
 
 ---
 
-## 5. Outras mudanças de contrato da API
+## 5. Cadastro, login e token
 
 - **Cadastro de responsável** (`POST /api/responsible/auth/signup`):
-  - agora valida CPF, senha forte, confirmação de senha e **endereço obrigatório**;
+  - valida CPF, senha forte, confirmação de senha e **endereço obrigatório** (o de cobrança);
   - aceita o endereço em `address` ou `addressRequestDTO`;
-  - envia o código de verificação por e-mail; o login só funciona depois do `POST /api/auth/verify-email`.
-- **Cadastro de aluno** (`POST /api/student/create-student`): não tem mais `weekdays`; os dias ficam no student stop.
-- **Escola** (`POST /api/school/add-school`): se a escola (nome + rua) já existe, o motorista é **vinculado** a ela, e não dá mais erro. `409` se já estiver vinculado.
-- **Caminho removido:** `POST /api/student-stop/{studentId}/{routeStopId}` virou `POST /api/route/stop/{routeStopId}/add-student/{studentId}`, que depois também saiu: hoje é `POST /api/route/{routeId}/add-student/{studentId}`.
-- **JWT:** agora expira (`JWT_EXPIRATION`, padrão 15 min), e token vencido dá `401`. O `sub` passou a ser o **id do usuário** (antes era o CPF). Tokens antigos dão `401`; basta logar de novo.
-- **Renovar o token sem senha:** o login agora também devolve `refreshToken` (30 dias, `JWT_REFRESH_EXPIRATION`). Com token vencido (`401`), o front chama `POST /api/auth/refresh` `{"refreshToken"}`, recebe um par novo (o usado deixa de valer) e repete a chamada. `POST /api/auth/logout` `{"refreshToken"}` apaga. No Redis fica só o hash do refreshToken. Passo a passo pro front em `docs/FLUXO_TRIP.md`, seção 4.10.
+  - envia o código de verificação por e-mail; o login só funciona depois do `POST /api/auth/verify-email`;
+  - a resposta traz o papel em `roles: ["ROLE_RESPONSIBLE"]`.
+- **Papel do usuário:** cada usuário tem **um** papel (`ROLE_DRIVER`, `ROLE_RESPONSIBLE` ou `ROLE_ADMIN`), na coluna `users.role`. Ele vai no JWT, na claim `roles` (ex.: `["ROLE_DRIVER"]`), e no `GET /api/users/me`.
+- **Escola** (`POST /api/school/add-school`): se a escola (nome + rua) já existe, o motorista é **vinculado** a ela. `409` se já estiver vinculado.
+- **JWT:** expira (`JWT_EXPIRATION`, padrão 15 min), e token vencido dá `401`. O `sub` é o **id do usuário**. A chave vem de `JWT_KEY`; o valor padrão do `application.yml` é só para desenvolvimento.
+- **Renovar o token sem senha:** o login também devolve `refreshToken` (30 dias, `JWT_REFRESH_EXPIRATION`). Com token vencido (`401`), o front chama `POST /api/auth/refresh` `{"refreshToken"}`, recebe um par novo (o usado deixa de valer) e repete a chamada. `POST /api/auth/logout` `{"refreshToken"}` apaga. No Redis fica só o hash do refreshToken. Passo a passo pro front em `docs/FLUXO_TRIP.md`, seção 4.10.
 - **Notificações:** `GET /api/notifications`, `GET /api/notifications/unread-count`, `PUT /api/notifications/{id}/read`, `PUT /api/notifications/read-all` e o WebSocket `ws://<host>/notifications?token=<jwt>` (veja `docs/FLUXO_TRIP.md`, seção 6).
 - **No backend**, o `authentication.getName()` devolve o **id** do usuário. Use `AuthenticatedUser.id(authentication)` (um `UUID`, sem ir ao banco). Os services recebem `UUID userId`, e o CPF só é usado no login e na checagem de cadastro duplicado.
-- **Código de atualização do usuário** (`send-code-updateUser` / `update-user`): agora é um por usuário (chave `User:SendCodeUser:{id}` no Redis). Antes a chave era única e um usuário podia usar o código do outro.
+- **Código de atualização do usuário** (`send-code-updateUser` / `update-user`): um por usuário (chave `User:SendCodeUser:{id}` no Redis).
 
-## 6. Banco (migrations novas)
+## 6. Banco
 
-| Migration | O que faz |
+As migrations ficam em `src/main/resources/db/migration` e o Flyway aplica sozinho quando o backend sobe (a última é a **V29**). Migration que já rodou não se edita: mudança de banco é sempre numa migration nova, com o próximo número (**V30**). Para zerar o banco local: `docker compose down -v`.
+
+| Assunto | Tabelas |
 |---|---|
-| V18 | antigo `V15__add_status...`, renomeado porque havia dois V15. Quem já tinha aplicado esse V15: `flyway repair` ou recriar o banco local |
-| V19 | `student_stops.weekdays`; remove `student_stops.status`, `student_stops.route_id` e `student_addresses.weekdays` (sem uso) |
-| V20 | `users.photo_key` |
-| V22 | `trips.driver_id`; uma trip não cancelada por rota por dia; `UNIQUE (trip_id, student_id)` em `boardings`; `routes.vehicle_id` (van padrão); tabela `student_absences` (aluno + rota + data) |
-| V21 | `vehicles`: `renavam` e `chassis` (únicos), `manufacture_year`, `color`, `fuel`, `category`, `licensing_year`. Em `driver_vehicles`, a UNIQUE (motorista, van) virou índice parcial `WHERE end_date IS NULL`: só um vínculo **ativo** por par, com histórico liberado |
+| usuários | `users` (com `role`), `drivers`, `responsibles` (com o endereço de **cobrança**) |
+| alunos | `students`, `student_responsibles` (vínculo e tipo), `student_addresses` (endereços de busca, com apelido) |
+| endereços | `addresses` (cada lugar uma vez: mesmo CEP + número = mesmo endereço) |
+| escola e van | `schools`, `driver_schools`, `vehicles`, `driver_vehicles` |
+| contrato | `contracts`, `user_driver_contracts` (motorista + responsável + aluno + escola), `payments` (parcelas), `documents`, `signatures` |
+| rota | `routes`, `route_drivers`, `route_stops`, `student_stops`, `school_stops` |
+| viagem | `trips`, `boardings`, `student_absences`, `occurrences` |
+| grupos | `driver_groups`, `driver_group_students` |
+| outros | `chats`, `chat_messages`, `notifications`, `ratings` |
 
 ## 7. Rodar e testar
 
 ```bash
-docker compose up -d db redis minio
-cd backend && ./mvnw clean package     # compila e roda os testes unitários
+docker compose up -d db redis minio    # o banco é o vanroute_db; para zerar: docker compose down -v
+cd backend && ./mvnw clean package     # compila e roda os testes unitários (no vanroute_db)
 java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
-Para a trip, o servidor também precisa de `ORS_DIRECTIONS_URL` (nos testes aponta para o simulador do `stubs.py`) e, nos testes, `TRIP_ETA_REFRESH_SECONDS=3`. O teste do WebSocket da trip é o `backend/api-tests/trip-ws-test.mjs`. Para ver a execução da rota e as notificações funcionando sem front: `bash backend/api-tests/demo/run-demo.sh` e abra http://localhost:8090 (motorista e 2 pais na mesma tela). Fluxo completo, entradas e saídas de todas as rotas e dos WebSockets (`/trip/{tripId}` e `/notifications`): `docs/FLUXO_TRIP.md`. Para testar contra a API real do OpenRouteService, suba o backend sem `ORS_GEOCODE_URL`/`ORS_DIRECTIONS_URL` (com a chave em `openrouteservice.api-key` no `application-local.properties`, que fica fora do git) e rode com `REAL_MAPS=1`: as contagens de chamadas, que só existem no simulador, aparecem como SKIP. Os testes de API ponta a ponta (servidor real, dados fictícios) estão em `backend/api-tests/`. Como rodar está no cabeçalho do `run-api-tests.sh` e na seção E do relatório.
+Para a trip, o servidor também precisa de `ORS_DIRECTIONS_URL` (nos testes aponta para o simulador do `stubs.py`) e, nos testes, `TRIP_ETA_REFRESH_SECONDS=3`. O teste do WebSocket da trip é o `backend/api-tests/trip-ws-test.mjs`. Para ver a execução da rota e as notificações funcionando sem front: `bash backend/api-tests/demo/run-demo.sh` e abra http://localhost:8090 (motorista e 2 pais na mesma tela). Fluxo completo, entradas e saídas de todas as rotas e dos WebSockets (`/trip/{tripId}` e `/notifications`): `docs/FLUXO_TRIP.md`. Para testar contra a API real do OpenRouteService, suba o backend sem `ORS_GEOCODE_URL`/`ORS_DIRECTIONS_URL` (com a chave em `openrouteservice.api-key` no `application-local.properties`, que fica fora do git) e rode com `REAL_MAPS=1`: as contagens de chamadas, que só existem no simulador, aparecem como SKIP. 
+
+**Testes de API ponta a ponta** (servidor real, dados fictícios, sem serviços externos), em `backend/api-tests/`:
+```bash
+python3 -I backend/api-tests/stubs.py &    # e-mail falso :2525 e simulador de mapas :8089
+cd backend && \
+  SPRING_MAIL_HOST=127.0.0.1 SPRING_MAIL_PORT=2525 SPRING_MAIL_USERNAME=stub SPRING_MAIL_PASSWORD=stub \
+  SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=false \
+  ORS_GEOCODE_URL=http://127.0.0.1:8089/pelias/v1/search ORS_DIRECTIONS_URL=http://127.0.0.1:8089/v2/directions/driving-car \
+  TRIP_ETA_REFRESH_SECONDS=3 TRIP_OFF_ROUTE_MIN_SECONDS=0 java -jar target/backend-0.0.1-SNAPSHOT.jar &
+./api-tests/run-api-tests.sh   # usa node >= 22 nos testes de WebSocket
+```
+- Cada execução cria dados fictícios novos (CPFs válidos aleatórios), então pode ser repetida. Os dados ficam no `vanroute_db`.
+- Os motoristas são inseridos via SQL, porque o cadastro real exige uma CNH digital assinada ICP-Brasil, que não dá para gerar com dados fictícios.
+- Os testes unitários (`./mvnw test`) usam Mockito; o `BackendApplicationTests` sobe o contexto completo e roda o Flyway no `vanroute_db`.

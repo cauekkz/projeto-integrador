@@ -15,19 +15,16 @@ addresses                 cada lugar existe UMA vez (mesmo CEP + número = mesmo
   ▲ route_stops.address_id          ponto da rota: o MESMO endereço de um aluno ou de uma escola
 
 routes                    a rota ("Ida manhã", "Volta tarde"); a van padrão fica em routes.vehicle_id
-  └ route_stops           os pontos, em ordem (orderIndex 1, 2, 3...); 1 ponto por endereço na rota
+  └ route_stops           os pontos, em ordem (orderIndex 1, 2, 3...); pode haver mais de um no mesmo endereço
       ├ student_stops     quem embarca/desce ali: aluno + BOARDING/ALIGHTING + HOME/SCHOOL/OTHER + dias da semana
       └ school_stops      qual escola fica ali
 ```
 
-**Um ponto = um lugar onde a van para.** Num ponto cabem:
-- **vários alunos** (vários `student_stops`). Ex.: dois irmãos na mesma casa, ou todos os alunos que descem na escola;
+**Um ponto = uma parada da van**, num endereço e numa posição. Num ponto cabem:
+- **vários alunos** (vários `student_stops`), quando o motorista põe mais de um aluno naquele ponto. Ex.: todos que descem na escola;
 - **mais de uma escola** (vários `school_stops`), quando as escolas ficam no **mesmo endereço** (mesmo prédio).
 
-Se a escola fica **só perto**, com outro endereço, ela tem **o ponto dela**.
-
-"1 ponto por endereço na rota" quer dizer só isto: **não pode haver dois pontos no mesmo endereço na mesma rota**.
-Pra pôr mais um aluno ou escola naquele lugar, você liga ao ponto que já existe.
+**O mesmo endereço pode ter mais de um ponto na rota**, porque a van pode voltar lá. Ex.: deixa a Ana na escola, busca o Paulo e volta na escola para deixar ele. Quem decide se o aluno vai num ponto que já existe ou num ponto novo é **o motorista**, a cada aluno que ele põe na rota (passo 6).
 
 ---
 
@@ -81,7 +78,7 @@ Todo endereço novo (do pai, do aluno ou da escola) passa por `AddressService.fi
 - O mesmo endereço duas vezes no cadastro dá **400**.
 - Cria o `student`, a ligação `student_responsible` (o pai como admin) e uma `student_addresses` por endereço.
 
-**Irmão:** é outro filho, com a lista dele. Se mora na mesma casa, manda o `addressId` da casa do irmão. Mesmo que digite de novo, o backend reconhece pelo CEP + número e liga no mesmo endereço.
+**Outro filho:** tem a **própria lista**, independente. Pode ter endereços totalmente diferentes (ex.: um fica na casa do pai e o outro na da mãe). Se algum endereço for igual, o pai pode escolher (`addressId`) em vez de digitar; e, se digitar, o backend reconhece pelo CEP + número e usa o mesmo registro de endereço. As ligações continuam separadas: tirar um endereço de um filho não mexe no outro.
 
 **Depois do cadastro:**
 
@@ -89,7 +86,7 @@ Todo endereço novo (do pai, do aluno ou da escola) passa por `AddressService.fi
 |---|---|
 | ver os endereços | `GET /api/student/{id}/addresses` → `[{ id, label, address }]` (o `id` é o `studentAddressId`) |
 | pôr outro | `POST /api/student/{id}/addresses` `{label, address}` ou `{label, addressId}` (**409** se o filho já tem esse endereço) |
-| tirar | `DELETE /api/student/{id}/addresses/{studentAddressId}`: apaga **só a ligação** (o endereço continua pro irmão). O filho sai dos pontos de casa com esse endereço, e o motorista é avisado. **409** se for o último endereço, ou se tiver uma viagem rodando com ele |
+| tirar | `DELETE /api/student/{id}/addresses/{studentAddressId}`: apaga **só a ligação** (o endereço continua pra quem mais usa). O filho sai dos pontos de casa com esse endereço, e o motorista é avisado. **409** se for o último endereço, ou se tiver uma viagem rodando com ele |
 
 ### Passo 3: o motorista cadastra a escola
 `POST /api/school/add-school` `{name, phone, email, addressRequestDTO: {...}}`
@@ -114,36 +111,55 @@ Antes, `GET /api/route/stop-options` mostra o que ele pode escolher (DTO `RouteS
 ```
 Só aparecem os alunos com contrato **ativo** com ele. A escola não aparece: é sempre a do contrato.
 
-`POST /api/route/{routeId}/add-student/{studentId}`, com o DTO `AddStudentToRouteRequest`:
-```json
-{ "action": "BOARDING",  "locationType": "HOME",   "studentAddressId": "<Casa da Ana>", "weekdays": ["MONDAY"] }
-{ "action": "ALIGHTING", "locationType": "SCHOOL" }
-{ "action": "BOARDING",  "locationType": "HOME",   "studentAddressId": "<Casa da Bia>", "orderIndex": 1 }
-```
+`POST /api/route/{routeId}/add-student/{studentId}`, com o DTO `AddStudentToRouteRequest`. Cada chamada põe **uma** ação do aluno (embarque e desembarque são duas chamadas) e diz **em qual ponto**, obrigatoriamente de um destes dois jeitos:
+
+| Campo | Ponto |
+|---|---|
+| `"newStop": true` | **cria um ponto novo**, mesmo que já exista outro no mesmo endereço |
+| `"routeStopId": "..."` | usa **um ponto que já existe** nessa rota. O front acha pelo `GET /api/route/{routeId}/stops`, filtrando pelo endereço |
+
+Sem nenhum dos dois, ou com os dois: **400**.
+
 | `locationType` | Onde |
 |---|---|
-| `HOME` / `OTHER` | o endereço do aluno do `studentAddressId` (de `GET /api/route/stop-options`) |
-| `SCHOOL` | o ponto da **escola do contrato** (não manda endereço) |
+| `HOME` / `OTHER` | um endereço do aluno. No ponto novo, manda o `studentAddressId` (de `GET /api/route/stop-options`). No ponto que já existe, o ponto tem que ser num endereço do aluno |
+| `SCHOOL` | a **escola do contrato** (não manda endereço). No ponto novo, ele cria o ponto no endereço da escola, já ligado a ela. No ponto que já existe, o ponto tem que ser no endereço da escola, e ele liga a escola se ainda não estiver ligada |
 
-O que o backend faz, em uma transação só:
-1. **ponto:** `HOME`/`OTHER` = o ponto daquele endereço do aluno; `SCHOOL` = o ponto da escola do contrato (route stop + **school stop**). Se a rota já tem, usa o mesmo (irmão da mesma casa, ou aluno da mesma escola = mesmo ponto); senão, cria. **A escola só entra na rota por um `SCHOOL`**: `HOME`/`OTHER` nunca cria escola;
-2. **ordem:** um **embarque** novo entra **antes** de onde o aluno desce (antes dos desembarques que ele já tem e, se não é na escola, antes da escola do contrato, se ela já está na rota); os de baixo descem uma posição. Um **desembarque** novo entra no fim. Ele **não sabe se a rota é ida ou volta**: olha só a ação do aluno;
-3. **aluno:** cria **um** student stop, só com a ação pedida (embarque e desembarque são duas chamadas), com as verificações abaixo. Se qualquer coisa falhar, nada fica gravado.
-
-A posição é automática, mas o motorista pode escolher mandando `orderIndex` (a partir de 1). Só vale para ponto **criado agora**: ponto que já existe não se mexe. A única regra rígida de posição é a **ordem embarque → desembarque** (400 se a posição escolhida quebrar). Depois ele reordena quando quiser (passo 7).
-
-**Limitações (por enquanto):** um ponto por endereço na rota (não dá para passar duas vezes no mesmo lugar) e uma escola por rota (não dá para parar na mesma escola duas vezes). O jeito hoje é dividir em duas rotas.
-
-Resposta: `RouteEditResponse` = `{ stops, pending }`, a rota inteira já alterada e o que falta configurar. **Toda alteração da rota** (passo 7 inclusive) devolve isso.
-
-**Exemplo, ida com dois alunos** (o motorista só adiciona os alunos, em qualquer ordem):
+```json
+{ "action": "BOARDING",  "locationType": "HOME",   "newStop": true, "studentAddressId": "<Casa da Ana>", "weekdays": ["MONDAY"] }
+{ "action": "ALIGHTING", "locationType": "SCHOOL", "newStop": true }
+{ "action": "ALIGHTING", "locationType": "SCHOOL", "routeStopId": "<o ponto da escola que já existe>" }
+{ "action": "BOARDING",  "locationType": "OTHER",  "newStop": true, "studentAddressId": "<Padaria>", "orderIndex": 3 }
 ```
-Ana embarca na Casa         → casa Ana(1)                          pendência: Ana sem desembarque
-Ana desce na escola         → a escola entra no fim: casa Ana(1), escola(2)
-Bia embarca na Casa         → entra ANTES da escola: casa Ana(1), casa Bia(2), escola(3)
-Bia desce na escola         → usa o ponto 3 (a mesma escola, sem school stop novo)
+
+**Posição do ponto novo:**
+- `orderIndex` (a partir de 1): o motorista escolhe;
+- sem ele, é automática:
+  - **embarque:** entra **antes** de onde o aluno desce (antes dos desembarques que ele já tem e, se não é na escola, antes do primeiro ponto da escola do contrato);
+  - **desembarque:** entra no fim.
+
+Os pontos de baixo descem uma posição. O backend **não sabe se a rota é ida ou volta**: olha só a ação do aluno. Num ponto que já existe, nada se mexe (mandar `orderIndex` junto dá 400; para mudar a posição, é o `swap-order`).
+
+**A regra rígida é a ordem:** em cada dia, o embarque do aluno tem que vir **antes** do desembarque. Vale para o ponto novo, para o ponto que já existe, para a posição escolhida e para todo ajuste depois (400 se quebrar).
+
+Se qualquer coisa falhar, **nada fica gravado**. A resposta é `RouteEditResponse` = `{ stops, pending }`: a rota inteira já alterada e o que falta configurar. **Toda alteração da rota** (passo 7 inclusive) devolve isso.
+
+**Exemplo, ida com dois alunos:**
 ```
-**Volta:** "Ana desce em casa" cria a casa (1); "Ana embarca na escola" cria a escola **antes**: escola (1), casa (2).
+Ana embarca na Casa      newStop                → casa Ana(1)                      pendência: Ana sem desembarque
+Ana desce na escola      newStop                → casa Ana(1), escola(2)
+Bia embarca na Casa      newStop                → entra ANTES da escola: casa Ana(1), casa Bia(2), escola(3)
+Bia desce na escola      routeStopId = escola   → o mesmo ponto 3
+```
+**Voltando na escola:** a van deixa a Ana, busca o Paulo na padaria e volta para deixar ele:
+```
+Ana embarca na Casa      newStop                       → casa(1)
+Ana desce na escola      newStop                       → casa(1), escola(2)
+Paulo embarca na Padaria newStop, orderIndex 3         → casa(1), escola(2), padaria(3)
+Paulo desce na escola    routeStopId = escola(2)       → 400: ele desceria antes de embarcar
+Paulo desce na escola    newStop                       → casa(1), escola(2), padaria(3), escola(4)
+```
+**Volta:** "Ana desce em casa" (newStop) cria a casa (1); "Ana embarca na escola" (newStop) cria a escola **antes**: escola (1), casa (2).
 
 ### O student stop
 Resposta dentro de cada ponto (`students` do `RouteStopResponse`): `{ id, studentId, studentName, stopId, locationType, action, weekdays }`.
