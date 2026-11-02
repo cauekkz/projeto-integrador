@@ -43,4 +43,9 @@ public interface UserDriverContractRepository extends JpaRepository<UserDriverCo
             "ORDER BY c.startDate DESC")
     List<UserDriverContract> findAllOfUserByStatus(@Param("userId") UUID userId, @Param("status") ContractStatus status);
     Optional<UserDriverContract> findFirstByDriverUserIdAndStudentIdAndContractStatus(UUID driverId, UUID studentId, ContractStatus status);
+
+    // o responsavel tem (ou teve) contrato com o motorista, num desses status
+    boolean existsByDriverUserIdAndResponsibleUserIdAndContractStatusIn(UUID driverId, UUID responsibleId, List<ContractStatus> statuses);
+
+    boolean existsByDriverUserIdAndResponsibleUserId(UUID driverId, UUID responsibleId);
 }
