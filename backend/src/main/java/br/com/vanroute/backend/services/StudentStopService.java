@@ -1,6 +1,5 @@
 package br.com.vanroute.backend.services;
 
-import java.util.Optional;
 import br.com.vanroute.backend.repositories.RouteRepository;
 import br.com.vanroute.backend.models.student.StudentAddress;
 import br.com.vanroute.backend.models.school.School;
@@ -63,12 +62,11 @@ public class StudentStopService {
         this.routeRepository = routeRepository;
     }
 
-    // "adicionar aluno na rota" num passo so: o motorista diz onde (um endereco do aluno ou a escola do contrato),
-    // se ele embarca ou desce e os dias. O backend usa o ponto desse endereco (ou cria na ordem certa), garante a
-    // escola do contrato na rota e liga o aluno com todas as regras. Se algo falhar, nada fica gravado
+    // "adicionar aluno na rota" num passo so: o motorista diz o ponto (um que ja existe ou um novo), onde
+    // (um endereco do aluno ou a escola do contrato), se ele embarca ou desce e os dias. Se algo falhar, nada fica gravado
     @Transactional
     public RouteEditResponse addStudentToRoute(UUID routeId, UUID studentId, AddStudentToRouteRequest request,
-                                                     Authentication authentication) {
+                                               Authentication authentication) {
         Route route = routeRepository.findById(routeId)
                 .orElseThrow(() -> new EntityNotFoundException("Route not found"));
         Driver driver = routeService.checkOwnership(route, authentication);
@@ -77,41 +75,65 @@ public class StudentStopService {
                 .orElseThrow(() -> new AccessDeniedException("Não existe contrato ativo com esse aluno"));
         School school = contract.getSchool();
         boolean atSchool = request.locationType() == StudentStopLocationType.SCHOOL;
+        boolean newStop = Boolean.TRUE.equals(request.newStop());
+        if (newStop == (request.routeStopId() != null)) {
+            throw new BadRequestException("Escolha um ponto que já existe (routeStopId) ou crie um novo (newStop: true)");
+        }
         if (atSchool && request.studentAddressId() != null) {
             throw new BadRequestException("Na escola não mande studentAddressId: o ponto é o da escola do contrato");
         }
-        if (!atSchool && request.studentAddressId() == null) {
-            throw new BadRequestException("Escolha um endereço do aluno (studentAddressId)");
-        }
-        Optional<SchoolStop> schoolInRoute = schoolStopRepository.findFirstByStopRouteIdAndSchoolId(routeId, school.getId());
-        // ponto novo: o embarque entra antes de onde o aluno desce (antes dos desembarques que ele ja tem e, se nao e na
-        // escola, antes da escola do contrato, se ela ja esta na rota). Ex.: ida com a escola no 2 -> a casa nova entra no 2.
-        // o desembarque entra no fim. Ponto que ja existe nao se mexe: se a ordem ficar errada, a regra da ordem recusa
-        List<Integer> mustComeBefore = new ArrayList<>();
-        if (request.action() == StudentStopAction.BOARDING) {
-            studentStopRepository.findByStudentIdAndStopRouteIdAndAction(studentId, routeId, StudentStopAction.ALIGHTING)
-                    .forEach(alighting -> mustComeBefore.add(alighting.getStop().getOrderIndex()));
-            if (!atSchool) {
-                schoolInRoute.ifPresent(link -> mustComeBefore.add(link.getStop().getOrderIndex()));
-            }
-        }
-        // o motorista pode escolher a posicao; a regra da ordem confere do mesmo jeito
-        Integer position = request.orderIndex() != null ? request.orderIndex()
-                : mustComeBefore.stream().min(Integer::compare).orElse(null);
+        StudentAddress place = request.studentAddressId() == null ? null
+                : studentAddressRepository.findByIdAndStudentId(request.studentAddressId(), studentId)
+                        .orElseThrow(() -> new BadRequestException("Esse endereço não é desse aluno"));
 
         RouteStop stop;
-        if (atSchool) {
-            stop = schoolInRoute.map(SchoolStop::getStop)
-                    .orElseGet(() -> routeService.stopAt(route, school.getAddress(), school, position));
+        if (newStop) {
+            if (!atSchool && place == null) {
+                throw new BadRequestException("Escolha um endereço do aluno (studentAddressId)");
+            }
+            stop = atSchool
+                    ? routeService.newStop(route, school.getAddress(), school, position(request, studentId, routeId, school))
+                    : routeService.newStop(route, place.getAddress(), null, position(request, studentId, routeId, school));
         } else {
-            // so o ponto do endereco: a escola entra na rota quando o aluno embarca ou desce nela (locationType SCHOOL)
-            StudentAddress place = studentAddressRepository.findByIdAndStudentId(request.studentAddressId(), studentId)
-                    .orElseThrow(() -> new BadRequestException("Esse endereço não é desse aluno"));
-            stop = routeService.stopAt(route, place.getAddress(), null, position);
+            if (request.orderIndex() != null) {
+                throw new BadRequestException("orderIndex só vale pra ponto novo: pra mudar a posição use o swap-order");
+            }
+            stop = routeStopRepository.findById(request.routeStopId())
+                    .filter(existing -> existing.getRoute().getId().equals(routeId))
+                    .orElseThrow(() -> new EntityNotFoundException("Esse ponto não existe nessa rota"));
+            if (atSchool) {
+                // o ponto tem que ser no endereco da escola do contrato; ela fica ligada a ele (pode estar em outros pontos)
+                if (school.getAddress() == null || !school.getAddress().getId().equals(stop.getAddress().getId())) {
+                    throw new BadRequestException("Esse ponto não é no endereço da escola do contrato");
+                }
+                routeService.linkSchool(stop, school);
+            } else if (place != null && !place.getAddress().getId().equals(stop.getAddress().getId())) {
+                throw new BadRequestException("Esse ponto não é nesse endereço do aluno");
+            }
         }
         createStudentStop(new StudentStopRequestDTO(null, null, request.locationType(), request.action(), request.weekdays()),
                 studentId, stop.getId(), authentication);
         return routeService.routeState(routeId);
+    }
+
+    // posicao do ponto novo: a escolhida pelo motorista ou a automatica. Automatica: o embarque entra antes de onde o aluno
+    // desce (antes dos desembarques que ele ja tem e, se nao e na escola, antes do primeiro ponto da escola do contrato);
+    // o desembarque entra no fim. A regra da ordem confere depois do mesmo jeito
+    private Integer position(AddStudentToRouteRequest request, UUID studentId, UUID routeId, School school) {
+        if (request.orderIndex() != null) {
+            return request.orderIndex();
+        }
+        if (request.action() != StudentStopAction.BOARDING) {
+            return null;
+        }
+        List<Integer> mustComeBefore = new ArrayList<>();
+        studentStopRepository.findByStudentIdAndStopRouteIdAndAction(studentId, routeId, StudentStopAction.ALIGHTING)
+                .forEach(alighting -> mustComeBefore.add(alighting.getStop().getOrderIndex()));
+        if (request.locationType() != StudentStopLocationType.SCHOOL) {
+            schoolStopRepository.findFirstByStopRouteIdAndSchoolIdOrderByStopOrderIndexAsc(routeId, school.getId())
+                    .ifPresent(link -> mustComeBefore.add(link.getStop().getOrderIndex()));
+        }
+        return mustComeBefore.stream().min(Integer::compare).orElse(null);
     }
 
     // liga o aluno a um ponto da rota. so o dono da rota, com contrato ativo com o aluno.

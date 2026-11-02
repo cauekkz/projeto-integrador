@@ -2,6 +2,7 @@ package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.dtos.route.stops.AddStudentToRouteRequest;
 import br.com.vanroute.backend.exceptions.BadRequestException;
+import jakarta.persistence.EntityNotFoundException;
 import br.com.vanroute.backend.models.address.Address;
 import br.com.vanroute.backend.models.contract.UserDriverContract;
 import br.com.vanroute.backend.models.contract.enums.ContractStatus;
@@ -34,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-// "adicionar aluno na rota" num passo so (StudentStopService.addStudentToRoute)
+// "adicionar aluno na rota" num passo so (StudentStopService.addStudentToRoute): ponto que ja existe ou novo
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AddStudentToRouteTest {
@@ -99,8 +100,8 @@ class AddStudentToRouteTest {
         when(userDriverContractRepository.findFirstByDriverUserIdAndStudentIdAndContractStatus(driver.getUserId(), ana.getId(), ContractStatus.ACTIVE))
                 .thenReturn(Optional.of(contract));
         when(studentAddressRepository.findByIdAndStudentId(home.getId(), ana.getId())).thenReturn(Optional.of(home));
-        when(routeService.stopAt(eq(route), eq(home.getAddress()), isNull(), any())).thenReturn(homeStop);
-        when(routeService.stopAt(eq(route), eq(school.getAddress()), eq(school), any())).thenReturn(schoolStop);
+        when(routeService.newStop(eq(route), eq(home.getAddress()), isNull(), any())).thenReturn(homeStop);
+        when(routeService.newStop(eq(route), eq(school.getAddress()), eq(school), any())).thenReturn(schoolStop);
 
         // o resto das regras do createStudentStop (o ponto existe, e endereco do aluno, a escola esta na rota)
         when(routeStopRepository.findById(homeStop.getId())).thenReturn(Optional.of(homeStop));
@@ -117,35 +118,102 @@ class AddStudentToRouteTest {
         SchoolStop link = new SchoolStop();
         link.setSchool(school);
         link.setStop(schoolStop);
-        // sem a escola: a 1a consulta vem vazia e, depois que o stopAt cria o ponto da escola, ela aparece
-        when(schoolStopRepository.findFirstByStopRouteIdAndSchoolId(route.getId(), school.getId()))
-                .thenReturn(present ? Optional.of(link) : Optional.empty(), Optional.of(link));
+        when(schoolStopRepository.findFirstByStopRouteIdAndSchoolIdOrderByStopOrderIndexAsc(route.getId(), school.getId()))
+                .thenReturn(present ? Optional.of(link) : Optional.empty());
     }
 
-    private AddStudentToRouteRequest at(StudentStopAction action, StudentStopLocationType type, UUID studentAddressId) {
-        return new AddStudentToRouteRequest(action, type, studentAddressId, null, null);
+    private AddStudentToRouteRequest newStop(StudentStopAction action, StudentStopLocationType type, UUID studentAddressId) {
+        return new AddStudentToRouteRequest(action, type, studentAddressId, null, true, null, null);
+    }
+
+    private AddStudentToRouteRequest existing(StudentStopAction action, StudentStopLocationType type, UUID routeStopId) {
+        return new AddStudentToRouteRequest(action, type, null, routeStopId, null, null, null);
+    }
+
+    private void add(AddStudentToRouteRequest request) {
+        service.addStudentToRoute(route.getId(), ana.getId(), request, authentication);
     }
 
     @Test
-    void homeCreatesOnlyTheHomeStopNotTheSchool() {
+    void theDriverMustSayExistingStopOrNewStop() {
+        assertThrows(BadRequestException.class, () -> add(new AddStudentToRouteRequest(
+                StudentStopAction.BOARDING, StudentStopLocationType.HOME, home.getId(), null, null, null, null)));
+        assertThrows(BadRequestException.class, () -> add(new AddStudentToRouteRequest(
+                StudentStopAction.BOARDING, StudentStopLocationType.HOME, home.getId(), homeStop.getId(), true, null, null)));
+        verify(studentStopRepository, never()).save(any());
+    }
+
+    @Test
+    void newHomeStopCreatesOnlyTheHomeNotTheSchool() {
         schoolAlreadyInRoute(false);
 
-        service.addStudentToRoute(route.getId(), ana.getId(), at(StudentStopAction.BOARDING, StudentStopLocationType.HOME, home.getId()), authentication);
+        add(newStop(StudentStopAction.BOARDING, StudentStopLocationType.HOME, home.getId()));
 
-        verify(routeService).stopAt(route, home.getAddress(), null, null);
-        verify(routeService, never()).stopAt(eq(route), eq(school.getAddress()), any(), any());
+        verify(routeService).newStop(route, home.getAddress(), null, null);
+        verify(routeService, never()).newStop(eq(route), eq(school.getAddress()), any(), any());
         verify(studentStopRepository).save(argThat(ss -> ss.getStop() == homeStop && ss.getAction() == StudentStopAction.BOARDING));
     }
 
     @Test
-    void schoolIsCreatedWhenTheStudentGoesThereAndItIsNotInTheRoute() {
-        schoolAlreadyInRoute(false);
+    void newSchoolStopIsCreatedEvenIfTheSchoolIsAlreadyInTheRoute() {
+        // ex.: deixa um aluno na escola e volta la depois pra deixar outro
+        schoolAlreadyInRoute(true);
 
-        service.addStudentToRoute(route.getId(), ana.getId(), at(StudentStopAction.ALIGHTING, StudentStopLocationType.SCHOOL, null), authentication);
+        add(newStop(StudentStopAction.ALIGHTING, StudentStopLocationType.SCHOOL, null));
 
-        // desembarque novo vai pro fim
-        verify(routeService).stopAt(route, school.getAddress(), school, null);
+        verify(routeService).newStop(route, school.getAddress(), school, null);
         verify(studentStopRepository).save(argThat(ss -> ss.getStop() == schoolStop && ss.getLocationType() == StudentStopLocationType.SCHOOL));
+    }
+
+    @Test
+    void existingStopIsUsedAsItIs() {
+        add(existing(StudentStopAction.BOARDING, StudentStopLocationType.HOME, homeStop.getId()));
+
+        verify(routeService, never()).newStop(any(), any(), any(), any());
+        verify(studentStopRepository).save(argThat(ss -> ss.getStop() == homeStop));
+    }
+
+    @Test
+    void existingSchoolStopGetsTheSchoolLinked() {
+        add(existing(StudentStopAction.ALIGHTING, StudentStopLocationType.SCHOOL, schoolStop.getId()));
+
+        verify(routeService).linkSchool(schoolStop, school);
+        verify(studentStopRepository).save(argThat(ss -> ss.getStop() == schoolStop));
+    }
+
+    @Test
+    void existingStopMustBeOfThisRouteAndInTheRightPlace() {
+        // nao existe
+        assertThrows(EntityNotFoundException.class,
+                () -> add(existing(StudentStopAction.BOARDING, StudentStopLocationType.HOME, UUID.randomUUID())));
+        // de outra rota
+        Route other = new Route();
+        other.setId(UUID.randomUUID());
+        RouteStop otherRouteStop = stop(other, home.getAddress(), 1);
+        when(routeStopRepository.findById(otherRouteStop.getId())).thenReturn(Optional.of(otherRouteStop));
+        assertThrows(EntityNotFoundException.class,
+                () -> add(existing(StudentStopAction.BOARDING, StudentStopLocationType.HOME, otherRouteStop.getId())));
+        // SCHOOL num ponto que nao e o endereco da escola
+        assertThrows(BadRequestException.class,
+                () -> add(existing(StudentStopAction.ALIGHTING, StudentStopLocationType.SCHOOL, homeStop.getId())));
+        // posicao so pra ponto novo
+        assertThrows(BadRequestException.class, () -> add(new AddStudentToRouteRequest(
+                StudentStopAction.BOARDING, StudentStopLocationType.HOME, null, homeStop.getId(), null, null, 1)));
+        verify(studentStopRepository, never()).save(any());
+    }
+
+    @Test
+    void newBoardingGoesBeforeTheAlightingTheStudentAlreadyHasAndBeforeTheSchool() {
+        schoolAlreadyInRoute(true);
+        StudentStop alighting = new StudentStop();
+        alighting.setStop(stop(route, address(), 3));
+        when(studentStopRepository.findByStudentIdAndStopRouteIdAndAction(ana.getId(), route.getId(), StudentStopAction.ALIGHTING))
+                .thenReturn(List.of(alighting));
+
+        add(newStop(StudentStopAction.BOARDING, StudentStopLocationType.HOME, home.getId()));
+
+        // desce no 3 e a escola esta no 2: entra no 2 (o menor dos dois)
+        verify(routeService).newStop(route, home.getAddress(), null, 2);
     }
 
     @Test
@@ -157,66 +225,29 @@ class AddStudentToRouteTest {
         when(studentStopRepository.findByStudentIdAndStopRouteIdAndAction(ana.getId(), route.getId(), StudentStopAction.ALIGHTING))
                 .thenReturn(List.of(alighting));
 
-        service.addStudentToRoute(route.getId(), ana.getId(), at(StudentStopAction.BOARDING, StudentStopLocationType.SCHOOL, null), authentication);
+        add(newStop(StudentStopAction.BOARDING, StudentStopLocationType.SCHOOL, null));
 
-        verify(routeService).stopAt(route, school.getAddress(), school, 1);
-    }
-
-    @Test
-    void newBoardingGoesBeforeTheAlightingTheStudentAlreadyHas() {
-        schoolAlreadyInRoute(true);
-        StudentStop alighting = new StudentStop();
-        alighting.setStop(stop(route, address(), 3));
-        when(studentStopRepository.findByStudentIdAndStopRouteIdAndAction(ana.getId(), route.getId(), StudentStopAction.ALIGHTING))
-                .thenReturn(List.of(alighting));
-
-        service.addStudentToRoute(route.getId(), ana.getId(), at(StudentStopAction.BOARDING, StudentStopLocationType.HOME, home.getId()), authentication);
-
-        // desce no 3 e a escola esta no 2: entra no 2 (o menor dos dois)
-        verify(routeService).stopAt(route, home.getAddress(), null, 2);
-        verify(routeService, never()).stopAt(eq(route), eq(school.getAddress()), any(), any());
-    }
-
-    @Test
-    void secondHomeOfAMorningRouteGoesBeforeTheSchoolThatAlreadyExists() {
-        // ida ja com casa 1 e escola 2: a casa de outro aluno entra no 2 (antes da escola), nao no fim
-        schoolAlreadyInRoute(true);
-
-        service.addStudentToRoute(route.getId(), ana.getId(), at(StudentStopAction.BOARDING, StudentStopLocationType.HOME, home.getId()), authentication);
-
-        verify(routeService).stopAt(route, home.getAddress(), null, schoolStop.getOrderIndex());
+        verify(routeService).newStop(route, school.getAddress(), school, 1);
     }
 
     @Test
     void theDriverCanChooseThePositionOfANewStop() {
         schoolAlreadyInRoute(true);
 
-        service.addStudentToRoute(route.getId(), ana.getId(),
-                new AddStudentToRouteRequest(StudentStopAction.BOARDING, StudentStopLocationType.HOME, home.getId(), null, 1), authentication);
+        add(new AddStudentToRouteRequest(StudentStopAction.BOARDING, StudentStopLocationType.HOME, home.getId(), null, true, null, 1));
 
-        verify(routeService).stopAt(route, home.getAddress(), null, 1);
-    }
-
-    @Test
-    void atSchoolUsesTheStopOfTheContractSchool() {
-        schoolAlreadyInRoute(true);
-
-        service.addStudentToRoute(route.getId(), ana.getId(), at(StudentStopAction.ALIGHTING, StudentStopLocationType.SCHOOL, null), authentication);
-
-        verify(routeService, never()).stopAt(any(), any(), any(), any());
-        verify(studentStopRepository).save(argThat(ss -> ss.getStop() == schoolStop && ss.getLocationType() == StudentStopLocationType.SCHOOL));
+        verify(routeService).newStop(route, home.getAddress(), null, 1);
     }
 
     @Test
     void wrongChoicesAreRefused() {
         schoolAlreadyInRoute(true);
-        assertThrows(BadRequestException.class, () -> service.addStudentToRoute(route.getId(), ana.getId(),
-                at(StudentStopAction.ALIGHTING, StudentStopLocationType.SCHOOL, home.getId()), authentication));
-        assertThrows(BadRequestException.class, () -> service.addStudentToRoute(route.getId(), ana.getId(),
-                at(StudentStopAction.BOARDING, StudentStopLocationType.HOME, null), authentication));
+        // escola com endereco do aluno
+        assertThrows(BadRequestException.class, () -> add(newStop(StudentStopAction.ALIGHTING, StudentStopLocationType.SCHOOL, home.getId())));
+        // ponto novo de casa sem dizer qual endereco
+        assertThrows(BadRequestException.class, () -> add(newStop(StudentStopAction.BOARDING, StudentStopLocationType.HOME, null)));
         // endereco de outro aluno
-        assertThrows(BadRequestException.class, () -> service.addStudentToRoute(route.getId(), ana.getId(),
-                at(StudentStopAction.BOARDING, StudentStopLocationType.HOME, UUID.randomUUID()), authentication));
+        assertThrows(BadRequestException.class, () -> add(newStop(StudentStopAction.BOARDING, StudentStopLocationType.HOME, UUID.randomUUID())));
         verify(studentStopRepository, never()).save(any());
     }
 }

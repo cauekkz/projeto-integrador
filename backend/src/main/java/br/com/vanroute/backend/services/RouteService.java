@@ -95,28 +95,34 @@ public class RouteService {
         );
     }
 
-    // o ponto desse endereco na rota: reaproveita se ja existe (irmaos da mesma casa caem juntos) ou cria.
-    // novo entra em `position` (os de baixo descem uma posicao) ou no fim. Com escola, garante a escola ligada ao ponto
-    RouteStop stopAt(Route route, Address address, School school, Integer position) {
-        RouteStop stop = routeStopRepository.findFirstByRouteIdAndAddressId(route.getId(), address.getId()).orElse(null);
-        if (stop == null) {
-            List<RouteStop> stops = routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId());
-            int order = position == null || position > stops.size() ? stops.size() + 1 : position;
-            stops.stream().filter(existing -> existing.getOrderIndex() >= order)
-                    .forEach(existing -> existing.setOrderIndex(existing.getOrderIndex() + 1));
-            stop = new RouteStop();
-            stop.setRoute(route);
-            stop.setAddress(address);
-            stop.setOrderIndex(order);
-            stop = routeStopRepository.save(stop);
+    // ponto novo nesse endereco (pode ja existir outro no mesmo endereco: a van volta la).
+    // entra em `position` (os de baixo descem uma posicao) ou no fim. Com escola, ja nasce ligado a ela
+    RouteStop newStop(Route route, Address address, School school, Integer position) {
+        List<RouteStop> stops = routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId());
+        int order = position == null || position > stops.size() ? stops.size() + 1 : position;
+        stops.stream().filter(existing -> existing.getOrderIndex() >= order)
+                .forEach(existing -> existing.setOrderIndex(existing.getOrderIndex() + 1));
+        RouteStop stop = new RouteStop();
+        stop.setRoute(route);
+        stop.setAddress(address);
+        stop.setOrderIndex(order);
+        stop = routeStopRepository.save(stop);
+        if (school != null) {
+            linkSchool(stop, school);
         }
-        if (school != null && schoolStopRepository.findFirstByStopRouteIdAndSchoolId(route.getId(), school.getId()).isEmpty()) {
+        return stop;
+    }
+
+    // liga a escola ao ponto, se ainda nao estiver ligada
+    void linkSchool(RouteStop stop, School school) {
+        boolean linked = schoolStopRepository.findByStopId(stop.getId()).stream()
+                .anyMatch(schoolStop -> schoolStop.getSchool().getId().equals(school.getId()));
+        if (!linked) {
             SchoolStop schoolStop = new SchoolStop();
             schoolStop.setSchool(school);
             schoolStop.setStop(stop);
             schoolStopRepository.save(schoolStop);
         }
-        return stop;
     }
 
     // a lista que o motorista ve no "pôr aluno na rota": alunos com contrato ativo com ele e os enderecos de cada um
