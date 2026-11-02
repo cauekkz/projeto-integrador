@@ -1,7 +1,12 @@
 package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.config.AuthenticatedUser;
-import br.com.vanroute.backend.dtos.geocode.Coordenadas;
+import java.util.LinkedHashMap;
+import java.util.HashMap;
+import br.com.vanroute.backend.models.school.SchoolStop;
+import br.com.vanroute.backend.models.school.School;
+import br.com.vanroute.backend.models.contract.enums.ContractStatus;
+import br.com.vanroute.backend.dtos.student.StudentPlaceResponseDTO;
 import br.com.vanroute.backend.exceptions.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -28,45 +33,47 @@ import br.com.vanroute.backend.models.student.Student;
 import br.com.vanroute.backend.models.student.StudentStop;
 import br.com.vanroute.backend.models.student.enums.StudentStopAction;
 
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class RouteService {
 
     private final RouteRepository routeRepository;
-    private final AddressRepository addressRepository;
     private final RouteStopRepository routeStopRepository;
     private final DriverRepository driverRepository;
     private final RouteDriverRepository routeDriverRepository;
-    private final AddressService addressService;
     private final StudentStopRepository studentStopRepository;
     private final SchoolStopRepository schoolStopRepository;
     private final DriverVehicleRepository driverVehicleRepository;
     private final VehicleRepository vehicleRepository;
-    private final MapService mapService;
+    private final StudentAddressRepository studentAddressRepository;
+    private final UserDriverContractRepository userDriverContractRepository;
 
 
-    public RouteService(RouteRepository routeRepository, AddressRepository addressRepository, RouteStopRepository routeStopRepository,
-    DriverRepository driverRepository, RouteDriverRepository routeDriverRepository, AddressService addressService, MapService mapService,
+    public RouteService(RouteRepository routeRepository, RouteStopRepository routeStopRepository,
+    DriverRepository driverRepository, RouteDriverRepository routeDriverRepository,
     StudentStopRepository studentStopRepository, SchoolStopRepository schoolStopRepository,
-    DriverVehicleRepository driverVehicleRepository, VehicleRepository vehicleRepository) {
+    DriverVehicleRepository driverVehicleRepository, VehicleRepository vehicleRepository,
+    StudentAddressRepository studentAddressRepository, UserDriverContractRepository userDriverContractRepository) {
         this.routeRepository = routeRepository;
-        this.addressRepository = addressRepository;
         this.routeStopRepository = routeStopRepository;
         this.driverRepository = driverRepository;
         this.routeDriverRepository = routeDriverRepository;
-        this.addressService = addressService;
         this.studentStopRepository = studentStopRepository;
         this.schoolStopRepository = schoolStopRepository;
         this.driverVehicleRepository = driverVehicleRepository;
         this.vehicleRepository = vehicleRepository;
-        this.mapService = mapService;
+        this.studentAddressRepository = studentAddressRepository;
+        this.userDriverContractRepository = userDriverContractRepository;
     }
 
+    @Transactional
     public RouteResponse createRoute(CreateRouteRequestDTO createRouteRequestDTO, Authentication authentication) {
 
         Route route = new Route();
@@ -88,30 +95,62 @@ public class RouteService {
         );
     }
 
-    @Transactional
-    public List<RouteStopResponse> addRouteStop(UUID routeId, List<AddRouteStopRequest> addRouteStopRequest, Authentication authentication) {
-        Route route = routeRepository.findById(routeId)
-                .orElseThrow(() -> new EntityNotFoundException("Route doesn't exists"));
-        checkOwnership(route, authentication);
-        List<RouteStopResponse> response = new ArrayList<>();
-        for (AddRouteStopRequest request : addRouteStopRequest) {
-            Address address = addressService.addAddress(request.address());
-            Coordenadas cords = mapService.searchCoord(address);
-            address.setLatitude(cords.latitude());
-            address.setLongitude(cords.longitude());
-
-            RouteStop routeStop = new RouteStop();
-            routeStop.setRoute(route);
-            routeStop.setAddress(address);
-            // entra sempre no fim; pra mudar a posicao o motorista faz a troca
-            routeStop.setOrderIndex(routeStopRepository.findByRouteIdOrderByOrderIndexAsc(routeId).size() + 1);
-            response.add(toResponse(routeStopRepository.save(routeStop)));
+    // ponto novo nesse endereco (pode ja existir outro no mesmo endereco: a van volta la).
+    // entra em `position` (os de baixo descem uma posicao) ou no fim. Com escola, ja nasce ligado a ela
+    RouteStop newStop(Route route, Address address, School school, Integer position) {
+        List<RouteStop> stops = routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId());
+        int order = position == null || position > stops.size() ? stops.size() + 1 : position;
+        stops.stream().filter(existing -> existing.getOrderIndex() >= order)
+                .forEach(existing -> existing.setOrderIndex(existing.getOrderIndex() + 1));
+        RouteStop stop = new RouteStop();
+        stop.setRoute(route);
+        stop.setAddress(address);
+        stop.setOrderIndex(order);
+        stop = routeStopRepository.save(stop);
+        if (school != null) {
+            linkSchool(stop, school);
         }
-        return response;
+        return stop;
+    }
+
+    // liga a escola ao ponto, se ainda nao estiver ligada
+    void linkSchool(RouteStop stop, School school) {
+        boolean linked = schoolStopRepository.findByStopId(stop.getId()).stream()
+                .anyMatch(schoolStop -> schoolStop.getSchool().getId().equals(school.getId()));
+        if (!linked) {
+            SchoolStop schoolStop = new SchoolStop();
+            schoolStop.setSchool(school);
+            schoolStop.setStop(stop);
+            schoolStopRepository.save(schoolStop);
+        }
+    }
+
+    // a lista que o motorista ve no "pôr aluno na rota": alunos com contrato ativo com ele e os enderecos de cada um
+    public RouteStopOptionsDTO stopOptions(Authentication authentication) {
+        Driver driver = driverRepository.findById(AuthenticatedUser.id(authentication))
+                .orElseThrow(() -> new AccessDeniedException("Driver not found"));
+        Map<UUID, String> students = new LinkedHashMap<>();
+        userDriverContractRepository.findAllOfUserByStatus(driver.getUserId(), ContractStatus.ACTIVE).stream()
+                .filter(contract -> contract.getDriver().getUserId().equals(driver.getUserId()))
+                .forEach(contract -> students.putIfAbsent(contract.getStudent().getId(), contract.getStudent().getName()));
+        Map<UUID, List<StudentPlaceResponseDTO>> addresses = new HashMap<>();
+        if (!students.isEmpty()) {
+            studentAddressRepository.findOfStudents(students.keySet()).forEach(sa -> addresses
+                    .computeIfAbsent(sa.getStudent().getId(), k -> new ArrayList<>()).add(StudentAddressService.toResponse(sa)));
+        }
+        List<RouteStopOptionsDTO.StudentOption> studentOptions = students.entrySet().stream()
+                .map(e -> new RouteStopOptionsDTO.StudentOption(e.getKey(), e.getValue(), addresses.getOrDefault(e.getKey(), List.of())))
+                .toList();
+        return new RouteStopOptionsDTO(studentOptions);
+    }
+
+    private static AddressResponseDTO toAddressResponse(Address a) {
+        return a == null ? null : new AddressResponseDTO(a.getId(), a.getStreet(), a.getZipCode(), a.getCity(), a.getNeighborhood(),
+                a.getNumber(), a.getState(), a.getLatitude(), a.getLongitude());
     }
 
     @Transactional
-    public RouteStopResponse updateRouteStopOrder(UUID routeStopId, UpdateRouteStopOrderRequest request, Authentication authentication) {
+    public RouteEditResponse updateRouteStopOrder(UUID routeStopId, UpdateRouteStopOrderRequest request, Authentication authentication) {
         RouteStop routeStop = routeStopRepository.findById(routeStopId)
                 .orElseThrow(() -> new EntityNotFoundException("Route stop not found"));
         checkOwnership(routeStop.getRoute(), authentication);
@@ -121,12 +160,35 @@ public class RouteService {
                 .orElseThrow(() -> new BadRequestException("Não existe ponto nessa posição"));
         other.setOrderIndex(routeStop.getOrderIndex());
         routeStop.setOrderIndex(request.orderIndex());
-        return toResponse(routeStop);
+        // a troca nao pode deixar o desembarque de algum aluno antes do embarque
+        UUID routeId = routeStop.getRoute().getId();
+        Stream.concat(studentStopRepository.findByStopId(routeStop.getId()).stream(),
+                        studentStopRepository.findByStopId(other.getId()).stream())
+                .map(studentStop -> studentStop.getStudent().getId())
+                .distinct()
+                .forEach(studentId -> checkBoardingBeforeAlighting(
+                        studentStopRepository.findByStudentIdAndStopRouteId(studentId, routeId)));
+        return routeState(routeId);
+    }
+
+    // em cada dia o embarque do aluno tem que vir antes do desembarque na ordem dos pontos da rota
+    public void checkBoardingBeforeAlighting(List<StudentStop> stopsOfStudent) {
+        for (StudentStop boarding : stopsOfStudent) {
+            if (boarding.getAction() != StudentStopAction.BOARDING) continue;
+            for (StudentStop alighting : stopsOfStudent) {
+                if (alighting.getAction() == StudentStopAction.ALIGHTING
+                        && !Collections.disjoint(boarding.getWeekdays(), alighting.getWeekdays())
+                        && boarding.getStop().getOrderIndex() >= alighting.getStop().getOrderIndex()) {
+                    throw new BadRequestException("O embarque de " + boarding.getStudent().getName()
+                            + " precisa vir antes do desembarque na ordem da rota");
+                }
+            }
+        }
     }
 
     // so exclui ponto vazio; os pontos de baixo sobem uma posicao pra nao deixar buraco na ordem
     @Transactional
-    public void deleteRouteStop(UUID routeStopId, Authentication authentication) {
+    public RouteEditResponse deleteRouteStop(UUID routeStopId, Authentication authentication) {
         RouteStop routeStop = routeStopRepository.findById(routeStopId)
                 .orElseThrow(() -> new EntityNotFoundException("Route stop not found"));
         checkOwnership(routeStop.getRoute(), authentication);
@@ -139,6 +201,15 @@ public class RouteService {
                 stop.setOrderIndex(stop.getOrderIndex() - 1);
             }
         }
+        return routeState(routeStop.getRoute().getId());
+    }
+
+    // a rota depois de uma alteracao (quem chama ja conferiu o dono): pontos em ordem + pendencias
+    public RouteEditResponse routeState(UUID routeId) {
+        List<RouteStopResponse> stops = routeStopRepository.findByRouteIdOrderByOrderIndexAsc(routeId).stream()
+                .map(this::toResponse)
+                .toList();
+        return new RouteEditResponse(stops, pendingOf(routeId));
     }
 
     private RouteStopResponse toResponse(RouteStop routeStop) {

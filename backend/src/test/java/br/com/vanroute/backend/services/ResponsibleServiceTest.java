@@ -4,13 +4,10 @@ import br.com.vanroute.backend.dtos.user.ResponsibleRequestDTO;
 import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.models.user.Responsible;
-import br.com.vanroute.backend.models.user.RolesEntity;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.repositories.ResponsibleRepository;
-import br.com.vanroute.backend.repositories.ResponsibleAddressRepository;
-import br.com.vanroute.backend.dtos.geocode.Coordenadas;
 import br.com.vanroute.backend.dtos.student.AddressRequestDTO;
 import br.com.vanroute.backend.models.address.Address;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Set;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,9 +43,6 @@ class ResponsibleServiceTest {
     private MapService mapService;
 
     @Mock
-    private ResponsibleAddressRepository responsibleAddressRepository;
-
-    @Mock
     private EmailVerificationService emailVerificationService;
 
     private ResponsibleRequestDTO requestDTO;
@@ -67,20 +61,20 @@ class ResponsibleServiceTest {
 
     @Test
     void shouldCreateResponsibleSuccessfully() {
-        RolesEntity role = RolesEntity.builder().nome(RoleTypeEnum.ROLE_RESPONSIBLE.name()).build();
-
         User createdUser = new User();
         createdUser.setName(requestDTO.getName());
         createdUser.setEmail(requestDTO.getEmail());
         createdUser.setCpf(requestDTO.getCpf());
         createdUser.setPhone(requestDTO.getPhone());
-        createdUser.setRoles(Set.of(role));
+        createdUser.setRole(RoleTypeEnum.ROLE_RESPONSIBLE);
 
         when(userService.createUser(any(UserCreateDTO.class))).thenReturn(createdUser);
         Address address = new Address();
         address.setStreet("Avenida Paulista");
-        when(addressService.addAddress(any())).thenReturn(address);
-        when(mapService.searchCoord(any(Address.class))).thenReturn(new Coordenadas(-23.56, -46.65));
+        // o AddressService devolve o endereco ja com a coordenada (novo ou reaproveitado)
+        address.setLatitude(-23.56);
+        address.setLongitude(-46.65);
+        when(addressService.findOrCreate(any())).thenReturn(address);
 
         Responsible savedResponsible = new Responsible();
         savedResponsible.setUser(createdUser);
@@ -95,7 +89,7 @@ class ResponsibleServiceTest {
         assertEquals(requestDTO.getCpf(), response.cpf());
         assertEquals(requestDTO.getPhone(), response.phone());
         assertEquals(FinancialStatus.PENDING, response.financialStatus());
-        assertEquals(Set.of(role), response.roleTypeEnum());
+        assertEquals(List.of("ROLE_RESPONSIBLE"), response.roles());
 
         ArgumentCaptor<UserCreateDTO> userDtoCaptor = ArgumentCaptor.forClass(UserCreateDTO.class);
         verify(userService, times(1)).createUser(userDtoCaptor.capture());

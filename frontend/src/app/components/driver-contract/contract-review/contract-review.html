@@ -1,0 +1,88 @@
+@let titulo = secao() === 'aluno' ? 'Visualizar dados do aluno' : 'Visualizar contrato';
+@let idConteudo = 'revisao-' + secao();
+
+@if (!aberto()) {
+  <button
+    type="button"
+    class="expansivel"
+    [attr.aria-expanded]="false"
+    [attr.aria-controls]="idConteudo"
+    (click)="alternar()"
+  >
+    <span>{{ titulo }}</span>
+    <i class="bi bi-chevron-down" aria-hidden="true"></i>
+  </button>
+} @else {
+  <div class="revisao" [id]="idConteudo">
+    @if (secao() === 'aluno') {
+      @let responsavel = draft.responsavel();
+      <button
+        type="button"
+        class="cabecalho-responsavel"
+        [attr.aria-expanded]="true"
+        [attr.aria-controls]="idConteudo"
+        [attr.aria-label]="'Ocultar dados do aluno'"
+        (click)="alternar()"
+      >
+        @if (responsavel?.fotoUrl) {
+          <img class="avatar grande" [src]="responsavel?.fotoUrl" alt="">
+        } @else {
+          <span class="avatar grande avatar-iniciais" aria-hidden="true">{{ iniciais(responsavel?.nome) }}</span>
+        }
+        <span class="responsavel-info">
+          <span class="rotulo">Responsável</span>
+          <strong>{{ responsavel?.nome }}</strong>
+        </span>
+        <i class="bi bi-chevron-up" aria-hidden="true"></i>
+      </button>
+
+      <hr class="divisor">
+
+      <div class="campo">
+        <span class="rotulo">Dependente</span>
+        <div class="caixa">
+          <span class="avatar avatar-iniciais" aria-hidden="true">{{ iniciais(draft.aluno()?.name) }}</span>
+          <span class="texto-caixa">{{ draft.aluno()?.name }}</span>
+        </div>
+      </div>
+
+      <div class="campo">
+        <span class="rotulo">Escola</span>
+        <div class="caixa">
+          <span class="texto-caixa">{{ draft.escola()?.name }}</span>
+        </div>
+      </div>
+    } @else {
+      <button
+        type="button"
+        class="expansivel"
+        [attr.aria-expanded]="true"
+        [attr.aria-controls]="idConteudo"
+        (click)="alternar()"
+      >
+        <span>{{ titulo }}</span>
+        <i class="bi bi-chevron-up" aria-hidden="true"></i>
+      </button>
+
+      <div class="campo">
+        <span class="rotulo">Periodicidade</span>
+        <div class="caixa"><span class="texto-caixa">{{ draft.periodicidadeLabel() }}</span></div>
+      </div>
+
+      <div class="campo">
+        <span class="rotulo">Valor</span>
+        <div class="caixa"><span class="texto-caixa">{{ draft.valorFormatado() }}</span></div>
+      </div>
+
+      <div class="campo">
+        <span class="rotulo">Data de início</span>
+        <div class="caixa"><span class="texto-caixa">{{ draft.dataInicio() }}</span></div>
+      </div>
+
+      <div class="campo">
+        <span class="rotulo">Data de término</span>
+        <div class="caixa"><span class="texto-caixa">{{ draft.dataFim() }}</span></div>
+      </div>
+    }
+  </div>
+}

@@ -1,63 +1,81 @@
 <div class="screen">
-
   <div class="topbar">
-    <div class="notif-wrapper">
+    <div class="notif-wrapper sino-clicavel" role="button" tabindex="0" aria-label="Abrir notificações" (click)="notificacoes.abrirTela()" (keydown.enter)="notificacoes.abrirTela()">
       <div class="bell-btn">
         <i class="bi bi-bell"></i>
       </div>
-<!--      <span class="badge">99</span>-->
+      @if (notificacoes.naoLidas()) {
+        <span class="badge" [attr.aria-label]="notificacoes.naoLidas() + ' notificações não lidas'">{{ notificacoes.rotulo() }}</span>
+      }
     </div>
 
-    <div class="user-info">
-      <img src="/testee.jpg" class="avatar" alt="">
-      <span class="name">Gustavo Gomez</span>
+    <div class="user-info" (click)="irParaPerfil()">
+      <img [src]="usuarioLogado?.photoUrl || '/testee.jpg'" class="avatar" alt="Foto do motorista">
+      <span class="name">{{ usuarioLogado?.name || 'Gustavo Gomez' }}</span>
     </div>
 
     <span class="role">Motorista</span>
   </div>
 
+  <!-- component -->
   <div class="content">
-    @if (temRota) {
-      <div class="rota-card" (click)="irParaRota()">
-        <div class="rota-status">
+    <div class="rota-link" (click)="irParaRota()">
+      <div class="driver-card-wrapper">
+        <div class="status-top">
           <span class="dot"></span>
           <span class="status-text">Em rota</span>
         </div>
-        <p class="rota-label">teste</p>
-        <p class="rota-titulo">teste</p>
-        <div class="rota-info">
-          <div class="info-item">
-            <i class="bi bi-people"></i>
-            <span>x</span>
+
+        <div class="rota-card">
+          <div class="mapa-preview">
+            <img
+              src="/mapa-placeholder.png"
+              alt="Mapa da rota"
+              class="mapa-img"
+            />
           </div>
-          <div class="info-item">
-            <i class="bi bi-geo-alt"></i>
-            <span>x</span>
+
+          <div class="rota-footer">
+            <p class="rota-titulo">Indo para casa de Andreas Pereira</p>
+            <p class="rota-subtitulo">Você tem 3 passageiros</p>
           </div>
-          <div class="info-item">
-            <i class="bi bi-clock"></i>
-            <span>x</span>
+
+          <div class="metrics-card">
+            <div class="metrics-grid">
+              <div class="metric-box">
+                <i class="bi bi-people-fill"></i>
+                <span>3</span>
+              </div>
+
+              <div class="metric-box">
+                <i class="bi bi-geo-alt-fill"></i>
+                <span>6 km</span>
+              </div>
+
+              <div class="metric-box">
+                <i class="bi bi-clock-fill"></i>
+                <span>22 min</span>
+              </div>
+            </div>
+
+            <div class="chat-btn" (click)="irParaChat(); $event.stopPropagation()">
+              <i class="bi bi-chat-dots-fill"></i>
+              <!--  <span class="chat-badge"></span>... -->
+            </div>
           </div>
         </div>
       </div>
-    }
+    </div>
   </div>
 
-  <div class="bottombar">
-
-    <button class="tab active">
-      <i class="down bi bi-house-door-fill"></i>
-    </button>
-
-    <button class="tab">
-      <i class="down bi bi-house-door-fill"></i>
-    </button>
-
-    <button class="tab">
-      <i class="down bi bi-gear-wide-connected"></i>
-    </button>
-
-  </div>
-
-
+  <app-footer tipoUsuario="motorista" abaAtiva="home"></app-footer>
 </div>
+
+@if (mostrarPerfil) {
+  <app-profile-select
+    animate.leave="sair-perfil"
+    tipoUsuario="motorista"
+    [usuario]="usuarioLogado"
+    (fecharEvent)="fecharPerfil()"
+  />
+}

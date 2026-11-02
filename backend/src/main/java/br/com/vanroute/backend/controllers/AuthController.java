@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.dtos.user.ForgotPasswordRequest;
 import br.com.vanroute.backend.dtos.user.LoginRequestDTO;
 import br.com.vanroute.backend.dtos.user.token.RefreshTokenRequestDTO;
 import br.com.vanroute.backend.dtos.verifyEmail.VerifyEmailRequestDTO;
@@ -54,7 +55,7 @@ public class AuthController {
     }
 
     @PostMapping("/verify-email")
-    public ResponseEntity<?> verifyEmail(@RequestBody VerifyEmailRequestDTO verifyEmailRequestDTO) {
+    public ResponseEntity<?> verifyEmail(@RequestBody @Valid VerifyEmailRequestDTO verifyEmailRequestDTO) {
         String email = verifyEmailRequestDTO.email();
         String code = verifyEmailRequestDTO.code();
         try {
@@ -81,5 +82,17 @@ public class AuthController {
         }
     }
 
+    // esqueci a senha (tela de login, sem token): 1) manda o codigo pro e-mail  2) troca a senha com o codigo
+    @PostMapping("/forgot-password/send-code")
+    public ResponseEntity<String> sendForgotPasswordCode(@RequestParam String email) {
+        userService.sendForgotPasswordCode(email);
+        return ResponseEntity.ok("Se o e-mail estiver cadastrado, enviamos um código.");
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> resetPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+        userService.resetPassword(request);
+        return ResponseEntity.ok("Senha alterada com sucesso!");
+    }
 
 }

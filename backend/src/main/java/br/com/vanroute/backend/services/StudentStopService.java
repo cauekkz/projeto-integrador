@@ -1,11 +1,19 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.repositories.RouteRepository;
+import br.com.vanroute.backend.models.student.StudentAddress;
+import br.com.vanroute.backend.models.school.School;
+import br.com.vanroute.backend.models.route.Route;
+import br.com.vanroute.backend.dtos.route.stops.AddStudentToRouteRequest;
+import br.com.vanroute.backend.dtos.route.RouteEditResponse;
+import br.com.vanroute.backend.repositories.StudentAddressRepository;
 import br.com.vanroute.backend.dtos.route.stops.StudentStopRequestDTO;
 import br.com.vanroute.backend.dtos.route.stops.StudentStopResponseDTO;
 import br.com.vanroute.backend.exceptions.BadRequestException;
 import br.com.vanroute.backend.models.contract.UserDriverContract;
 import br.com.vanroute.backend.models.contract.enums.ContractStatus;
 import br.com.vanroute.backend.models.route.RouteStop;
+import br.com.vanroute.backend.models.school.SchoolStop;
 import br.com.vanroute.backend.models.shared.enums.WeekDay;
 import br.com.vanroute.backend.models.student.enums.StudentStopAction;
 import br.com.vanroute.backend.models.student.enums.StudentStopLocationType;
@@ -23,8 +31,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,19 +46,98 @@ public class StudentStopService {
     private final SchoolStopRepository schoolStopRepository;
     private final UserDriverContractRepository userDriverContractRepository;
     private final RouteService routeService;
+    private final StudentAddressRepository studentAddressRepository;
+    private final RouteRepository routeRepository;
 
     public StudentStopService(RouteStopRepository routeStopRepository, StudentStopRepository studentStopRepository,
                               SchoolStopRepository schoolStopRepository, UserDriverContractRepository userDriverContractRepository,
-                              RouteService routeService) {
+                              RouteService routeService, StudentAddressRepository studentAddressRepository,
+                              RouteRepository routeRepository) {
         this.routeStopRepository = routeStopRepository;
         this.studentStopRepository = studentStopRepository;
         this.schoolStopRepository = schoolStopRepository;
         this.userDriverContractRepository = userDriverContractRepository;
         this.routeService = routeService;
+        this.studentAddressRepository = studentAddressRepository;
+        this.routeRepository = routeRepository;
     }
 
-    // liga o aluno a um ponto da rota. so o dono da rota, com contrato ativo com o aluno,
-    // e a rota tem que passar pela escola do contrato. por dia o aluno tem no maximo um embarque e um desembarque na rota
+    // "adicionar aluno na rota" num passo so: o motorista diz o ponto (um que ja existe ou um novo), onde
+    // (um endereco do aluno ou a escola do contrato), se ele embarca ou desce e os dias. Se algo falhar, nada fica gravado
+    @Transactional
+    public RouteEditResponse addStudentToRoute(UUID routeId, UUID studentId, AddStudentToRouteRequest request,
+                                               Authentication authentication) {
+        Route route = routeRepository.findById(routeId)
+                .orElseThrow(() -> new EntityNotFoundException("Route not found"));
+        Driver driver = routeService.checkOwnership(route, authentication);
+        UserDriverContract contract = userDriverContractRepository
+                .findFirstByDriverUserIdAndStudentIdAndContractStatus(driver.getUserId(), studentId, ContractStatus.ACTIVE)
+                .orElseThrow(() -> new AccessDeniedException("Não existe contrato ativo com esse aluno"));
+        School school = contract.getSchool();
+        boolean atSchool = request.locationType() == StudentStopLocationType.SCHOOL;
+        boolean newStop = Boolean.TRUE.equals(request.newStop());
+        if (newStop == (request.routeStopId() != null)) {
+            throw new BadRequestException("Escolha um ponto que já existe (routeStopId) ou crie um novo (newStop: true)");
+        }
+        if (atSchool && request.studentAddressId() != null) {
+            throw new BadRequestException("Na escola não mande studentAddressId: o ponto é o da escola do contrato");
+        }
+        StudentAddress place = request.studentAddressId() == null ? null
+                : studentAddressRepository.findByIdAndStudentId(request.studentAddressId(), studentId)
+                        .orElseThrow(() -> new BadRequestException("Esse endereço não é desse aluno"));
+
+        RouteStop stop;
+        if (newStop) {
+            if (!atSchool && place == null) {
+                throw new BadRequestException("Escolha um endereço do aluno (studentAddressId)");
+            }
+            stop = atSchool
+                    ? routeService.newStop(route, school.getAddress(), school, position(request, studentId, routeId, school))
+                    : routeService.newStop(route, place.getAddress(), null, position(request, studentId, routeId, school));
+        } else {
+            if (request.orderIndex() != null) {
+                throw new BadRequestException("orderIndex só vale pra ponto novo: pra mudar a posição use o swap-order");
+            }
+            stop = routeStopRepository.findById(request.routeStopId())
+                    .filter(existing -> existing.getRoute().getId().equals(routeId))
+                    .orElseThrow(() -> new EntityNotFoundException("Esse ponto não existe nessa rota"));
+            if (atSchool) {
+                // o ponto tem que ser no endereco da escola do contrato; ela fica ligada a ele (pode estar em outros pontos)
+                if (school.getAddress() == null || !school.getAddress().getId().equals(stop.getAddress().getId())) {
+                    throw new BadRequestException("Esse ponto não é no endereço da escola do contrato");
+                }
+                routeService.linkSchool(stop, school);
+            } else if (place != null && !place.getAddress().getId().equals(stop.getAddress().getId())) {
+                throw new BadRequestException("Esse ponto não é nesse endereço do aluno");
+            }
+        }
+        createStudentStop(new StudentStopRequestDTO(null, null, request.locationType(), request.action(), request.weekdays()),
+                studentId, stop.getId(), authentication);
+        return routeService.routeState(routeId);
+    }
+
+    // posicao do ponto novo: a escolhida pelo motorista ou a automatica. Automatica: o embarque entra antes de onde o aluno
+    // desce (antes dos desembarques que ele ja tem e, se nao e na escola, antes do primeiro ponto da escola do contrato);
+    // o desembarque entra no fim. A regra da ordem confere depois do mesmo jeito
+    private Integer position(AddStudentToRouteRequest request, UUID studentId, UUID routeId, School school) {
+        if (request.orderIndex() != null) {
+            return request.orderIndex();
+        }
+        if (request.action() != StudentStopAction.BOARDING) {
+            return null;
+        }
+        List<Integer> mustComeBefore = new ArrayList<>();
+        studentStopRepository.findByStudentIdAndStopRouteIdAndAction(studentId, routeId, StudentStopAction.ALIGHTING)
+                .forEach(alighting -> mustComeBefore.add(alighting.getStop().getOrderIndex()));
+        if (request.locationType() != StudentStopLocationType.SCHOOL) {
+            schoolStopRepository.findFirstByStopRouteIdAndSchoolIdOrderByStopOrderIndexAsc(routeId, school.getId())
+                    .ifPresent(link -> mustComeBefore.add(link.getStop().getOrderIndex()));
+        }
+        return mustComeBefore.stream().min(Integer::compare).orElse(null);
+    }
+
+    // liga o aluno a um ponto da rota. so o dono da rota, com contrato ativo com o aluno.
+    // por dia o aluno tem no maximo um embarque e um desembarque na rota (faltou um dos dois: pendencia)
     public StudentStopResponseDTO createStudentStop(StudentStopRequestDTO studentStopRequestDTO, UUID studentId, UUID routeStopId,
                                                     Authentication authentication) {
         RouteStop routeStop = routeStopRepository.findById(routeStopId)
@@ -60,10 +149,8 @@ public class StudentStopService {
                 .findFirstByDriverUserIdAndStudentIdAndContractStatus(driver.getUserId(), studentId, ContractStatus.ACTIVE)
                 .orElseThrow(() -> new AccessDeniedException("Não existe contrato ativo com esse aluno"));
 
-        if (schoolStopRepository.findFirstByStopRouteIdAndSchoolId(routeId, contract.getSchool().getId()).isEmpty()) {
-            throw new BadRequestException("A rota não passa pela escola do contrato");
-        }
         checkSchoolLocation(studentStopRequestDTO.locationType(), routeStopId, contract.getSchool().getId());
+        checkStudentAddress(studentStopRequestDTO.locationType(), studentId, routeStop);
         if (studentStopRepository.existsByStudentIdAndStopId(studentId, routeStopId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Student is already registered at this stop.");
         }
@@ -76,12 +163,13 @@ public class StudentStopService {
         studentStop.setWeekdays(weekdays);
         studentStop.setStop(routeStop);
         studentStop.setStudent(contract.getStudent());
+        checkOrder(studentStop, routeId);
         return toResponse(studentStopRepository.save(studentStop));
     }
 
     // muda o aluno de ponto dentro da mesma rota (pra trocar de rota: exclui e cria de novo)
     @Transactional
-    public StudentStopResponseDTO moveStudentStop(UUID studentStopId, UUID routeStopId, Authentication authentication) {
+    public RouteEditResponse moveStudentStop(UUID studentStopId, UUID routeStopId, Authentication authentication) {
         StudentStop studentStop = studentStopRepository.findById(studentStopId)
                 .orElseThrow(() -> new EntityNotFoundException("Student stop not found"));
         Driver driver = routeService.checkOwnership(studentStop.getStop().getRoute(), authentication);
@@ -95,23 +183,38 @@ public class StudentStopService {
                     .findFirstByDriverUserIdAndStudentIdAndContractStatus(driver.getUserId(), studentStop.getStudent().getId(), ContractStatus.ACTIVE)
                     .orElseThrow(() -> new AccessDeniedException("Não existe contrato ativo com esse aluno"));
             checkSchoolLocation(StudentStopLocationType.SCHOOL, routeStopId, contract.getSchool().getId());
+        } else if (studentStop.getLocationType() != null) {
+            checkSchoolLocation(studentStop.getLocationType(), routeStopId, null);
+            checkStudentAddress(studentStop.getLocationType(), studentStop.getStudent().getId(), target);
         }
         if (studentStopRepository.existsByStudentIdAndStopId(studentStop.getStudent().getId(), routeStopId)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Student is already registered at this stop.");
         }
         studentStop.setStop(target);
-        return toResponse(studentStop);
+        checkOrder(studentStop, target.getRoute().getId());
+        return routeService.routeState(target.getRoute().getId());
     }
 
     // troca os dias desse student stop; os outros do aluno na rota nao mudam
     @Transactional
-    public StudentStopResponseDTO updateWeekdays(UUID studentStopId, Set<WeekDay> newWeekdays, Authentication authentication) {
+    public RouteEditResponse updateWeekdays(UUID studentStopId, Set<WeekDay> newWeekdays, Authentication authentication) {
         StudentStop studentStop = findOwned(studentStopId, authentication);
         Set<WeekDay> weekdays = normalize(newWeekdays);
         checkOverlap(studentStop.getStudent().getId(), studentStop.getStop().getRoute().getId(),
                 studentStop.getAction(), weekdays, studentStopId);
         studentStop.setWeekdays(weekdays);
-        return toResponse(studentStop);
+        checkOrder(studentStop, studentStop.getStop().getRoute().getId());
+        return routeService.routeState(studentStop.getStop().getRoute().getId());
+    }
+
+    // os pontos do aluno na rota ja com a mudanca aplicada; embarque tem que vir antes do desembarque
+    private void checkOrder(StudentStop changed, UUID routeId) {
+        List<StudentStop> stops = new ArrayList<>(studentStopRepository
+                .findByStudentIdAndStopRouteId(changed.getStudent().getId(), routeId).stream()
+                .filter(existing -> changed.getId() == null || !changed.getId().equals(existing.getId()))
+                .toList());
+        stops.add(changed);
+        routeService.checkBoardingBeforeAlighting(stops);
     }
 
     // sem dias = todos os dias
@@ -129,8 +232,11 @@ public class StudentStopService {
         }
     }
 
-    public void deleteStudentStop(UUID studentStopId, Authentication authentication) {
-        studentStopRepository.delete(findOwned(studentStopId, authentication));
+    @Transactional
+    public RouteEditResponse deleteStudentStop(UUID studentStopId, Authentication authentication) {
+        StudentStop studentStop = findOwned(studentStopId, authentication);
+        studentStopRepository.delete(studentStop);
+        return routeService.routeState(studentStop.getStop().getRoute().getId());
     }
 
     public static StudentStopResponseDTO toResponse(StudentStop studentStop) {
@@ -145,12 +251,25 @@ public class StudentStopService {
         );
     }
 
-    // embarque/desembarque marcado como SCHOOL tem que ser no ponto da escola do contrato
+    // SCHOOL tem que ser no ponto da escola do contrato; HOME/OTHER nao pode ser em ponto que tem escola
     private void checkSchoolLocation(StudentStopLocationType locationType, UUID routeStopId, UUID schoolId) {
-        if (locationType == StudentStopLocationType.SCHOOL
-                && schoolStopRepository.findByStopId(routeStopId).stream()
-                .noneMatch(schoolStop -> schoolStop.getSchool().getId().equals(schoolId))) {
-            throw new BadRequestException("Ponto SCHOOL precisa ser o ponto da escola do contrato");
+        List<SchoolStop> schoolStops = schoolStopRepository.findByStopId(routeStopId);
+        if (locationType == StudentStopLocationType.SCHOOL) {
+            if (schoolStops.stream().noneMatch(schoolStop -> schoolStop.getSchool().getId().equals(schoolId))) {
+                throw new BadRequestException("Ponto SCHOOL precisa ser o ponto da escola do contrato");
+            }
+        } else if (!schoolStops.isEmpty()) {
+            throw new BadRequestException("Ponto de escola só aceita aluno marcado como SCHOOL");
+        }
+    }
+
+    // ponto de casa (HOME/OTHER) so num endereco cadastrado do aluno: o responsavel define onde buscar, o motorista escolhe
+    private void checkStudentAddress(StudentStopLocationType locationType, UUID studentId, RouteStop stop) {
+        if (locationType == StudentStopLocationType.SCHOOL) {
+            return;
+        }
+        if (stop.getAddress() == null || !studentAddressRepository.existsByStudentIdAndAddressId(studentId, stop.getAddress().getId())) {
+            throw new BadRequestException("Esse ponto não é um endereço cadastrado do aluno");
         }
     }
 

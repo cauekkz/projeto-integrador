@@ -2,25 +2,24 @@ package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.exceptions.BadRequestException;
 
+import br.com.vanroute.backend.dtos.user.ForgotPasswordRequest;
 import br.com.vanroute.backend.dtos.user.UpdateUser;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
-import br.com.vanroute.backend.models.user.RolesEntity;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.models.user.enums.UserStatus;
-import br.com.vanroute.backend.repositories.RolesRepository;
 import br.com.vanroute.backend.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -41,9 +40,6 @@ class UserServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @Mock
-    private RolesRepository rolesRepository;
-
-    @Mock
     private EmailVerificationService emailVerificationService;
 
     @Mock
@@ -52,11 +48,13 @@ class UserServiceTest {
     @Mock
     private br.com.vanroute.backend.repositories.DriverRepository driverRepository;
 
+    @Mock
+    private RefreshTokenService refreshTokenService;
+
     @InjectMocks
     private UserService userService;
 
     private UserCreateDTO defaultUserCreateDTO;
-    private RolesEntity responsibleRole;
     private User defaultUser;
 
     @BeforeEach
@@ -69,10 +67,6 @@ class UserServiceTest {
         defaultUserCreateDTO.setCpf("12345678901");
         defaultUserCreateDTO.setPasswordHash("championsLeague");
         defaultUserCreateDTO.setRole(RoleTypeEnum.ROLE_RESPONSIBLE);
-
-        responsibleRole = RolesEntity.builder()
-                .nome("ROLE_RESPONSIBLE")
-                .build();
 
         defaultUser = new User();
         defaultUser.setName("Mbappé");
@@ -93,9 +87,6 @@ class UserServiceTest {
         when(userRepository.findByCpf(anyString()))
                 .thenReturn(Optional.empty());
 
-        when(rolesRepository.findByNome("ROLE_RESPONSIBLE"))
-                .thenReturn(Optional.of(responsibleRole));
-
         when(passwordEncoder.encode("championsLeague"))
                 .thenReturn("hashed_password");
 
@@ -113,16 +104,13 @@ class UserServiceTest {
         assertEquals("hashed_password", result.getPasswordHash());
         assertEquals(UserStatus.CHECK_EMAIL, result.getStatus());
 
-        assertTrue(result.getRoles().contains(responsibleRole));
+        assertEquals(RoleTypeEnum.ROLE_RESPONSIBLE, result.getRole());
 
         verify(userRepository, times(1))
                 .findByCpf("12345678901");
 
         verify(passwordEncoder, times(1))
                 .encode("championsLeague");
-
-        verify(rolesRepository, times(1))
-                .findByNome("ROLE_RESPONSIBLE");
 
         verify(userRepository, times(1))
                 .save(any(User.class));
@@ -144,7 +132,6 @@ class UserServiceTest {
 
         verify(userRepository, never()).save(any(User.class));
         verify(passwordEncoder, never()).encode(anyString());
-        verify(rolesRepository, never()).findByNome(anyString());
     }
 
     @Test
@@ -152,15 +139,8 @@ class UserServiceTest {
 
         defaultUserCreateDTO.setRole(null);
 
-        RolesEntity role = RolesEntity.builder()
-                .nome("ROLE_RESPONSIBLE")
-                .build();
-
         when(userRepository.findByCpf(anyString()))
                 .thenReturn(Optional.empty());
-
-        when(rolesRepository.findByNome("ROLE_RESPONSIBLE"))
-                .thenReturn(Optional.of(role));
 
         when(passwordEncoder.encode(anyString()))
                 .thenReturn("hashed_password");
@@ -170,24 +150,19 @@ class UserServiceTest {
 
         User result = userService.createUser(defaultUserCreateDTO);
 
-        assertNotNull(result);
-        assertTrue(result.getRoles().contains(role));
-
-        verify(rolesRepository)
-                .findByNome("ROLE_RESPONSIBLE");
+        assertEquals(RoleTypeEnum.ROLE_RESPONSIBLE, result.getRole());
+        // o papel vira a authority do Spring (e a claim "roles" do JWT)
+        assertEquals(List.of("ROLE_RESPONSIBLE"),
+                result.getAuthorities().stream().map(a -> a.getAuthority()).toList());
     }
 
     @Test
-    void shouldCreateRoleWhenRoleDoesNotExist() {
+    void shouldKeepTheRoleAskedForADriver() {
+
+        defaultUserCreateDTO.setRole(RoleTypeEnum.ROLE_DRIVER);
 
         when(userRepository.findByCpf(anyString()))
                 .thenReturn(Optional.empty());
-
-        when(rolesRepository.findByNome("ROLE_RESPONSIBLE"))
-                .thenReturn(Optional.empty());
-
-        when(rolesRepository.save(any(RolesEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
 
         when(passwordEncoder.encode(anyString()))
                 .thenReturn("hashed_password");
@@ -195,21 +170,7 @@ class UserServiceTest {
         when(userRepository.save(any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        User result = userService.createUser(defaultUserCreateDTO);
-
-        assertNotNull(result);
-
-        ArgumentCaptor<RolesEntity> roleCaptor =
-                ArgumentCaptor.forClass(RolesEntity.class);
-
-        verify(rolesRepository).save(roleCaptor.capture());
-
-        assertEquals(
-                "ROLE_RESPONSIBLE",
-                roleCaptor.getValue().getAuthority()
-        );
-
-        assertTrue(result.getRoles().contains(roleCaptor.getValue()));
+        assertEquals(RoleTypeEnum.ROLE_DRIVER, userService.createUser(defaultUserCreateDTO).getRole());
     }
 
     @Test
@@ -217,9 +178,6 @@ class UserServiceTest {
 
         when(userRepository.findByCpf(anyString()))
                 .thenReturn(Optional.empty());
-
-        when(rolesRepository.findByNome(anyString()))
-                .thenReturn(Optional.of(responsibleRole));
 
         when(passwordEncoder.encode("championsLeague"))
                 .thenReturn("hashed_password");
@@ -732,5 +690,57 @@ class UserServiceTest {
         when(driverRepository.findById(parent.getId())).thenReturn(Optional.empty());
 
         assertNull(userService.me(parent.getId()).linkCode());
+    }
+
+    private ForgotPasswordRequest forgotPasswordRequest() {
+        ForgotPasswordRequest request = new ForgotPasswordRequest();
+        request.setEmail("mbappe@teste.com");
+        request.setCode("123456");
+        request.setPassword("Nova@1234");
+        request.setConfirmPassword("Nova@1234");
+        return request;
+    }
+
+    @Test
+    void shouldSendForgotPasswordCodeWhenEmailExists() {
+        when(userRepository.findByEmail("mbappe@teste.com")).thenReturn(Optional.of(defaultUser));
+
+        userService.sendForgotPasswordCode("mbappe@teste.com");
+
+        verify(emailVerificationService).generateAndSendCode("forgotPassword:email:" + defaultUser.getEmail(), defaultUser.getEmail());
+    }
+
+    @Test
+    void shouldNotSendForgotPasswordCodeWhenEmailDoesNotExist() {
+        when(userRepository.findByEmail("ninguem@teste.com")).thenReturn(Optional.empty());
+
+        userService.sendForgotPasswordCode("ninguem@teste.com");
+
+        verify(emailVerificationService, never()).generateAndSendCode(anyString(), anyString());
+    }
+
+    @Test
+    void shouldResetPasswordAndRevokeSessions() {
+        defaultUser.setId(USER_ID);
+        when(userRepository.findByEmail("mbappe@teste.com")).thenReturn(Optional.of(defaultUser));
+        when(passwordEncoder.encode("Nova@1234")).thenReturn("hash-novo");
+
+        userService.resetPassword(forgotPasswordRequest());
+
+        verify(emailVerificationService).verifyCode("forgotPassword:email:mbappe@teste.com", "123456");
+        assertEquals("hash-novo", defaultUser.getPasswordHash());
+        verify(userRepository).save(defaultUser);
+        verify(refreshTokenService).revokeAll(USER_ID);
+    }
+
+    @Test
+    void shouldNotResetPasswordWhenCodeIsWrong() {
+        doThrow(new IllegalArgumentException("Código incorreto ou expirado."))
+                .when(emailVerificationService).verifyCode("forgotPassword:email:mbappe@teste.com", "123456");
+
+        assertThrows(IllegalArgumentException.class, () -> userService.resetPassword(forgotPasswordRequest()));
+
+        verify(userRepository, never()).save(any(User.class));
+        verify(refreshTokenService, never()).revokeAll(any());
     }
 }

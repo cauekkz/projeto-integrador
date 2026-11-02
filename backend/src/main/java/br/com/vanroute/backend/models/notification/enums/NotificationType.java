@@ -17,5 +17,7 @@ public enum NotificationType {
     STUDENT_DELIVERED, // chegou (escola ou casa)
     STUDENT_ABSENT, // motorista marcou como ausente nessa viagem
     // falta avisada pelo responsavel (pro motorista)
-    ABSENCE_REPORTED
+    ABSENCE_REPORTED,
+    // aviso do motorista pra um grupo de alunos (ex.: "nao vou buscar hoje")
+    DRIVER_NOTICE
 }

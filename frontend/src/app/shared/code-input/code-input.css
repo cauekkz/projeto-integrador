@@ -1,0 +1,131 @@
+.code-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px 16px;
+  box-sizing: border-box;
+
+}
+
+.instrucao {
+  text-align: center;
+  color: #64748b;
+  font-size: 0.95rem;
+  max-width: 280px;
+
+}
+
+.inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0;
+  flex-wrap: nowrap;
+}
+
+.code-input {
+  width: 32px;
+  height: 52px;
+  border: none;
+  border-bottom: 2px solid #cbd5e1;
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1f2937;
+  outline: none;
+  background: transparent;
+}
+
+.code-input:focus {
+  border-bottom-color: #1565d8;
+}
+
+@keyframes slideUp {
+  0% { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.code-input.animate {
+  animation: slideUp 0.15s ease-out;
+}
+
+.separador {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1565d8;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.error-message {
+  color: #e61212;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.botoes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 340px;
+  align-items: center;
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+
+.btn-verificar,
+.btn-reenviar {
+  width: 100%;
+  height: 56px;
+  border-radius: 14px;
+  font-size: 1rem;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.btn-verificar {
+  border: none;
+  background: #1565d8;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
+}
+
+.btn-reenviar {
+  border: 1px solid #1565d8;
+  background: white;
+  color: #1565d8;
+  font-weight: 500;
+}
+
+.btn-verificar:hover:not(:disabled) {
+  background: #0052a3;
+}
+
+.btn-reenviar:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
+@media (max-width: 380px) {
+  .code-input {
+    width: 28px;
+    height: 46px;
+    font-size: 1.2rem;
+  }
+
+  .inputs {
+    gap: 4px;
+  }
+}
+
+.btn-verificar:disabled,
+.code-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

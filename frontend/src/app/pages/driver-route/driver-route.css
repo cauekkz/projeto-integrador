@@ -1,35 +1,65 @@
 .screen {
-  min-height: 100vh;
+  position: relative;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   background: #f1f5f9;
 }
-
 .topbar {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 50;
   display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 25px 11px 24px 11px;
+  border-radius: 33px;
+  background: rgba(160, 160, 160, 0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.info {
+  display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 16px 20px;
-  background: white;
+  background: rgba(239, 248, 254, 0.55);
+  border-radius: 999px;
+  padding:10px 68px 10px 30px;
 }
 
-.back-button {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.back-button img {
-  width: 24px;
-  height: 24px;
-}
-
-.user-info {
+.bell-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 1;
   justify-content: center;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.notif-wrapper {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 5px;
+  min-width: 18px;
+  text-align: center;
 }
 
 .avatar {
@@ -39,22 +69,18 @@
   object-fit: cover;
 }
 
-.user-name {
-  font-size: 0.95rem;
+.name {
+  font-size: 0.85rem;
   font-weight: 600;
   color: #1f2937;
+  white-space: nowrap;
 }
 
-.role {
-  font-size: 0.9rem;
-  color: #64748b;
-}
 
-.mapa {
-  width: 100%;
-  height: 260px;
-  background: #e2e8f0;
-  overflow: hidden;
+.mapa-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
 }
 
 .mapa-img {
@@ -63,86 +89,28 @@
   object-fit: cover;
 }
 
-.listas {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-}
 
-.lista-card {
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-}
-
-.lista-header {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px;
-  background: white;
-  border: none;
-  cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #1f2937;
-}
-
-.lista-icon {
-  width: 24px;
-  height: 24px;
-  opacity: 0.5;
-}
-
-.lista-titulo {
-  flex: 1;
-  text-align: left;
-}
-
-.lista-count {
-  color: #64748b;
-  font-weight: 600;
-}
-
-.chevron {
-  color: #64748b;
-  font-size: 0.5rem;
-  margin-left: 8px;
+.dot {
   width: 8px;
   height: 8px;
-}
-
-.aluno-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-top: 1px solid #f1f5f9;
-}
-
-.aluno-avatar {
-  width: 36px;
-  height: 36px;
+  background: #2563eb;
   border-radius: 50%;
-  object-fit: cover;
+  flex-shrink: 0;
 }
 
-.aluno-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.aluno-nome {
+.status-text {
   font-size: 0.9rem;
-  font-weight: 600;
-  color: #1f2937;
+  font-weight: 700;
+  color: #2563eb;
 }
 
-.aluno-end {
-  font-size: 0.8rem;
-  color: #94a3b8;
+/* arrastando a bolinha ou painel aberto: footer some rapido (so opacidade; transform quebraria o position: fixed dele) */
+.footer-wrap {
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.footer-wrap.escondido {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }

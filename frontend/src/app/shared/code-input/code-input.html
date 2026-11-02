@@ -1,0 +1,34 @@
+<div class="code-wrapper">
+  <p class="instrucao">{{ instrucao }}</p>
+
+  <div class="inputs">
+    @for (code of codes; track $index) {
+      @if (separadores.includes($index) && $index !== 0) {
+        <span class="separador">-</span>
+      }
+      <input
+        class="code-input"
+        type="text"
+        maxlength="1"
+        [(ngModel)]="codes[$index]"
+        (input)="onInput($event, $index)"
+        (keydown)="onKeydown($event, $index)"
+        (paste)="onPaste($event, $index)"
+        [disabled]="desabilitado"
+        [attr.aria-label]="'Caractere ' + ($index + 1) + ' de ' + length"
+        [name]="'code' + $index"
+      />
+    }
+  </div>
+
+  @if (invalido) {
+    <p class="error-message">Digite todos os {{ length }} dígitos!</p>
+  }
+
+  <div class="botoes">
+    <button class="btn-verificar" type="button" [disabled]="desabilitado" (click)="verificar()">{{ textoBotao }}</button>
+    @if (mostrarReenviar) {
+      <button class="btn-reenviar" (click)="reenviar()">Reenviar código</button>
+    }
+  </div>
+</div>

@@ -1,30 +1,27 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import {
+  createStudentRequest,
+  generateStudentLink,
+  getMyChildrenRequest,
+  studentResponsibleResponse,
+} from './dto/student/student.dto';
+import { API_URL } from './api';
 
-export interface StudentResponsibleResponse {
-  id: string;
-  relationType: string;
-  student: {
-    id: string;
-    name: string;
-    notes: string;
-    birthDate: string;
-  };
-  admin: boolean;
-}
+
 @Injectable({
   providedIn: 'root',
 })
 export class StudentService {
-  private apiUrl = 'http://localhost:9090/api/student';
+  private apiUrl = `${API_URL}/student`;
 
   constructor(private http: HttpClient) {}
 
-  createStudent(data: { name: string; notes: string; birthDate: string; relationType: string }) {
-    return this.http.post<StudentResponsibleResponse>(`${this.apiUrl}/create-student`, data);
+  createStudent(data: createStudentRequest) {
+    return this.http.post<studentResponsibleResponse>(`${this.apiUrl}/create-student`, data);
   }
 
-  generateStudentLink(data: { id: string; relationType: string }) {
+  generateStudentLink(data: generateStudentLink) {
     return this.http.post(`${this.apiUrl}/generate-link`, data, { responseType: 'text' });
   }
 
@@ -34,13 +31,7 @@ export class StudentService {
     });
   }
 
-  getMyChildren(filters?: {
-    relationType?: string;
-    isAdmin?: boolean;
-    studentName?: string;
-    page?: number;
-    size?: number;
-  }) {
+  getMyChildren(filters?: getMyChildrenRequest) {
     let params: any = {};
 
     if (filters?.relationType) {

@@ -33,14 +33,6 @@ public class UserController {
         return ResponseEntity.ok(userService.me(AuthenticatedUser.id(authentication)));
     }
 
-    @GetMapping("/{id}")
-    @Valid
-    public ResponseEntity<User> getUserById(@PathVariable UUID id) {
-        return userService.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
     @PostMapping("/send-code-updateUser")
     public ResponseEntity<Void>  sendCodeToUser(Authentication authentication){
      userService.sendCodeToUser(AuthenticatedUser.id(authentication));
@@ -52,7 +44,6 @@ public class UserController {
         userService.updateUser(updateUser, AuthenticatedUser.id(authentication));
         return ResponseEntity.ok().build();
     }
-
 
     // 1) pega a URL de upload da foto  2) sobe a imagem direto no MinIO  3) manda o fileKey no update-photo
     @GetMapping("/photo-upload-url")

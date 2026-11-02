@@ -1,11 +1,11 @@
 package br.com.vanroute.backend.services;
 
-import br.com.vanroute.backend.dtos.geocode.Coordenadas;
-import br.com.vanroute.backend.dtos.route.AddRouteStopRequest;
+import br.com.vanroute.backend.models.school.School;
+import br.com.vanroute.backend.models.school.SchoolStop;
+import br.com.vanroute.backend.dtos.route.RouteEditResponse;
 import br.com.vanroute.backend.dtos.route.RoutePendingResponse;
 import br.com.vanroute.backend.dtos.route.RouteStopResponse;
 import br.com.vanroute.backend.dtos.route.UpdateRouteStopOrderRequest;
-import br.com.vanroute.backend.dtos.student.AddressRequestDTO;
 import br.com.vanroute.backend.exceptions.BadRequestException;
 import br.com.vanroute.backend.models.address.Address;
 import br.com.vanroute.backend.models.route.Route;
@@ -34,8 +34,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,15 +48,14 @@ import static org.mockito.Mockito.when;
 class RouteServiceTest {
 
     @Mock private RouteRepository routeRepository;
-    @Mock private AddressRepository addressRepository;
     @Mock private RouteStopRepository routeStopRepository;
     @Mock private DriverRepository driverRepository;
     @Mock private RouteDriverRepository routeDriverRepository;
-    @Mock private AddressService addressService;
-    @Mock private MapService mapService;
     @Mock private StudentStopRepository studentStopRepository;
     @Mock private SchoolStopRepository schoolStopRepository;
     @Mock private Authentication authentication;
+    @Mock private StudentAddressRepository studentAddressRepository;
+    @Mock private UserDriverContractRepository userDriverContractRepository;
 
     @InjectMocks
     private RouteService routeService;
@@ -106,17 +108,59 @@ class RouteServiceTest {
     }
 
     @Test
-    void newStopGoesToTheEnd() {
-        when(routeRepository.findById(route.getId())).thenReturn(Optional.of(route));
-        when(routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId())).thenReturn(List.of(a, b, c, d));
-        when(addressService.addAddress(any())).thenReturn(new Address());
-        when(mapService.searchCoord(any(Address.class))).thenReturn(new Coordenadas(-23.5, -46.6));
+    void newStopIsCreatedEvenWithAnotherStopAtTheSameAddress() {
+        // a van volta no mesmo endereco: o ponto novo nao reaproveita o que ja existe
+        when(routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId())).thenReturn(List.of(a, b));
         when(routeStopRepository.save(any(RouteStop.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        List<RouteStopResponse> response = routeService.addRouteStop(route.getId(),
-                List.of(new AddRouteStopRequest(new AddressRequestDTO("Rua", "0", "SP", null, 1, "SP", null, null))), authentication);
+        RouteStop created = routeService.newStop(route, a.getAddress(), null, null);
 
-        assertEquals(5, response.get(0).orderIndex());
+        assertNotSame(a, created);
+        assertSame(a.getAddress(), created.getAddress());
+        assertEquals(3, created.getOrderIndex());
+    }
+
+    @Test
+    void newStopInsertsInTheMiddleAndPushesTheOthersDown() {
+        Address address = new Address();
+        address.setId(UUID.randomUUID());
+        when(routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId())).thenReturn(List.of(a, b, c, d));
+        when(routeStopRepository.save(any(RouteStop.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RouteStop created = routeService.newStop(route, address, null, 2);
+
+        assertEquals(2, created.getOrderIndex());
+        // 1 fica; 2, 3 e 4 descem uma posicao
+        assertEquals(List.of(1, 3, 4, 5), List.of(a.getOrderIndex(), b.getOrderIndex(), c.getOrderIndex(), d.getOrderIndex()));
+    }
+
+    @Test
+    void newStopWithASchoolLinksTheSchoolEvenIfItIsAlreadyInAnotherStop() {
+        School school = new School();
+        school.setId(UUID.randomUUID());
+        Address address = new Address();
+        address.setId(UUID.randomUUID());
+        when(routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId())).thenReturn(List.of(a, b));
+        when(routeStopRepository.save(any(RouteStop.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RouteStop created = routeService.newStop(route, address, school, null);
+
+        assertEquals(3, created.getOrderIndex());
+        verify(schoolStopRepository).save(argThat(link -> link.getStop() == created && link.getSchool() == school));
+    }
+
+    @Test
+    void linkSchoolDoesNotLinkTwiceToTheSameStop() {
+        School school = new School();
+        school.setId(UUID.randomUUID());
+        SchoolStop link = new SchoolStop();
+        link.setSchool(school);
+        link.setStop(b);
+        when(schoolStopRepository.findByStopId(b.getId())).thenReturn(List.of(link));
+
+        routeService.linkSchool(b, school);
+
+        verify(schoolStopRepository, never()).save(any());
     }
 
     @Test
@@ -128,6 +172,25 @@ class RouteServiceTest {
 
         verify(routeStopRepository).delete(b);
         assertEquals(List.of(1, 2, 3), List.of(a.getOrderIndex(), c.getOrderIndex(), d.getOrderIndex()));
+    }
+
+    @Test
+    void everyEditAnswersWithTheStopsAndWhatIsStillMissing() {
+        when(routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId())).thenReturn(List.of(a, b));
+        Student ana = new Student();
+        ana.setId(UUID.randomUUID());
+        ana.setName("Ana");
+        StudentStop boarding = new StudentStop();
+        boarding.setStudent(ana);
+        boarding.setAction(StudentStopAction.BOARDING);
+        boarding.setWeekdays(EnumSet.allOf(WeekDay.class));
+        when(studentStopRepository.findByRouteWithStudent(route.getId())).thenReturn(List.of(boarding));
+
+        RouteEditResponse state = routeService.routeState(route.getId());
+
+        assertEquals(List.of(a.getId(), b.getId()), state.stops().stream().map(RouteStopResponse::id).toList());
+        // ana embarca todo dia e nao desce em nenhum
+        assertEquals(EnumSet.allOf(WeekDay.class), state.pending().get(0).missingAlighting());
     }
 
     @Test
@@ -168,5 +231,48 @@ class RouteServiceTest {
         assertEquals(ana.getId(), pending.get(0).studentId());
         assertEquals(EnumSet.noneOf(WeekDay.class), pending.get(0).missingBoarding());
         assertEquals(EnumSet.of(WeekDay.TUESDAY, WeekDay.WEDNESDAY), pending.get(0).missingAlighting());
+    }
+
+    private StudentStop at(RouteStop routeStop, Student student, StudentStopAction action, WeekDay... days) {
+        StudentStop studentStop = studentStop(student, action, days);
+        studentStop.setStop(routeStop);
+        return studentStop;
+    }
+
+    @Test
+    void alightingBeforeBoardingIsRejected() {
+        Student ana = new Student();
+        List<StudentStop> stops = List.of(
+                at(c, ana, StudentStopAction.BOARDING, WeekDay.MONDAY),
+                at(a, ana, StudentStopAction.ALIGHTING, WeekDay.MONDAY));
+
+        assertThrows(BadRequestException.class, () -> routeService.checkBoardingBeforeAlighting(stops));
+    }
+
+    @Test
+    void boardingBeforeAlightingIsAccepted() {
+        Student ana = new Student();
+        // seg: embarca no 1 e desce no 3; embarque de sex no 4 e desembarque de sab no 2 sao dias diferentes
+        routeService.checkBoardingBeforeAlighting(List.of(
+                at(a, ana, StudentStopAction.BOARDING, WeekDay.MONDAY),
+                at(c, ana, StudentStopAction.ALIGHTING, WeekDay.MONDAY),
+                at(d, ana, StudentStopAction.BOARDING, WeekDay.FRIDAY),
+                at(b, ana, StudentStopAction.ALIGHTING, WeekDay.SATURDAY)));
+    }
+
+    @Test
+    void swapThatPutsAlightingBeforeBoardingIsRejected() {
+        Student ana = new Student();
+        ana.setId(UUID.randomUUID());
+        StudentStop boarding = at(a, ana, StudentStopAction.BOARDING, WeekDay.MONDAY);
+        StudentStop alighting = at(c, ana, StudentStopAction.ALIGHTING, WeekDay.MONDAY);
+        when(routeStopRepository.findById(a.getId())).thenReturn(Optional.of(a));
+        when(routeStopRepository.findFirstByRouteIdAndOrderIndex(route.getId(), 3)).thenReturn(Optional.of(c));
+        when(studentStopRepository.findByStopId(a.getId())).thenReturn(List.of(boarding));
+        when(studentStopRepository.findByStudentIdAndStopRouteId(ana.getId(), route.getId())).thenReturn(List.of(boarding, alighting));
+
+        // embarque vai pro 3 e desembarque pro 1
+        assertThrows(BadRequestException.class,
+                () -> routeService.updateRouteStopOrder(a.getId(), new UpdateRouteStopOrderRequest(3), authentication));
     }
 }

@@ -1,0 +1,141 @@
+<div class="add-container">
+  @if (etapa === 'form') {
+    <app-header titulo="Suas informações" (voltarEvent)="voltar()"></app-header>
+
+    <!-- sem "capture": no celular abre direto a galeria -->
+    <input
+      #fotoInput
+      type="file"
+      accept="image/png, image/jpeg, image/webp"
+      hidden
+      (change)="selecionarFoto($event)"
+    />
+    <section class="photo-card" [class.com-foto]="fotoPreview">
+      <button
+        type="button"
+        class="photo-avatar"
+        [attr.aria-label]="fotoPreview ? 'Trocar foto do dependente' : 'Escolher foto do dependente na galeria'"
+        (click)="fotoInput.click()"
+      >
+        @if (fotoPreview) {
+          <img [src]="fotoPreview" alt="Foto do dependente" class="photo-preview" />
+        } @else {
+          <i class="bi bi-person-fill photo-vazio" aria-hidden="true"></i>
+        }
+        <span class="photo-badge" aria-hidden="true">
+          <i class="bi" [class.bi-pencil-fill]="fotoPreview" [class.bi-image-fill]="!fotoPreview"></i>
+        </span>
+      </button>
+
+      <div class="photo-texto">
+        <strong>Foto do dependente</strong>
+        <span>{{ fotoPreview ? 'Toque na foto para trocar' : 'Toque para escolher da galeria' }}</span>
+        <small>PNG, JPG ou WEBP · até 5 MB</small>
+      </div>
+
+      @if (fotoPreview) {
+        <button type="button" class="photo-remover" (click)="removerFoto()">
+          <i class="bi bi-trash3" aria-hidden="true"></i>
+          Remover
+        </button>
+      }
+    </section>
+
+    <form class="form">
+      <div class="field">
+        <label>Nome do dependente</label>
+        <input type="text" placeholder="Nome do dependente" [(ngModel)]="enteredName" name="name" appNameFormat />
+      </div>
+
+      <div class="field">
+        <label>Data de nascimento</label>
+        <input
+          type="text"
+          placeholder="00/00/0000"
+          [(ngModel)]="enteredBirthdate"
+          name="birthdate"
+          appDateMask
+        />
+      </div>
+
+      <div class="field">
+        <label>Observações</label>
+        <textarea
+          placeholder="Coloque aqui informações necessárias que o motorista precise saber sobre seu dependente. Ex: auxílio para subir na van, tomar remédios."
+          [(ngModel)]="enteredObservacoes"
+          name="observacoes"
+          maxlength="1200">
+        </textarea>
+        <span class="counter">{{ enteredObservacoes.length }}/{{ maxObs }}</span>
+      </div>
+
+      <div class="field">
+        <label>CEP</label>
+        <input type="text" inputmode="numeric" placeholder="00000-000" [(ngModel)]="enteredCep" name="cep" appCepMask appCepBusca (enderecoCep)="preencherEndereco($event); ($event.rua ? numeroInput : ruaInput).focus()" />
+      </div>
+
+      <div class="field">
+        <label>Rua</label>
+        <input #ruaInput type="text" placeholder="Nome da rua" [(ngModel)]="enteredStreet" name="street" />
+      </div>
+
+      <div class="field">
+        <label>Número</label>
+        <input #numeroInput type="text" inputmode="numeric" placeholder="Número" [(ngModel)]="enteredNumber" name="number" />
+      </div>
+
+      <div class="field">
+        <label>Bairro</label>
+        <input type="text" placeholder="Bairro" [(ngModel)]="enteredNeighborhood" name="neighborhood" />
+      </div>
+
+      <div class="field">
+        <label>Cidade</label>
+        <input type="text" placeholder="Cidade" [(ngModel)]="enteredCity" name="city" />
+      </div>
+
+      <div class="field">
+        <label>Estado</label>
+        <input type="text" placeholder="UF" maxlength="2" [(ngModel)]="enteredState" name="state" />
+      </div>
+
+      <div class="field">
+        <label for="relationType">Tipo de relação</label>
+
+        <select id="relationType" [(ngModel)]="enteredRelationType" name="relationType" required>
+          <option value="" disabled>Selecione uma opção</option>
+          <option value="FINANCIAL">Financeiro</option>
+          <option value="LEGAL">Legal</option>
+          <option value="WITHDRAWAL">Retirada</option>
+        </select>
+      </div>
+
+      <div class="bottom-actions">
+        <app-button [texto]="salvando ? 'Salvando...' : 'Pronto'" tipo="primary" [disabled]="salvando" (clickEvent)="pronto()"></app-button>
+        <app-button texto="Tenho um código" tipo="secondary" (clickEvent)="vincularDependente()"></app-button>
+      </div>
+    </form>
+  }
+
+  @if (etapa === 'code') {
+    <app-header titulo="Suas informações" (voltarEvent)="voltar()" />
+
+    <div class="code-result">
+      <p class="code-instrucao">
+        Envie este código para o motorista vincular o dependente <strong>{{ enteredName }}</strong>:
+      </p>
+
+      <div class="code-box">
+        <span>{{ codigoGerado }}</span>
+        <button type="button" class="btn-copy" (click)="copiarCodigo()">
+          {{ copiado ? 'Copiado!' : 'Copiar' }}
+        </button>
+      </div>
+    </div>
+
+    <div class="botoes">
+      <app-button texto="Concluir" tipo="primary" posicao="top" (clickEvent)="concluir()"></app-button>
+    </div>
+  }
+</div>
+

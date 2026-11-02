@@ -1,5 +1,6 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.dtos.user.ForgotPasswordRequest;
 import br.com.vanroute.backend.repositories.DriverRepository;
 import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.dtos.user.UserMeResponseDTO;
@@ -10,10 +11,8 @@ import br.com.vanroute.backend.exceptions.BadRequestException;
 import br.com.vanroute.backend.dtos.user.UpdateUser;
 import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
 import br.com.vanroute.backend.models.user.User;
-import br.com.vanroute.backend.models.user.RolesEntity;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.models.user.enums.UserStatus;
-import br.com.vanroute.backend.repositories.RolesRepository;
 import br.com.vanroute.backend.repositories.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,23 +28,24 @@ import java.util.UUID;
 public class UserService {
 
         private static final String REDIS_KEY = "User:SendCodeUser";
+    private static final String FORGOT_PASSWORD_KEY = "forgotPassword:email:";
 
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RolesRepository rolesRepository;
     private final EmailVerificationService emailVerificationService;
     private final StorageService storageService;
     private final DriverRepository driverRepository;
+    private final RefreshTokenService refreshTokenService;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RolesRepository rolesRepository, EmailVerificationService emailVerificationService, StorageService storageService, DriverRepository driverRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailVerificationService emailVerificationService, StorageService storageService, DriverRepository driverRepository, RefreshTokenService refreshTokenService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.rolesRepository = rolesRepository;
         this.emailVerificationService = emailVerificationService;
         this.storageService = storageService;
         this.driverRepository = driverRepository;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public User createUser(UserCreateDTO userCreateDTO) {
@@ -53,12 +53,7 @@ public class UserService {
             throw new UserOrDriverOrResponsibleAlreadyRegisteredException("Usuario ja cadastrado");
         }
 
-        RoleTypeEnum selectedRole = userCreateDTO.getRole() != null ? userCreateDTO.getRole()
-                : RoleTypeEnum.ROLE_RESPONSIBLE;
-        String roleName = selectedRole.name();
-
-        RolesEntity roles = rolesRepository.findByNome(roleName)
-                .orElseGet(() -> rolesRepository.save(RolesEntity.builder().nome(roleName).build()));
+        RoleTypeEnum role = userCreateDTO.getRole() != null ? userCreateDTO.getRole() : RoleTypeEnum.ROLE_RESPONSIBLE;
 
         User user = new User();
         user.setName(userCreateDTO.getName());
@@ -66,7 +61,7 @@ public class UserService {
         user.setPhone(userCreateDTO.getPhone());
         user.setCpf(userCreateDTO.getCpf());
         user.setPasswordHash(passwordEncoder.encode(userCreateDTO.getPasswordHash()));
-        user.setRoles(java.util.Set.of(roles));
+        user.setRole(role);
         user.setStatus(UserStatus.CHECK_EMAIL);
         return userRepository.save(user);
 
@@ -96,6 +91,22 @@ public class UserService {
         }
          userRepository.save(user);
         return "User updated successfully";
+    }
+
+    // e-mail desconhecido nao da erro: a resposta e a mesma pra nao revelar quem tem conta
+    public void sendForgotPasswordCode(String email) {
+        userRepository.findByEmail(email)
+                .ifPresent(user -> emailVerificationService.generateAndSendCode(FORGOT_PASSWORD_KEY + user.getEmail(), user.getEmail()));
+    }
+
+    // o codigo confere antes de buscar o usuario; trocou a senha, cai a sessao de todos os aparelhos
+    public void resetPassword(ForgotPasswordRequest request) {
+        emailVerificationService.verifyCode(FORGOT_PASSWORD_KEY + request.getEmail(), request.getCode());
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("Código incorreto ou expirado."));
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        userRepository.save(user);
+        refreshTokenService.revokeAll(user.getId());
     }
 
     public StorageService.PresignedUrlResponse photoUploadUrl(UUID userId, String fileName, String contentType) {
@@ -134,7 +145,7 @@ public class UserService {
                 user.getEmail(),
                 user.getPhone(),
                 user.getCpf(),
-                user.getRoles().stream().map(RolesEntity::getAuthority).toList(),
+                user.roleNames(),
                 user.getPhotoKey(),
                 linkCode
         );

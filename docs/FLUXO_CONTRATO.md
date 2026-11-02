@@ -115,8 +115,10 @@ Pra baixar o PDF: `GET /api/storage/download-url?fileKey=<documentFileKey>`, que
 
 | Rota | Efeito | Mensagem que vai pro chat |
 |---|---|---|
-| `PUT /api/chats/{chatId}/contracts/{contractId}/accept` | contrato `ACTIVE` + gera as parcelas, da `startDate` até a `endDate`, conforme a `periodicity` (fev a jun mensal = 5 parcelas) | `APPROVAL` "Contrato Aceito" |
-| `PUT /api/chats/{chatId}/contracts/{contractId}/reject` | contrato `CANCELED` | `REJECTION` "Contrato Recusado" |
+| `PUT /api/chats/{chatId}/contracts/{contractId}/accept` | contrato `ACTIVE` + gera as parcelas, da `startDate` até a `endDate`, conforme a `periodicity` (fev a jun mensal = 5 parcelas). O pai **assina** e o documento fica `SIGNED` | `APPROVAL` "Contrato Aceito" |
+| `PUT /api/chats/{chatId}/contracts/{contractId}/reject` | contrato `CANCELED`, documento `REJECTED` | `REJECTION` "Contrato Recusado" |
+
+**Assinatura:** quando o motorista propõe, ele assina; quando o pai aceita, o pai assina. Cada assinatura guarda quem, quando e o hash dos termos (partes, aluno, escola, valor, período e documento). O `GET /api/contract/{contractId}` mostra `documentStatus` e `signatures: [{ userId, name, signedAt, valid }]`. Se o contrato mudar depois de assinado, `valid` vira `false`.
 
 As duas devolvem **200 sem corpo**. Só o responsável do contrato consegue: o motorista recebe **403**.
 Se o contrato já foi aceito ou recusado, dá **409**.
@@ -124,7 +126,7 @@ Se o contrato já foi aceito ou recusado, dá **409**.
 ### 8. Depois
 
 - `GET /api/contract/my-contracts` (`?status=ACTIVE` opcional) lista os contratos do usuário logado, motorista ou pai.
-- Com o contrato `ACTIVE`, o motorista consegue colocar o aluno na rota (`PUT /api/route/stop/{id}/add-student/{studentId}`).
+- Com o contrato `ACTIVE`, o motorista consegue colocar o aluno na rota (`POST /api/route/{routeId}/add-student/{studentId}`).
 
 ## Notificações do contrato
 

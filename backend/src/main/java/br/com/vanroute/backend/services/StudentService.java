@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.exceptions.BadRequestException;
+import br.com.vanroute.backend.dtos.student.StudentAddressRequestDTO;
 import br.com.vanroute.backend.repositories.DriverRepository;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.chat.Chat;
@@ -16,12 +18,10 @@ import org.springframework.security.access.AccessDeniedException;
 
 import org.springframework.transaction.annotation.Transactional;
 
-import br.com.vanroute.backend.dtos.geocode.Coordenadas;
 import br.com.vanroute.backend.dtos.student.StudentResponsibleResponseDTO;
 import br.com.vanroute.backend.mapper.StudentResponsibleMapper;
 import br.com.vanroute.backend.models.address.Address;
 import br.com.vanroute.backend.models.student.StudentAddress;
-import br.com.vanroute.backend.repositories.StudentAddressRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -43,25 +43,21 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final ResponsibleRepository responsibleRepository;
     private final StudentResponsibleRepository studentResponsibleRepository;
-    private final AddressService addressService;
-    private final StudentAddressRepository studentAddressRepository;
     private final StudentResponsibleMapper studentResponsibleMapper;
-    private final MapService mapService;
     private final StudentStopRepository studentStopRepository;
     private final ChatService chatService;
     private final DriverRepository driverRepository;
+    private final StudentAddressService studentAddressService;
 
-    public StudentService(StudentRepository studentRepository, ResponsibleRepository responsibleRepository, StudentResponsibleRepository studentResponsibleRepository, AddressService addressService, StudentAddressRepository studentAddressRepository,StudentResponsibleMapper studentResponsibleMapper, MapService mapService, StudentStopRepository studentStopRepository, ChatService chatService, DriverRepository driverRepository) {
+    public StudentService(StudentRepository studentRepository, ResponsibleRepository responsibleRepository, StudentResponsibleRepository studentResponsibleRepository,StudentResponsibleMapper studentResponsibleMapper, StudentStopRepository studentStopRepository, ChatService chatService, DriverRepository driverRepository, StudentAddressService studentAddressService) {
         this.studentRepository = studentRepository;
         this.responsibleRepository = responsibleRepository;
         this.studentResponsibleRepository = studentResponsibleRepository;
-        this.addressService = addressService;
-        this.studentAddressRepository = studentAddressRepository;
         this.studentResponsibleMapper = studentResponsibleMapper;
-        this.mapService = mapService;
         this.studentStopRepository = studentStopRepository;
         this.chatService = chatService;
         this.driverRepository = driverRepository;
+        this.studentAddressService = studentAddressService;
     }
 
         @Transactional
@@ -70,15 +66,27 @@ public class StudentService {
             student.setName(dto.name());
             student.setNotes(dto.notes());
             student.setBirthDate(dto.birthDate());
-            Address address = addressService.addAddress(dto.address());
-            Coordenadas cords = mapService.searchCoord(address);
-            address.setLatitude(cords.latitude());
-            address.setLongitude(cords.longitude());
+            // um endereco (address/addressId) ou varios (addresses). Resolve todos antes de salvar o aluno:
+            // se algum for invalido, nada fica gravado
+            List<StudentAddressRequestDTO> requested = dto.addresses() != null && !dto.addresses().isEmpty()
+                    ? dto.addresses()
+                    : List.of(new StudentAddressRequestDTO(dto.addressLabel(), dto.address(), dto.addressId()));
+            List<Address> addresses = requested.stream()
+                    .map(request -> studentAddressService.resolve(request.address(), request.addressId(), responsibleId))
+                    .toList();
+            if (addresses.stream().map(Address::getId).distinct().count() < addresses.size()) {
+                throw new BadRequestException("O mesmo endereço apareceu duas vezes");
+            }
             studentRepository.save(student);
-            StudentAddress studentAddress = new StudentAddress();
-            studentAddress.setAddress(address);
-            studentAddress.setStudent(student);
-            studentAddressRepository.save(studentAddress);
+            StudentAddress studentAddress = null;
+            for (int i = 0; i < addresses.size(); i++) {
+                String label = requested.get(i).label();
+                StudentAddress attached = studentAddressService.attach(student, addresses.get(i),
+                        label == null || label.isBlank() ? (i == 0 ? null : "Endereço " + (i + 1)) : label);
+                if (studentAddress == null) {
+                    studentAddress = attached;
+                }
+            }
 
             StudentResponsible studentResponsible = new StudentResponsible();
             studentResponsible.setStudent(student);

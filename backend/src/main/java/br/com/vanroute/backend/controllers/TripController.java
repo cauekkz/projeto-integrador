@@ -2,6 +2,7 @@ package br.com.vanroute.backend.controllers;
 
 import br.com.vanroute.backend.config.AuthenticatedUser;
 import br.com.vanroute.backend.dtos.trip.*;
+import br.com.vanroute.backend.services.OccurrenceService;
 import br.com.vanroute.backend.services.TripService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 // fushiguro
@@ -18,8 +20,10 @@ import java.util.UUID;
 public class TripController {
 
     private final TripService tripService;
+    private final OccurrenceService occurrenceService;
 
-    public TripController(TripService tripService) {
+    public TripController(TripService tripService, OccurrenceService occurrenceService) {
+        this.occurrenceService = occurrenceService;
         this.tripService = tripService;
     }
 
@@ -61,5 +65,19 @@ public class TripController {
     @PostMapping("/{tripId}/finish")
     public TripResponseDTO finish(@PathVariable UUID tripId, Authentication authentication) {
         return tripService.finish(tripId, AuthenticatedUser.id(authentication));
+    }
+
+    // ocorrencia na viagem (motorista): os pais dos alunos da viagem recebem na hora
+    @PostMapping("/{tripId}/occurrences")
+    public ResponseEntity<OccurrenceResponseDTO> reportOccurrence(@PathVariable UUID tripId, @RequestBody @Valid OccurrenceRequestDTO request,
+                                                                  Authentication authentication) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(occurrenceService.report(tripId, request, AuthenticatedUser.id(authentication)));
+    }
+
+    // ocorrencias da viagem (motorista ou pai de aluno dela), a mais nova primeiro
+    @GetMapping("/{tripId}/occurrences")
+    public List<OccurrenceResponseDTO> occurrences(@PathVariable UUID tripId, Authentication authentication) {
+        return occurrenceService.list(tripId, AuthenticatedUser.id(authentication));
     }
 }

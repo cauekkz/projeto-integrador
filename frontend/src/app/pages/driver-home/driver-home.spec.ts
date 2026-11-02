@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { provideRouter } from '@angular/router';
 import { DriverHome } from './driver-home';
 
 describe('DriverHome', () => {
@@ -9,6 +9,7 @@ describe('DriverHome', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [DriverHome],
+      providers: [provideRouter([])],
     }).compileComponents();
 
     fixture = TestBed.createComponent(DriverHome);

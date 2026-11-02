@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
+import java.util.UUID;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,6 +21,8 @@ import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.DriverApprovalStatus;
 import br.com.vanroute.backend.repositories.DriverRepository;
 import br.com.vanroute.backend.utils.CodeGenerator;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 class DriverServiceTest {
@@ -86,5 +91,26 @@ class DriverServiceTest {
         assertEquals("Usuario/Motorista já cadastrado", exception.getMessage());
         verify(userService, times(1)).createUser(any(UserCreateDTO.class));
         verify(driverRepository, never()).saveAndFlush(any(Driver.class));
+    }
+
+    @Test
+    void shouldReturnLinkCodeOfDriverById() {
+        UUID userId = UUID.randomUUID();
+        Driver driver = new Driver();
+        driver.setLinkCode("ABC23XYZ9");
+        when(driverRepository.findById(userId)).thenReturn(Optional.of(driver));
+
+        assertEquals("ABC23XYZ9", driverService.getLinkCode(userId));
+    }
+
+    @Test
+    void shouldReturnNotFoundWhenUserIsNotADriver() {
+        UUID userId = UUID.randomUUID();
+        when(driverRepository.findById(userId)).thenReturn(Optional.empty());
+
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> driverService.getLinkCode(userId));
+
+        assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
     }
 }

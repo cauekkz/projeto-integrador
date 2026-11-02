@@ -114,30 +114,6 @@ public class MapService {
         );
     }
 
-    public GeoRouteResponse calcularRota(
-            double longitudeOrigem,
-            double latitudeOrigem,
-            double longitudeDestino,
-            double latitudeDestino
-    ) {
-
-        String start = longitudeOrigem + "," + latitudeOrigem;
-        String end = longitudeDestino + "," + latitudeDestino;
-
-        return webClient.get()
-                .uri(uriBuilder -> uriBuilder
-                        .scheme("https")
-                        .host("api.openrouteservice.org")
-                        .path("/v2/directions/driving-car")
-                        .queryParam("api_key", apiKey)
-                        .queryParam("start", start)
-                        .queryParam("end", end)
-                        .build())
-                .retrieve()
-                .bodyToMono(GeoRouteResponse.class)
-                .block(TIMEOUT);
-    }
-
     // trajeto passando por todos os pontos na ordem (maximo 50 no plano gratis).
     // cada ponto e [longitude, latitude]; devolve GeoJSON com a linha, distancia (m) e duracao (s)
     public GeoRouteResponse directions(List<List<Double>> lngLatPoints) {

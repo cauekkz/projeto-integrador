@@ -6,7 +6,6 @@ import br.com.vanroute.backend.dtos.user.token.TokenResponseDTO;
 import br.com.vanroute.backend.exceptions.InvalidCredentialsException;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.models.user.enums.UserStatus;
-import br.com.vanroute.backend.repositories.RolesRepository;
 import br.com.vanroute.backend.repositories.UserRepository;
 import br.com.vanroute.backend.exceptions.BadRequestException;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,9 +43,6 @@ class AuthenticationServiceTest {
 
     @Mock
     private UserRepository userRepository;
-
-    @Mock
-    private RolesRepository rolesRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;

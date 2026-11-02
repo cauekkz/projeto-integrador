@@ -1,69 +1,50 @@
 <div class="screen">
 
   <div class="topbar">
-    <button class="back-button" (click)="voltar()">
-      <img src="/Back.png" alt="">
-    </button>
-    <div class="user-info">
-      <img src="/testee.jpg" class="avatar" alt="">
-      <span class="user-name">Gustavo Gomez</span>
+    <div class="notif-wrapper">
+      <div class="bell-btn" (click)="irParaPerfil()">
+        <img [src]="usuarioLogado?.photoUrl || '/testee.jpg'" class="avatar" alt="Foto do motorista">
+      </div>
     </div>
-    <span class="role">Motorista</span>
+
+    <div class="info">
+      <span class="dot"></span>
+      <span class="status-text">Em percurso</span>
+    </div>
+
+    <div class="notif-wrapper sino-clicavel" role="button" tabindex="0" aria-label="Abrir notificações" (click)="notificacoes.abrirTela()" (keydown.enter)="notificacoes.abrirTela()">
+      <div class="bell-btn">
+        <i class="bi bi-bell-fill"></i>
+      </div>
+      @if (notificacoes.naoLidas()) {
+        <span class="badge" [attr.aria-label]="notificacoes.naoLidas() + ' notificações não lidas'">{{ notificacoes.rotulo() }}</span>
+      }
+    </div>
   </div>
 
-  <div class="mapa">
+  <div class="mapa-fullscreen">
     <img src="/mapa-placeholder.png" alt="Mapa" class="mapa-img">
   </div>
 
-  <div class="listas">
+  <app-passengers-sheet
+    [embarcados]="alunosEmbarcados"
+    [esperando]="alunosEsperando"
+    (footerOcultoChange)="footerOculto = $event"
+  />
 
-    <div class="lista-card">
-      <button class="lista-header" (click)="toggleEsperando()">
-        <i class="bi bi-people"></i>
-        <span class="lista-titulo">Alunos Esperando</span>
-        <span class="lista-count">{{ alunosEsperando.length }}</span>
-        @if (alunosEmbarcadosAberto) {
-          <img src="/Back.svg" class="chevron-icon">
-        } @else {
-          <img src="/up.svg" class="chevron-icon">
-        }
-      </button>
-      @if (alunosEsperandoAberto) {
-        @for (aluno of alunosEsperando; track aluno.nome) {
-          <div class="aluno-item">
-            <img src="/avatar.png" class="aluno-avatar" alt="">
-            <div class="aluno-info">
-              <span class="aluno-nome">{{ aluno.nome }}</span>
-              <span class="aluno-end">{{ aluno.endereco }}</span>
-            </div>
-          </div>
-        }
-      }
-    </div>
-
-    <div class="lista-card">
-      <button class="lista-header" (click)="toggleEmbarcados()">
-        <i class="bi bi-people"></i>
-        <span class="lista-titulo">Alunos Embarcados</span>
-        <span class="lista-count">{{ alunosEmbarcados.length }}</span>
-        @if (alunosEmbarcadosAberto) {
-          <img src="/Back.svg" class="chevron-icon">
-        } @else {
-          <img src="/up.svg" class="chevron-icon">
-        }
-      </button>
-      @if (alunosEmbarcadosAberto) {
-        @for (aluno of alunosEmbarcados; track aluno.nome) {
-          <div class="aluno-item">
-            <img src="/avatar.png" class="aluno-avatar" alt="">
-            <div class="aluno-info">
-              <span class="aluno-nome">{{ aluno.nome }}</span>
-              <span class="aluno-end">{{ aluno.endereco }}</span>
-            </div>
-          </div>
-        }
-      }
-    </div>
-
+  <div class="footer-wrap" [class.escondido]="footerOculto" [attr.aria-hidden]="footerOculto">
+    <app-footer tipoUsuario="motorista" abaAtiva="meio" tipo="mapa" />
   </div>
+
 </div>
+
+@if (mostrarPerfil) {
+  <app-profile-select
+    animate.leave="sair-perfil"
+    tipoUsuario="motorista"
+    [usuario]="usuarioLogado"
+    (fecharEvent)="fecharPerfil()"
+  />
+}
+
+
