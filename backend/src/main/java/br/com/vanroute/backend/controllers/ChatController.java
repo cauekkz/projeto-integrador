@@ -135,9 +135,7 @@ public class ChatController {
     }
 
     @PutMapping("/{chatId}/contracts/{contractId}/accept")
-    //essa maldita recebera o id do contrato e id do chat da url ent tem que manda certin ent so manda o krl do jwt no header
-    //ai o macaco se pergunta "mas gotao de onde eu vou tirar o id dessas porra??" ent gotao o chat meu irmao je é pra ter faz tempo ne ja tem um get pra pikas como essa, blz ai o id do contrato na linha 108 ele gurda junto com o id da tabela que guarda o krl tudo ele guarda o id do contrato tbm ent é dele
-    //alias front é bom oia com o id dessa merda vc consegue puxar o contrato o documento todas as realação pra mostra pro responsbie hj chega amanha é foco 100% dnv
+    // o contractId vem do payload da mensagem PROPOSAL do chat; so o responsavel do contrato aceita
     public ResponseEntity<Void> acceptContract(@PathVariable UUID chatId, @PathVariable UUID contractId, Authentication authentication) {
         UUID responsibleId = AuthenticatedUser.id(authentication);
         chatService.validateChatAccess(chatId, responsibleId);
@@ -158,7 +156,6 @@ public class ChatController {
         }
         return ResponseEntity.ok().build();
     }
-    //hemoglobina expande explode 
 
     @PutMapping("/{chatId}/contracts/{contractId}/reject")
     public ResponseEntity<Void> rejectContract(@PathVariable UUID chatId, @PathVariable UUID contractId, Authentication authentication) {
@@ -182,6 +179,28 @@ public class ChatController {
         return ResponseEntity.ok().build();
     }
 
-    
+    // o motorista retira a proposta que ainda esta pendente
+    @PutMapping("/{chatId}/contracts/{contractId}/withdraw")
+    public ResponseEntity<Void> withdrawContract(@PathVariable UUID chatId, @PathVariable UUID contractId, Authentication authentication) {
+        UUID driverId = AuthenticatedUser.id(authentication);
+        chatService.validateChatAccess(chatId, driverId);
+
+        contractService.withdrawContract(contractId, driverId);
+        ContractDetailsResponseDTO details = contractService.getContractDetails(contractId, driverId);
+        notificationService.send(List.of(details.responsibleId()), NotificationType.CONTRACT_WITHDRAWN, "Proposta retirada",
+                details.driverName() + " retirou a proposta de contrato de " + details.studentName(),
+                Map.of("chatId", chatId, "contractId", contractId));
+
+        // REJECTION: o front ja trata como proposta encerrada
+        String payloadStr = "{\"contractId\": \"" + contractId + "\"}";
+        ChatMessageResponseDTO msg = chatMessageService.sendSystemMessage(chatId, driverId, "Proposta Retirada",
+                br.com.vanroute.backend.models.chat.enums.MessageType.REJECTION, payloadStr);
+        try {
+            redisTemplate.convertAndSend("chat-" + chatId, objectMapper.writeValueAsString(msg));
+        } catch (Exception e) {
+            log.error("Error to publish", e);
+        }
+        return ResponseEntity.ok().build();
+    }
 
 }

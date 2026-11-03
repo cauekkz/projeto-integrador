@@ -5,6 +5,7 @@ import br.com.vanroute.backend.models.contract.enums.PaymentStatus;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -26,8 +27,13 @@ public class Payment {
     @Column(name = "payment_method")
     private PaymentMethod paymentMethod;
 
-    @Column(name = "payment_date")
-    private LocalDate paymentDate;
+    // vencimento: inicio do contrato + n periodos
+    @Column(name = "due_date", nullable = false)
+    private LocalDate dueDate;
+
+    // quando foi pago de fato; so em parcela PAID
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
 
     @ManyToOne
     @JoinColumn(name = "contract_id", nullable = false)
@@ -65,12 +71,20 @@ public class Payment {
         this.paymentMethod = paymentMethod;
     }
 
-    public LocalDate getPaymentDate() {
-        return paymentDate;
+    public LocalDate getDueDate() {
+        return dueDate;
     }
 
-    public void setPaymentDate(LocalDate paymentDate) {
-        this.paymentDate = paymentDate;
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    }
+
+    public LocalDateTime getPaidAt() {
+        return paidAt;
+    }
+
+    public void setPaidAt(LocalDateTime paidAt) {
+        this.paidAt = paidAt;
     }
 
     public Contract getContract() {

@@ -13,4 +13,6 @@ public interface StudentAbsenceRepository extends JpaRepository<StudentAbsence, 
     List<StudentAbsence> findByRouteIdAndDate(UUID routeId, LocalDate date);
 
     List<StudentAbsence> findByStudentIdAndDateGreaterThanEqualOrderByDate(UUID studentId, LocalDate date);
+
+    List<StudentAbsence> findByStudentIdAndRouteIdInAndDateGreaterThanEqual(UUID studentId, java.util.Collection<UUID> routeIds, LocalDate date);
 }
