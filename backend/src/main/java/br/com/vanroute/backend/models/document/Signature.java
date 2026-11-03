@@ -1,11 +1,12 @@
 package br.com.vanroute.backend.models.document;
 
-import br.com.vanroute.backend.models.document.enums.SignatureStatus;
 import br.com.vanroute.backend.models.user.User;
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
+// alguem assinou o documento (o motorista ao propor o contrato, o responsavel ao aceitar).
+// guarda a hora e o hash dos termos assinados: se o contrato mudar, o hash nao bate mais
 @Entity
 @Table(name = "signatures")
 public class Signature {
@@ -14,12 +15,11 @@ public class Signature {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Enumerated(EnumType.STRING)
-    @Column()
-    private SignatureStatus status;
+    @Column(name = "signed_at", nullable = false)
+    private LocalDateTime signedAt;
 
-    @Column(name = "signed_at")
-    private LocalDate signedAt;
+    @Column(name = "document_hash", nullable = false, length = 64)
+    private String documentHash;
 
     @ManyToOne
     @JoinColumn(name = "document_id", nullable = false)
@@ -37,20 +37,20 @@ public class Signature {
         this.id = id;
     }
 
-    public SignatureStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(SignatureStatus status) {
-        this.status = status;
-    }
-
-    public LocalDate getSignedAt() {
+    public LocalDateTime getSignedAt() {
         return signedAt;
     }
 
-    public void setSignedAt(LocalDate signedAt) {
+    public void setSignedAt(LocalDateTime signedAt) {
         this.signedAt = signedAt;
+    }
+
+    public String getDocumentHash() {
+        return documentHash;
+    }
+
+    public void setDocumentHash(String documentHash) {
+        this.documentHash = documentHash;
     }
 
     public Document getDocument() {
@@ -68,5 +68,4 @@ public class Signature {
     public void setUser(User user) {
         this.user = user;
     }
-
 }

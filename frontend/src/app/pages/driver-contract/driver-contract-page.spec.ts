@@ -148,14 +148,31 @@ describe('Criação de contrato pelo motorista', () => {
       expect(draft.studentId()).toBe('aluno-1');
     });
 
-    it('envia a proposta sem PDF no formato do ContractProposalRequestDTO e volta pro chat', async () => {
+    it('não envia a proposta sem o PDF do contrato', async () => {
       const { page, draft } = abrirPagina();
       preencherTudo(draft);
       draft.etapa.set('midia');
 
       page.avancar();
+      await esperar();
+
+      http.expectNone(`${API}/chats/chat-1/contract`);
+      expect(draft.etapa()).toBe('midia');
+      expect(draft.mostrarErros()).toBe(true);
+      expect(draft.errosMidia().pdf).toBeTruthy();
+    });
+
+    it('envia a proposta no formato do ContractProposalRequestDTO e volta pro chat', async () => {
+      vi.spyOn(TestBed.inject(ChatWebSocketService), 'uploadAttachment').mockResolvedValue('arquivo-123.pdf');
+      const { page, draft } = abrirPagina();
+      preencherTudo(draft);
+      draft.pdf.set(new File(['%PDF'], 'contrato.pdf', { type: 'application/pdf' }));
+      draft.etapa.set('midia');
+
+      page.avancar();
       // clique repetido durante o envio nao gera outro POST
       page.avancar();
+      await esperar();
 
       const req = http.expectOne(`${API}/chats/chat-1/contract`);
       expect(req.request.method).toBe('POST');
@@ -165,7 +182,7 @@ describe('Criação de contrato pelo motorista', () => {
         studentId: 'aluno-1',
         schoolId: 'escola-1',
         contract: { periodicity: 'MONTHLY', value: 350, startDate: '2027-02-01', endDate: '2027-06-30' },
-        document: { url: null, type: 'TRANSPORT_CONTRACT' },
+        document: { url: 'arquivo-123.pdf', type: 'TRANSPORT_CONTRACT' },
       });
       req.flush({ userDriverContractId: 'udc-1', contract: { contractId: 'c-1', status: 'PENDING' } }, { status: 201, statusText: 'Created' });
       await esperar();

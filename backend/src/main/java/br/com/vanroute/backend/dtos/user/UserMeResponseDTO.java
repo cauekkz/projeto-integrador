@@ -12,6 +12,9 @@ public record UserMeResponseDTO(
         String cpf,
         List<String> roles,
         String photoKey,
-        String linkCode
+        String linkCode,
+        // versao atual dos termos e se esse usuario ja aceitou; false = o app mostra os termos e chama POST /api/terms/accept
+        String termsVersion,
+        boolean termsAccepted
 ) {
 }

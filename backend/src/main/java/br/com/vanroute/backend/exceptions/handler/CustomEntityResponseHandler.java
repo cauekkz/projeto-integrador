@@ -1,5 +1,9 @@
 package br.com.vanroute.backend.exceptions.handler;
 
+import br.com.vanroute.backend.exceptions.InvalidDocumentException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import br.com.vanroute.backend.exceptions.BadRequestException;
 import br.com.vanroute.backend.exceptions.InvalidCredentialsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,11 +27,20 @@ import java.util.Date;
 @RestController
 public class CustomEntityResponseHandler extends ResponseEntityExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(CustomEntityResponseHandler.class);
+
+    // erro inesperado: o detalhe fica no log; o cliente recebe so uma mensagem generica
     @ExceptionHandler(Exception.class)
     public final ResponseEntity<ExceptionResponse> handleAllExceptions(Exception ex, WebRequest request){
-        ExceptionResponse response = new ExceptionResponse(new Date(), ex.getMessage(),
+        log.error("Erro inesperado em {}", request.getDescription(false), ex);
+        ExceptionResponse response = new ExceptionResponse(new Date(), "Erro interno no servidor",
                 request.getDescription(false));
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(InvalidDocumentException.class)
+    public final ResponseEntity<ExceptionResponse> handleInvalidDocumentException(Exception ex, WebRequest request){
+        return build(ex, request, HttpStatus.UNPROCESSABLE_ENTITY);
     }
 
     @ExceptionHandler(BadRequestException.class)

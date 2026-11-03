@@ -1,2 +1,17 @@
 .idea/application-local.properties
 application-local.properties
+
+# documentos reais (CRLV da van, CNH dos testes de assinatura ICP): tem dado pessoal, nunca sobem
+*CRLV*.pdf
+*Crlv*.pdf
+*crlv*.pdf
+backend/src/test/resources/documents/*CNH.pdf
+
+# lixo e configuracao pessoal de IA: nao sobe pro repositorio
+*.zip
+.mcp.json
+.claude/
+
+# variaveis de ambiente de producao/servidor (o modelo e o .env.example)
+.env
+!.env.example

@@ -1,0 +1,17 @@
+# Copie para application-local.properties (fica fora do git) e preencha. E carregado porque o
+# application.properties tem spring.profiles.active=local. Em producao nao existe: tudo vem das variaveis de ambiente.
+
+# e-mail que manda os codigos (Gmail: senha de app, nao a senha da conta)
+spring.mail.username=seu.email@gmail.com
+spring.mail.password=senha-de-app-do-gmail
+
+# chave do OpenRouteService (geocode e trajeto): https://openrouteservice.org
+openrouteservice.api-key=sua-chave
+
+# segredos de DESENVOLVIMENTO (os mesmos do docker-compose.yml). Em producao: DATABASE_PASSWORD, JWT_KEY,
+# MINIO_ACCESS_KEY e MINIO_SECRET_KEY
+spring.datasource.password=123456
+# qualquer texto com 32 caracteres ou mais (assina o token de login)
+spring.jwt.key=troque-por-um-texto-aleatorio-com-pelo-menos-32-caracteres
+spring.cloud.aws.credentials.access-key=vanroute
+spring.cloud.aws.credentials.secret-key=vanroute123456

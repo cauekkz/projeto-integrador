@@ -85,6 +85,15 @@ public class DriverRequestDTO {
         this.documentPdf = documentPdf;
     }
 
+    // versao dos Termos de Uso que a pessoa aceitou na tela de cadastro (GET /api/terms); tem que ser a atual
+    @NotBlank(message = "Aceite os Termos de Uso e a Política de Privacidade")
+    private String acceptedTermsVersion;
 
+    public String getAcceptedTermsVersion() {
+        return acceptedTermsVersion;
+    }
 
+    public void setAcceptedTermsVersion(String acceptedTermsVersion) {
+        this.acceptedTermsVersion = acceptedTermsVersion;
+    }
 }

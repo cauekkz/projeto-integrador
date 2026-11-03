@@ -17,8 +17,6 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import br.com.vanroute.backend.services.ChatService;
 
-    //bglh complicadinho
-
 @Component
 public class ChatWebSocketHandler extends TextWebSocketHandler implements MessageListener {
     

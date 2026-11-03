@@ -4,7 +4,7 @@
 #   DEMO_PORT=8091 bash ...                       -> pagina em outra porta
 #   DEMO_MAPS=sim bash ...                        -> usa o simulador de mapas mesmo com chave (ex.: cota diaria da chave acabou)
 #
-# - banco ISOLADO vanroute_audit (o seu vanroute_db nao e tocado), Redis e MinIO do docker compose
+# - o banco normal (vanroute_db) com dados ficticios, Redis e MinIO do docker compose; zere com docker compose down -v
 # - e-mail falso (stubs.py): o cadastro dos pais funciona sem mandar e-mail de verdade
 # - mapas: com a chave em application-local.properties usa o OpenRouteService real; sem ela, o simulador
 # - cria o cenario (seed.sh) e serve a pagina (serve.py)
@@ -23,8 +23,6 @@ for port in 9090 8089 2525 "$PAGE_PORT"; do
 done
 
 docker compose -f "$ROOT/docker-compose.yml" up -d db redis minio >/dev/null
-docker exec vanroute-db psql -U postgres -tAc "SELECT 1 FROM pg_database WHERE datname='vanroute_audit'" | grep -q 1 \
-  || docker exec vanroute-db psql -U postgres -c 'CREATE DATABASE vanroute_audit' >/dev/null
 
 # recompila se o codigo mudou depois do ultimo jar
 if [ ! -f "$JAR" ] || [ -n "$(find "$BACK/src/main" -newer "$JAR" -print -quit)" ]; then
@@ -47,8 +45,7 @@ else
 fi
 
 echo "subindo o backend (log em $OUT/backend.log)..."
-env DATABASE_NAME=vanroute_audit MINIO_BUCKET_NAME=vanroute-audit \
-  SPRING_MAIL_HOST=127.0.0.1 SPRING_MAIL_PORT=2525 SPRING_MAIL_USERNAME=stub SPRING_MAIL_PASSWORD=stub \
+env SPRING_MAIL_HOST=127.0.0.1 SPRING_MAIL_PORT=2525 SPRING_MAIL_USERNAME=stub SPRING_MAIL_PASSWORD=stub \
   SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=false TRIP_ETA_REFRESH_SECONDS=${TRIP_ETA_REFRESH_SECONDS:-120} \
   "${maps[@]}" java -jar "$JAR" --spring.jpa.show-sql=false > "$OUT/backend.log" 2>&1 & pids+=($!)
 

@@ -2,6 +2,7 @@ package br.com.vanroute.backend.models.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.models.user.enums.UserStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import java.util.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.jspecify.annotations.Nullable;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 @Entity
@@ -28,13 +30,14 @@ public class User implements UserDetails {
     private String passwordHash;
     
     // VARCHAR evita conflito no ddl-auto validate (CHAR/bpchar do Postgres != String do Hibernate)
-    @Column(nullable = false, unique = true, length = 11)
+    // cpf, email e phone ficam nulos quando o usuario exclui a conta
+    @Column(unique = true, length = 11)
     private String cpf;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String email;
     
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String phone;
 
     @CreationTimestamp
@@ -50,13 +53,10 @@ public class User implements UserDetails {
     @Column(name = "photo_key")
     private String photoKey;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id")
-    )
-    private Set<RolesEntity> roles = new HashSet<>();
+    // um papel por usuario (motorista, responsavel ou admin); vai no JWT na claim "roles"
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RoleTypeEnum role;
 
     public UUID getId() {
         return id;
@@ -129,17 +129,22 @@ public class User implements UserDetails {
         this.photoKey = photoKey;
     }
 
-    public Set<RolesEntity> getRoles() {
-        return roles;
+    public RoleTypeEnum getRole() {
+        return role;
     }
 
-    public void setRoles(Set<RolesEntity> roles) {
-        this.roles = roles;
+    public void setRole(RoleTypeEnum role) {
+        this.role = role;
+    }
+
+    // o papel como vai no JWT e nas respostas (ex.: ["ROLE_DRIVER"])
+    public List<String> roleNames() {
+        return role == null ? List.of() : List.of(role.name());
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles;
+        return roleNames().stream().map(SimpleGrantedAuthority::new).toList();
     }
 
     @JsonIgnore

@@ -57,8 +57,7 @@ private final ResponsibleRepository responsibleRepository;
             String json = objectMapper.writeValueAsString(dto);
             while (true) {
                 code = codeGenerator.generateCode();
-                // alias eu nao lembro se fiz essa verificação no bglh de envia email dps tem q
-                // ver. é que é do Redis ne ai quem me ensino foi o brabo
+                // setIfAbsent: o codigo so e gravado se ainda nao existir (sem colisao entre convites)
                 Boolean result = redisTemplate.opsForValue().setIfAbsent(
                         REDIS_KEY_PREFIX + code,
                         json,
@@ -71,10 +70,7 @@ private final ResponsibleRepository responsibleRepository;
 
         } catch (JsonProcessingException e) {
 
-            throw new RuntimeException(
-                    "Erro ao serializar os dados do vínculo"
-
-            );
+            throw new IllegalStateException("Erro ao serializar os dados do vínculo", e);
         }
     }
 

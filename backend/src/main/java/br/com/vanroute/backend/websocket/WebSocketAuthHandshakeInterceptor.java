@@ -9,7 +9,6 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.util.Map;
-//chat lixo
 public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
 
     @Override

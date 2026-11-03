@@ -1,10 +1,9 @@
 package br.com.vanroute.backend.dtos.user;
 
 import br.com.vanroute.backend.dtos.route.AddressResponseDTO;
-import br.com.vanroute.backend.models.user.RolesEntity;
 import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 
-import java.util.Set;
+import java.util.List;
 
 public record ResponsibleResponseDTO(
         String name,
@@ -12,7 +11,7 @@ public record ResponsibleResponseDTO(
         String cpf,
         String phone,
         FinancialStatus financialStatus,
-        Set<RolesEntity> roleTypeEnum,
+        List<String> roles,
         AddressResponseDTO address
 ) {
 }

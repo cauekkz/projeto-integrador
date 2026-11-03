@@ -5,7 +5,6 @@ import br.com.vanroute.backend.dtos.school.SchoolRequestDTO;
 import br.com.vanroute.backend.models.school.School;
 import br.com.vanroute.backend.services.DriverSchoolService;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import br.com.vanroute.backend.dtos.school.SchoolResponseDTO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;

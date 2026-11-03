@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.models.student;
 
+import java.time.LocalDateTime;
+import org.hibernate.annotations.CreationTimestamp;
 import br.com.vanroute.backend.models.address.Address;
 import jakarta.persistence.*;
 import java.util.UUID;
@@ -19,6 +21,14 @@ public class StudentAddress {
     @ManyToOne
     @JoinColumn(name = "address_id", nullable = false)
     private Address address;
+
+    // apelido que o responsavel ve e o motorista escolhe: "Casa", "Casa da avo", "Ingles de terca"
+    @Column(nullable = false, length = 60)
+    private String label;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
     public UUID getId() {
         return id;
@@ -44,4 +54,16 @@ public class StudentAddress {
         this.address = address;
     }
 
+
+    public String getLabel() {
+        return label;
+    }
+
+    public void setLabel(String label) {
+        this.label = label;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 }

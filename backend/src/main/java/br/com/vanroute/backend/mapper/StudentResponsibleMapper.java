@@ -1,7 +1,6 @@
 package br.com.vanroute.backend.mapper;
 
 import br.com.vanroute.backend.dtos.route.AddressResponseDTO;
-import br.com.vanroute.backend.dtos.student.AddressRequestDTO;
 import br.com.vanroute.backend.dtos.student.StudentAddressResponseDTO;
 import br.com.vanroute.backend.dtos.student.StudentResponseDTO;
 import br.com.vanroute.backend.dtos.student.StudentResponsibleResponseDTO;
@@ -75,7 +74,7 @@ public class StudentResponsibleMapper {
                 responsible.getUser().getCpf(),
                 responsible.getUser().getPhone(),
                 responsible.getFinancialStatus(),
-                responsible.getUser().getRoles(),
+                responsible.getUser().roleNames(),
                 new AddressResponseDTO(
                         responsible.getAddress().getId(),
                         responsible.getAddress().getStreet(),

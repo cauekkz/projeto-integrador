@@ -11,10 +11,8 @@ import br.com.vanroute.backend.exceptions.BadRequestException;
 import br.com.vanroute.backend.dtos.user.UpdateUser;
 import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
 import br.com.vanroute.backend.models.user.User;
-import br.com.vanroute.backend.models.user.RolesEntity;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.models.user.enums.UserStatus;
-import br.com.vanroute.backend.repositories.RolesRepository;
 import br.com.vanroute.backend.repositories.UserRepository;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,17 +33,17 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final RolesRepository rolesRepository;
     private final EmailVerificationService emailVerificationService;
     private final StorageService storageService;
     private final DriverRepository driverRepository;
     private final RefreshTokenService refreshTokenService;
+    private final TermsService termsService;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, RolesRepository rolesRepository, EmailVerificationService emailVerificationService, StorageService storageService, DriverRepository driverRepository, RefreshTokenService refreshTokenService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailVerificationService emailVerificationService, StorageService storageService, DriverRepository driverRepository, RefreshTokenService refreshTokenService, TermsService termsService) {
+        this.termsService = termsService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.rolesRepository = rolesRepository;
         this.emailVerificationService = emailVerificationService;
         this.storageService = storageService;
         this.driverRepository = driverRepository;
@@ -57,12 +55,7 @@ public class UserService {
             throw new UserOrDriverOrResponsibleAlreadyRegisteredException("Usuario ja cadastrado");
         }
 
-        RoleTypeEnum selectedRole = userCreateDTO.getRole() != null ? userCreateDTO.getRole()
-                : RoleTypeEnum.ROLE_RESPONSIBLE;
-        String roleName = selectedRole.name();
-
-        RolesEntity roles = rolesRepository.findByNome(roleName)
-                .orElseGet(() -> rolesRepository.save(RolesEntity.builder().nome(roleName).build()));
+        RoleTypeEnum role = userCreateDTO.getRole() != null ? userCreateDTO.getRole() : RoleTypeEnum.ROLE_RESPONSIBLE;
 
         User user = new User();
         user.setName(userCreateDTO.getName());
@@ -70,7 +63,7 @@ public class UserService {
         user.setPhone(userCreateDTO.getPhone());
         user.setCpf(userCreateDTO.getCpf());
         user.setPasswordHash(passwordEncoder.encode(userCreateDTO.getPasswordHash()));
-        user.setRoles(java.util.Set.of(roles));
+        user.setRole(role);
         user.setStatus(UserStatus.CHECK_EMAIL);
         return userRepository.save(user);
 
@@ -154,9 +147,11 @@ public class UserService {
                 user.getEmail(),
                 user.getPhone(),
                 user.getCpf(),
-                user.getRoles().stream().map(RolesEntity::getAuthority).toList(),
+                user.roleNames(),
                 user.getPhotoKey(),
-                linkCode
+                linkCode,
+                TermsService.CURRENT_VERSION,
+                termsService.acceptedCurrent(user.getId())
         );
     }
 
@@ -164,10 +159,6 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public void deleteById(UUID id, String code) {
-        emailVerificationService.verifyCode(codeKey(id), code);
-        userRepository.deleteById(id);
-    }
 
     public Optional<User> findByCpf(String cpf) {
         return userRepository.findByCpf(cpf);

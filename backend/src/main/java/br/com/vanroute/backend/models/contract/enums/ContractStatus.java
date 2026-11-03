@@ -5,6 +5,6 @@ public enum ContractStatus {
     ACTIVE, // Ativo
     INACTIVE, // Inativo
     CANCELED, // Cancelado
-    SUSPENDED, // Suspenso
-    OVERDUE // Atrasado
+    // SUSPENDED, // Suspenso: sem uso
+    // OVERDUE // Atrasado: sem uso (atraso e da parcela, nao do contrato)
 }

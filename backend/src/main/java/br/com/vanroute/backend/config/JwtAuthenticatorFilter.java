@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.config;
 
+import br.com.vanroute.backend.models.user.enums.UserStatus;
+
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,10 +30,10 @@ public class JwtAuthenticatorFilter extends OncePerRequestFilter {
         this.userRepository = userRepository;
     }
 
-    // token antigo (sub = CPF) ou usuario apagado: segue sem autenticacao (401 nas rotas protegidas)
+    // token antigo (sub = CPF), usuario apagado ou conta excluida (INACTIVE): segue sem autenticacao (401 nas rotas protegidas)
     private Optional<User> findUser(String subject) {
         try {
-            return userRepository.findById(UUID.fromString(subject));
+            return userRepository.findById(UUID.fromString(subject)).filter(user -> user.getStatus() != UserStatus.INACTIVE);
         } catch (IllegalArgumentException e) {
             return Optional.empty();
         }

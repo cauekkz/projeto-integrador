@@ -193,6 +193,11 @@ export class DriverContractPage implements OnInit {
       this.draft.mostrarErros.set(true);
       return;
     }
+    if (Object.keys(this.draft.errosMidia()).length) {
+      this.draft.etapa.set('midia');
+      this.draft.mostrarErros.set(true);
+      return;
+    }
 
     const responsavel = this.draft.responsavel()!;
     this.enviando.set(true);
@@ -207,7 +212,7 @@ export class DriverContractPage implements OnInit {
         this.draft.registrarPdfEnviado(pdf, fileKey);
       } catch (error) {
         console.error('Erro ao enviar o PDF do contrato:', error);
-        this.erroEnvio.set('Não foi possível enviar o PDF. Tente novamente ou remova o anexo.');
+        this.erroEnvio.set('Não foi possível enviar o PDF. Tente novamente.');
         this.enviando.set(false);
         return;
       }

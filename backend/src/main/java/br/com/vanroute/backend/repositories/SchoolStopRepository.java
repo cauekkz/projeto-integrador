@@ -8,7 +8,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface SchoolStopRepository extends JpaRepository<SchoolStop, UUID> {
-    Optional<SchoolStop> findFirstByStopRouteIdAndSchoolId(UUID routeId, UUID schoolId);
+    // o primeiro ponto dessa escola na rota (a mesma escola pode aparecer em mais de um ponto)
+    Optional<SchoolStop> findFirstByStopRouteIdAndSchoolIdOrderByStopOrderIndexAsc(UUID routeId, UUID schoolId);
     boolean existsByStopId(UUID stopId);
     List<SchoolStop> findByStopId(UUID stopId);
 }

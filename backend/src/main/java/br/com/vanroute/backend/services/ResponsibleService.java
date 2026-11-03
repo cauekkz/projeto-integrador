@@ -1,7 +1,6 @@
 package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.dtos.route.AddressResponseDTO;
-import br.com.vanroute.backend.dtos.geocode.Coordenadas;
 import br.com.vanroute.backend.dtos.user.ResponsibleRequestDTO;
 import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
@@ -20,19 +19,20 @@ public class ResponsibleService {
     private final ResponsibleRepository responsibleRepository;
     private final UserService userService;
     private final AddressService addressService;
-    private final MapService mapService;
     private final EmailVerificationService emailVerificationService;
+    private final TermsService termsService;
 
-    public ResponsibleService(ResponsibleRepository responsibleRepository, UserService userService, AddressService addressService, MapService mapService, EmailVerificationService emailVerificationService) {
+    public ResponsibleService(ResponsibleRepository responsibleRepository, UserService userService, AddressService addressService, EmailVerificationService emailVerificationService, TermsService termsService) {
+        this.termsService = termsService;
         this.responsibleRepository = responsibleRepository;
         this.userService = userService;
         this.addressService = addressService;
-        this.mapService = mapService;
         this.emailVerificationService = emailVerificationService;
     }
 
     @Transactional
     public ResponsibleResponseDTO createResponsible(ResponsibleRequestDTO responsibleRequestDTO){
+        termsService.requireCurrent(responsibleRequestDTO.getAcceptedTermsVersion());
         UserCreateDTO userDto = new UserCreateDTO();
         userDto.setName(responsibleRequestDTO.getName());
         userDto.setCpf(responsibleRequestDTO.getCpf());
@@ -43,18 +43,17 @@ public class ResponsibleService {
 
         User user = userService.createUser(userDto);
 
-        Address address = addressService.addAddress(responsibleRequestDTO.getAddressRequestDTO());
+        // endereco de cobranca; se ja existe (ex.: outro responsavel da mesma casa) so liga
+        Address address = addressService.findOrCreate(responsibleRequestDTO.getAddressRequestDTO());
         Responsible responsible = new Responsible();
         responsible.setUser(user);
-        responsible.setFinancialStatus(FinancialStatus.PENDING);
+        responsible.setFinancialStatus(FinancialStatus.UP_TO_DATE);
         responsible.setAddress(address);
-        Coordenadas cords = mapService.searchCoord(address);
-        address.setLatitude(cords.latitude());
-        address.setLongitude(cords.longitude());
         Responsible newResponsible = responsibleRepository.save(responsible);
+        termsService.accept(user.getId(), responsibleRequestDTO.getAcceptedTermsVersion());
 
         // dentro da transacao: se o envio falhar, o cadastro e desfeito
-        emailVerificationService.generateAndSendCode("verificationEmail:email:" + user.getEmail(), user.getEmail());
+        emailVerificationService.sendCodeAfterSignup("verificationEmail:email:" + user.getEmail(), user.getEmail());
 
         return new ResponsibleResponseDTO(
                 newResponsible.getUser().getName(),
@@ -62,7 +61,7 @@ public class ResponsibleService {
                 newResponsible.getUser().getCpf(),
                 newResponsible.getUser().getPhone(),
                 newResponsible.getFinancialStatus(),
-                newResponsible.getUser().getRoles(),
+                newResponsible.getUser().roleNames(),
                 new AddressResponseDTO(
                         address.getId(),
                         address.getStreet(),
