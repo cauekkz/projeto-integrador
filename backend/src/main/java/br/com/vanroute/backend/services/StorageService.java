@@ -67,12 +67,20 @@ public class StorageService {
         }
     }
 
-    public PresignedUrlResponse generatePresignedUrl(String originalFilename, String contentType) {
+    public static final String UPLOAD_PREFIX = "uploads/";
+
+    // o arquivo vai pra pasta de quem enviou (uploads/{id}/...): o caminho ja diz o dono,
+    // sem tabela. Anexar no chat ou usar como PDF do contrato so com arquivo da propria pasta
+    public PresignedUrlResponse generatePresignedUrl(UUID userId, String originalFilename, String contentType) {
         String ext = "";
         if (originalFilename != null && originalFilename.contains(".")) {
             ext = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
-        return presignPut(UUID.randomUUID().toString() + ext, contentType);
+        return presignPut(UPLOAD_PREFIX + userId + "/" + UUID.randomUUID() + ext, contentType);
+    }
+
+    public static boolean isOwnedBy(String fileKey, UUID userId) {
+        return fileKey != null && fileKey.startsWith(UPLOAD_PREFIX + userId + "/");
     }
 
     public static final String PROFILE_PREFIX = "profile/";
@@ -125,6 +133,7 @@ public class StorageService {
     public PresignedDownloadResponse generateDownloadUrl(String fileKey, UUID userId) {
         // foto de perfil: qualquer usuario logado ve
         boolean allowed = fileKey.startsWith(PROFILE_PREFIX)
+                || isOwnedBy(fileKey, userId)
                 || chatMessageRepository.existsAttachmentVisibleTo(fileKey, userId)
                 || documentRepository.existsContractDocumentVisibleTo(fileKey, userId);
         if (!allowed) {

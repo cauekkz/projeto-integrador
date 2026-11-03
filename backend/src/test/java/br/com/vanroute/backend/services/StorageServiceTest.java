@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -77,12 +78,17 @@ public class StorageServiceTest {
         
         when(s3Presigner.presignPutObject(any(PutObjectPresignRequest.class))).thenReturn(presignedReq);
 
-        StorageService.PresignedUrlResponse response = storageService.generatePresignedUrl("doc.pdf", "application/pdf");
+        UUID owner = UUID.randomUUID();
+        StorageService.PresignedUrlResponse response = storageService.generatePresignedUrl(owner, "doc.pdf", "application/pdf");
 
         assertNotNull(response);
         assertNotNull(response.uploadUrl());
         assertEquals("http://localhost:9000/test-bucket/some-key", response.uploadUrl());
         assertTrue(response.fileKey().endsWith(".pdf"));
+        // o caminho diz quem enviou
+        assertTrue(response.fileKey().startsWith("uploads/" + owner + "/"));
+        assertTrue(StorageService.isOwnedBy(response.fileKey(), owner));
+        assertFalse(StorageService.isOwnedBy(response.fileKey(), UUID.randomUUID()));
     }
 
     // o id vem do token; o download nao consulta mais o usuario

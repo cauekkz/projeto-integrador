@@ -440,10 +440,12 @@ O arquivo **não passa pelo backend**: o front envia e baixa direto do MinIO, us
 **Enviar (imagem/PDF do chat ou PDF do contrato):**
 ```
 1. GET /api/storage/presigned-url?fileName=foto.jpeg&contentType=image/jpeg
-   → { "uploadUrl": "...", "fileKey": "3f2a....jpeg" }
+   → { "uploadUrl": "...", "fileKey": "uploads/{seuId}/3f2a....jpeg" }
 2. PUT <uploadUrl> com o arquivo no corpo e o header Content-Type igual ao do passo 1   (direto no MinIO)
 3. usar o fileKey: attachmentUrl da mensagem ou document.url da proposta
 ```
+
+**Dono do arquivo:** o upload vai pra pasta de quem enviou (`uploads/{id}/...`), então o caminho já diz o dono, sem tabela. Anexar no chat ou usar como PDF da proposta só com arquivo da própria pasta (outro dá `403` no chat e `400` na proposta). Sem isso, quem soubesse o `fileKey` de outra pessoa podia anexar no próprio chat e ganhar acesso ao arquivo. O bucket sozinho não resolve: pra ele todo mundo é o backend, que assina os links.
 
 **Baixar/exibir:**
 ```
@@ -459,6 +461,7 @@ Quem pode baixar:
 | anexo de chat | quem participa do chat |
 | PDF de contrato | as partes do contrato |
 | foto de perfil | qualquer usuário logado |
+| arquivo que você enviou (`uploads/{seuId}/...`) | você |
 
 **Foto de perfil:**
 ```

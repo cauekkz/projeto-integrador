@@ -87,9 +87,9 @@ public class ContractServiceTest {
         ContractProposalRequestDTO request = new ContractProposalRequestDTO(
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 new ContractRequestDTO(ContractPeriodicity.MONTHLY, BigDecimal.TEN, LocalDate.now(TripService.ZONE), LocalDate.now(TripService.ZONE).plusMonths(1)),
-                new DocumentRequestDTO("contracts/x.pdf", "TRANSPORT_CONTRACT"));
+                new DocumentRequestDTO("uploads/" + driverId + "/x.pdf", "TRANSPORT_CONTRACT"));
 
-        when(storageService.exists("contracts/x.pdf")).thenReturn(true);
+        when(storageService.exists("uploads/" + driverId + "/x.pdf")).thenReturn(true);
         when(studentResponsibleService.isAdmin(request.responsibleId(), request.studentId())).thenReturn(true);
         when(driverSchoolsRepository.existsByDriverUserIdAndSchoolId(driverId, request.schoolId())).thenReturn(false);
 
@@ -102,9 +102,9 @@ public class ContractServiceTest {
         ContractProposalRequestDTO request = new ContractProposalRequestDTO(
                 UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                 new ContractRequestDTO(ContractPeriodicity.MONTHLY, BigDecimal.TEN, LocalDate.now(TripService.ZONE), LocalDate.now(TripService.ZONE).plusMonths(1)),
-                new DocumentRequestDTO("contracts/x.pdf", "TRANSPORT_CONTRACT"));
+                new DocumentRequestDTO("uploads/" + driverId + "/x.pdf", "TRANSPORT_CONTRACT"));
 
-        when(storageService.exists("contracts/x.pdf")).thenReturn(true);
+        when(storageService.exists("uploads/" + driverId + "/x.pdf")).thenReturn(true);
         when(studentResponsibleService.isAdmin(request.responsibleId(), request.studentId())).thenReturn(true);
         when(driverSchoolsRepository.existsByDriverUserIdAndSchoolId(driverId, request.schoolId())).thenReturn(true);
         when(entityManager.getReference(Driver.class, driverId)).thenReturn(new Driver());
@@ -127,7 +127,7 @@ public class ContractServiceTest {
 
     private static ContractProposalRequestDTO proposal(ContractRequestDTO terms) {
         return new ContractProposalRequestDTO(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), terms,
-                new DocumentRequestDTO("contracts/x.pdf", "TRANSPORT_CONTRACT"));
+                new DocumentRequestDTO("uploads/" + driverId + "/x.pdf", "TRANSPORT_CONTRACT"));
     }
 
     @Test
@@ -292,11 +292,18 @@ public class ContractServiceTest {
             assertThrows(BadRequestException.class, () -> contractService.createContract(UUID.randomUUID(), request));
         }
 
-        // fileKey que nao existe no storage (inventado ou upload que falhou)
-        when(storageService.exists("contracts/nao-existe.pdf")).thenReturn(false);
+        UUID driverId = UUID.randomUUID();
+        // PDF de outra pessoa (bastaria saber o fileKey dela)
+        ContractProposalRequestDTO someoneElses = new ContractProposalRequestDTO(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), terms,
+                new DocumentRequestDTO("uploads/" + UUID.randomUUID() + "/contrato.pdf", "TRANSPORT_CONTRACT"));
+        assertThrows(BadRequestException.class, () -> contractService.createContract(driverId, someoneElses));
+
+        // fileKey da pasta dele, mas que nao existe no storage (upload que falhou)
+        String missingKey = "uploads/" + driverId + "/nao-existe.pdf";
+        when(storageService.exists(missingKey)).thenReturn(false);
         ContractProposalRequestDTO request = new ContractProposalRequestDTO(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), terms,
-                new DocumentRequestDTO("contracts/nao-existe.pdf", "TRANSPORT_CONTRACT"));
-        assertThrows(BadRequestException.class, () -> contractService.createContract(UUID.randomUUID(), request));
+                new DocumentRequestDTO(missingKey, "TRANSPORT_CONTRACT"));
+        assertThrows(BadRequestException.class, () -> contractService.createContract(driverId, request));
         verify(contractRepository, never()).save(any());
     }
 

@@ -96,6 +96,18 @@ class ChatMessageServiceTest {
     }
 
     @Test
+    void cannotAttachAFileSomeoneElseUploaded() {
+        ChatMessageRequestDTO requestDTO = new ChatMessageRequestDTO(
+                null,
+                br.com.vanroute.backend.models.chat.enums.AttachmentType.OTHER,
+                "uploads/" + UUID.randomUUID() + "/documento.pdf"
+        );
+
+        assertThrows(org.springframework.security.access.AccessDeniedException.class,
+                () -> chatMessageService.sendMessage(mockChat.getId(), senderUser.getId(), requestDTO));
+    }
+
+    @Test
     void shouldThrowWhenUserHasNoChatAccess() {
         ChatMessageRequestDTO requestDTO = new ChatMessageRequestDTO(
                 "Hello",
