@@ -1,0 +1,28 @@
+name: Documentos pessoais
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  sem-documentos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Nenhum PDF de CNH ou CRLV nos arquivos
+        run: |
+          found=$(git ls-files | grep -iE '(cnh|crlv)[^/]*\.pdf$' || true)
+          if [ -n "$found" ]; then
+            echo "::error::Documento pessoal no repositorio: $found"
+            exit 1
+          fi
+      - name: Nenhum documento removido voltou pelo historico
+        run: |
+          # blobs dos PDFs apagados do historico (o hash nao revela o conteudo)
+          removed='eba19240dcf7cab10d7464998183d89d6fcd2e38|82f76983d2e9d9a45ba9212473e437185d97ed66'
+          if git rev-list --objects HEAD | grep -qE "^($removed)"; then
+            echo "::error::Esse historico tem um documento que foi removido. Clone o repositorio de novo em vez de dar git pull"
+            exit 1
+          fi

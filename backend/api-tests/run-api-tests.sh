@@ -63,7 +63,7 @@ addr='{"street":"Avenida Paulista","zipCode":"01310-100","city":"Sao Paulo","nei
 
 signup_responsible() { # signup_responsible CPF EMAIL PHONE -> cria e ativa; imprime token
   req "responsible signup ($2)" 200 POST /api/responsible/auth/signup "" \
-    "{\"name\":\"Resp Teste\",\"email\":\"$2\",\"password\":\"Senha@123\",\"confirmPassword\":\"Senha@123\",\"cpf\":\"$1\",\"phone\":\"$3\",\"address\":$addr}"
+    "{\"name\":\"Resp Teste\",\"email\":\"$2\",\"password\":\"Senha@123\",\"confirmPassword\":\"Senha@123\",\"cpf\":\"$1\",\"phone\":\"$3\",\"address\":$addr,\"acceptedTermsVersion\":\"1\"}"
 }
 
 verify_and_login() { # verify_and_login CPF EMAIL VAR
@@ -95,9 +95,14 @@ signup_responsible "$R1_CPF" "$R1_EMAIL" "$R1_PHONE"
 assert "signup nao expoe senha" "! grep -qi 'senha@123\|password' <<<\"\$BODY\""
 assert "signup geocodificou endereco" "[ \"\$(echo \"\$BODY\" | jq .address.latitude)\" != null ]"
 assert "signup devolve o papel" "echo \"\$BODY\" | jq -e '.roles == [\"ROLE_RESPONSIBLE\"]' >/dev/null"
+assert "aceite dos termos gravado no cadastro" "[ \"\$(psql_db -c \"SELECT count(*) FROM terms_acceptances t JOIN users u ON u.id=t.user_id WHERE u.cpf='$R1_CPF' AND t.version='1'\")\" = 1 ]"
 assert "papel gravado na coluna users.role" "[ \"\$(psql_db -c \"SELECT role FROM users WHERE cpf='$R1_CPF'\")\" = ROLE_RESPONSIBLE ]"
 req "signup duplicado" 409 POST /api/responsible/auth/signup "" \
-  "{\"name\":\"Dup\",\"email\":\"$R1_EMAIL\",\"password\":\"Senha@123\",\"confirmPassword\":\"Senha@123\",\"cpf\":\"$R1_CPF\",\"phone\":\"$R1_PHONE\",\"address\":$addr}"
+  "{\"name\":\"Dup\",\"email\":\"$R1_EMAIL\",\"password\":\"Senha@123\",\"confirmPassword\":\"Senha@123\",\"cpf\":\"$R1_CPF\",\"phone\":\"$R1_PHONE\",\"address\":$addr,\"acceptedTermsVersion\":\"1\"}"
+req "signup sem aceitar os termos" 400 POST /api/responsible/auth/signup "" \
+  "{\"name\":\"X\",\"email\":\"t$RUN@teste.local\",\"password\":\"Senha@123\",\"confirmPassword\":\"Senha@123\",\"cpf\":\"$(cpf)\",\"phone\":\"5$RUN\",\"address\":$addr}"
+req "signup aceitando versao velha dos termos" 400 POST /api/responsible/auth/signup "" \
+  "{\"name\":\"X\",\"email\":\"t$RUN@teste.local\",\"password\":\"Senha@123\",\"confirmPassword\":\"Senha@123\",\"cpf\":\"$(cpf)\",\"phone\":\"5$RUN\",\"address\":$addr,\"acceptedTermsVersion\":\"0\"}"
 req "signup CPF invalido" 400 POST /api/responsible/auth/signup "" \
   "{\"name\":\"X\",\"email\":\"x$RUN@teste.local\",\"password\":\"Senha@123\",\"confirmPassword\":\"Senha@123\",\"cpf\":\"12345678900\",\"phone\":\"1\",\"address\":$addr}"
 req "signup senhas diferentes" 400 POST /api/responsible/auth/signup "" \
@@ -109,7 +114,16 @@ req "signup endereco nao geocodificavel" 400 POST /api/responsible/auth/signup "
 req "signup JSON malformado" 400 POST /api/responsible/auth/signup "" "{nao-json"
 req "login antes de verificar e-mail" 400 POST /api/auth/login "" "{\"cpf\":\"$R1_CPF\",\"passwordHash\":\"Senha@123\"}"
 req "verify-email codigo errado" 400 POST /api/auth/verify-email "" "{\"email\":\"$R1_EMAIL\",\"code\":\"000000x\"}"
-req "send-verification-code" 200 POST "/api/auth/send-verification-code?email=$R1_EMAIL"
+req "reenvio logo depois do cadastro (trava de 1 minuto)" 429 POST "/api/auth/send-verification-code?email=$R1_EMAIL"
+redis DEL "verificationEmail:email:$R1_EMAIL:cooldown" >/dev/null
+req "send-verification-code (passou 1 minuto)" 200 POST "/api/auth/send-verification-code?email=$R1_EMAIL"
+OLD_CODE=$(redis GET "verificationEmail:email:$R1_EMAIL")
+wrong() { printf '%06d' $(( (10#$OLD_CODE + $1) % 1000000 )); }  # 6 digitos, diferente do certo
+for n in 1 2 3 4; do req "verify-email errado ($n de 5)" 400 POST /api/auth/verify-email "" "{\"email\":\"$R1_EMAIL\",\"code\":\"$(wrong $n)\"}"; done
+assert "a 4a errada avisa que resta 1" "grep -q 'Resta 1 tentativa' <<<\"\$BODY\""
+req "5a errada: troca o codigo e manda outro" 429 POST /api/auth/verify-email "" "{\"email\":\"$R1_EMAIL\",\"code\":\"$(wrong 5)\"}"
+assert "codigo trocado no Redis" "[ -n \"\$(redis GET verificationEmail:email:$R1_EMAIL)\" ] && [ \"\$(redis GET verificationEmail:email:$R1_EMAIL)\" != \"$OLD_CODE\" ]"
+req "o codigo antigo nao vale mais" 400 POST /api/auth/verify-email "" "{\"email\":\"$R1_EMAIL\",\"code\":\"$OLD_CODE\"}"
 req "send-verification-code e-mail inexistente" 400 POST "/api/auth/send-verification-code?email=nao.$RUN@teste.local"
 verify_and_login "$R1_CPF" "$R1_EMAIL" R1
 jwt_roles() { local p; p=$(cut -d. -f2 <<<"$1" | tr '_-' '/+'); while [ $(( ${#p} % 4 )) -ne 0 ]; do p="$p="; done; base64 -d <<<"$p" 2>/dev/null | jq -c .roles; }
@@ -144,8 +158,10 @@ req "login motorista D2" 200 POST /api/auth/login "" "{\"cpf\":\"$D2_CPF\",\"pas
 printf '%%PDF-1.4\nCNH DIGITAL ficticia sem assinatura\n%%%%EOF\n' > /tmp/vr_fake.pdf
 CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/driver/auth/verify-CNH" -F "documentPdf=@/tmp/vr_fake.pdf;type=application/pdf"); BODY=$(cat /tmp/vr_body)
 check "verify-CNH PDF sem assinatura ICP" 422 "$CODE"
-CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/driver/auth/signup" -F "documentPdf=@/tmp/vr_fake.pdf;type=application/pdf" -F name=X -F email=z$RUN@teste.local -F password=Senha@123 -F confirmPassword=Senha@123 -F phone=9$RUN); BODY=$(cat /tmp/vr_body)
+CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/driver/auth/signup" -F "documentPdf=@/tmp/vr_fake.pdf;type=application/pdf" -F name=X -F email=z$RUN@teste.local -F password=Senha@123 -F confirmPassword=Senha@123 -F phone=9$RUN -F acceptedTermsVersion=1); BODY=$(cat /tmp/vr_body)
 check "driver signup CNH invalida" 422 "$CODE"
+CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/driver/auth/signup" -F "documentPdf=@/tmp/vr_fake.pdf;type=application/pdf" -F name=X -F email=z$RUN@teste.local -F password=Senha@123 -F confirmPassword=Senha@123 -F phone=9$RUN); BODY=$(cat /tmp/vr_body)
+check "driver signup sem aceitar os termos" 400 "$CODE"
 CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/driver/auth/signup" -F name=X); BODY=$(cat /tmp/vr_body)
 check "driver signup campos ausentes" 400 "$CODE"
 
@@ -226,6 +242,9 @@ req "R2 confirma codigo" 201 POST /api/student/confirm-link "$R2" "{\"code\":\"$
 req "R2 reutiliza codigo" 400 POST /api/student/confirm-link "$R2" "{\"code\":\"$LINK\"}"
 req "R2 (outro responsavel) ve os enderecos do aluno" 200 GET "/api/student/$STUDENT/addresses" "$R2"
 assert "R2 ve Casa, Padaria e Ingles" "[ \"\$(echo \"\$BODY\" | jq -r '[.[].label] | join(\",\")')\" = \"Casa,Padaria,Ingles\" ]"
+R2_FIRST_ADDR=$(echo "$BODY" | jq -r '.[0].id')
+req "R2 (nao admin) nao adiciona endereco" 403 POST "/api/student/$STUDENT/addresses" "$R2" "{\"label\":\"Avo\",\"address\":$addr}"
+req "R2 (nao admin) nao tira endereco" 403 DELETE "/api/student/$STUDENT/addresses/$R2_FIRST_ADDR" "$R2"
 req "R2 lista filhos (nao admin)" 200 GET "/api/student/my-children?isAdmin=false" "$R2"
 assert "R2 ve aluno vinculado" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 1 ]"
 req "motorista tenta criar aluno" 403 POST /api/student/create-student "$D1" "$STUDENT_JSON"
@@ -277,7 +296,21 @@ req "D1 ve os filhos do pai do chat" 200 GET "/api/chats/$CHAT/students" "$D1"
 assert "filhos do pai: so id e nome" "echo \"\$BODY\" | jq -e '.[] | select(.id==\"$STUDENT\" and .name==\"Aluno Ficticio\" and (keys == [\"id\",\"name\"]))' >/dev/null"
 req "R1 (responsavel) tenta ver filhos pelo chat" 403 GET "/api/chats/$CHAT/students" "$R1"
 req "D2 (fora do chat) tenta ver filhos" 400 GET "/api/chats/$CHAT/students" "$D2"
-contract() { echo "{\"responsibleId\":\"$R1_ID\",\"studentId\":\"$1\",\"schoolId\":\"$SCHOOL\",\"contract\":{\"periodicity\":\"MONTHLY\",\"value\":350.00,\"startDate\":\"2027-02-01\",\"endDate\":\"2027-06-30\"},\"document\":{\"url\":\"contratos/teste.pdf\",\"type\":\"TRANSPORT_CONTRACT\"}}"; }
+# datas relativas a hoje: o contrato nao pode comecar no passado
+C_START=$(date -d "$(date +%Y-%m-01) +1 month" +%F)  # dia 1 do mes que vem
+C_END=$(date -d "$C_START +5 months -1 day" +%F)     # 5 parcelas mensais
+# toda proposta leva o PDF do contrato ja enviado pro storage
+contract_pdf() { local r; r=$(curl -s -H "Authorization: Bearer $D1" "$BASE/api/storage/presigned-url?fileName=contrato.pdf&contentType=application/pdf")
+  curl -s -o /dev/null -X PUT -H 'Content-Type: application/pdf' --data-binary @/tmp/vr_fake.pdf "$(echo "$r" | jq -r .uploadUrl)"; echo "$r" | jq -r .fileKey; }
+CONTRACT_PDF=$(contract_pdf)
+contract() { echo "{\"responsibleId\":\"$R1_ID\",\"studentId\":\"$1\",\"schoolId\":\"$SCHOOL\",\"contract\":{\"periodicity\":\"MONTHLY\",\"value\":350.00,\"startDate\":\"$C_START\",\"endDate\":\"$C_END\"},\"document\":{\"url\":\"$CONTRACT_PDF\",\"type\":\"TRANSPORT_CONTRACT\"}}"; }
+bad_terms() { echo "{\"responsibleId\":\"$R1_ID\",\"studentId\":\"$STUDENT\",\"schoolId\":\"$SCHOOL\",\"contract\":$1,\"document\":{\"url\":\"$CONTRACT_PDF\",\"type\":\"TRANSPORT_CONTRACT\"}}"; }
+req "contrato comecando no passado" 400 POST "/api/chats/$CHAT/contract" "$D1" "$(bad_terms '{"periodicity":"MONTHLY","value":350.00,"startDate":"2020-02-01","endDate":"2020-06-30"}')"
+req "contrato com mais de 2 anos" 400 POST "/api/chats/$CHAT/contract" "$D1" "$(bad_terms "{\"periodicity\":\"MONTHLY\",\"value\":350.00,\"startDate\":\"$C_START\",\"endDate\":\"$(date -d "$C_START +2 years +1 day" +%F)\"}")"
+req "contrato com valor zero" 400 POST "/api/chats/$CHAT/contract" "$D1" "$(bad_terms "{\"periodicity\":\"MONTHLY\",\"value\":0,\"startDate\":\"$C_START\",\"endDate\":\"$C_END\"}")"
+req "contrato terminando antes de comecar" 400 POST "/api/chats/$CHAT/contract" "$D1" "$(bad_terms "{\"periodicity\":\"MONTHLY\",\"value\":350.00,\"startDate\":\"$C_END\",\"endDate\":\"$C_START\"}")"
+req "proposta sem o PDF do contrato" 400 POST "/api/chats/$CHAT/contract" "$D1" "$(contract "$STUDENT" | jq -c 'del(.document)')"
+req "proposta com PDF que nao existe no storage" 400 POST "/api/chats/$CHAT/contract" "$D1" "$(contract "$STUDENT" | jq -c '.document.url="contratos/inventado.pdf"')"
 req "D1 propoe contrato" 201 POST "/api/chats/$CHAT/contract" "$D1" "$(contract "$STUDENT")"
 assert "criacao ja devolve o contrato completo" "echo \"\$BODY\" | jq -e '.contract.schoolId==\"$SCHOOL\" and .contract.status==\"PENDING\" and .contract.value==350 and (.contract.studentName|length>0)' >/dev/null"
 UDC=$(echo "$BODY" | jq -r .userDriverContractId); CONTRACT=$(echo "$BODY" | jq -r .contract.contractId)
@@ -288,10 +321,11 @@ req "R1 aceita contrato" 200 PUT "/api/chats/$CHAT/contracts/$CONTRACT/accept" "
 req "R1 ve detalhes do contrato" 200 GET "/api/contract/$CONTRACT" "$R1"
 assert "detalhes: escola, aluno, valor, status, motorista" "echo \"\$BODY\" | jq -e '.schoolId==\"$SCHOOL\" and .studentId==\"$STUDENT\" and .value==350 and .status==\"ACTIVE\" and (.schoolName|length>0) and (.driverName|length>0) and .schoolAddress.state==\"SP\"' >/dev/null"
 req "D1 ve detalhes do contrato" 200 GET "/api/contract/$CONTRACT" "$D1"
+assert "detalhe lista os responsaveis do aluno: R1 admin primeiro, R2 retirada" "echo \"\$BODY\" | jq -e '.studentResponsibles[0].responsibleId==\"$R1_ID\" and .studentResponsibles[0].admin==true and ([.studentResponsibles[] | select(.admin==false) | .relationType] | index(\"WITHDRAWAL\") != null) and all(.studentResponsibles[]; has(\"phone\")|not)' >/dev/null"
 req "D2 (nao e parte) ve detalhes" 403 GET "/api/contract/$CONTRACT" "$D2"
 req "contrato inexistente" 404 GET "/api/contract/00000000-0000-0000-0000-000000000000" "$R1"
 assert "contrato ACTIVE" "[ \"\$(psql_db -c \"SELECT status FROM contracts WHERE id='$CONTRACT'\")\" = ACTIVE ]"
-assert "5 parcelas mensais geradas (fev-jun)" "[ \"\$(psql_db -c \"SELECT count(*) FROM payments WHERE contract_id='$CONTRACT'\")\" = 5 ]"
+assert "5 parcelas mensais geradas" "[ \"\$(psql_db -c \"SELECT count(*) FROM payments WHERE contract_id='$CONTRACT'\")\" = 5 ]"
 req "R1 aceita de novo" 409 PUT "/api/chats/$CHAT/contracts/$CONTRACT/accept" "$R1"
 req "R1 cria segundo aluno" 200 POST /api/student/create-student "$R1" "$(echo "$STUDENT_JSON" | jq -c '.address.number=77')"; STUDENT2=$(echo "$BODY" | jq -r .studentResponseDTO.id)
 STUDENT2_HOME=$(echo "$BODY" | jq -r .studentResponseDTO.studentAddressResponseDTO.id)
@@ -299,16 +333,27 @@ req "D1 propoe contrato aluno 2" 201 POST "/api/chats/$CHAT/contract" "$D1" "$(c
 CONTRACT2=$(echo "$BODY" | jq -r .contract.contractId)
 req "R1 recusa contrato 2" 200 PUT "/api/chats/$CHAT/contracts/$CONTRACT2/reject" "$R1"
 assert "contrato 2 CANCELED" "[ \"\$(psql_db -c \"SELECT status FROM contracts WHERE id='$CONTRACT2'\")\" = CANCELED ]"
+req "proposta com documento que nao e contrato" 400 POST "/api/chats/$CHAT/contract" "$D1" "$(contract "$STUDENT2" | jq -c '.document.type="CNH"')"
+req "D1 propoe de novo pro aluno 2" 201 POST "/api/chats/$CHAT/contract" "$D1" "$(contract "$STUDENT2")"
+WITHDRAWN=$(echo "$BODY" | jq -r .contract.contractId)
+req "R1 tenta retirar a proposta do motorista" 403 PUT "/api/chats/$CHAT/contracts/$WITHDRAWN/withdraw" "$R1"
+req "D1 retira a proposta" 200 PUT "/api/chats/$CHAT/contracts/$WITHDRAWN/withdraw" "$D1"
+assert "proposta retirada fica CANCELED e o documento REJECTED" "[ \"\$(psql_db -c \"SELECT c.status || ' ' || d.status FROM contracts c JOIN documents d ON d.entity_id = c.id WHERE c.id='$WITHDRAWN'\")\" = 'CANCELED REJECTED' ]"
+req "D1 retira de novo" 409 PUT "/api/chats/$CHAT/contracts/$WITHDRAWN/withdraw" "$D1"
+req "R1 tenta aceitar a proposta retirada" 409 PUT "/api/chats/$CHAT/contracts/$WITHDRAWN/accept" "$R1"
 req "D1 meus contratos ativos" 200 GET "/api/contract/my-contracts?status=ACTIVE" "$D1"
-assert "so o ativo, com aluno e escola" "echo \"\$BODY\" | jq -e 'length==1 and .[0].contractId==\"$CONTRACT\" and .[0].studentId==\"$STUDENT\" and .[0].schoolId==\"$SCHOOL\" and .[0].status==\"ACTIVE\"' >/dev/null"
+assert "so o ativo, com aluno e escola" "echo \"\$BODY\" | jq -e '.totalElements==1 and .content[0].contractId==\"$CONTRACT\" and .content[0].studentId==\"$STUDENT\" and .content[0].schoolId==\"$SCHOOL\" and .content[0].status==\"ACTIVE\"' >/dev/null"
 req "R1 todos os seus contratos" 200 GET /api/contract/my-contracts "$R1"
-assert "R1 ve o ativo e o cancelado" "echo \"\$BODY\" | jq -e '[.[].status] | (index(\"ACTIVE\") != null) and (index(\"CANCELED\") != null)' >/dev/null"
+assert "R1 ve o ativo e o cancelado" "echo \"\$BODY\" | jq -e '[.content[].status] | (index(\"ACTIVE\") != null) and (index(\"CANCELED\") != null)' >/dev/null"
+req "R1 contratos de 1 em 1 (paginacao)" 200 GET "/api/contract/my-contracts?size=1&page=1" "$R1"
+assert "pagina 2 com 1 item e o total de todos" "echo \"\$BODY\" | jq -e '(.content|length)==1 and .totalElements>=2 and .number==1' >/dev/null"
 req "D2 nao ve contratos dos outros" 200 GET /api/contract/my-contracts "$D2"
-assert "lista do D2 vazia" "[ \"\$(echo \"\$BODY\" | jq length)\" = 0 ]"
+assert "lista do D2 vazia" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 0 ]"
 req "status invalido" 400 GET "/api/contract/my-contracts?status=XYZ" "$D1"
 req "mensagens de proposta/aceite no chat" 200 GET "/api/chats/$CHAT/messages?size=50" "$R1"
 assert "mensagens de contrato com messageType do sistema" "echo \"\$BODY\" | jq -e '[.content[].messageType] | (index(\"PROPOSAL\") != null) and (index(\"APPROVAL\") != null) and (index(\"REJECTION\") != null)' >/dev/null"
-assert "chat contem 4 mensagens de contrato + 3 textos (1 via ws-test, 1 forjada)" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 7 ]"
+assert "chat contem 6 mensagens de contrato (2 propostas aceita/recusada + proposta retirada) + 3 textos (1 via ws-test, 1 forjada)" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 9 ]"
+assert "retirada vai pro chat como REJECTION" "echo \"\$BODY\" | jq -e '.content[] | select(.messageType==\"REJECTION\" and .content==\"Proposta Retirada\")' >/dev/null"
 
 echo "== 9. Rotas: aluno na rota (o ponto nasce do endereco do aluno; a escola do contrato entra junto) -> troca de ordem"
 # aluno na rota (POST /api/route/{routeId}/add-student/{studentId}): sempre diz o ponto, novo ou um que ja existe
@@ -430,9 +475,11 @@ assert "school stop removido" "[ \"\$(psql_db -c \"SELECT count(*) FROM school_s
 req "D1 consulta rota" 200 GET "/api/route/$ROUTE" "$D1"
 req "D2 consulta rota de D1" 403 GET "/api/route/$ROUTE" "$D2"
 req "D1 lista rotas+paradas" 200 GET /api/route/get-all-routes-and-stops "$D1"
-assert "D1 ve suas 2 rotas" "[ \"\$(echo \"\$BODY\" | jq length)\" = 2 ]"
+assert "D1 ve suas 2 rotas" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 2 ]"
+req "D1 busca rota pelo nome" 200 GET "/api/route/get-all-routes-and-stops?name=ida&size=1" "$D1"
+assert "1 por pagina, so as que tem ida no nome, com os pontos" "echo \"\$BODY\" | jq -e '(.content|length)==1 and all(.content[]; (.name|ascii_downcase|test(\"ida\")) and (.stops|type)==\"array\")' >/dev/null"
 req "D2 lista rotas+paradas" 200 GET /api/route/get-all-routes-and-stops "$D2"
-assert "D2 nao ve rota de D1 (isolamento)" "! echo \"\$BODY\" | jq -e '.[] | select(.id==\"$ROUTE\")' >/dev/null"
+assert "D2 nao ve rota de D1 (isolamento)" "! echo \"\$BODY\" | jq -e '.content[] | select(.id==\"$ROUTE\")' >/dev/null"
 req "responsavel lista rotas" 403 GET /api/route/get-all-routes-and-stops "$R1"
 req "R1 ve as rotas do filho" 200 GET "/api/student/$STUDENT/routes" "$R1"
 assert "so id e nome da rota" "echo \"\$BODY\" | jq -e 'length==1 and .[0].name==\"Ida Manha\" and (.[0] | keys) == [\"id\",\"name\"]' >/dev/null"
@@ -528,7 +575,7 @@ req "D1 presigned-url (PDF)" 200 GET "/api/storage/presigned-url?fileName=contra
 UP=$(echo "$BODY" | jq -r .uploadUrl); PDFKEY=$(echo "$BODY" | jq -r .fileKey)
 UPCODE=$(curl -s -o /dev/null -w '%{http_code}' -X PUT -H 'Content-Type: application/pdf' --data-binary @"$PDF" "$UP")
 check "upload do PDF do contrato" 200 "$UPCODE"
-DOC_CONTRACT="{\"responsibleId\":\"$R1_ID\",\"studentId\":\"$STUDENT2\",\"schoolId\":\"$SCHOOL\",\"contract\":{\"periodicity\":\"MONTHLY\",\"value\":300.00,\"startDate\":\"2027-02-01\",\"endDate\":\"2027-03-31\"},\"document\":{\"url\":\"$PDFKEY\",\"type\":\"TRANSPORT_CONTRACT\"}}"
+DOC_CONTRACT="{\"responsibleId\":\"$R1_ID\",\"studentId\":\"$STUDENT2\",\"schoolId\":\"$SCHOOL\",\"contract\":{\"periodicity\":\"MONTHLY\",\"value\":300.00,\"startDate\":\"$C_START\",\"endDate\":\"$(date -d "$C_START +2 months -1 day" +%F)\"},\"document\":{\"url\":\"$PDFKEY\",\"type\":\"TRANSPORT_CONTRACT\"}}"
 req "D1 propoe contrato com o PDF" 201 POST "/api/chats/$CHAT/contract" "$D1" "$DOC_CONTRACT"
 PDF_CONTRACT=$(echo "$BODY" | jq -r .contract.contractId)
 req "R1 ve a proposta com o documento" 200 GET "/api/contract/$PDF_CONTRACT" "$R1"
@@ -692,6 +739,7 @@ assert "R1: a van saiu, com o tripId" "echo \"\$BODY\" | jq -e '.content[] | sel
 assert "R1: a van esta indo buscar (proximo ponto e do filho)" "grep -q VAN_ON_THE_WAY <<<\"$R1_TYPES\""
 assert "R1: embarcou / chegou na escola / irmao ausente" "echo \"\$BODY\" | jq -e '([.content[] | select(.type==\"STUDENT_BOARDED\")] | length) > 0 and ([.content[] | select(.type==\"STUDENT_DELIVERED\" and (.title|test(\"escola\")))] | length) > 0 and ([.content[] | select(.type==\"STUDENT_ABSENT\" and .payload.studentIds[0]==\"$STUDENT3\")] | length) > 0' >/dev/null"
 assert "R1: nao recebe aviso de contrato aceito (isso e pro motorista)" "! grep -q CONTRACT_ACCEPTED <<<\"$R1_TYPES\""
+assert "R1: proposta retirada pelo motorista" "echo \"\$BODY\" | jq -e '.content[] | select(.type==\"CONTRACT_WITHDRAWN\" and .payload.contractId==\"$WITHDRAWN\")' >/dev/null"
 req "notificacoes do D1" 200 GET "/api/notifications?size=100" "$D1"
 assert "D1: contrato aceito e recusado + falta avisada pelo pai" "echo \"\$BODY\" | jq -e '([.content[].type] | index(\"CONTRACT_ACCEPTED\") != null) and ([.content[].type] | index(\"CONTRACT_REJECTED\") != null) and ([.content[].type] | index(\"ABSENCE_REPORTED\") != null)' >/dev/null"
 assert "D1: endereco removido avisa o motorista" "echo \"\$BODY\" | jq -e '.content[] | select(.type==\"ROUTE\" and .payload.routeId==\"$ROUTE\" and .payload.studentId==\"$STUDENT\")' >/dev/null"
@@ -760,6 +808,136 @@ assert "media 4, 1 avaliacao, a minha e a lista" "echo \"\$BODY\" | jq -e '.rati
 req "o proprio motorista ve o perfil" 200 GET "/api/driver/$D1_ID/profile" "$D1"
 req "R1 apaga a avaliacao" 204 DELETE "/api/driver/$D1_ID/rating" "$R1"
 req "apaga de novo" 404 DELETE "/api/driver/$D1_ID/rating" "$R1"
+echo "   perfil do responsavel pro motorista"
+req "D1 ve o perfil do R1 (tem chat e contrato)" 200 GET "/api/responsible/$R1_ID/profile" "$D1"
+assert "nome, telefone, em dia e os filhos com contrato com o D1 (com o rotulo)" "echo \"\$BODY\" | jq -e '(.name|length>0) and (.phone|length>0) and .financialStatus==\"UP_TO_DATE\" and .overduePayments==0 and (.students[] | select(.studentId==\"$STUDENT\") | .relationType==\"FINANCIAL\" and .admin==true) and (has(\"cpf\")|not) and (has(\"email\")|not)' >/dev/null"
+req "D2 sem chat nem contrato com o R1" 403 GET "/api/responsible/$R1_ID/profile" "$D2"
+req "responsavel nao ve perfil de outro responsavel" 403 GET "/api/responsible/$R1_ID/profile" "$R2"
+req "R1 ve o proprio perfil" 200 GET "/api/responsible/$R1_ID/profile" "$R1"
+assert "proprio perfil: todos os filhos com contrato" "echo \"\$BODY\" | jq -e '([.students[].studentId] | index(\"$STUDENT\") != null) and ([.students[].studentId] | index(\"$STUDENT3\") != null)' >/dev/null"
+req "responsavel que nao existe" 404 GET "/api/responsible/00000000-0000-0000-0000-000000000000/profile" "$D1"
+
+echo "== 13f. Chave Pix do motorista"
+req "responsavel nao acessa chave Pix (rota de motorista)" 403 GET /api/driver/pix-key "$R1"
+req "D1 ainda sem chave" 200 GET /api/driver/pix-key "$D1"
+assert "sem chave: type e key nulos" "echo \"\$BODY\" | jq -e '.type==null and .key==null' >/dev/null"
+req "CPF com digito errado" 400 PUT /api/driver/pix-key "$D1" '{"type":"CPF","key":"529.982.247-26"}'
+req "tipo que nao existe" 400 PUT /api/driver/pix-key "$D1" '{"type":"BOLETO","key":"x"}'
+req "sem corpo" 400 PUT /api/driver/pix-key "$D1"
+req "telefone com mascara" 200 PUT /api/driver/pix-key "$D1" '{"type":"PHONE","key":"(11) 98765-4321"}'
+assert "telefone salvo no formato do banco" "echo \"\$BODY\" | jq -e '.type==\"PHONE\" and .key==\"+5511987654321\"' >/dev/null"
+req "troca pra e-mail" 200 PUT /api/driver/pix-key "$D1" '{"type":"EMAIL","key":" Pix.D1@Van.com "}'
+assert "e-mail em minusculo, sem espacos" "echo \"\$BODY\" | jq -e '.key==\"pix.d1@van.com\"' >/dev/null"
+
+echo "== 13g. Parcelas: lista com filtros, baixa e cancelamento pelo motorista"
+req "R1 ve as parcelas do contrato" 200 GET "/api/payments?contractId=$CONTRACT" "$R1"
+assert "5 parcelas pendentes de 350, com a chave Pix do motorista pra copiar" "echo \"\$BODY\" | jq -e '.totalElements==5 and all(.content[]; .status==\"PENDING\" and .value==350 and .driverPixKey==\"pix.d1@van.com\" and .driverPixKeyType==\"EMAIL\" and .studentId==\"$STUDENT\")' >/dev/null"
+assert "ordem: vencimento mais antigo primeiro" "echo \"\$BODY\" | jq -e '[.content[].dueDate] == ([.content[].dueDate] | sort)' >/dev/null"
+FIRST_PAY=$(echo "$BODY" | jq -r '.content[0].id'); SECOND_PAY=$(echo "$BODY" | jq -r '.content[1].id')
+req "D2 nao ve as parcelas de outro contrato" 200 GET "/api/payments?contractId=$CONTRACT" "$D2"
+assert "lista do D2 vazia" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 0 ]"
+req "periodo invertido" 400 GET "/api/payments?from=2027-05-01&to=2027-01-01" "$R1"
+req "status invalido" 400 GET "/api/payments?status=XYZ" "$R1"
+psql_db -c "UPDATE payments SET due_date = DATE '$TODAY' - 3 WHERE id='$FIRST_PAY'" >/dev/null
+req "parcela vencida aparece como OVERDUE" 200 GET "/api/payments?contractId=$CONTRACT&status=OVERDUE" "$R1"
+assert "1 atrasada (a que venceu)" "echo \"\$BODY\" | jq -e '.totalElements==1 and .content[0].id==\"$FIRST_PAY\" and .content[0].status==\"OVERDUE\"' >/dev/null"
+req "filtro PENDING nao traz a atrasada" 200 GET "/api/payments?contractId=$CONTRACT&status=PENDING" "$R1"
+assert "4 pendentes em dia" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 4 ]"
+req "R1 tenta dar baixa" 403 PUT "/api/payments/$FIRST_PAY/paid" "$R1" '{"method":"PIX"}'
+req "baixa sem dizer como pagou" 400 PUT "/api/payments/$FIRST_PAY/paid" "$D1" '{}'
+req "D2 tenta dar baixa" 403 PUT "/api/payments/$FIRST_PAY/paid" "$D2" '{"method":"PIX"}'
+req "D1 ve o R1 com a parcela atrasada" 200 GET "/api/responsible/$R1_ID/profile" "$D1"
+assert "perfil: OVERDUE com 1 atrasada" "echo \"\$BODY\" | jq -e '.financialStatus==\"OVERDUE\" and .overduePayments==1' >/dev/null"
+req "D1 confirma o Pix da atrasada" 200 PUT "/api/payments/$FIRST_PAY/paid" "$D1" '{"method":"PIX"}'
+assert "quitou: o responsavel volta pra UP_TO_DATE na hora" "[ \"\$(psql_db -c \"SELECT financial_status FROM responsibles WHERE user_id='$R1_ID'\")\" = UP_TO_DATE ]"
+assert "PAID, PIX, com a hora do pagamento" "echo \"\$BODY\" | jq -e '.status==\"PAID\" and .paymentMethod==\"PIX\" and .paidAt!=null' >/dev/null"
+assert "no banco: PAID com paid_at" "[ \"\$(psql_db -c \"SELECT status || '/' || payment_method || '/' || (paid_at IS NOT NULL) FROM payments WHERE id='$FIRST_PAY'\")\" = 'PAID/PIX/true' ]"
+req "baixa de novo (nao tem volta)" 409 PUT "/api/payments/$FIRST_PAY/paid" "$D1" '{"method":"CASH"}'
+req "cancelar a paga (nao tem volta)" 409 PUT "/api/payments/$FIRST_PAY/cancel" "$D1"
+psql_db -c "UPDATE payments SET status = 'OVERDUE' WHERE id='$SECOND_PAY'" >/dev/null
+req "parcela marcada OVERDUE pelo worker aparece no filtro" 200 GET "/api/payments?contractId=$CONTRACT&status=OVERDUE" "$R1"
+assert "a do worker (OVERDUE gravado) conta como atrasada" "echo \"\$BODY\" | jq -e '[.content[].id] | index(\"$SECOND_PAY\") != null' >/dev/null"
+req "D1 cancela a segunda parcela (estava OVERDUE)" 200 PUT "/api/payments/$SECOND_PAY/cancel" "$D1"
+assert "segunda CANCELED" "echo \"\$BODY\" | jq -e '.status==\"CANCELED\" and .paidAt==null' >/dev/null"
+req "parcela que nao existe" 404 PUT "/api/payments/00000000-0000-0000-0000-000000000000/paid" "$D1" '{"method":"PIX"}'
+req "D1 filtra pagas pelo aluno" 200 GET "/api/payments?studentId=$STUDENT&status=PAID" "$D1"
+assert "so a paga" "echo \"\$BODY\" | jq -e '.totalElements==1 and .content[0].id==\"$FIRST_PAY\"' >/dev/null"
+req "R1 filtra pelo motorista" 200 GET "/api/payments?driverId=$D1_ID&size=100" "$R1"
+assert "parcelas dos 2 filhos com o D1" "echo \"\$BODY\" | jq -e '[.content[].studentId] | (index(\"$STUDENT\") != null) and (index(\"$STUDENT3\") != null)' >/dev/null"
+req "R1 recebe a confirmacao" 200 GET "/api/notifications?size=100" "$R1"
+assert "PAYMENT: confirmado e cancelado, com o paymentId" "echo \"\$BODY\" | jq -e '([.content[] | select(.type==\"PAYMENT\" and .payload.paymentId==\"$FIRST_PAY\")] | length)==1 and ([.content[] | select(.type==\"PAYMENT\" and .payload.paymentId==\"$SECOND_PAY\")] | length)==1' >/dev/null"
+
+echo "== 13h. Historico de viagens"
+req "R1 ve o historico do filho" 200 GET "/api/trip/history?studentId=$STUDENT" "$R1"
+assert "a viagem de hoje, finalizada, com o nome da rota e do motorista" "echo \"\$BODY\" | jq -e '.content[] | select(.tripId==\"$TRIP2\" and .tripStatus==\"FINISHED\" and (.routeName|length>0) and .driverId==\"$D1_ID\" and .studentId==\"$STUDENT\")' >/dev/null"
+req "R1 filtra pelo dia" 200 GET "/api/trip/history?date=$TODAY" "$R1"
+assert "os 2 filhos na viagem de hoje (o irmao faltou)" "echo \"\$BODY\" | jq -e '[.content[] | select(.tripId==\"$TRIP2\") | .studentId] | (index(\"$STUDENT\") != null) and (index(\"$STUDENT3\") != null)' >/dev/null"
+req "dia sem viagem" 200 GET "/api/trip/history?date=2020-01-01" "$R1"
+assert "nada em 2020" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 0 ]"
+req "D1 ve as viagens que dirigiu" 200 GET "/api/trip/history?studentId=$STUDENT&driverId=$D1_ID" "$D1"
+assert "inclui a de hoje" "echo \"\$BODY\" | jq -e '[.content[].tripId] | index(\"$TRIP2\") != null' >/dev/null"
+req "D2 nao ve o historico dos outros" 200 GET "/api/trip/history?studentId=$STUDENT" "$D2"
+assert "historico do D2 vazio" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 0 ]"
+req "R2 (o outro responsavel do aluno) tambem ve o historico" 200 GET "/api/trip/history?studentId=$STUDENT" "$R2"
+assert "todos os responsaveis do filho veem" "echo \"\$BODY\" | jq -e '[.content[].tripId] | index(\"$TRIP2\") != null' >/dev/null"
+req "R2 nao ve as parcelas (so o responsavel do contrato)" 200 GET "/api/payments?studentId=$STUDENT" "$R2"
+assert "parcelas do R2 vazias" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 0 ]"
+req "periodo invertido" 400 GET "/api/trip/history?from=2027-05-01&to=2027-01-01" "$R1"
+
+echo "== 13i. Cancelamento de contrato (pedido, resposta e cancelamento pelo motorista)"
+req "pedido sem motivo" 400 POST "/api/contract/$CONTRACT/cancellation" "$R1" '{"reason":"  "}'
+req "D2 nao e parte" 403 POST "/api/contract/$CONTRACT/cancellation" "$D2" '{"reason":"x"}'
+req "contrato pendente nao cancela (pra isso tem retirar/recusar)" 409 POST "/api/contract/$PDF_CONTRACT/cancellation" "$R1" '{"reason":"x"}'
+req "R1 pede o cancelamento" 201 POST "/api/contract/$CONTRACT/cancellation" "$R1" '{"reason":"Mudanca de escola"}'
+assert "pedido PENDING com quem pediu e o motivo" "echo \"\$BODY\" | jq -e '.status==\"PENDING\" and .unilateral==false and .reason==\"Mudanca de escola\" and .requestedById==\"$R1_ID\"' >/dev/null"
+req "segundo pedido com um pendente" 409 POST "/api/contract/$CONTRACT/cancellation" "$D1" '{"reason":"x"}'
+req "R1 tenta aceitar o proprio pedido" 403 PUT "/api/contract/$CONTRACT/cancellation/accept" "$R1"
+req "D1 ve o pedido na lista de contratos" 200 GET "/api/contract/my-contracts?studentId=$STUDENT" "$D1"
+assert "lista com o pedido pendente" "echo \"\$BODY\" | jq -e '.totalElements==1 and .content[0].pendingCancellation.reason==\"Mudanca de escola\" and .content[0].overduePayments==0' >/dev/null"
+req "D1 recebe a notificacao" 200 GET "/api/notifications?size=100" "$D1"
+assert "CANCELLATION_REQUESTED com o contractId" "echo \"\$BODY\" | jq -e '.content[] | select(.type==\"CANCELLATION_REQUESTED\" and .payload.contractId==\"$CONTRACT\")' >/dev/null"
+req "D1 recusa" 200 PUT "/api/contract/$CONTRACT/cancellation/reject" "$D1"
+assert "REJECTED e o contrato continua ativo" "echo \"\$BODY\" | jq -e '.status==\"REJECTED\" and .decidedById==\"$D1_ID\"' >/dev/null && [ \"\$(psql_db -c \"SELECT status FROM contracts WHERE id='$CONTRACT'\")\" = ACTIVE ]"
+req "recusar sem pedido pendente" 404 PUT "/api/contract/$CONTRACT/cancellation/reject" "$D1"
+req "R1 pede de novo" 201 POST "/api/contract/$CONTRACT/cancellation" "$R1" '{"reason":"Mudanca de escola"}'
+req "D1 tenta desistir do pedido do R1" 403 DELETE "/api/contract/$CONTRACT/cancellation" "$D1"
+req "R1 desiste" 200 DELETE "/api/contract/$CONTRACT/cancellation" "$R1"
+assert "WITHDRAWN" "echo \"\$BODY\" | jq -e '.status==\"WITHDRAWN\"' >/dev/null"
+req "D1 poe o aluno num grupo" 201 POST /api/driver/groups "$D1" '{"name":"Grupo cancelamento"}'; CGROUP=$(echo "$BODY" | jq -r .id)
+req "aluno no grupo" 200 POST "/api/driver/groups/$CGROUP/students/$STUDENT" "$D1"
+assert "antes: o aluno esta na rota do D1" "[ \"\$(psql_db -c \"SELECT count(*) FROM student_stops ss JOIN route_stops rs ON rs.id = ss.stop_id WHERE ss.student_id='$STUDENT' AND rs.route_id='$ROUTE'\")\" -gt 0 ]"
+req "D1 pede (sem atraso: precisa do aceite)" 201 POST "/api/contract/$CONTRACT/cancellation" "$D1" '{"reason":"Vou parar de atender o bairro"}'
+assert "PENDING (sem parcelas atrasadas)" "echo \"\$BODY\" | jq -e '.status==\"PENDING\" and .unilateral==false' >/dev/null"
+req "R1 aceita" 200 PUT "/api/contract/$CONTRACT/cancellation/accept" "$R1"
+assert "ACCEPTED pelo R1" "echo \"\$BODY\" | jq -e '.status==\"ACCEPTED\" and .decidedById==\"$R1_ID\"' >/dev/null"
+assert "contrato CANCELED" "[ \"\$(psql_db -c \"SELECT status FROM contracts WHERE id='$CONTRACT'\")\" = CANCELED ]"
+assert "as parcelas futuras viraram CANCELED; a paga continua paga" "[ \"\$(psql_db -c \"SELECT string_agg(status, ',' ORDER BY status) FROM payments WHERE contract_id='$CONTRACT'\")\" = 'CANCELED,CANCELED,CANCELED,CANCELED,PAID' ]"
+assert "o aluno saiu da rota do D1" "[ \"\$(psql_db -c \"SELECT count(*) FROM student_stops ss JOIN route_stops rs ON rs.id = ss.stop_id WHERE ss.student_id='$STUDENT' AND rs.route_id='$ROUTE'\")\" = 0 ]"
+req "grupo depois do cancelamento" 200 GET /api/driver/groups "$D1"
+assert "o aluno saiu do grupo" "echo \"\$BODY\" | jq -e --arg g \"$CGROUP\" '.[] | select(.id==\$g) | (.students|length)==0' >/dev/null"
+req "R1 ve o detalhe do contrato cancelado" 200 GET "/api/contract/$CONTRACT" "$R1"
+assert "historico: recusado, desistido e aceito; documento e assinaturas ficam" "echo \"\$BODY\" | jq -e '.status==\"CANCELED\" and ([.cancellations[].status] == [\"REJECTED\",\"WITHDRAWN\",\"ACCEPTED\"]) and .documentStatus==\"SIGNED\" and (.signatures|length)==2' >/dev/null"
+req "contrato cancelado nao recebe pedido" 409 POST "/api/contract/$CONTRACT/cancellation" "$R1" '{"reason":"x"}'
+req "D1 recebe o aviso do aceite" 200 GET "/api/notifications?size=100" "$D1"
+assert "CONTRACT_CANCELED pro D1" "echo \"\$BODY\" | jq -e '.content[] | select(.type==\"CONTRACT_CANCELED\" and .payload.contractId==\"$CONTRACT\")' >/dev/null"
+echo "   motorista cancela sozinho com 2 parcelas atrasadas"
+psql_db -c "UPDATE payments SET due_date = DATE '$TODAY' - 1 WHERE contract_id='$CONTRACT3' AND id IN (SELECT id FROM payments WHERE contract_id='$CONTRACT3' ORDER BY due_date LIMIT 1)" >/dev/null
+req "com 1 atrasada" 200 GET "/api/contract/my-contracts?studentId=$STUDENT3" "$D1"
+assert "overduePayments 1" "echo \"\$BODY\" | jq -e '.content[0].overduePayments==1' >/dev/null"
+psql_db -c "UPDATE payments SET due_date = DATE '$TODAY' - 2 WHERE id = (SELECT id FROM payments WHERE contract_id='$CONTRACT3' AND due_date >= DATE '$TODAY' ORDER BY due_date LIMIT 1)" >/dev/null
+req "com 2 atrasadas" 200 GET "/api/contract/my-contracts?studentId=$STUDENT3" "$D1"
+assert "overduePayments 2" "echo \"\$BODY\" | jq -e '.content[0].overduePayments==2' >/dev/null"
+req "R1 (responsavel) nao cancela sozinho mesmo com atraso" 201 POST "/api/contract/$CONTRACT3/cancellation" "$R1" '{"reason":"quero sair"}'
+assert "o pedido do responsavel fica PENDING" "echo \"\$BODY\" | jq -e '.status==\"PENDING\"' >/dev/null"
+req "R1 desiste" 200 DELETE "/api/contract/$CONTRACT3/cancellation" "$R1"
+req "D1 cancela sozinho" 201 POST "/api/contract/$CONTRACT3/cancellation" "$D1" '{"reason":"2 parcelas sem pagar"}'
+assert "ACCEPTED, unilateral, decidido pelo proprio D1" "echo \"\$BODY\" | jq -e '.status==\"ACCEPTED\" and .unilateral==true and .decidedById==\"$D1_ID\"' >/dev/null"
+assert "contrato do irmao CANCELED" "[ \"\$(psql_db -c \"SELECT status FROM contracts WHERE id='$CONTRACT3'\")\" = CANCELED ]"
+req "as atrasadas continuam devidas" 200 GET "/api/payments?contractId=$CONTRACT3&status=OVERDUE" "$R1"
+assert "2 parcelas OVERDUE" "[ \"\$(echo \"\$BODY\" | jq .totalElements)\" = 2 ]"
+req "R1 recebe o aviso" 200 GET "/api/notifications?size=100" "$R1"
+assert "CONTRACT_CANCELED pro R1" "echo \"\$BODY\" | jq -e '.content[] | select(.type==\"CONTRACT_CANCELED\" and .payload.contractId==\"$CONTRACT3\")' >/dev/null"
+req "D1 ainda da baixa numa atrasada do contrato cancelado" 200 PUT "/api/payments/$(psql_db -c "SELECT id FROM payments WHERE contract_id='$CONTRACT3' AND status='PENDING' ORDER BY due_date LIMIT 1")/paid" "$D1" '{"method":"CASH"}'
 
 echo "== 11. Usuarios"
 echo "   foto de perfil"
@@ -787,7 +965,7 @@ req "foto: troca pela nova" 200 PUT /api/users/update-photo "$R1" "{\"fileKey\":
 assert "foto antiga apagada do bucket" "! docker exec vanroute-minio sh -c 'ls /data/$BUCKET/$PHOTO' >/dev/null 2>&1 && docker exec vanroute-minio sh -c 'ls /data/$BUCKET/$PHOTO2' >/dev/null 2>&1"
 req "GET /users/{id} removido (expunha CPF, e-mail e telefone)" "40[0-9]" GET "/api/users/$R1_ID" "$R1"
 req "me" 200 GET /api/users/me "$R1"
-assert "me nao expoe passwordHash" "! echo \"\$BODY\" | grep -qi 'passwordHash\|\\\$2a\\\$'"
+assert "me nao expoe passwordHash" "! echo \"\$BODY\" | grep -qi 'passwordHash\|argon2\|\\\$2a\\\$'"
 req "envia codigo de atualizacao" 200 POST /api/users/send-code-updateUser "$R2"
 req "R2 ve seus dados (me)" 200 GET /api/users/me "$R2"; R2_ID=$(echo "$BODY" | jq -r .id)
 UCODE=$(redis GET "User:SendCodeUser:$R2_ID")
@@ -796,9 +974,45 @@ req "R1 tenta usar o codigo do R2" 400 PUT /api/users/update-user "$R1" "{\"emai
 req "atualiza usuario codigo errado" 400 PUT /api/users/update-user "$R2" '{"email":"novo@teste.local","phone":"1","code":"errado"}'
 req "atualiza usuario" 200 PUT /api/users/update-user "$R2" "{\"email\":\"r2b.$RUN@teste.local\",\"phone\":\"11${RUN}9\",\"code\":\"$UCODE\"}"
 assert "e-mail atualizado" "[ \"\$(psql_db -c \"SELECT email FROM users WHERE cpf='$R2_CPF'\")\" = r2b.$RUN@teste.local ]"
-req "DELETE usuario sem ADMIN" 403 DELETE "/api/users/$R1_ID/123456" "$R2"
+req "a rota antiga de admin que apagava usuario nao existe mais" "40[45]" DELETE "/api/users/$R1_ID/123456" "$R2"
+
+echo "== 11a. Termos de uso e exportar meus dados (LGPD)"
+req "termos sem login" 200 GET /api/terms
+assert "versao atual e o texto" "echo \"\$BODY\" | jq -e '.version==\"1\" and (.content|test(\"Política de Privacidade\"))' >/dev/null"
+req "me antes de aceitar (D1 foi criado direto no banco)" 200 GET /api/users/me "$D1"
+assert "termsAccepted false" "echo \"\$BODY\" | jq -e '.termsVersion==\"1\" and .termsAccepted==false' >/dev/null"
+req "aceitar versao velha" 400 POST /api/terms/accept "$D1" '{"version":"0"}'
+req "aceitar sem login" 401 POST /api/terms/accept "" '{"version":"1"}'
+req "D1 aceita" 204 POST /api/terms/accept "$D1" '{"version":"1"}'
+req "aceitar de novo nao duplica" 204 POST /api/terms/accept "$D1" '{"version":"1"}'
+assert "um aceite gravado com a hora" "[ \"\$(psql_db -c \"SELECT count(*) FROM terms_acceptances WHERE user_id='$D1_ID' AND version='1' AND accepted_at IS NOT NULL\")\" = 1 ]"
+req "me depois de aceitar" 200 GET /api/users/me "$D1"
+assert "termsAccepted true" "echo \"\$BODY\" | jq -e '.termsAccepted==true' >/dev/null"
+req "R1 exporta os dados" 200 GET /api/users/me/export "$R1"
+assert "conta, filhos com enderecos, contratos com parcelas e mensagens; sem senha" "echo \"\$BODY\" | jq -e '.account.cpf==\"$R1_CPF\" and (.children|length)>=2 and (.children[0].addresses|length)>=1 and (.contracts|length)>=1 and (.contracts[0].payments|type)==\"array\" and (.messagesSent|length)>=1' >/dev/null && ! grep -qi 'password' <<<\"\$BODY\""
+req "exportar de novo antes de 5 minutos" 429 GET /api/users/me/export "$R1"
+req "exportar sem login" 401 GET /api/users/me/export
+
+echo "== 11b. Excluir a propria conta (dados pessoais apagados, conta vira 'Usuario removido')"
+req "R1 com contratos ativos/atraso nao exclui" 409 DELETE /api/users/me "$R1" '{"password":"Senha@123"}'
+R3_CPF=$(cpf); R3_EMAIL="r3.$RUN@teste.local"
+signup_responsible "$R3_CPF" "$R3_EMAIL" "11${RUN}7"
+verify_and_login "$R3_CPF" "$R3_EMAIL" R3
+req "R3 me" 200 GET /api/users/me "$R3"; R3_ID=$(echo "$BODY" | jq -r .id)
+req "R3 cria um filho" 200 POST /api/student/create-student "$R3" "{\"name\":\"Filho do R3\",\"birthDate\":\"2016-05-10\",\"relationType\":\"FINANCIAL\",\"address\":$addr}"
+R3_CHILD=$(echo "$BODY" | jq -r .studentResponseDTO.id)
+req "senha errada" 400 DELETE /api/users/me "$R3" '{"password":"errada"}'
+req "sem senha" 400 DELETE /api/users/me "$R3"
+req "R3 exclui a conta" 204 DELETE /api/users/me "$R3" '{"password":"Senha@123"}'
+assert "dados pessoais apagados e status INACTIVE" "[ \"\$(psql_db -c \"SELECT name || '|' || coalesce(cpf,'-') || '|' || coalesce(email,'-') || '|' || coalesce(phone,'-') || '|' || status FROM users WHERE id='$R3_ID'\")\" = 'Usuário removido|-|-|-|INACTIVE' ]"
+assert "o filho que so tinha ele ficou anonimo, sem vinculo e sem endereco" "[ \"\$(psql_db -c \"SELECT s.name || '|' || (SELECT count(*) FROM student_responsibles WHERE student_id=s.id) || '|' || (SELECT count(*) FROM student_addresses WHERE student_id=s.id) FROM students s WHERE s.id='$R3_CHILD'\")\" = 'Aluno removido|0|0' ]"
+req "o token antigo para de valer na hora" 401 GET /api/users/me "$R3"
+req "login com o CPF antigo" 401 POST /api/auth/login "" "{\"cpf\":\"$R3_CPF\",\"passwordHash\":\"Senha@123\"}"
+req "o mesmo CPF e e-mail podem se cadastrar de novo" 200 POST /api/responsible/auth/signup "" "{\"name\":\"Voltou\",\"email\":\"$R3_EMAIL\",\"password\":\"Senha@123\",\"confirmPassword\":\"Senha@123\",\"cpf\":\"$R3_CPF\",\"phone\":\"11${RUN}7\",\"address\":$addr,\"acceptedTermsVersion\":\"1\"}"
 
 echo
 printf '%s\n' "${RESULTS[@]}"
 echo
 echo "TOTAL: $((PASS+FAIL)) cenarios | PASS: $PASS | FAIL: $FAIL$([ "$SKIP" -gt 0 ] && echo " | SKIP: $SKIP (API real)")"
+# sai com erro se algum cenario falhou (o CI fica vermelho)
+[ "$FAIL" -eq 0 ]

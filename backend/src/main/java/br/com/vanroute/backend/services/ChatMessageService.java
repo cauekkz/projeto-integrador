@@ -67,7 +67,7 @@ public class ChatMessageService {
         message.setChat(chat);
         message.setSender(sender);
         message.setContent(content);
-        message.setAttachmentType(attachmentType); // maldito jeito
+        message.setAttachmentType(attachmentType);
         message.setAttachmentUrl(attachmentUrl);
         message.setMessageType(type);
         message.setPayload(payload);

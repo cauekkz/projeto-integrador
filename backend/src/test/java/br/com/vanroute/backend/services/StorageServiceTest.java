@@ -14,7 +14,6 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedPutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PutObjectPresignRequest;
 
-import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.repositories.ChatMessageRepository;
 import br.com.vanroute.backend.repositories.DocumentRepository;
 import br.com.vanroute.backend.repositories.UserRepository;
@@ -23,7 +22,6 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.net.URI;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

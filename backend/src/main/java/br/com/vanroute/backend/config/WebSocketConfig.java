@@ -2,6 +2,7 @@ package br.com.vanroute.backend.config;
 
 import br.com.vanroute.backend.websocket.TripWebSocketHandler;
 import br.com.vanroute.backend.websocket.NotificationWebSocketHandler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
@@ -19,8 +20,13 @@ public class WebSocketConfig implements WebSocketConfigurer {
     private final TripWebSocketHandler tripWebSocketHandler;
     private final NotificationWebSocketHandler notificationWebSocketHandler;
 
+    private final String[] allowedOrigins;
+
+    // mesmas origens do CORS (WebConfig.ALLOWED_ORIGINS)
     public WebSocketConfig(ChatWebSocketHandler chatWebSocketHandler, TripWebSocketHandler tripWebSocketHandler,
-                           NotificationWebSocketHandler notificationWebSocketHandler) {
+                           NotificationWebSocketHandler notificationWebSocketHandler,
+                           @Value(WebConfig.ALLOWED_ORIGINS) String[] allowedOrigins) {
+        this.allowedOrigins = allowedOrigins;
         this.chatWebSocketHandler = chatWebSocketHandler;
         this.tripWebSocketHandler = tripWebSocketHandler;
         this.notificationWebSocketHandler = notificationWebSocketHandler;
@@ -31,16 +37,16 @@ public class WebSocketConfig implements WebSocketConfigurer {
         registry.addHandler(chatWebSocketHandler, "/chat/{chatId}")
                 .addInterceptors(new WebSocketAuthHandshakeInterceptor())
                 .setHandshakeHandler(new WebSocketAuthHandshakeHandler())
-                .setAllowedOrigins("*");
+                .setAllowedOriginPatterns(allowedOrigins);
         // GPS do motorista e acompanhamento dos pais em tempo real
         registry.addHandler(tripWebSocketHandler, "/trip/{tripId}")
                 .addInterceptors(new WebSocketAuthHandshakeInterceptor())
                 .setHandshakeHandler(new WebSocketAuthHandshakeHandler())
-                .setAllowedOrigins("*");
+                .setAllowedOriginPatterns(allowedOrigins);
         // notificacoes do usuario do token
         registry.addHandler(notificationWebSocketHandler, "/notifications")
                 .addInterceptors(new WebSocketAuthHandshakeInterceptor())
                 .setHandshakeHandler(new WebSocketAuthHandshakeHandler())
-                .setAllowedOrigins("*");
+                .setAllowedOriginPatterns(allowedOrigins);
     }
 }

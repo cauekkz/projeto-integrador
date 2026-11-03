@@ -36,7 +36,7 @@ addr() { echo "{\"street\":\"$1\",\"zipCode\":\"$2\",\"city\":\"Sao Paulo\",\"ne
 
 parent() { # parent NOME RUA CEP BAIRRO NUM -> "cpf token"
   local c e; c=$(cpf); e="pai$RANDOM.$RUN@teste.local"
-  api POST /api/responsible/auth/signup "" "{\"name\":\"$1\",\"email\":\"$e\",\"password\":\"Senha@123\",\"confirmPassword\":\"Senha@123\",\"cpf\":\"$c\",\"phone\":\"11$RANDOM$RANDOM\",\"address\":$(addr "$2" "$3" "$4" "$5")}" >/dev/null
+  api POST /api/responsible/auth/signup "" "{\"name\":\"$1\",\"email\":\"$e\",\"password\":\"Senha@123\",\"confirmPassword\":\"Senha@123\",\"cpf\":\"$c\",\"phone\":\"11$RANDOM$RANDOM\",\"address\":$(addr "$2" "$3" "$4" "$5"),\"acceptedTermsVersion\":\"1\"}" >/dev/null
   local code; code=$(docker exec vanroute-redis redis-cli GET "verificationEmail:email:$e")
   api POST /api/auth/verify-email "" "{\"email\":\"$e\",\"code\":\"$code\"}" >/dev/null
   echo "$c $(api POST /api/auth/login "" "{\"cpf\":\"$c\",\"passwordHash\":\"Senha@123\"}" | jq -r .token)"
@@ -65,7 +65,10 @@ kid() { # kid TOKEN_PAI NOME RUA CEP BAIRRO NUM -> "id do aluno  id do endereco 
 contract() { # contract TOKEN_MOTORISTA LINK ESCOLA TOKEN_PAI ALUNO: chat pelo codigo do motorista, proposta e aceite
   local parentId; parentId=$(api GET /api/users/me "$4" | jq -r .id)
   local chat; chat=$(api POST /api/invite-code/redeem "$4" "{\"inviteCode\":\"$2\"}" | jq -r .)
-  local c; c=$(api POST "/api/chats/$chat/contract" "$1" "{\"responsibleId\":\"$parentId\",\"studentId\":\"$5\",\"schoolId\":\"$3\",\"contract\":{\"periodicity\":\"MONTHLY\",\"value\":350.00,\"startDate\":\"2027-02-01\",\"endDate\":\"2027-06-30\"},\"document\":{\"url\":\"demo\",\"type\":\"TRANSPORT_CONTRACT\"}}" | jq -r .contract.contractId)
+  # o PDF do contrato vai pro storage antes da proposta
+  local up; up=$(api GET "/api/storage/presigned-url?fileName=contrato.pdf&contentType=application/pdf" "$1")
+  printf '%%PDF-1.4\nContrato de transporte escolar (demo)\n%%%%EOF\n' | curl -s -o /dev/null -X PUT -H 'Content-Type: application/pdf' --data-binary @- "$(echo "$up" | jq -r .uploadUrl)"
+  local c; c=$(api POST "/api/chats/$chat/contract" "$1" "{\"responsibleId\":\"$parentId\",\"studentId\":\"$5\",\"schoolId\":\"$3\",\"contract\":{\"periodicity\":\"MONTHLY\",\"value\":350.00,\"startDate\":\"$(date -d "$(date +%Y-%m-01) +1 month" +%F)\",\"endDate\":\"$(date -d "$(date +%Y-%m-01) +6 months -1 day" +%F)\"},\"document\":{\"url\":\"$(echo "$up" | jq -r .fileKey)\",\"type\":\"TRANSPORT_CONTRACT\"}}" | jq -r .contract.contractId)
   api PUT "/api/chats/$chat/contracts/$c/accept" "$4" >/dev/null
 }
 # "adicionar aluno na rota" num passo so, num ponto NOVO (o backend poe na ordem certa); devolve o id do ponto da escola

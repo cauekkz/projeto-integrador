@@ -1,6 +1,7 @@
 package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.dtos.student.AddressRequestDTO;
+import br.com.vanroute.backend.dtos.student.StudentAddressRequestDTO;
 import br.com.vanroute.backend.exceptions.BadRequestException;
 import br.com.vanroute.backend.models.address.Address;
 import br.com.vanroute.backend.models.notification.enums.NotificationType;
@@ -64,6 +65,7 @@ class StudentAddressServiceTest {
         siblingHome = new Address();
         siblingHome.setId(UUID.randomUUID());
         when(studentResponsibleRepository.existsByResponsible_UserIdAndStudent_Id(parent, ana.getId())).thenReturn(true);
+        when(studentResponsibleRepository.existsByResponsible_UserIdAndStudent_IdAndIsAdminTrue(parent, ana.getId())).thenReturn(true);
         when(responsibleRepository.findById(parent)).thenReturn(Optional.of(new Responsible()));
         when(addressRepository.findById(siblingHome.getId())).thenReturn(Optional.of(siblingHome));
     }
@@ -140,6 +142,20 @@ class StudentAddressServiceTest {
         verify(studentStopRepository).deleteAll(List.of(boarding));
         verify(notificationService).send(eq(List.of(driver.getUserId())), eq(NotificationType.ROUTE), eq("Endereço removido"),
                 contains("Casa da avó"), anyMap());
+    }
+
+    @Test
+    void onlyTheAdminAddsOrRemovesAddresses() {
+        UUID otherParent = UUID.randomUUID();
+        when(studentResponsibleRepository.existsByResponsible_UserIdAndStudent_Id(otherParent, ana.getId())).thenReturn(true);
+
+        assertThrows(AccessDeniedException.class, () -> service.add(ana.getId(),
+                new StudentAddressRequestDTO("Avo", null, siblingHome.getId()), otherParent));
+        assertThrows(AccessDeniedException.class, () -> service.remove(ana.getId(), UUID.randomUUID(), otherParent));
+        // ver continua liberado pra qualquer responsavel do aluno
+        assertDoesNotThrow(() -> service.list(ana.getId(), otherParent));
+        verify(studentAddressRepository, never()).save(any());
+        verify(studentAddressRepository, never()).delete(any());
     }
 
     @Test

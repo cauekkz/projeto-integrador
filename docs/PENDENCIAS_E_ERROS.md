@@ -1,58 +1,60 @@
 # Pendências do backend
 
-O que ainda falta, tirado do código e do banco atuais (V29). Decisões em aberto e colunas pouco usadas estão em `docs/SUGESTOES_FUTURAS.md`.
+O que ainda falta, tirado do código e do banco atuais (V32). Decisões em aberto e colunas pouco usadas estão em `docs/SUGESTOES_FUTURAS.md`.
 
 ---
 
 ## 1. Funcionalidades que o banco já prevê, mas o código não faz
 
 ### 1.1 Pagamento
-- O aceite do contrato gera as parcelas em `payments` (status `PENDING`), mas **nenhuma rota lê essas parcelas**: o pai e o motorista não as veem.
-- Ninguém cobra, dá baixa (`PAID`) ou marca atraso (`OVERDUE`). `payment_method` (`PIX`, `CREDIT_CARD`, `BOLETO`, `CASH`) nunca é preenchido.
-- `responsibles.financial_status` fica sempre `PENDING`: decidir junto com o pagamento.
-- A cobrança deve usar o endereço de cobrança (`responsibles.address_id`).
+Feito: lista de parcelas com filtros, chave Pix do motorista e baixa manual (`docs/FLUXO_PAGAMENTO.md`). Falta:
+Feito também: o worker diário grava `OVERDUE` e avisa o pai, e `responsibles.financial_status` passou a valer (`UP_TO_DATE`/`OVERDUE`, `docs/WORKER.md`). Falta:
+- Cobrança automática (Mercado Pago): só depois de validar o Pix manual.
+- `responsibles.address_id` (endereço de cobrança) só faz sentido com cobrança por gateway.
 
 ### 1.2 Ciclo de vida do contrato
-- Contrato vencido continua `ACTIVE` para sempre: falta marcar `INACTIVE` depois da `endDate` (um job diário).
-- Não existe rota para **cancelar um contrato ativo**, nem para editar uma proposta.
-- `SUSPENDED` e `OVERDUE` existem no enum, mas nada os usa (dependem do pagamento).
+Feito: validação da proposta, retirada pelo motorista e cancelamento com pedido e aprovação (`docs/FLUXO_CONTRATO.md`, passo 9). Falta:
+Feito também: o worker diário marca `INACTIVE` o contrato que passou da `endDate` (o aluno sai das rotas e grupos) e cancela a proposta não respondida até o início. Falta:
+- Rota para editar uma proposta (hoje o motorista retira e manda outra).
+- `SUSPENDED` e `OVERDUE` do contrato não são usados.
 
-### 1.3 Documentos do motorista
-- A CNH (cadastro) e o CRLV (van) são **validados** (assinatura ICP-Brasil), mas o PDF **não é guardado** em `documents`.
-- O enum `DocumentType` prevê documentos que nenhuma rota recebe:
-  - `SCHOOL_TRANSPORT_COURSE`: o curso de condutor de escolares, que o CTB exige do motorista de van escolar;
-  - `SCHOOL_AUTHORIZATION`: a autorização do município/DETRAN para transporte escolar;
-  - `LIABILITY_TERM`: o termo de responsabilidade.
+### 1.3 Documentos do motorista (fora por decisão, por enquanto)
+- A CNH (cadastro) e o CRLV (van) são **validados** (assinatura ICP-Brasil), mas o PDF **não é guardado**. Decisão: não guardar por enquanto.
+- No `DocumentType` e no `DocumentEntityType`, os valores de documento do motorista, da van etc. estão **comentados**; só o contrato (`TRANSPORT_CONTRACT`/`CONTRACT`) é usado. Pra voltar: descomentar e criar as rotas (curso de condutor de escolares, autorização do município, termo de responsabilidade).
 - `drivers.approval_status` fica sempre `APPROVED`: não existe aprovação ou suspensão de motorista.
 
 ### 1.4 Vínculo do responsável
 - `student_responsibles.relation_type` (`FINANCIAL`, `LEGAL`, `WITHDRAWAL`) é gravado e serve de filtro, mas **nenhuma regra usa**. Exemplos possíveis: só quem é `WITHDRAWAL` pode receber a criança; só `FINANCIAL` recebe a cobrança.
 
 ### 1.5 Conta do usuário
-- `users.status` só usa `CHECK_EMAIL` e `ACTIVE`. `INACTIVE`, `SUSPENDED` e `BLOCKED` não têm rota nem regra.
-- Não existe "excluir minha conta" para o próprio usuário (só o `DELETE /api/users/**` de admin). A LGPD pede isso.
+Feito: "excluir minha conta" (`DELETE /api/users/me`, ver `docs/FLUXO_FRONT.md` seção 12) e status sem uso comentados (`SUSPENDED`/`BLOCKED` do usuário, `SUSPENDED`/`OVERDUE` do contrato, `PENDING`/`DEFAULTING`/`BLOCKED` do financeiro e todos menos `APPROVED` do motorista). `INACTIVE` do usuário agora é a conta excluída.
 
 ---
 
 ## 2. LGPD
-- Termos de Uso e Política de Privacidade (dados de crianças, CPF e localização em tempo real).
-- Registrar o aceite no cadastro: quem aceitou, qual versão e quando.
-- O usuário poder exportar e apagar os próprios dados.
+Feito no backend: termos versionados (`GET /api/terms`, texto em `resources/terms/v1.md`, **rascunho a revisar**), registro do aceite (`POST /api/terms/accept`, tabela `terms_acceptances`; o `/api/users/me` diz `termsAccepted`), exportar os dados (`GET /api/users/me/export`, 1 a cada 5 minutos) e excluir a conta (`DELETE /api/users/me`). Falta:
+- Revisar o texto dos termos e pôr o e-mail de contato.
+- Front: mostrar os termos no cadastro e no login quando `termsAccepted` for `false`.
+- Exigir o aceite **no cadastro** (hoje é depois do login, pra não quebrar o cadastro do front atual).
 
 ---
 
 ## 3. Antes de ir para produção
-- **Segredos:** `JWT_KEY`, `DATABASE_PASSWORD`, `MINIO_ACCESS_KEY` e `MINIO_SECRET_KEY` só por variável de ambiente. Os valores padrão do `application.yml` são de desenvolvimento.
-- **Limite de requisições** no login, no cadastro e no envio de código por e-mail.
-- **CI** com o GitHub Actions (testes unitários em todo PR).
+- **Segredos:** feito. `JWT_KEY`, `DATABASE_PASSWORD`, `MINIO_ACCESS_KEY` e `MINIO_SECRET_KEY` não têm mais valor padrão no `application.yml`: em produção vêm das variáveis de ambiente (sem elas o backend não sobe); em desenvolvimento, do `application-local.properties`.
+- **Senhas:** Argon2id (parâmetros mínimos da OWASP). Contas criadas antes, em BCrypt, não logam mais: no desenvolvimento, rode o seed de novo.
+- **Origens:** defina `ALLOWED_ORIGINS` com o domínio do front (vale pro CORS e pros WebSockets). O padrão aceita só localhost e rede local.
+- **Limite de requisições:** na aplicação já tem (código de e-mail: 5 tentativas e 1 reenvio por minuto). Falta o limite por IP no servidor web (Nginx `limit_req`) quando hospedar, principalmente no login e no cadastro.
 - **Push com o app fechado** (Firebase Cloud Messaging): hoje a notificação só aparece com o app aberto.
 - **HTTPS, backup do banco, logs e monitoramento.**
-- **Serviços pagos:** a chave grátis do OpenRouteService dá 200 rotas por dia; o e-mail precisa de um provedor de verdade.
-- **Limpeza:** espaços no fim de `spring.profiles.active=local` no `application.properties`.
+- **Serviços pagos (decidido):** fica no plano grátis do OpenRouteService (o fórum oficial fala em mais de 8.000 requisições por dia no total; confira o limite de cada serviço no painel da conta em account.heigit.org) e no Gmail (cerca de 500 e-mails por dia). Testado de ponta a ponta com a chave real. Reavaliar quando hospedar: se o volume crescer, um provedor de e-mail transacional e um plano pago de mapas.
+- **Worker:** subir o `worker/` junto (uma instância só) com as mesmas variáveis `DATABASE_*`.
 
 ---
 
 ## 4. Avisos para o time
-- **Migration que já rodou não se edita nem se renumera.** Mudança de banco sempre numa migration nova, com o próximo número (a próxima livre é a **V30**).
+- **Migration que já rodou não se edita nem se renumera.** Mudança de banco sempre numa migration nova, com o próximo número (a próxima livre é a **V34**).
 - Banco local com erro do Flyway: zere com `docker compose down -v` (ou `DROP DATABASE vanroute_db; CREATE DATABASE vanroute_db;`) e suba o backend; as migrations rodam do zero. Dados de exemplo: `backend/api-tests/demo/seed.sh`.
 - Depois de puxar a branch, rode `./mvnw clean test` (classes apagadas podem ficar no `target/`).
+- **Arquivo local obrigatório:** copie `backend/src/main/resources/application-local.properties.example` para `application-local.properties` (fica fora do git) e preencha. Sem ele o backend não sobe, porque a senha do banco, a `JWT_KEY` e as chaves do MinIO não têm mais valor padrão.
+- **Perfis nas rotas** (`SecurityConfig`): rota só de motorista chamada por responsável (ou o contrário) dá **403** antes de chegar no service.
+- **Documentos reais nunca vão pro git** (CNH, CRLV): o `.gitignore` bloqueia. Os testes de assinatura ICP usam `backend/src/test/resources/documents/validCNH.pdf` e `invalidCNH.pdf`, que cada um coloca na própria máquina; sem eles, esses 2 testes são pulados (no Actions também).

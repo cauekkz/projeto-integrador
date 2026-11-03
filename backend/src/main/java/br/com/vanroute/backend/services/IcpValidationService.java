@@ -1,5 +1,7 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.exceptions.InvalidDocumentException;
+
 //IA PURA TEM Q ANALIZA
 import org.bouncycastle.asn1.ASN1ObjectIdentifier;
 import org.bouncycastle.asn1.ASN1OctetString;
@@ -71,7 +73,7 @@ public class IcpValidationService {
             assertCnhDocument(pdfBytes);
             validateSignature(pdfBytes);
         } catch (Exception e) {
-            throw new RuntimeException("Falha ao validar a assinatura digital ICP-Brasil da CNH: " + e.getMessage());
+            throw new InvalidDocumentException("Falha ao validar a assinatura digital ICP-Brasil da CNH: " + e.getMessage());
         }
     }
 
@@ -81,7 +83,7 @@ public class IcpValidationService {
             assertCrlvDocument(pdfBytes);
             validateSignature(pdfBytes);
         } catch (Exception e) {
-            throw new RuntimeException("Falha ao validar a assinatura digital ICP-Brasil do CRLV: " + e.getMessage());
+            throw new InvalidDocumentException("Falha ao validar a assinatura digital ICP-Brasil do CRLV: " + e.getMessage());
         }
     }
 
@@ -151,7 +153,7 @@ public class IcpValidationService {
                 return (X509Certificate) factory.generateCertificate(is);
             }
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao carregar o certificado ICP-Brasil", e);
+            throw new IllegalStateException("Erro ao carregar o certificado ICP-Brasil", e);
         }
     }
 

@@ -9,15 +9,23 @@ import java.io.IOException;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 public class IcpValidationServiceTest {
 
     private final IcpValidationService icpValidationService = new IcpValidationService();
 
+    // as CNHs de teste sao documentos reais (a assinatura ICP-Brasil nao da pra forjar), entao ficam fora do git:
+    // cada um coloca as suas em src/test/resources/documents; sem o arquivo o teste e pulado
+    private static byte[] privateDocument(String name) throws IOException {
+        ClassPathResource resource = new ClassPathResource("documents/" + name);
+        assumeTrue(resource.exists(), "documents/" + name + " nao esta na maquina (documento real, fora do git)");
+        return resource.getInputStream().readAllBytes();
+    }
+
     @Test
     void shouldValidateCnhSuccessfully() throws IOException {
-        ClassPathResource validCNH = new ClassPathResource("documents/validCNH.pdf");
-        byte[] bytes = validCNH.getInputStream().readAllBytes();
+        byte[] bytes = privateDocument("validCNH.pdf");
         MockMultipartFile file = new MockMultipartFile("documentPdf", "validCNH.pdf", "application/pdf", bytes);
 
         assertDoesNotThrow(() -> icpValidationService.validateCnhSignature(file));
@@ -25,8 +33,7 @@ public class IcpValidationServiceTest {
 
     @Test
     void shouldThrowExceptionWhenCNHIsInvalid() throws IOException {
-        ClassPathResource invalidCNH = new ClassPathResource("documents/invalidCNH.pdf");
-        byte[] bytes = invalidCNH.getInputStream().readAllBytes();
+        byte[] bytes = privateDocument("invalidCNH.pdf");
         MockMultipartFile file = new MockMultipartFile("documentPdf", "invalidCNH.pdf", "application/pdf", bytes);
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> icpValidationService.validateCnhSignature(file));

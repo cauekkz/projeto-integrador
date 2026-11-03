@@ -20,10 +20,7 @@ import { NotFound } from './pages/not-found/not-found';
 import { DriverLinkCode } from './pages/driver-link-code/driver-link-code';
 
 export const routes: Routes = [
-  // qq esse faz?
-  // faz o front verificar se o usuario ta logado, se ele ta ele manda pro brabo
-  // amanha se der testo isso
-  //
+  // guestGuard: quem ja esta logado vai direto pra home da sua role
   {
     path: '',
     component: Home,

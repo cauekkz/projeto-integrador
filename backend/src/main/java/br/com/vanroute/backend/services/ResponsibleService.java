@@ -20,8 +20,10 @@ public class ResponsibleService {
     private final UserService userService;
     private final AddressService addressService;
     private final EmailVerificationService emailVerificationService;
+    private final TermsService termsService;
 
-    public ResponsibleService(ResponsibleRepository responsibleRepository, UserService userService, AddressService addressService, EmailVerificationService emailVerificationService) {
+    public ResponsibleService(ResponsibleRepository responsibleRepository, UserService userService, AddressService addressService, EmailVerificationService emailVerificationService, TermsService termsService) {
+        this.termsService = termsService;
         this.responsibleRepository = responsibleRepository;
         this.userService = userService;
         this.addressService = addressService;
@@ -30,6 +32,7 @@ public class ResponsibleService {
 
     @Transactional
     public ResponsibleResponseDTO createResponsible(ResponsibleRequestDTO responsibleRequestDTO){
+        termsService.requireCurrent(responsibleRequestDTO.getAcceptedTermsVersion());
         UserCreateDTO userDto = new UserCreateDTO();
         userDto.setName(responsibleRequestDTO.getName());
         userDto.setCpf(responsibleRequestDTO.getCpf());
@@ -44,12 +47,13 @@ public class ResponsibleService {
         Address address = addressService.findOrCreate(responsibleRequestDTO.getAddressRequestDTO());
         Responsible responsible = new Responsible();
         responsible.setUser(user);
-        responsible.setFinancialStatus(FinancialStatus.PENDING);
+        responsible.setFinancialStatus(FinancialStatus.UP_TO_DATE);
         responsible.setAddress(address);
         Responsible newResponsible = responsibleRepository.save(responsible);
+        termsService.accept(user.getId(), responsibleRequestDTO.getAcceptedTermsVersion());
 
         // dentro da transacao: se o envio falhar, o cadastro e desfeito
-        emailVerificationService.generateAndSendCode("verificationEmail:email:" + user.getEmail(), user.getEmail());
+        emailVerificationService.sendCodeAfterSignup("verificationEmail:email:" + user.getEmail(), user.getEmail());
 
         return new ResponsibleResponseDTO(
                 newResponsible.getUser().getName(),

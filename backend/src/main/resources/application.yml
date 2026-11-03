@@ -12,7 +12,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:vanroute_db}
     username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:123456}
+    password: ${DATABASE_PASSWORD}
 
   jpa:
     hibernate:
@@ -26,11 +26,13 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  # segredos sem valor padrao: em producao vem das variaveis de ambiente; em desenvolvimento,
+  # do application-local.properties (fora do git). Sem eles o backend nao sobe
   jwt:
     expiration: ${JWT_EXPIRATION:900000}
     # refreshToken: 30 dias (o app renova o JWT de 15 min sem pedir a senha)
     refresh-expiration: ${JWT_REFRESH_EXPIRATION:2592000000}
-    key: ${JWT_KEY:4QcYHiOKv6R1GIost25MwdDJNLayEubr3kj9nW8AxZqSFX0gfmhUTepCBPlV7z}
+    key: ${JWT_KEY}
   
   data:
     web:
@@ -41,8 +43,8 @@ spring:
   cloud:
     aws:
       credentials:
-        access-key: ${MINIO_ACCESS_KEY:vanroute}
-        secret-key: ${MINIO_SECRET_KEY:vanroute123456}
+        access-key: ${MINIO_ACCESS_KEY}
+        secret-key: ${MINIO_SECRET_KEY}
       s3:
         endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
         bucket: ${MINIO_BUCKET_NAME:vanroute-storage}

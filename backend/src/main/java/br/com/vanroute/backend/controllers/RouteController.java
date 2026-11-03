@@ -1,5 +1,13 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.dtos.route.RouteFilterRequestDTO;
+
+import org.springframework.data.web.PageableDefault;
+
+import org.springframework.data.domain.Pageable;
+
+import org.springframework.data.domain.Page;
+
 import br.com.vanroute.backend.dtos.route.stops.AddStudentToRouteRequest;
 import br.com.vanroute.backend.dtos.route.RouteStopOptionsDTO;
 import br.com.vanroute.backend.dtos.route.*;
@@ -137,13 +145,12 @@ public class RouteController {
         );
     }
 
+    // paginado: ?name= (parte do nome), ?active=false traz tambem as rotas que ele ja deixou; &page=&size= (padrao 10)
     @GetMapping("/get-all-routes-and-stops")
-    public ResponseEntity<List<RouteWithStopsResponse>> findAll(
-            Authentication authentication
-    ) {
-        return ResponseEntity.ok(
-                routeService.findAll(authentication)
-        );
+    public ResponseEntity<Page<RouteWithStopsResponse>> findAll(@ModelAttribute RouteFilterRequestDTO filter,
+                                                                @PageableDefault(size = 10) Pageable pageable,
+                                                                Authentication authentication) {
+        return ResponseEntity.ok(routeService.findAll(authentication, filter, pageable));
     }
 
 }

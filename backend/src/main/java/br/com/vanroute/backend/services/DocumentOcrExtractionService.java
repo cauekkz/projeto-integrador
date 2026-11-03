@@ -1,4 +1,6 @@
 package br.com.vanroute.backend.services;
+
+import br.com.vanroute.backend.exceptions.InvalidDocumentException;
 //IA PURA TEM Q ANALIZA
 
 import jakarta.annotation.PostConstruct;
@@ -58,13 +60,16 @@ public class DocumentOcrExtractionService {
             String cpf = extractCpf(text);
 
             if (cpf == null) {
-                throw new RuntimeException("CPF não encontrado na CNH. Texto OCR: " + text);
+                // o texto lido da CNH tem dado pessoal: nao vai na resposta nem no log
+                throw new InvalidDocumentException("Não foi possível ler o CPF da CNH. Envie o PDF original da CNH digital");
             }
 
             return cpf;
 
+        } catch (InvalidDocumentException e) {
+            throw e;
         } catch (Exception e) {
-            throw new RuntimeException("Erro ao processar CNH", e);
+            throw new InvalidDocumentException("Não foi possível ler a CNH. Envie o PDF original da CNH digital");
         }
     }
 

@@ -66,7 +66,7 @@ class ResponsibleControllerTest {
                 "carolina@example.com",
                 "12345678901",
                 "11999999999",
-                FinancialStatus.PENDING,
+                FinancialStatus.UP_TO_DATE,
                 List.of("ROLE_RESPONSIBLE"),
                 address
         );
@@ -84,6 +84,7 @@ class ResponsibleControllerTest {
                                   "confirmPassword": "SenhaForte123!",
                                   "cpf": "52998224725",
                                   "phone": "11999999999",
+                                  "acceptedTermsVersion": "1",
                                   "address": {
                                     "street": "Avenida Paulista",
                                     "zipCode": "01310-100",
@@ -101,7 +102,7 @@ class ResponsibleControllerTest {
                           "email": "carolina@example.com",
                           "cpf": "12345678901",
                           "phone": "11999999999",
-                          "financialStatus": "PENDING",
+                          "financialStatus": "UP_TO_DATE",
                           "address": {
                             "street": "Avenida Paulista",
                             "zipCode": "01310-100",

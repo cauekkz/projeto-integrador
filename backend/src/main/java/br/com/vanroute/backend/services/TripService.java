@@ -97,7 +97,6 @@ public class TripService {
         Optional<Trip> existing = tripRepository.findFirstByRouteIdAndDateAndStatusNot(routeId, today, TripStatus.CANCELED);
         if (existing.isPresent()) {
             Trip old = existing.get();
-            //hemoglobina
             if (!restart) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe uma trip de hoje nessa rota: continue ou recomece");
             }

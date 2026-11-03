@@ -28,7 +28,7 @@ export interface contractProposalRequest {
     endDate: string; // AAAA-MM-DD
   };
   document: {
-    // fileKey do PDF no MinIO; sem anexo vai null (a coluna aceita, e o "document" e obrigatorio no body)
+    // fileKey do PDF no MinIO; obrigatorio (o backend recusa proposta sem o PDF)
     url: string | null;
     type: 'TRANSPORT_CONTRACT';
   };

@@ -1,6 +1,7 @@
 package br.com.vanroute.backend.models.user;
 
 import br.com.vanroute.backend.models.user.enums.DriverApprovalStatus;
+import br.com.vanroute.backend.models.user.enums.PixKeyType;
 import jakarta.persistence.*;
 import java.util.UUID;
 
@@ -87,6 +88,27 @@ public class Driver {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    // chave Pix que o responsavel copia pra pagar as parcelas (o motorista confirma o recebimento)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pix_key_type", length = 10)
+    private PixKeyType pixKeyType;
+
+    @Column(name = "pix_key", length = 77)
+    private String pixKey;
+
+    public PixKeyType getPixKeyType() {
+        return pixKeyType;
+    }
+
+    public String getPixKey() {
+        return pixKey;
+    }
+
+    public void setPix(PixKeyType pixKeyType, String pixKey) {
+        this.pixKeyType = pixKeyType;
+        this.pixKey = pixKey;
     }
 
 }

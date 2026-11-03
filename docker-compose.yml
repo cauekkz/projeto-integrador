@@ -10,6 +10,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      # cria o vanroute_test (banco dos testes) quando o volume e novo
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -39,6 +41,24 @@ services:
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+
+  # tarefas diarias (docs/WORKER.md). Fica num perfil: o "docker compose up" normal nao sobe;
+  # pra subir: docker compose --profile worker up -d --build worker
+  worker:
+    build: ./worker
+    container_name: vanroute-worker
+    profiles: ["worker"]
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: vanroute_db
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: 123456
+      WORKER_INTERVAL: 24h
 
 volumes:
   postgres_data:

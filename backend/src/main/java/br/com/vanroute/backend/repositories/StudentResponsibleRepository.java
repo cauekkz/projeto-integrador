@@ -12,8 +12,6 @@ import java.util.UUID;
 
 public interface StudentResponsibleRepository
         extends JpaRepository<StudentResponsible, UUID>, JpaSpecificationExecutor<StudentResponsible> {
-    // danke chat
-
     boolean existsByResponsible_UserIdAndStudent_Id(UUID responsibleId, UUID studentId);
 
     // filhos de que o responsavel e admin (so esses podem ter contrato)
@@ -23,6 +21,14 @@ public interface StudentResponsibleRepository
     // todos os responsaveis do aluno (pra notificar)
     @Query("SELECT sr.responsible.userId FROM StudentResponsible sr WHERE sr.student.id = :studentId")
     List<UUID> findResponsibleUserIds(@Param("studentId") UUID studentId);
+
+    // vinculo de um responsavel com um aluno (rotulo e se e admin)
+    java.util.Optional<StudentResponsible> findByResponsible_UserIdAndStudent_Id(UUID responsibleId, UUID studentId);
+
+    // todos os responsaveis do aluno com nome, rotulo e admin (o admin primeiro)
+    @Query("SELECT sr FROM StudentResponsible sr JOIN FETCH sr.responsible r JOIN FETCH r.user u " +
+            "WHERE sr.student.id = :studentId ORDER BY sr.isAdmin DESC, u.name")
+    List<StudentResponsible> findLinksOfStudent(@Param("studentId") UUID studentId);
 
     boolean existsByResponsible_UserIdAndStudent_IdAndIsAdminTrue(
             UUID responsibleId,

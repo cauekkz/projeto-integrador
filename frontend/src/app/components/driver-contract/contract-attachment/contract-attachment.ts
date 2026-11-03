@@ -1,7 +1,7 @@
 import { Component, inject, input, signal } from '@angular/core';
 import { ContractDraftService, PDF_TAMANHO_MAXIMO } from '../../../pages/driver-contract/contract-draft.service';
 
-// area do PDF opcional que vai junto com a proposta
+// area do PDF do contrato, obrigatorio na proposta
 @Component({
   selector: 'app-contract-attachment',
   standalone: true,

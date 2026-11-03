@@ -30,13 +30,14 @@ public class User implements UserDetails {
     private String passwordHash;
     
     // VARCHAR evita conflito no ddl-auto validate (CHAR/bpchar do Postgres != String do Hibernate)
-    @Column(nullable = false, unique = true, length = 11)
+    // cpf, email e phone ficam nulos quando o usuario exclui a conta
+    @Column(unique = true, length = 11)
     private String cpf;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String email;
     
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String phone;
 
     @CreationTimestamp

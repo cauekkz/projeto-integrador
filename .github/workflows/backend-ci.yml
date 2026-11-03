@@ -1,7 +1,14 @@
 name: Backend CI
 
 on:
-  pull_request:
+  push:
+
+# segredos so de teste (os mesmos do docker-compose.yml): no application.yml eles nao tem valor padrao
+env:
+  DATABASE_PASSWORD: "123456"
+  JWT_KEY: chave-so-do-ci-nao-usar-em-producao-0123456789abcdef
+  MINIO_ACCESS_KEY: vanroute
+  MINIO_SECRET_KEY: vanroute123456
 
 jobs:
   tests:
@@ -18,3 +25,59 @@ jobs:
       - name: Testes unitários
         working-directory: backend
         run: ./mvnw -B test
+      # o teste do Spring acima ja criou as tabelas (Flyway) no banco do CI: o worker testa contra elas
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: worker/go.mod
+          cache-dependency-path: worker/go.sum
+      - name: Testes do worker
+        working-directory: worker
+        # o mesmo banco onde o teste do Spring rodou as migrations
+        env:
+          DATABASE_NAME: vanroute_test
+        run: |
+          go vet ./...
+          go test -count=1 ./...
+  api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Sobe Postgres, Redis e MinIO
+        run: docker compose up -d --wait db redis minio
+      - name: Compila o backend
+        working-directory: backend
+        run: ./mvnw -B -DskipTests package
+      - name: Sobe os stubs e o backend
+        working-directory: backend
+        env:
+          SPRING_MAIL_HOST: 127.0.0.1
+          SPRING_MAIL_PORT: 2525
+          SPRING_MAIL_USERNAME: stub
+          SPRING_MAIL_PASSWORD: stub
+          SENDER_EMAIL: stub@teste.local
+          SENDER_PASSWORD: stub
+          SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: false
+          ORS_GEOCODE_URL: http://127.0.0.1:8089/pelias/v1/search
+          ORS_DIRECTIONS_URL: http://127.0.0.1:8089/v2/directions/driving-car
+          TRIP_ETA_REFRESH_SECONDS: 3
+          TRIP_OFF_ROUTE_MIN_SECONDS: 0
+        run: |
+          python3 -I api-tests/stubs.py > stubs.log 2>&1 &
+          java -jar target/backend-0.0.1-SNAPSHOT.jar --spring.jpa.show-sql=false > backend.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://localhost:9090/v3/api-docs > /dev/null && exit 0; sleep 2; done
+          cat backend.log; exit 1
+      - name: Testes de API
+        working-directory: backend
+        run: ./api-tests/run-api-tests.sh
+      - name: Log do backend
+        if: failure()
+        working-directory: backend
+        run: tail -200 backend.log

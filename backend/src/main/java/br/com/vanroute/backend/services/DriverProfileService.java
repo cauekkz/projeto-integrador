@@ -22,8 +22,7 @@ import java.util.UUID;
 public class DriverProfileService {
 
     // quem ja fechou contrato com o motorista (ativo ou que ja acabou) avalia; proposta pendente ou recusada, nao
-    static final List<ContractStatus> CAN_RATE = List.of(ContractStatus.ACTIVE, ContractStatus.INACTIVE,
-            ContractStatus.SUSPENDED, ContractStatus.OVERDUE);
+    static final List<ContractStatus> CAN_RATE = List.of(ContractStatus.ACTIVE, ContractStatus.INACTIVE);
 
     private final DriverRepository driverRepository;
     private final ResponsibleRepository responsibleRepository;
