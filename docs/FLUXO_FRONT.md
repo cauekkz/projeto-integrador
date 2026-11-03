@@ -309,7 +309,7 @@ Pra mostrar: GET /api/storage/download-url?fileKey=... → downloadUrl (vale 15 
 ## 10. O que o front ainda não tem do backend
 - **Push com o app fechado** (Firebase Cloud Messaging / Expo Push). Hoje, a notificação fica guardada e aparece ao abrir o app.
 - **"Esqueci a senha"** já existe no backend: `POST /api/auth/forgot-password/send-code` (manda o código pro e-mail) e `POST /api/auth/forgot-password` (troca a senha com o código). Falta a tela.
-- **Cota da API de mapas:** a chave grátis tem um limite diário (200 rotas). Quando ele acaba:
+- **Cota da API de mapas:** a chave grátis tem um limite diário por serviço (veja o painel da conta do OpenRouteService). Quando ele acaba:
   - o cadastro de endereço dá **503**;
   - a trip continua funcionando, mas **sem a linha e sem o tempo**: trate `path`/`etaSeconds` `null` mostrando só a van.
 

@@ -440,7 +440,7 @@ Esse comando faz tudo sozinho:
 4. Sobe o backend na 9090:
    - com a sua chave do OpenRouteService no `application-local.properties`, usa **mapas e endereços reais**;
    - sem a chave, ou com `DEMO_MAPS=sim`, usa um simulador. Ele põe cada endereço num ponto diferente perto da Praça da Sé e desenha a linha reta entre os pontos;
-   - a chave tem cota diária: **200 rotas** e um número limitado de **buscas de endereço**. Acabou a de endereço, o cadastro responde **503** "Busca de endereços indisponível agora" até o dia seguinte;
+   - a chave grátis tem cota diária (o total passa de 8.000 requisições; o limite de cada serviço aparece no painel da conta). Acabou a de endereço, o cadastro responde **503** "Busca de endereços indisponível agora" até o dia seguinte;
    - recalcula o tempo a cada 2 min (no app, 5 min), pra dar pra ver mudando sem gastar a cota da chave.
 5. Cria o cenário (`seed.sh`), só com dados fictícios. São dois, um embaixo do outro na página:
    - **Ida (manhã):** 1 motorista com van, 1 escola e 2 pais, cada um com 1 filho e contrato ativo. Rota "Ida Manha": casa do filho 1 → casa do filho 2 → escola;

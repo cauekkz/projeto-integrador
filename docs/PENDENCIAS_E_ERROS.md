@@ -41,11 +41,12 @@ Feito no backend: termos versionados (`GET /api/terms`, texto em `resources/term
 
 ## 3. Antes de ir para produção
 - **Segredos:** feito. `JWT_KEY`, `DATABASE_PASSWORD`, `MINIO_ACCESS_KEY` e `MINIO_SECRET_KEY` não têm mais valor padrão no `application.yml`: em produção vêm das variáveis de ambiente (sem elas o backend não sobe); em desenvolvimento, do `application-local.properties`.
+- **Senhas:** Argon2id (parâmetros mínimos da OWASP). Contas criadas antes, em BCrypt, não logam mais: no desenvolvimento, rode o seed de novo.
 - **Origens:** defina `ALLOWED_ORIGINS` com o domínio do front (vale pro CORS e pros WebSockets). O padrão aceita só localhost e rede local.
 - **Limite de requisições:** na aplicação já tem (código de e-mail: 5 tentativas e 1 reenvio por minuto). Falta o limite por IP no servidor web (Nginx `limit_req`) quando hospedar, principalmente no login e no cadastro.
 - **Push com o app fechado** (Firebase Cloud Messaging): hoje a notificação só aparece com o app aberto.
 - **HTTPS, backup do banco, logs e monitoramento.**
-- **Serviços pagos:** a chave grátis do OpenRouteService dá 200 rotas por dia; o e-mail precisa de um provedor de verdade.
+- **Serviços pagos (decidido):** fica no plano grátis do OpenRouteService (o fórum oficial fala em mais de 8.000 requisições por dia no total; confira o limite de cada serviço no painel da conta em account.heigit.org) e no Gmail (cerca de 500 e-mails por dia). Testado de ponta a ponta com a chave real. Reavaliar quando hospedar: se o volume crescer, um provedor de e-mail transacional e um plano pago de mapas.
 - **Worker:** subir o `worker/` junto (uma instância só) com as mesmas variáveis `DATABASE_*`.
 
 ---
