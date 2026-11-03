@@ -70,7 +70,8 @@ public class ChatServiceTest {
     void shouldThrowExceptionWhenChatAccessDenied() {
         when(chatRepository.existsByChatIdAndUserId(mockChat.getId(), userOne.getId())).thenReturn(false);
 
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
+        org.springframework.security.access.AccessDeniedException exception = assertThrows(
+                org.springframework.security.access.AccessDeniedException.class,
                 () -> chatService.validateChatAccess(mockChat.getId(), userOne.getId()));
 
         assertEquals("Você não tem acesso a este chat.", exception.getMessage());

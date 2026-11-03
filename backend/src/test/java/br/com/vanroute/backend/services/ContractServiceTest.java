@@ -30,6 +30,7 @@ import br.com.vanroute.backend.repositories.DriverSchoolsRepository;
 import br.com.vanroute.backend.repositories.PaymentRepository;
 import br.com.vanroute.backend.repositories.UserDriverContractRepository;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -89,7 +90,6 @@ public class ContractServiceTest {
                 new ContractRequestDTO(ContractPeriodicity.MONTHLY, BigDecimal.TEN, LocalDate.now(TripService.ZONE), LocalDate.now(TripService.ZONE).plusMonths(1)),
                 new DocumentRequestDTO("uploads/" + driverId + "/x.pdf", "TRANSPORT_CONTRACT"));
 
-        when(storageService.exists("uploads/" + driverId + "/x.pdf")).thenReturn(true);
         when(studentResponsibleService.isAdmin(request.responsibleId(), request.studentId())).thenReturn(true);
         when(driverSchoolsRepository.existsByDriverUserIdAndSchoolId(driverId, request.schoolId())).thenReturn(false);
 
@@ -104,22 +104,25 @@ public class ContractServiceTest {
                 new ContractRequestDTO(ContractPeriodicity.MONTHLY, BigDecimal.TEN, LocalDate.now(TripService.ZONE), LocalDate.now(TripService.ZONE).plusMonths(1)),
                 new DocumentRequestDTO("uploads/" + driverId + "/x.pdf", "TRANSPORT_CONTRACT"));
 
-        when(storageService.exists("uploads/" + driverId + "/x.pdf")).thenReturn(true);
         when(studentResponsibleService.isAdmin(request.responsibleId(), request.studentId())).thenReturn(true);
         when(driverSchoolsRepository.existsByDriverUserIdAndSchoolId(driverId, request.schoolId())).thenReturn(true);
         when(entityManager.getReference(Driver.class, driverId)).thenReturn(new Driver());
         when(entityManager.getReference(School.class, request.schoolId())).thenReturn(new School());
         when(entityManager.getReference(Responsible.class, request.responsibleId())).thenReturn(new Responsible());
-        when(entityManager.getReference(Student.class, request.studentId())).thenReturn(new Student());
+        // o aluno e lido travado (duas propostas ao mesmo tempo passam uma de cada vez)
+        when(entityManager.find(Student.class, request.studentId(), LockModeType.PESSIMISTIC_WRITE)).thenReturn(new Student());
         
         Contract mockedContract = new Contract();
         mockedContract.setId(UUID.randomUUID());
         when(contractRepository.save(any(Contract.class))).thenReturn(mockedContract);
+        String frozen = "contracts/" + mockedContract.getId() + ".pdf";
+        when(storageService.freezeContractPdf("uploads/" + driverId + "/x.pdf", mockedContract.getId())).thenReturn(frozen);
 
         contractService.createContract(driverId, request);
 
         verify(contractRepository).save(any(Contract.class));
-        verify(documentRepository).save(any());
+        // o documento aponta pra copia que ninguem consegue regravar
+        verify(documentRepository).save(argThat(document -> frozen.equals(document.getUrl())));
         verify(userDriverContractRepository).save(any(UserDriverContract.class));
         // propor = o motorista assina os termos
         verify(signatureRepository).save(argThat(signature -> signature.getDocumentHash().length() == 64 && signature.getSignedAt() != null));
@@ -183,6 +186,8 @@ public class ContractServiceTest {
     private UserDriverContract pendingContract(UUID responsibleId) {
         UserDriverContract udc = contract(responsibleId);
         when(userDriverContractRepository.findByContractId(udc.getContract().getId())).thenReturn(Optional.of(udc));
+        org.mockito.Mockito.lenient().when(contractRepository.findByIdForUpdate(udc.getContract().getId()))
+                .thenReturn(Optional.of(udc.getContract()));
         return udc;
     }
 
@@ -243,13 +248,25 @@ public class ContractServiceTest {
     }
 
     @Test
+    void acceptingAContractThatStartsTodayMakesItActive() {
+        UUID responsibleId = UUID.randomUUID();
+        UserDriverContract udc = pendingContract(responsibleId);
+        udc.getContract().setStartDate(LocalDate.now(TripService.ZONE));
+
+        contractService.acceptContract(udc.getContract().getId(), responsibleId);
+
+        assertEquals(ContractStatus.ACTIVE, udc.getContract().getStatus());
+    }
+
+    @Test
     void acceptingGeneratesOneInstallmentPerPeriod() {
         UUID responsibleId = UUID.randomUUID();
         UserDriverContract udc = pendingContract(responsibleId);
 
         contractService.acceptContract(udc.getContract().getId(), responsibleId);
 
-        assertEquals(ContractStatus.ACTIVE, udc.getContract().getStatus());
+        // comeca amanha: fica agendado (o worker ativa no dia) e o aluno ainda nao entra nas rotas
+        assertEquals(ContractStatus.SCHEDULED, udc.getContract().getStatus());
         LocalDate start = udc.getContract().getStartDate();
         verify(paymentRepository).saveAll(argThat((List<Payment> payments) -> payments.size() == 2
                 && payments.get(0).getDueDate().equals(start) && payments.get(1).getDueDate().equals(start.plusMonths(1))
@@ -298,12 +315,46 @@ public class ContractServiceTest {
                 new DocumentRequestDTO("uploads/" + UUID.randomUUID() + "/contrato.pdf", "TRANSPORT_CONTRACT"));
         assertThrows(BadRequestException.class, () -> contractService.createContract(driverId, someoneElses));
 
-        // fileKey da pasta dele, mas que nao existe no storage (upload que falhou)
-        String missingKey = "uploads/" + driverId + "/nao-existe.pdf";
-        when(storageService.exists(missingKey)).thenReturn(false);
-        ContractProposalRequestDTO request = new ContractProposalRequestDTO(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), terms,
-                new DocumentRequestDTO(missingKey, "TRANSPORT_CONTRACT"));
+        verify(contractRepository, never()).save(any());
+    }
+
+    // proposta valida ate o PDF: o storage recusa (nao existe, nao e PDF ou passa de 10 MB) e nada e gravado
+    private ContractProposalRequestDTO validUntilThePdf(UUID driverId, String key) {
+        LocalDate start = LocalDate.now(TripService.ZONE).plusDays(1);
+        ContractProposalRequestDTO request = new ContractProposalRequestDTO(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
+                new ContractRequestDTO(ContractPeriodicity.MONTHLY, BigDecimal.TEN, start, start.plusMonths(1)),
+                new DocumentRequestDTO(key, "TRANSPORT_CONTRACT"));
+        when(studentResponsibleService.isAdmin(request.responsibleId(), request.studentId())).thenReturn(true);
+        when(driverSchoolsRepository.existsByDriverUserIdAndSchoolId(driverId, request.schoolId())).thenReturn(true);
+        when(entityManager.find(Student.class, request.studentId(), LockModeType.PESSIMISTIC_WRITE)).thenReturn(new Student());
+        return request;
+    }
+
+    @Test
+    void pdfRefusedByTheStorageStopsTheProposal() {
+        UUID driverId = UUID.randomUUID();
+        String key = "uploads/" + driverId + "/foto.png";
+        ContractProposalRequestDTO request = validUntilThePdf(driverId, key);
+        Contract saved = new Contract();
+        saved.setId(UUID.randomUUID());
+        when(contractRepository.save(any(Contract.class))).thenReturn(saved);
+        when(storageService.freezeContractPdf(key, saved.getId())).thenThrow(new BadRequestException("O contrato precisa ser um arquivo PDF"));
+
         assertThrows(BadRequestException.class, () -> contractService.createContract(driverId, request));
+        verify(documentRepository, never()).save(any());
+        verify(userDriverContractRepository, never()).save(any());
+    }
+
+    @Test
+    void proposalOverlappingAnotherContractIsAConflict() {
+        UUID driverId = UUID.randomUUID();
+        ContractProposalRequestDTO request = validUntilThePdf(driverId, "uploads/" + driverId + "/x.pdf");
+        when(userDriverContractRepository.existsPendingOrOverlapping(driverId, request.studentId(),
+                request.contract().startDate(), request.contract().endDate())).thenReturn(true);
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class, () -> contractService.createContract(driverId, request));
+
+        assertEquals(HttpStatus.CONFLICT, ex.getStatusCode());
         verify(contractRepository, never()).save(any());
     }
 

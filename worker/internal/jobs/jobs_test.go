@@ -86,7 +86,7 @@ func newWorld(ctx context.Context, t *testing.T, tx pgx.Tx, contractStatus, star
 	exec(ctx, t, tx, `INSERT INTO drivers (user_id, approval_status, link_code) VALUES ($1, 'APPROVED', $2)`,
 		w.driverID, fmt.Sprintf("W%08d", rand.Intn(100000000)))
 	w.responsibleID = user(ctx, t, tx, "ROLE_RESPONSIBLE", "ACTIVE", today.Now)
-	exec(ctx, t, tx, `INSERT INTO responsibles (user_id, financial_status) VALUES ($1, 'UP_TO_DATE')`, w.responsibleID)
+	exec(ctx, t, tx, `INSERT INTO responsibles (user_id) VALUES ($1)`, w.responsibleID)
 	w.studentID = uuid(ctx, t, tx)
 	exec(ctx, t, tx, `INSERT INTO students (id, birth_date, name) VALUES ($1, '2016-05-10', 'Ana Worker')`, w.studentID)
 	w.schoolID = uuid(ctx, t, tx)
@@ -149,8 +149,8 @@ func TestEndContractsTakesTheStudentOffRoutesGroupsAndAbsences(t *testing.T) {
 	w := newWorld(ctx, t, tx, "ACTIVE", "2026-08-01", "2027-03-09")
 	paid := payment(ctx, t, tx, w.contractID, "2027-03-01", "PAID")
 	future := payment(ctx, t, tx, w.contractID, "2027-04-01", "PENDING")
-	exec(ctx, t, tx, `INSERT INTO contract_cancellations (id, contract_id, requested_by, reason, requested_at, status)
-		VALUES (gen_random_uuid(), $1, $2, 'x', $3::timestamp, 'PENDING')`, w.contractID, w.responsibleID, today.Now)
+	exec(ctx, t, tx, `INSERT INTO contract_cancellations (id, contract_id, requested_by, reason, requested_at, status, effective_date)
+		VALUES (gen_random_uuid(), $1, $2, 'x', $3::timestamp, 'PENDING', '2027-04-09')`, w.contractID, w.responsibleID, today.Now)
 	running := newWorld(ctx, t, tx, "ACTIVE", "2026-08-01", "2027-03-09")
 	trip := uuid(ctx, t, tx)
 	exec(ctx, t, tx, `INSERT INTO trips (id, route_id, date, status, driver_id) VALUES ($1, $2, $3::date, 'IN_PROGRESS', $4)`,
@@ -220,18 +220,16 @@ func TestExpireProposalsCancelsWhatPassedTheStartDate(t *testing.T) {
 	}
 }
 
-func TestOverduePaymentsAndFinancialStatus(t *testing.T) {
+func TestOverduePayments(t *testing.T) {
 	ctx, tx := begin(t)
 	late := newWorld(ctx, t, tx, "ACTIVE", "2027-02-01", "2027-06-30")
 	overdue := payment(ctx, t, tx, late.contractID, "2027-03-09", "PENDING")
 	dueToday := payment(ctx, t, tx, late.contractID, today.Date, "PENDING")
 	onTime := newWorld(ctx, t, tx, "ACTIVE", "2027-02-01", "2027-06-30")
-	payment(ctx, t, tx, onTime.contractID, "2027-03-09", "PAID")
-	exec(ctx, t, tx, `UPDATE responsibles SET financial_status = 'OVERDUE' WHERE user_id = $1`, onTime.responsibleID)
+	paid := payment(ctx, t, tx, onTime.contractID, "2027-03-09", "PAID")
 
 	run(ctx, t, tx, MarkOverduePayments)
 	run(ctx, t, tx, MarkOverduePayments) // o segundo ciclo nao avisa de novo
-	run(ctx, t, tx, RefreshFinancialStatus)
 
 	if s := scalar[string](ctx, t, tx, `SELECT string_agg(status, ',' ORDER BY due_date) FROM payments WHERE id IN ($1, $2)`, overdue, dueToday); s != "OVERDUE,PENDING" {
 		t.Errorf("parcelas: %s (a que vence hoje ainda esta em dia)", s)
@@ -239,11 +237,8 @@ func TestOverduePaymentsAndFinancialStatus(t *testing.T) {
 	if n := notifications(ctx, t, tx, late.responsibleID, "PAYMENT"); n != 1 {
 		t.Errorf("aviso de atraso: %d (deveria ser 1)", n)
 	}
-	if s := scalar[string](ctx, t, tx, `SELECT financial_status FROM responsibles WHERE user_id = $1`, late.responsibleID); s != "OVERDUE" {
-		t.Errorf("responsavel atrasado: %s", s)
-	}
-	if s := scalar[string](ctx, t, tx, `SELECT financial_status FROM responsibles WHERE user_id = $1`, onTime.responsibleID); s != "UP_TO_DATE" {
-		t.Errorf("responsavel que quitou: %s", s)
+	if s := scalar[string](ctx, t, tx, `SELECT status FROM payments WHERE id = $1`, paid); s != "PAID" {
+		t.Errorf("parcela paga nao muda: %s", s)
 	}
 }
 
@@ -259,5 +254,176 @@ func TestCleanupRemovesOnlyUnverifiedUsersOlderThan48h(t *testing.T) {
 		if n := scalar[int](ctx, t, tx, `SELECT count(*) FROM users WHERE id = $1`, id); n != want {
 			t.Errorf("usuario %s: %d (esperado %d)", id, n, want)
 		}
+	}
+}
+
+// segundo contrato do mesmo motorista com o mesmo aluno (renovacao)
+func renewal(ctx context.Context, t *testing.T, tx pgx.Tx, w world, status, start, end string) string {
+	id := uuid(ctx, t, tx)
+	exec(ctx, t, tx, `INSERT INTO contracts (id, periodicity, value, start_date, end_date, status) VALUES ($1, 'MONTHLY', 380, $2, $3, $4)`,
+		id, start, end, status)
+	exec(ctx, t, tx, `INSERT INTO user_driver_contracts (id, responsible_id, driver_id, contract_id, student_id, school_id)
+		VALUES (gen_random_uuid(), $1, $2, $3, $4, $5)`, w.responsibleID, w.driverID, id, w.studentID, w.schoolID)
+	return id
+}
+
+func cancellation(ctx context.Context, t *testing.T, tx pgx.Tx, w world, effective string) string {
+	id := uuid(ctx, t, tx)
+	exec(ctx, t, tx, `INSERT INTO contract_cancellations (id, contract_id, requested_by, reason, requested_at, status, effective_date)
+		VALUES ($1, $2, $3, 'mudanca', '2027-02-08 10:00:00', 'PENDING', $4::date)`, id, w.contractID, w.responsibleID, effective)
+	return id
+}
+
+func stops(ctx context.Context, t *testing.T, tx pgx.Tx, studentID string) int {
+	return scalar[int](ctx, t, tx, `SELECT count(*) FROM student_stops WHERE student_id = $1`, studentID)
+}
+
+func TestEndContractsKeepsTheStudentWhenRenewed(t *testing.T) {
+	ctx, tx := begin(t)
+	w := newWorld(ctx, t, tx, "ACTIVE", "2026-08-01", "2027-03-09")
+	next := renewal(ctx, t, tx, w, "SCHEDULED", "2027-03-15", "2027-12-15")
+
+	run(ctx, t, tx, EndContracts)
+
+	if s := scalar[string](ctx, t, tx, `SELECT status FROM contracts WHERE id = $1`, w.contractID); s != "INACTIVE" {
+		t.Fatalf("contrato vencido: %s", s)
+	}
+	if stops(ctx, t, tx, w.studentID) != 1 || scalar[int](ctx, t, tx, `SELECT count(*) FROM driver_group_students WHERE student_id = $1`, w.studentID) != 1 {
+		t.Error("com a renovacao aceita o aluno continua na rota e no grupo")
+	}
+	if s := scalar[string](ctx, t, tx, `SELECT status FROM contracts WHERE id = $1`, next); s != "SCHEDULED" {
+		t.Errorf("renovacao: %s", s)
+	}
+}
+
+func TestCloseStaleTripsOnlyClosesTripsOpenFor20Hours(t *testing.T) {
+	ctx, tx := begin(t)
+	w := newWorld(ctx, t, tx, "ACTIVE", "2026-08-01", "2027-12-15")
+	old := uuid(ctx, t, tx)
+	exec(ctx, t, tx, `INSERT INTO trips (id, route_id, date, status, driver_id, start_time) VALUES ($1, $2, '2027-03-09', 'IN_PROGRESS', $3, '07:00')`,
+		old, w.routeID, w.driverID)
+	current := uuid(ctx, t, tx)
+	exec(ctx, t, tx, `INSERT INTO trips (id, route_id, date, status, driver_id, start_time) VALUES ($1, $2, $3::date, 'STARTED', $4, '07:00')`,
+		current, w.routeID, today.Date, w.driverID)
+
+	run(ctx, t, tx, CloseStaleTrips)
+
+	if s := scalar[string](ctx, t, tx, `SELECT status || ':' || coalesce(end_time::text, 'null') FROM trips WHERE id = $1`, old); s != "FINISHED:null" {
+		t.Errorf("viagem de ontem: %s", s)
+	}
+	if s := scalar[string](ctx, t, tx, `SELECT status FROM trips WHERE id = $1`, current); s != "STARTED" {
+		t.Errorf("viagem de hoje nao pode fechar: %s", s)
+	}
+	if notifications(ctx, t, tx, w.driverID, "SYSTEM") != 1 {
+		t.Error("o motorista devia ser avisado")
+	}
+}
+
+func TestTripThatCrossesMidnightIsNotClosedNorLosesTheStudent(t *testing.T) {
+	ctx, tx := begin(t)
+	// o worker passa 00:05 do dia 10; a viagem comecou 23:50 do dia 9 e ainda esta rodando
+	justAfterMidnight := DayOf(time.Date(2027, 3, 10, 0, 5, 0, 0, Zone))
+	w := newWorld(ctx, t, tx, "ACTIVE", "2026-08-01", "2027-03-09")
+	trip := uuid(ctx, t, tx)
+	exec(ctx, t, tx, `INSERT INTO trips (id, route_id, date, status, driver_id, start_time) VALUES ($1, $2, '2027-03-09', 'IN_PROGRESS', $3, '23:50')`,
+		trip, w.routeID, w.driverID)
+	exec(ctx, t, tx, `INSERT INTO boardings (id, trip_id, student_id, status) VALUES (gen_random_uuid(), $1, $2, 'BOARDED')`, trip, w.studentID)
+
+	for _, job := range []func(context.Context, pgx.Tx, Day) (int64, error){CloseStaleTrips, EndContracts} {
+		if _, err := job(ctx, tx, justAfterMidnight); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if s := scalar[string](ctx, t, tx, `SELECT status FROM trips WHERE id = $1`, trip); s != "IN_PROGRESS" {
+		t.Errorf("viagem rodando depois da meia-noite: %s", s)
+	}
+	// o contrato acabou dia 9, mas a van esta rodando com o aluno: espera o proximo ciclo
+	if s := scalar[string](ctx, t, tx, `SELECT status FROM contracts WHERE id = $1`, w.contractID); s != "ACTIVE" {
+		t.Errorf("contrato com a van rodando desde ontem: %s", s)
+	}
+	if stops(ctx, t, tx, w.studentID) != 1 {
+		t.Error("o aluno nao pode sair da rota no meio da viagem")
+	}
+}
+
+func TestCancelAfterNoticeCancelsOnTheEffectiveDate(t *testing.T) {
+	ctx, tx := begin(t)
+	w := newWorld(ctx, t, tx, "ACTIVE", "2027-01-10", "2027-12-10")
+	request := cancellation(ctx, t, tx, w, "2027-03-10")
+	overdue := payment(ctx, t, tx, w.contractID, "2027-02-10", "OVERDUE")
+	dueOnTheDay := payment(ctx, t, tx, w.contractID, "2027-03-10", "PENDING")
+	after := payment(ctx, t, tx, w.contractID, "2027-04-10", "PENDING")
+	notYet := newWorld(ctx, t, tx, "ACTIVE", "2027-01-10", "2027-12-10")
+	cancellation(ctx, t, tx, notYet, "2027-03-11")
+
+	run(ctx, t, tx, CancelAfterNotice)
+
+	if s := scalar[string](ctx, t, tx, `SELECT status FROM contracts WHERE id = $1`, w.contractID); s != "CANCELED" {
+		t.Fatalf("contrato no fim do aviso: %s", s)
+	}
+	if s := scalar[string](ctx, t, tx, `SELECT status || ':' || (decided_at IS NOT NULL)::text FROM contract_cancellations WHERE id = $1`, request); s != "COMPLETED:true" {
+		t.Errorf("pedido: %s", s)
+	}
+	// a divida nao some: a vencida e a do dia continuam; so a depois do aviso cai
+	if s := scalar[string](ctx, t, tx, `SELECT string_agg(status, ',' ORDER BY due_date) FROM payments WHERE id IN ($1, $2, $3)`,
+		overdue, dueOnTheDay, after); s != "OVERDUE,PENDING,CANCELED" {
+		t.Errorf("parcelas: %s", s)
+	}
+	if stops(ctx, t, tx, w.studentID) != 0 {
+		t.Error("o aluno devia sair da rota")
+	}
+	if notifications(ctx, t, tx, w.driverID, "CONTRACT_CANCELED") != 1 || notifications(ctx, t, tx, w.responsibleID, "CONTRACT_CANCELED") != 1 {
+		t.Error("os dois deviam ser avisados")
+	}
+	if s := scalar[string](ctx, t, tx, `SELECT status FROM contracts WHERE id = $1`, notYet.contractID); s != "ACTIVE" {
+		t.Errorf("aviso que termina amanha: %s", s)
+	}
+}
+
+func TestCancelAfterNoticeWaitsForTodaysTrip(t *testing.T) {
+	ctx, tx := begin(t)
+	w := newWorld(ctx, t, tx, "ACTIVE", "2027-01-10", "2027-12-10")
+	cancellation(ctx, t, tx, w, "2027-03-10")
+	trip := uuid(ctx, t, tx)
+	exec(ctx, t, tx, `INSERT INTO trips (id, route_id, date, status, driver_id) VALUES ($1, $2, $3::date, 'IN_PROGRESS', $4)`,
+		trip, w.routeID, today.Date, w.driverID)
+	exec(ctx, t, tx, `INSERT INTO boardings (id, trip_id, student_id, status) VALUES (gen_random_uuid(), $1, $2, 'BOARDED')`, trip, w.studentID)
+
+	run(ctx, t, tx, CancelAfterNotice)
+
+	if s := scalar[string](ctx, t, tx, `SELECT status FROM contracts WHERE id = $1`, w.contractID); s != "ACTIVE" {
+		t.Errorf("com a van rodando espera o proximo ciclo: %s", s)
+	}
+}
+
+func TestActivateContractsOnTheStartDate(t *testing.T) {
+	ctx, tx := begin(t)
+	starts := newWorld(ctx, t, tx, "SCHEDULED", today.Date, "2027-12-15")
+	later := newWorld(ctx, t, tx, "SCHEDULED", "2027-03-11", "2027-12-15")
+
+	run(ctx, t, tx, ActivateContracts)
+
+	if s := scalar[string](ctx, t, tx, `SELECT status FROM contracts WHERE id = $1`, starts.contractID); s != "ACTIVE" {
+		t.Errorf("comeca hoje: %s", s)
+	}
+	if s := scalar[string](ctx, t, tx, `SELECT status FROM contracts WHERE id = $1`, later.contractID); s != "SCHEDULED" {
+		t.Errorf("comeca amanha: %s", s)
+	}
+	if notifications(ctx, t, tx, starts.responsibleID, "CONTRACT_STARTED") != 1 {
+		t.Error("o responsavel devia ser avisado")
+	}
+}
+
+func TestNextRunIsTheNextSaoPauloTime(t *testing.T) {
+	// 02h UTC de 10/03 = 23h de 09/03 em Sao Paulo: o proximo 00:05 e o de 10/03
+	next := NextRun(time.Date(2027, 3, 10, 2, 0, 0, 0, time.UTC), 0, 5)
+	if got := next.In(Zone).Format("2006-01-02 15:04"); got != "2027-03-10 00:05" {
+		t.Errorf("proximo ciclo: %s", got)
+	}
+	// exatamente no horario: o proximo e amanha
+	next = NextRun(time.Date(2027, 3, 10, 0, 5, 0, 0, Zone), 0, 5)
+	if got := next.In(Zone).Format("2006-01-02 15:04"); got != "2027-03-11 00:05" {
+		t.Errorf("no horario: %s", got)
 	}
 }

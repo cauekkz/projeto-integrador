@@ -23,12 +23,16 @@ public class ChatWebSocketHandler extends TextWebSocketHandler implements Messag
     private final ChatService chatService;
     private final Map<String, Set<WebSocketSession>> sessions = new ConcurrentHashMap<>();
     
-    public ChatWebSocketHandler(ChatService chatService) {
+    private final WebSocketSessionRegistry registry;
+
+    public ChatWebSocketHandler(ChatService chatService, WebSocketSessionRegistry registry) {
         this.chatService = chatService;
+        this.registry = registry;
     }
     //aqui é pra verificar se ele tem permisao pra entrar na conversa antes de tudo
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        registry.register(session);
         String chatId = getChatIdFromUri(session.getUri());
         
         if (session.getPrincipal() == null) {
@@ -69,6 +73,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler implements Messag
     
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        registry.unregister(session);
         String chatId = getChatIdFromUri(session.getUri());
         Set<WebSocketSession> chatSessions = sessions.get(chatId);
         if (chatSessions != null) {

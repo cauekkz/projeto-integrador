@@ -55,6 +55,16 @@ public class DataExportService {
                     SELECT sa.label, a.street, a.number, a.neighborhood, a.city, a.state, a.zip_code
                     FROM student_addresses sa JOIN addresses a ON a.id = sa.address_id WHERE sa.student_id = ?""", child.get("id")));
             child.put("absences", list("SELECT date, created_at FROM student_absences WHERE student_id = ? ORDER BY date", child.get("id")));
+            // viagens do aluno: embarque e desembarque, e as ocorrencias registradas nessas viagens
+            child.put("trips", list("""
+                    SELECT t.date, r.name AS route_name, t.status AS trip_status, b.status AS boarding_status,
+                           b.boarding_time, b.unboarding_time
+                    FROM boardings b JOIN trips t ON t.id = b.trip_id JOIN routes r ON r.id = t.route_id
+                    WHERE b.student_id = ? ORDER BY t.date, t.start_time""", child.get("id")));
+            child.put("occurrences", list("""
+                    SELECT o.date_time, o.type, o.description
+                    FROM occurrences o JOIN boardings b ON b.trip_id = o.trip_id
+                    WHERE b.student_id = ? ORDER BY o.date_time""", child.get("id")));
         }
         data.put("children", children);
         data.put("ratingsGiven", list("SELECT driver_id, score, comment, date FROM ratings WHERE responsible_id = ? ORDER BY date", userId));
@@ -64,8 +74,18 @@ public class DataExportService {
         data.put("schools", list("""
                 SELECT s.name, ds.created_at FROM driver_schools ds JOIN schools s ON s.id = ds.school_id WHERE ds.driver_id = ?""", userId));
         data.put("vehicles", list("""
-                SELECT v.plate, v.model, v.color, v.capacity, dv.start_date, dv.end_date
+                SELECT v.plate, v.model, v.year, v.manufacture_year, v.color, v.fuel, v.category, v.capacity, v.renavam,
+                       v.chassis, v.licensing_year, dv.start_date, dv.end_date
                 FROM driver_vehicles dv JOIN vehicles v ON v.id = dv.vehicle_id WHERE dv.driver_id = ? ORDER BY dv.start_date""", userId));
+        data.put("groups", list("SELECT name, created_at FROM driver_groups WHERE driver_id = ? ORDER BY name", userId));
+        // viagens que dirigiu e ocorrencias que registrou
+        data.put("tripsDriven", list("""
+                SELECT t.date, r.name AS route_name, t.status, t.start_time, t.end_time
+                FROM trips t JOIN routes r ON r.id = t.route_id WHERE t.driver_id = ? ORDER BY t.date, t.start_time""", userId));
+        data.put("occurrencesRegistered", list("""
+                SELECT date_time, type, description FROM occurrences WHERE driver_id = ? ORDER BY date_time""", userId));
+        // avaliacoes recebidas (sem quem avaliou: e dado da outra pessoa)
+        data.put("ratingsReceived", list("SELECT score, comment, date FROM ratings WHERE driver_id = ? ORDER BY date", userId));
 
         // os dois: contratos (com as parcelas), mensagens que mandou e notificacoes
         List<Map<String, Object>> contracts = list("""
@@ -78,6 +98,18 @@ public class DataExportService {
             contract.put("payments", list("""
                     SELECT value, due_date, status, payment_method, paid_at FROM payments WHERE contract_id = ? ORDER BY due_date""",
                     contract.get("id")));
+            contract.put("document", one("""
+                    SELECT type, url AS file_key, status, uploaded_at FROM documents
+                    WHERE entity_type = 'CONTRACT' AND entity_id = ? ORDER BY uploaded_at LIMIT 1""", contract.get("id")));
+            // assinaturas das duas partes (quem, quando e o hash dos termos)
+            contract.put("signatures", list("""
+                    SELECT u.name, s.signed_at, s.document_hash FROM signatures s JOIN documents d ON d.id = s.document_id
+                    JOIN users u ON u.id = s.user_id
+                    WHERE d.entity_type = 'CONTRACT' AND d.entity_id = ? ORDER BY s.signed_at""", contract.get("id")));
+            contract.put("cancellations", list("""
+                    SELECT u.name AS requested_by, c.reason, c.requested_at, c.status, c.unilateral, c.effective_date, c.decided_at
+                    FROM contract_cancellations c JOIN users u ON u.id = c.requested_by
+                    WHERE c.contract_id = ? ORDER BY c.requested_at""", contract.get("id")));
         }
         data.put("contracts", contracts);
         data.put("messagesSent", list("""

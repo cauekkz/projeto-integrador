@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -101,16 +102,27 @@ class ResponsibleProfileServiceTest {
     }
 
     @Test
-    void financialStatusIsTheOverallOneButTheCountIsOnlyWithThisDriver() {
+    void debtWithAnotherDriverDoesNotShow() {
         when(userDriverContractRepository.existsByDriverUserIdAndResponsibleUserId(driverId, responsibleId)).thenReturn(true);
-        // atrasado so com outro motorista: aparece OVERDUE, mas nenhuma parcela com esse motorista
-        when(paymentRepository.countOverdueOfResponsible(eq(responsibleId), any())).thenReturn(3L);
+        // atrasado so com outro motorista: pra esse motorista ele esta em dia
+        lenient().when(paymentRepository.countOverdueOfResponsible(eq(responsibleId), any())).thenReturn(3L);
         when(paymentRepository.countOverdueBetween(eq(driverId), eq(responsibleId), any())).thenReturn(0L);
 
         ResponsibleProfileResponseDTO profile = service.profile(responsibleId, driverId);
 
-        assertEquals(FinancialStatus.OVERDUE, profile.financialStatus());
+        assertEquals(FinancialStatus.UP_TO_DATE, profile.financialStatus());
         assertEquals(0L, profile.overduePayments());
+    }
+
+    @Test
+    void debtWithThisDriverShows() {
+        when(userDriverContractRepository.existsByDriverUserIdAndResponsibleUserId(driverId, responsibleId)).thenReturn(true);
+        when(paymentRepository.countOverdueBetween(eq(driverId), eq(responsibleId), any())).thenReturn(2L);
+
+        ResponsibleProfileResponseDTO profile = service.profile(responsibleId, driverId);
+
+        assertEquals(FinancialStatus.OVERDUE, profile.financialStatus());
+        assertEquals(2L, profile.overduePayments());
     }
 
     @Test

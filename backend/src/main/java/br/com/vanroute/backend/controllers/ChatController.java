@@ -1,11 +1,8 @@
 package br.com.vanroute.backend.controllers;
 
-import br.com.vanroute.backend.services.NotificationService;
-import br.com.vanroute.backend.models.notification.enums.NotificationType;
-import br.com.vanroute.backend.dtos.contract.ContractDetailsResponseDTO;
-import java.util.List;
 import br.com.vanroute.backend.services.StudentService;
 import br.com.vanroute.backend.dtos.student.ChildSummaryResponseDTO;
+import java.util.List;
 import java.util.UUID;
 import java.util.Map;
 
@@ -21,8 +18,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import br.com.vanroute.backend.config.AuthenticatedUser;
 import br.com.vanroute.backend.dtos.chat.ChatMessageResponseDTO;
 import br.com.vanroute.backend.dtos.chat.ChatResponseDTO;
@@ -30,40 +25,25 @@ import br.com.vanroute.backend.dtos.chat.ChatMessageRequestDTO;
 import br.com.vanroute.backend.services.ChatMessageService;
 import br.com.vanroute.backend.services.ChatService;
 import jakarta.validation.Valid;
-import org.springframework.data.redis.core.RedisTemplate;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import br.com.vanroute.backend.dtos.contract.ContractProposalRequestDTO;
-import  br.com.vanroute.backend.services.ContractService;
+
+import br.com.vanroute.backend.services.ContractChatService;
 
 @RestController
 @RequestMapping("/api/chats")
 public class ChatController {
 
-    private static final Logger log = LoggerFactory.getLogger(ChatController.class);
-
     private final ChatMessageService chatMessageService;
     private final ChatService chatService;
-    private final RedisTemplate<String, String> redisTemplate;
-    private final ObjectMapper objectMapper;
-    private final ContractService contractService;
     private final StudentService studentService;
-    private final NotificationService notificationService;
-    
-    public ChatController(
-            ChatMessageService chatMessageService,
-            ChatService chatService,
-            RedisTemplate<String, String> redisTemplate,
-            ObjectMapper objectMapper,
-            ContractService contractService,
-            StudentService studentService,
-            NotificationService notificationService) {
+    private final ContractChatService contractChatService;
+
+    public ChatController(ChatMessageService chatMessageService, ChatService chatService, StudentService studentService,
+                          ContractChatService contractChatService) {
         this.chatMessageService = chatMessageService;
         this.chatService = chatService;
-        this.redisTemplate = redisTemplate;
-        this.objectMapper = objectMapper;
-        this.contractService = contractService;
         this.studentService = studentService;
-        this.notificationService = notificationService;
+        this.contractChatService = contractChatService;
     }
 
     @GetMapping
@@ -83,14 +63,7 @@ public class ChatController {
             @Valid @RequestBody ChatMessageRequestDTO request, Authentication authentication) {
 
         ChatMessageResponseDTO msg = chatMessageService.sendMessage(chatId, AuthenticatedUser.id(authentication), request);
-
-        try {
-            String json = objectMapper.writeValueAsString(msg);
-            redisTemplate.convertAndSend("chat-" + chatId, json);
-        } catch (Exception e) {
-            log.error("Failed to publish message to Redis for chat: {}", chatId, e);
-        }
-
+        chatMessageService.publish(chatId, msg);
         return ResponseEntity.status(201).body(msg);
     }
 
@@ -107,99 +80,31 @@ public class ChatController {
     @PostMapping("/{chatId}/contract")
     public ResponseEntity<Object> createContract(@PathVariable UUID chatId,
         @Valid @RequestBody ContractProposalRequestDTO request, Authentication authentication) {
-        UUID driverId = AuthenticatedUser.id(authentication);
-        chatService.UsersInChat(chatId, driverId, request.responsibleId());
-        
-        br.com.vanroute.backend.models.contract.UserDriverContract udc = contractService.createContract(driverId, request);
-        
-
-        
-        String payloadStr = "{\"userDriverContractId\": \"" + udc.getId() + "\", \"contractId\": \"" + udc.getContract().getId() + "\"}";
-        ChatMessageResponseDTO msg = chatMessageService.sendSystemMessage(chatId, driverId, "Proposta de Contrato",
-                br.com.vanroute.backend.models.chat.enums.MessageType.PROPOSAL, payloadStr);
-        try {
-            redisTemplate.convertAndSend("chat-" + chatId, objectMapper.writeValueAsString(msg));
-        } catch (Exception e) {
-            log.error("Failed to publish message to Redis for chat: {}", chatId, e);
-        }
-
-        ContractDetailsResponseDTO details = contractService.getContractDetails(udc.getContract().getId(), driverId);
-        notificationService.send(List.of(request.responsibleId()), NotificationType.CONTRACT_PROPOSED, "Nova proposta de contrato",
-                details.driverName() + " enviou uma proposta de contrato para " + details.studentName(),
-                Map.of("chatId", chatId, "contractId", details.contractId()));
-
+        ContractChatService.Proposal proposal = contractChatService.propose(chatId, AuthenticatedUser.id(authentication), request);
         return ResponseEntity.status(201).body(Map.of(
-                "message", msg,
-                "userDriverContractId", udc.getId(),
-                "contract", details));
+                "message", proposal.message(),
+                "userDriverContractId", proposal.userDriverContractId(),
+                "contract", proposal.contract()));
     }
 
+    // o contractId vem do payload da mensagem PROPOSAL do chat; so o responsavel do contrato aceita, e o contrato
+    // tem que ser dessa conversa
     @PutMapping("/{chatId}/contracts/{contractId}/accept")
-    // o contractId vem do payload da mensagem PROPOSAL do chat; so o responsavel do contrato aceita
     public ResponseEntity<Void> acceptContract(@PathVariable UUID chatId, @PathVariable UUID contractId, Authentication authentication) {
-        UUID responsibleId = AuthenticatedUser.id(authentication);
-        chatService.validateChatAccess(chatId, responsibleId);
-        
-        contractService.acceptContract(contractId, responsibleId);
-        ContractDetailsResponseDTO details = contractService.getContractDetails(contractId, responsibleId);
-        notificationService.send(List.of(details.driverId()), NotificationType.CONTRACT_ACCEPTED, "Contrato aceito",
-                details.responsibleName() + " aceitou o contrato de " + details.studentName(),
-                Map.of("chatId", chatId, "contractId", contractId));
-        
-        String payloadStr = "{\"contractId\": \"" + contractId + "\"}";
-        ChatMessageResponseDTO msg = chatMessageService.sendSystemMessage(chatId, responsibleId, "Contrato Aceito",
-                br.com.vanroute.backend.models.chat.enums.MessageType.APPROVAL, payloadStr);
-        try {
-            redisTemplate.convertAndSend("chat-" + chatId, objectMapper.writeValueAsString(msg));
-        } catch (Exception e) {
-            log.error("Error to publish", e);
-        }
+        contractChatService.accept(chatId, contractId, AuthenticatedUser.id(authentication));
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{chatId}/contracts/{contractId}/reject")
     public ResponseEntity<Void> rejectContract(@PathVariable UUID chatId, @PathVariable UUID contractId, Authentication authentication) {
-        UUID responsibleId = AuthenticatedUser.id(authentication);
-        chatService.validateChatAccess(chatId, responsibleId);
-        
-        contractService.rejectContract(contractId, responsibleId);
-        ContractDetailsResponseDTO details = contractService.getContractDetails(contractId, responsibleId);
-        notificationService.send(List.of(details.driverId()), NotificationType.CONTRACT_REJECTED, "Contrato recusado",
-                details.responsibleName() + " recusou o contrato de " + details.studentName(),
-                Map.of("chatId", chatId, "contractId", contractId));
-        
-        String payloadStr = "{\"contractId\": \"" + contractId + "\"}";
-        ChatMessageResponseDTO msg = chatMessageService.sendSystemMessage(chatId, responsibleId, "Contrato Recusado",
-                br.com.vanroute.backend.models.chat.enums.MessageType.REJECTION, payloadStr);
-        try {
-            redisTemplate.convertAndSend("chat-" + chatId, objectMapper.writeValueAsString(msg));
-        } catch (Exception e) {
-            log.error("Error to publish", e);
-        }
+        contractChatService.reject(chatId, contractId, AuthenticatedUser.id(authentication));
         return ResponseEntity.ok().build();
     }
 
     // o motorista retira a proposta que ainda esta pendente
     @PutMapping("/{chatId}/contracts/{contractId}/withdraw")
     public ResponseEntity<Void> withdrawContract(@PathVariable UUID chatId, @PathVariable UUID contractId, Authentication authentication) {
-        UUID driverId = AuthenticatedUser.id(authentication);
-        chatService.validateChatAccess(chatId, driverId);
-
-        contractService.withdrawContract(contractId, driverId);
-        ContractDetailsResponseDTO details = contractService.getContractDetails(contractId, driverId);
-        notificationService.send(List.of(details.responsibleId()), NotificationType.CONTRACT_WITHDRAWN, "Proposta retirada",
-                details.driverName() + " retirou a proposta de contrato de " + details.studentName(),
-                Map.of("chatId", chatId, "contractId", contractId));
-
-        // REJECTION: o front ja trata como proposta encerrada
-        String payloadStr = "{\"contractId\": \"" + contractId + "\"}";
-        ChatMessageResponseDTO msg = chatMessageService.sendSystemMessage(chatId, driverId, "Proposta Retirada",
-                br.com.vanroute.backend.models.chat.enums.MessageType.REJECTION, payloadStr);
-        try {
-            redisTemplate.convertAndSend("chat-" + chatId, objectMapper.writeValueAsString(msg));
-        } catch (Exception e) {
-            log.error("Error to publish", e);
-        }
+        contractChatService.withdraw(chatId, contractId, AuthenticatedUser.id(authentication));
         return ResponseEntity.ok().build();
     }
 

@@ -33,6 +33,9 @@ class ChatMessageServiceTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private StorageService storageService;
+
     @InjectMocks
     private ChatMessageService chatMessageService;
 
@@ -105,6 +108,19 @@ class ChatMessageServiceTest {
 
         assertThrows(org.springframework.security.access.AccessDeniedException.class,
                 () -> chatMessageService.sendMessage(mockChat.getId(), senderUser.getId(), requestDTO));
+    }
+
+    @Test
+    void attachmentOverTheLimitIsRefused() {
+        String key = "uploads/" + senderUser.getId() + "/video.mp4";
+        doThrow(new br.com.vanroute.backend.exceptions.BadRequestException("O arquivo pode ter no máximo 10 MB"))
+                .when(storageService).checkUploaded(key);
+        ChatMessageRequestDTO requestDTO = new ChatMessageRequestDTO(null,
+                br.com.vanroute.backend.models.chat.enums.AttachmentType.OTHER, key);
+
+        assertThrows(br.com.vanroute.backend.exceptions.BadRequestException.class,
+                () -> chatMessageService.sendMessage(mockChat.getId(), senderUser.getId(), requestDTO));
+        verify(chatMessageRepository, never()).save(any());
     }
 
     @Test

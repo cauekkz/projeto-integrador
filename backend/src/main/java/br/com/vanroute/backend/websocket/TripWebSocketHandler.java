@@ -34,13 +34,17 @@ public class TripWebSocketHandler extends TextWebSocketHandler implements Messag
     // tripId -> (id da sessao -> sessao segura pra envio de varias threads)
     private final Map<UUID, Map<String, WebSocketSession>> sessions = new ConcurrentHashMap<>();
 
-    public TripWebSocketHandler(TripLiveService tripLiveService, ObjectMapper objectMapper) {
+    private final WebSocketSessionRegistry registry;
+
+    public TripWebSocketHandler(TripLiveService tripLiveService, ObjectMapper objectMapper, WebSocketSessionRegistry registry) {
+        this.registry = registry;
         this.tripLiveService = tripLiveService;
         this.objectMapper = objectMapper;
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        registry.register(session);
         if (session.getPrincipal() == null) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Unauthenticated"));
             return;
@@ -102,6 +106,7 @@ public class TripWebSocketHandler extends TextWebSocketHandler implements Messag
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        registry.unregister(session);
         UUID tripId = tripId(session.getUri());
         Map<String, WebSocketSession> tripSessions = tripId == null ? null : sessions.get(tripId);
         if (tripSessions != null) {

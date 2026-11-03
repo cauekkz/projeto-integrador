@@ -90,7 +90,7 @@ public class RouteService {
         RouteDriver routeDriver = new RouteDriver();
         routeDriver.setRoute(route);
         routeDriver.setDriver(driver);
-        routeDriver.setStartDate(LocalDate.now());
+        routeDriver.setStartDate(LocalDate.now(TripService.ZONE));
         routeDriver.setEndDate(null);
         routeDriverRepository.save(routeDriver);
 
@@ -337,7 +337,8 @@ public class RouteService {
     public Driver checkOwnership(Route route, Authentication authentication) {
         Driver driver = driverRepository.findById(AuthenticatedUser.id(authentication))
                 .orElseThrow(() -> new AccessDeniedException("Driver not found"));
-        if (!routeDriverRepository.existsByRouteIdAndDriverUserId(route.getId(), driver.getUserId())) {
+        // so quem esta na rota hoje (end_date nulo)
+        if (!routeDriverRepository.existsByRouteIdAndDriverUserIdAndEndDateIsNull(route.getId(), driver.getUserId())) {
             throw new AccessDeniedException("Route does not belong to this driver");
         }
         return driver;

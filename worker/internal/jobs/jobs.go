@@ -32,19 +32,33 @@ func DayOf(t time.Time) Day {
 	return Day{Date: local.Format("2006-01-02"), Now: local.Format("2006-01-02 15:04:05")}
 }
 
+// proximo horario hh:mm de Sao Paulo depois de now (hoje, se ainda nao passou; senao amanha)
+func NextRun(now time.Time, hour, minute int) time.Time {
+	local := now.In(Zone)
+	next := time.Date(local.Year(), local.Month(), local.Day(), hour, minute, 0, 0, Zone)
+	if !next.After(local) {
+		next = next.AddDate(0, 0, 1)
+	}
+	return next
+}
+
 // Job e uma tarefa diaria; devolve quantos registros ela mudou
 type Job struct {
 	Name string
 	Run  func(ctx context.Context, tx pgx.Tx, day Day) (int64, error)
 }
 
-// todas, na ordem em que rodam: parcelas antes da situacao financeira; propostas e contratos independem
+// todas, na ordem em que rodam:
+//   - as viagens esquecidas fecham antes de mexer em contratos, porque viagem rodando segura o aluno na rota;
+//   - o aviso previo vence antes de o contrato agendado comecar (nao avisa "comecou" de um contrato cancelado)
 var All = []Job{
 	{Name: "usuarios sem e-mail confirmado", Run: CleanupUnverifiedUsers},
+	{Name: "viagens esquecidas abertas", Run: CloseStaleTrips},
 	{Name: "propostas expiradas", Run: ExpireProposals},
+	{Name: "cancelamentos no fim do aviso previo", Run: CancelAfterNotice},
+	{Name: "contratos que comecam hoje", Run: ActivateContracts},
 	{Name: "contratos encerrados", Run: EndContracts},
 	{Name: "parcelas atrasadas", Run: MarkOverduePayments},
-	{Name: "situacao financeira dos responsaveis", Run: RefreshFinancialStatus},
 }
 
 // grava uma notificacao igual as do backend (o app mostra quando abrir; o worker nao tem o WebSocket)

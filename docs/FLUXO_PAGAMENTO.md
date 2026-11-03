@@ -72,7 +72,7 @@ Filtros opcionais: `studentId`, `driverId`, `responsibleId`, `contractId`, `stat
 ```json
 { "method": "PIX" }
 ```
-`method`: `PIX`, `CASH`, `BOLETO` ou `CREDIT_CARD`. Vale pra parcela `PENDING` ou `OVERDUE`. Devolve a parcela com `status: PAID`, `paymentMethod` e `paidAt`. O pai recebe a notificação `PAYMENT` "Pagamento confirmado" e, se não tiver outra atrasada, a situação financeira dele volta pra `UP_TO_DATE` na hora.
+`method`: `PIX`, `CASH`, `BOLETO` ou `CREDIT_CARD`. Vale pra parcela `PENDING` ou `OVERDUE`. Devolve a parcela com `status: PAID`, `paymentMethod` e `paidAt`. O pai recebe a notificação `PAYMENT` "Pagamento confirmado". No perfil dele, a situação volta pra `UP_TO_DATE` na hora se não tiver outra atrasada (é calculada pelas parcelas).
 
 ### `PUT /api/payments/{paymentId}/cancel` (motorista)
 
@@ -80,7 +80,9 @@ Dispensa a parcela (ex.: o contrato começou no meio do mês e o motorista não 
 
 **As duas não têm volta.** Erros: **400** baixa sem `method`; **403** quem não é o motorista do contrato; **404** parcela que não existe; **409** parcela já paga ou cancelada.
 
-Parcela atrasada de um contrato já cancelado continua aberta: o motorista ainda pode dar baixa nela.
+A parcela é lida travada (`SELECT ... FOR UPDATE`): duas confirmações ao mesmo tempo (duplo clique) não passam as duas, e a segunda recebe **409**.
+
+**Dívida não some com o cancelamento:** parcela vencida de um contrato cancelado ou encerrado continua aberta (o pai continua devedor), e o motorista ainda pode dar baixa nela ou dispensá-la. Isso vale também para as parcelas que vencem durante o aviso prévio de 30 dias (`docs/FLUXO_CONTRATO.md`, passo 9). Com uma parcela vencida há **30 dias ou mais**, o motorista pode cancelar o contrato na hora, sem aviso.
 
 ## 3. Notificações
 
@@ -93,21 +95,21 @@ Chegam na hora pelo WebSocket `/notifications?token=JWT` e ficam gravadas (`docs
 
 ## 4. O que fica pra depois
 
-- Situação financeira do responsável (`responsibles.financial_status`): nasce `UP_TO_DATE`; o worker marca `OVERDUE` e o backend volta pra `UP_TO_DATE` na baixa. O motorista vê a situação **com ele** no perfil do responsável (`docs/FLUXO_CONTRATO.md`, passo 10).
+- Situação financeira do responsável: **não fica gravada**. O perfil do responsável calcula na hora pelas parcelas atrasadas (pro motorista, só as com ele; `docs/FLUXO_CONTRATO.md`, passo 10). A coluna `responsibles.financial_status` saiu na V36.
 - Cobrança pelo Mercado Pago (o pai paga pelo app e a baixa é automática): só depois de validar o fluxo do Pix.
 
 ## 5. Onde está no código
 
 | Rota | Controller | Service | O que o service faz |
 |---|---|---|---|
-| `GET /api/driver/pix-key` | [DriverController.getPixKey](../backend/src/main/java/br/com/vanroute/backend/controllers/DriverController.java#L94) | [DriverService.getPixKey](../backend/src/main/java/br/com/vanroute/backend/services/DriverService.java#L74) | busca o motorista logado e devolve tipo e chave |
-| `PUT /api/driver/pix-key` | [DriverController.setPixKey](../backend/src/main/java/br/com/vanroute/backend/controllers/DriverController.java#L99) | [DriverService.setPixKey](../backend/src/main/java/br/com/vanroute/backend/services/DriverService.java#L80) | valida e normaliza com [PixKeys.normalize](../backend/src/main/java/br/com/vanroute/backend/utils/PixKeys.java#L20) e grava nas colunas `pix_key_type` e `pix_key` |
-| `DELETE /api/driver/pix-key` | [DriverController.removePixKey](../backend/src/main/java/br/com/vanroute/backend/controllers/DriverController.java#L104) | [DriverService.removePixKey](../backend/src/main/java/br/com/vanroute/backend/services/DriverService.java#L89) | limpa as duas colunas |
-| `GET /api/payments` | [PaymentController.list](../backend/src/main/java/br/com/vanroute/backend/controllers/PaymentController.java#L39) | [PaymentService.list](../backend/src/main/java/br/com/vanroute/backend/services/PaymentService.java#L62) | monta a consulta só com os filtros que vieram, pagina e troca `PENDING` vencida por `OVERDUE` ([withDisplayStatus](../backend/src/main/java/br/com/vanroute/backend/services/PaymentService.java#L101)) |
-| `PUT /api/payments/{id}/paid` | [PaymentController.markPaid](../backend/src/main/java/br/com/vanroute/backend/controllers/PaymentController.java#L54) | [PaymentService.markPaid](../backend/src/main/java/br/com/vanroute/backend/services/PaymentService.java#L107) | confere dono e status ([pendingOfDriver](../backend/src/main/java/br/com/vanroute/backend/services/PaymentService.java#L138)), grava `PAID`, método e `paid_at`, e notifica o pai |
-| `PUT /api/payments/{id}/cancel` | [PaymentController.cancel](../backend/src/main/java/br/com/vanroute/backend/controllers/PaymentController.java#L61) | [PaymentService.cancel](../backend/src/main/java/br/com/vanroute/backend/services/PaymentService.java#L126) | mesma conferência, grava `CANCELED` e notifica o pai |
+| `GET /api/driver/pix-key` | [DriverController.getPixKey](../backend/src/main/java/br/com/vanroute/backend/controllers/DriverController.java#L101) | [DriverService.getPixKey](../backend/src/main/java/br/com/vanroute/backend/services/DriverService.java#L74) | busca o motorista logado e devolve tipo e chave |
+| `PUT /api/driver/pix-key` | [DriverController.setPixKey](../backend/src/main/java/br/com/vanroute/backend/controllers/DriverController.java#L106) | [DriverService.setPixKey](../backend/src/main/java/br/com/vanroute/backend/services/DriverService.java#L80) | valida e normaliza com [PixKeys.normalize](../backend/src/main/java/br/com/vanroute/backend/utils/PixKeys.java#L20) e grava nas colunas `pix_key_type` e `pix_key` |
+| `DELETE /api/driver/pix-key` | [DriverController.removePixKey](../backend/src/main/java/br/com/vanroute/backend/controllers/DriverController.java#L111) | [DriverService.removePixKey](../backend/src/main/java/br/com/vanroute/backend/services/DriverService.java#L89) | limpa as duas colunas |
+| `GET /api/payments` | [PaymentController.list](../backend/src/main/java/br/com/vanroute/backend/controllers/PaymentController.java#L39) | [PaymentService.list](../backend/src/main/java/br/com/vanroute/backend/services/PaymentService.java#L61) | monta a consulta só com os filtros que vieram, pagina e troca `PENDING` vencida por `OVERDUE` ([withDisplayStatus](../backend/src/main/java/br/com/vanroute/backend/services/PaymentService.java#L100)) |
+| `PUT /api/payments/{id}/paid` | [PaymentController.markPaid](../backend/src/main/java/br/com/vanroute/backend/controllers/PaymentController.java#L54) | [PaymentService.markPaid](../backend/src/main/java/br/com/vanroute/backend/services/PaymentService.java#L106) | confere dono e status ([pendingOfDriver](../backend/src/main/java/br/com/vanroute/backend/services/PaymentService.java#L135)), grava `PAID`, método e `paid_at`, e notifica o pai |
+| `PUT /api/payments/{id}/cancel` | [PaymentController.cancel](../backend/src/main/java/br/com/vanroute/backend/controllers/PaymentController.java#L61) | [PaymentService.cancel](../backend/src/main/java/br/com/vanroute/backend/services/PaymentService.java#L124) | mesma conferência, grava `CANCELED` e notifica o pai |
 
-**Onde as parcelas nascem:** no aceite do contrato, [ContractService.acceptContract](../backend/src/main/java/br/com/vanroute/backend/services/ContractService.java#L184), com as datas de [ContractService.installmentDates](../backend/src/main/java/br/com/vanroute/backend/services/ContractService.java#L250).
+**Onde as parcelas nascem:** no aceite do contrato, [ContractService.acceptContract](../backend/src/main/java/br/com/vanroute/backend/services/ContractService.java#L187), com as datas de [ContractService.installmentDates](../backend/src/main/java/br/com/vanroute/backend/services/ContractService.java#L262).
 
 **Notificação:** [NotificationService.send](../backend/src/main/java/br/com/vanroute/backend/services/NotificationService.java#L50) grava a notificação e manda pelo WebSocket `/notifications` depois do commit.
 
@@ -116,6 +118,6 @@ Chegam na hora pelo WebSocket `/notifications?token=JWT` e ficam gravadas (`docs
 - [V31__contract_cancellations_and_pix_key.sql](../backend/src/main/resources/db/migration/V31__contract_cancellations_and_pix_key.sql): colunas `pix_key_type` e `pix_key` em `drivers`.
 - Modelos: [Payment.java](../backend/src/main/java/br/com/vanroute/backend/models/contract/Payment.java#L1), [Driver.java](../backend/src/main/java/br/com/vanroute/backend/models/user/Driver.java#L1), [PixKeyType.java](../backend/src/main/java/br/com/vanroute/backend/models/user/enums/PixKeyType.java#L1).
 - DTOs: [PaymentResponseDTO.java](../backend/src/main/java/br/com/vanroute/backend/dtos/payment/PaymentResponseDTO.java#L1), [MarkPaidRequestDTO.java](../backend/src/main/java/br/com/vanroute/backend/dtos/payment/MarkPaidRequestDTO.java#L1), [PixKeyDTO.java](../backend/src/main/java/br/com/vanroute/backend/dtos/user/PixKeyDTO.java#L1).
-- Consultas: [PaymentRepository](../backend/src/main/java/br/com/vanroute/backend/repositories/PaymentRepository.java#L19) (atrasadas por contrato).
+- Consultas: [PaymentRepository](../backend/src/main/java/br/com/vanroute/backend/repositories/PaymentRepository.java#L19) (atrasadas por contrato; [findByIdForUpdate](../backend/src/main/java/br/com/vanroute/backend/repositories/PaymentRepository.java#L27) trava a parcela na baixa).
 
 **Testes:** [PaymentServiceTest](../backend/src/test/java/br/com/vanroute/backend/services/PaymentServiceTest.java), [PixKeysTest](../backend/src/test/java/br/com/vanroute/backend/utils/PixKeysTest.java) e as seções 13f e 13g de [run-api-tests.sh](../backend/api-tests/run-api-tests.sh).

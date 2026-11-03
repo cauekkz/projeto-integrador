@@ -36,7 +36,7 @@ public class ChatMessage {
     private AttachmentType attachmentType;
 
     @Column(name = "sent_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false, updatable = false)
-    private LocalDateTime sentAt = LocalDateTime.now();
+    private LocalDateTime sentAt = LocalDateTime.now(br.com.vanroute.backend.services.TripService.ZONE);
 
     @Column(name = "read_at")
     private LocalDateTime readAt;

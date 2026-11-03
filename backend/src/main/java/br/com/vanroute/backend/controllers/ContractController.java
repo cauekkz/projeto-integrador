@@ -52,7 +52,8 @@ public class ContractController {
         return ResponseEntity.ok(contractService.findMyContracts(AuthenticatedUser.id(authentication), filter, pageable));
     }
 
-    // pede o cancelamento (a outra parte aceita ou recusa). O motorista com 2+ parcelas atrasadas cancela na hora
+    // pede o cancelamento com aviso previo de 30 dias: o contrato e cancelado sozinho na effectiveDate, ou antes se a
+    // outra parte aceitar. O motorista com parcela vencida ha 30 dias ou mais cancela na hora
     @PostMapping("/{contractId}/cancellation")
     public ResponseEntity<CancellationResponseDTO> requestCancellation(@PathVariable UUID contractId,
                                                                        @RequestBody(required = false) CancellationRequestDTO request,
@@ -60,16 +61,10 @@ public class ContractController {
         return ResponseEntity.status(201).body(cancellationService.request(contractId, AuthenticatedUser.id(authentication), request));
     }
 
-    // a outra parte aceita: o contrato e cancelado na hora
+    // a outra parte aceita antes do fim do aviso: o contrato e cancelado na hora
     @PutMapping("/{contractId}/cancellation/accept")
     public ResponseEntity<CancellationResponseDTO> acceptCancellation(@PathVariable UUID contractId, Authentication authentication) {
         return ResponseEntity.ok(cancellationService.accept(contractId, AuthenticatedUser.id(authentication)));
-    }
-
-    // a outra parte recusa: o contrato continua
-    @PutMapping("/{contractId}/cancellation/reject")
-    public ResponseEntity<CancellationResponseDTO> rejectCancellation(@PathVariable UUID contractId, Authentication authentication) {
-        return ResponseEntity.ok(cancellationService.reject(contractId, AuthenticatedUser.id(authentication)));
     }
 
     // quem pediu desiste do pedido

@@ -383,20 +383,24 @@ Detalhes: `docs/FLUXO_CONTRATO.md`, `docs/FLUXO_PAGAMENTO.md` e `docs/FLUXO_TRIP
 | Card da proposta no chat: botão **"Retirar proposta"** (só enquanto `PENDING`) | `PUT /api/chats/{chatId}/contracts/{contractId}/withdraw`. O chat recebe `REJECTION` "Proposta Retirada" e o card fecha sozinho |
 | **Chave Pix** (configurações) | `GET/PUT/DELETE /api/driver/pix-key` `{ type: CPF/CNPJ/EMAIL/PHONE/RANDOM, key }`. Mostre a `key` que voltar (já normalizada). **400** com a mensagem se a chave não bate com o tipo |
 | **Parcelas** (lista com filtros por aluno, responsável, status e período) | `GET /api/payments?...` paginado. Botões nas `PENDING`/`OVERDUE`: **"Recebi"** (`PUT /api/payments/{id}/paid` `{ method }`, perguntando PIX/dinheiro/...) e **"Dispensar"** (`PUT /api/payments/{id}/cancel`). Confirme antes: **não tem volta** |
-| Lista de contratos | filtros `studentId`/`driverId`; mostre `overduePayments` e o `pendingCancellation` (com Aceitar/Recusar se foi o pai que pediu, ou Desistir se foi ele) |
-| **Cancelar contrato** | `POST /api/contract/{id}/cancellation` `{ reason }`. Se a resposta vier `ACCEPTED` com `unilateral: true`, o contrato já foi cancelado (2+ atrasadas); senão, "pedido enviado" |
+| Lista de contratos | filtros `studentId`/`driverId`; mostre `overduePayments` e o `pendingCancellation` com a data em que o contrato cai (`effectiveDate`): **"Aceitar e cancelar agora"** se foi o pai que pediu, ou **"Desistir"** se foi ele. Não existe mais "Recusar" |
+| **Cancelar contrato** | `POST /api/contract/{id}/cancellation` `{ reason }`. Se a resposta vier `ACCEPTED` com `unilateral: true`, o contrato já foi cancelado (parcela vencida há 30+ dias); senão, "o contrato será cancelado em `effectiveDate` (aviso prévio de 30 dias)" |
 | **Perfil do responsável** (do chat ou do contrato) | `GET /api/responsible/{responsibleId}/profile`: nome, foto, telefone, situação **com ele** (`UP_TO_DATE`/`OVERDUE` + `overduePayments`) e os filhos com contrato com ele |
 
 ### Responsável
 | Tela | Chamadas |
 |---|---|
 | **Parcelas** | `GET /api/payments` com filtros por filho e motorista. Nas `PENDING`/`OVERDUE`: mostre a `driverPixKey` com **botão de copiar** (se vier `null`, "o motorista ainda não cadastrou a chave Pix"). `OVERDUE` em vermelho. Avisar que pagou é pelo chat |
-| Lista de contratos | `pendingCancellation` com Aceitar/Recusar (pedido do motorista) ou Desistir (pedido dele) |
-| **Cancelar contrato** | `POST /api/contract/{id}/cancellation` `{ reason }` → sempre `PENDING` (o pai nunca cancela sozinho) |
+| Lista de contratos | `pendingCancellation` com a data em que o contrato cai (`effectiveDate`): **"Aceitar e cancelar agora"** (pedido do motorista) ou **"Desistir"** (pedido dele) |
+| **Cancelar contrato** | `POST /api/contract/{id}/cancellation` `{ reason }` → `PENDING` com `effectiveDate` (hoje + 30 dias): "o contrato será cancelado em ..., ou antes se o motorista aceitar". Avise que as parcelas que vencerem até lá continuam devidas |
 | **Histórico de viagens** por filho e por dia | `GET /api/trip/history?studentId=&date=` (ou `from`/`to`): embarcou às, chegou às, faltou, ocorrências |
 
 ### Os dois
-- Notificações novas: `CANCELLATION_REQUESTED`, `CANCELLATION_REJECTED`, `CANCELLATION_WITHDRAWN`, `CONTRACT_CANCELED`, `CONTRACT_WITHDRAWN` e, do worker diário, `CONTRACT_EXPIRED` (proposta não respondida até o início), `CONTRACT_ENDED` (contrato chegou ao fim) e `PAYMENT` "Parcela atrasada". Todas com `contractId` no `payload` (as de parcela também com `paymentId`).
+- Notificações novas:
+  - do backend: `CANCELLATION_REQUESTED`, `CANCELLATION_WITHDRAWN`, `CONTRACT_CANCELED` e `CONTRACT_WITHDRAWN`;
+  - do worker diário: `CONTRACT_EXPIRED` (proposta não respondida até o início), `CONTRACT_STARTED` (contrato agendado começou), `CONTRACT_CANCELED` (fim do aviso prévio), `CONTRACT_ENDED` (contrato chegou ao fim), `PAYMENT` "Parcela atrasada" e `SYSTEM` "Viagem fechada automaticamente" (pro motorista, com `tripId`).
+
+  As de contrato vêm com `contractId` no `payload` (as de parcela também com `paymentId`). `CANCELLATION_REJECTED` não é mais enviada.
 - As do worker **não chegam pelo WebSocket** (o worker não tem a conexão): aparecem no próximo `GET /api/notifications` ou ao reabrir o app.
 - O detalhe do contrato (`GET /api/contract/{id}`) traz `cancellations` (histórico de pedidos) e `overduePayments`.
 
@@ -407,12 +411,13 @@ Detalhes: `docs/FLUXO_CONTRATO.md`, `docs/FLUXO_PAGAMENTO.md` e `docs/FLUXO_TRIP
 ### Conta e código de e-mail
 | Tela | Chamadas |
 |---|---|
-| **Excluir minha conta** (os dois perfis) | `DELETE /api/users/me` `{ "password": "..." }` → **204** e faça logout. **400** senha errada; **409** com contrato ativo, proposta pendente ou parcela atrasada (mostre a `message`). Os dados pessoais somem e a conta vira "Usuário removido"; o mesmo CPF/e-mail pode se cadastrar de novo |
+| **Excluir minha conta** (os dois perfis) | `DELETE /api/users/me` `{ "password": "..." }` → **204** e faça logout. **400** senha errada; **409** com contrato aceito (agendado ou ativo), proposta pendente ou parcela atrasada (mostre a `message`). Os dados pessoais e os arquivos enviados somem, as conexões WebSocket abertas são fechadas, e a conta vira "Usuário removido"; o mesmo CPF/e-mail pode se cadastrar de novo |
 | Reenviar código (cadastro, esqueci a senha, trocar e-mail) | **429** "Aguarde X segundos..." se pedir de novo antes de 1 minuto (o cadastro já conta como o primeiro envio): mostre a mensagem e um contador |
 | Digitar o código | errado → **400** "Código incorreto. Restam N tentativas."; na 5ª errada → **429** "Enviamos um novo código para o seu e-mail" (o anterior para de valer) |
-| Perfil do responsável (motorista) | cada filho traz `relationType` e `admin`; o detalhe do contrato traz `studentResponsibles` (todos os responsáveis do aluno, com rótulo) || **Termos de uso** | `GET /api/terms` (sem login) → `{ version, content }` (markdown). Depois do login, se o `/api/users/me` vier com `termsAccepted: false`, mostre os termos e chame `POST /api/terms/accept` `{ "version": "1" }` (204). Versão nova dos termos = todo mundo volta a ver |
+| Perfil do responsável (motorista) | cada filho traz `relationType` e `admin`; o detalhe do contrato traz `studentResponsibles` (todos os responsáveis do aluno, com rótulo) |
+| **Termos de uso** | `GET /api/terms` (sem login) → `{ version, content }` (markdown). Depois do login, se o `/api/users/me` vier com `termsAccepted: false`, mostre os termos e chame `POST /api/terms/accept` `{ "version": "<a version do GET>" }` (204). Versão nova dos termos = todo mundo volta a ver, e o resto da API responde **403** `{ code: "TERMS_NOT_ACCEPTED", version }` até aceitar |
 | **Exportar meus dados** | `GET /api/users/me/export` → JSON pra baixar (vem com `Content-Disposition`). **429** se pedir de novo antes de 5 minutos |
-| **Perfil do responsável (dele mesmo)** | `GET /api/responsible/{seuId}/profile`: situação financeira geral, todas as parcelas atrasadas e todos os contratos dos filhos |
+| **Perfil do responsável (dele mesmo)** | `GET /api/responsible/{seuId}/profile`: situação financeira geral, todas as parcelas atrasadas e todos os contratos dos filhos (o motorista só vê a situação com ele) |
 
 ### Paginação (muda o formato de 2 rotas que o front já usa)
 Mesmo padrão de `GET /api/chats`, mensagens, notificações, parcelas, histórico e `my-children`: a resposta vira
@@ -427,6 +432,37 @@ Mesmo padrão de `GET /api/chats`, mensagens, notificações, parcelas, históri
 
 ### Cadastro: aceite dos termos obrigatório
 - Antes de cadastrar, mostre os termos (`GET /api/terms`) com um "Li e aceito".
-- Mande a versão aceita no cadastro: responsável `"acceptedTermsVersion": "1"` no JSON; motorista `acceptedTermsVersion=1` no multipart. Sem ela, ou com versão velha: **400**. **O cadastro atual do front quebra até mandar esse campo.**
-- No login, se o `/api/users/me` vier com `termsAccepted: false` (saiu uma versão nova), mostre os termos de novo e chame `POST /api/terms/accept`.
+- Mande a versão aceita no cadastro: a `version` que veio do `GET /api/terms` (hoje `"2"`), em `"acceptedTermsVersion"` no JSON do responsável e em `acceptedTermsVersion` no multipart do motorista. Sem ela, ou com versão velha: **400**. **O cadastro atual do front quebra até mandar esse campo.** Não deixe a versão fixa no código: leia do `GET /api/terms`.
+- No login, se o `/api/users/me` vier com `termsAccepted: false` (saiu uma versão nova), mostre os termos de novo e chame `POST /api/terms/accept`. Até aceitar, as outras rotas respondem **403** `TERMS_NOT_ACCEPTED`: trate esse código num interceptor e abra a tela dos termos.
+
+## 13. Mudanças da auditoria (o que o front precisa ajustar)
+
+### Contrato
+- **Status novo `SCHEDULED`:** contrato aceito que ainda não começou. Mostre "Agendado — começa em `startDate`". Só vira `ACTIVE` na data de início (worker); até lá o motorista **não** consegue pôr o aluno na rota nem num grupo (**403** "Não existe contrato ativo"), e o aluno não entra nas viagens.
+- **Renovação:** o motorista pode propor **um** próximo contrato para o mesmo aluno, começando **depois** do fim do atual. Sobrepondo o atual, ou com outro já pendente ou agendado: **409** (no máximo o atual e um próximo).
+- **Cancelamento com aviso prévio:** sem "Recusar". Veja as tabelas da seção 12 e `docs/FLUXO_CONTRATO.md`, passo 9.
+- **PDF da proposta:** precisa ser PDF de verdade e ter no máximo **10 MB** (**400** com a mensagem). Cada proposta consome o arquivo enviado: para mandar outra proposta, envie o PDF de novo. O `documentFileKey` do contrato passa a ser `contracts/{contractId}.pdf` (o download continua igual, por `GET /api/storage/download-url`).
+- **Chat de outra pessoa:** acessar ou propor em chat do qual não participa agora dá **403** (antes **400**). Aceitar/recusar/retirar um contrato pelo chat errado também dá **403**.
+
+### Anexos do chat
+- Arquivo com mais de **10 MB**: **400** "O arquivo pode ter no máximo 10 MB". Confira o tamanho antes de enviar.
+
+### Login e cadastro
+- **5 senhas erradas no mesmo CPF** (ou 30 no mesmo IP) bloqueiam o login por **15 minutos**: **429** com a mensagem. Mostre a mensagem; não tente de novo automaticamente.
+- "Verifique seu e-mail" (**400**) só aparece com a senha certa. Com a senha errada, a resposta é sempre **401** "Credenciais inválidas", tenha conta ou não.
+- **Cadastro do motorista:** o nome digitado precisa ser o **mesmo da CNH** (sem importar acentos e maiúsculas). Também volta **422** com a mensagem se a CNH estiver vencida, não for categoria D ou E, ou o motorista tiver menos de 21 anos. Mostre a `message` no formulário.
+- **Cadastro de van:** CRLV com licenciamento de mais de um ano atrás volta **422** "O licenciamento da van está vencido".
+
+### Responsáveis do aluno (tela do filho)
+| Ação | Chamada |
+|---|---|
+| Ver os responsáveis | `GET /api/student/{studentId}/responsibles` → `[{ responsibleId, name, relationType, admin }]` (qualquer responsável do aluno) |
+| Remover um responsável (só o admin) | `DELETE /api/student/{studentId}/responsibles/{responsibleId}` → **204**. Quem é removido perde na hora o acesso às rotas, viagens, localização ao vivo e histórico do aluno, e recebe a notificação `SYSTEM` "Vínculo removido" |
+| Sair do aluno (qualquer um, menos o admin) | o mesmo `DELETE`, com o próprio id |
+| Passar o admin | `PUT /api/student/{studentId}/responsibles/{responsibleId}/admin` → **204** (só o admin; o outro precisa já estar vinculado) |
+
+Erros: **403** quem não é admin removendo outro ou passando o admin; **409** o admin tentando sair sem passar o admin, ou remover alguém que tem contrato ou proposta em andamento com o aluno (cancele antes).
+
+### Perfil do responsável (visto pelo motorista)
+- `financialStatus` e `overduePayments` agora são **só das parcelas com esse motorista**. Atraso com outro motorista não aparece mais.
 

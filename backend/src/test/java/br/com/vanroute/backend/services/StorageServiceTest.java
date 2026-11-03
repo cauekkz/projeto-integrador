@@ -131,4 +131,48 @@ public class StorageServiceTest {
         assertThrows(AccessDeniedException.class, () -> storageService.generateDownloadUrl("foto.jpeg", userId));
         verify(s3Presigner, never()).presignGetObject(any(GetObjectPresignRequest.class));
     }
+
+    // PDF do contrato: o arquivo enviado e conferido e copiado pra contracts/{id}.pdf (onde ninguem grava)
+    private void uploaded(String key, long size, String firstBytes) {
+        when(s3Client.headObject(any(software.amazon.awssdk.services.s3.model.HeadObjectRequest.class)))
+                .thenReturn(software.amazon.awssdk.services.s3.model.HeadObjectResponse.builder().contentLength(size).build());
+        if (firstBytes != null) {
+            when(s3Client.getObjectAsBytes(any(software.amazon.awssdk.services.s3.model.GetObjectRequest.class)))
+                    .thenReturn(software.amazon.awssdk.core.ResponseBytes.fromByteArray(
+                            software.amazon.awssdk.services.s3.model.GetObjectResponse.builder().build(),
+                            firstBytes.getBytes(java.nio.charset.StandardCharsets.US_ASCII)));
+        }
+    }
+
+    @Test
+    void contractPdfIsFrozenInAFolderNobodyWrites() {
+        UUID contractId = UUID.randomUUID();
+        uploaded("uploads/d/x.pdf", 2048, "%PDF-");
+
+        String frozen = storageService.freezeContractPdf("uploads/d/x.pdf", contractId);
+
+        assertEquals("contracts/" + contractId + ".pdf", frozen);
+        verify(s3Client).copyObject(org.mockito.ArgumentMatchers.<software.amazon.awssdk.services.s3.model.CopyObjectRequest>argThat(
+                copy -> copy.sourceKey().equals("uploads/d/x.pdf") && copy.destinationKey().equals(frozen)));
+        verify(s3Client).deleteObject(org.mockito.ArgumentMatchers.<software.amazon.awssdk.services.s3.model.DeleteObjectRequest>argThat(
+                delete -> delete.key().equals("uploads/d/x.pdf")));
+    }
+
+    @Test
+    void contractThatIsNotAPdfIsRefused() {
+        uploaded("uploads/d/foto.pdf", 2048, "\u0089PNG");
+
+        assertThrows(br.com.vanroute.backend.exceptions.BadRequestException.class,
+                () -> storageService.freezeContractPdf("uploads/d/foto.pdf", UUID.randomUUID()));
+        verify(s3Client, never()).copyObject(any(software.amazon.awssdk.services.s3.model.CopyObjectRequest.class));
+    }
+
+    @Test
+    void fileOverTenMegabytesIsRefused() {
+        uploaded("uploads/d/grande.pdf", StorageService.MAX_FILE_BYTES + 1, null);
+
+        assertThrows(br.com.vanroute.backend.exceptions.BadRequestException.class,
+                () -> storageService.freezeContractPdf("uploads/d/grande.pdf", UUID.randomUUID()));
+        verify(s3Client, never()).copyObject(any(software.amazon.awssdk.services.s3.model.CopyObjectRequest.class));
+    }
 }

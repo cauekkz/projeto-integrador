@@ -11,6 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -59,5 +60,31 @@ class TermsServiceTest {
         assertThrows(BadRequestException.class, () -> service.accept(userId, "0"));
         assertThrows(BadRequestException.class, () -> service.accept(userId, null));
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void newVersionAsksEveryoneAgain() {
+        // quem so aceitou a versao 1 nao tem aceite da atual (o service so consulta a atual): o filtro bloqueia
+        // ate aceitar de novo
+        TermsService service = new TermsService(repository);
+        when(repository.existsByUserIdAndVersion(userId, TermsService.CURRENT_VERSION)).thenReturn(false);
+
+        assertEquals("2", TermsService.CURRENT_VERSION);
+        assertFalse(service.acceptedCurrent(userId));
+        assertThrows(BadRequestException.class, () -> service.accept(userId, "1"));
+        assertThrows(BadRequestException.class, () -> service.requireCurrent("1"));
+    }
+
+    @Test
+    void textOfTheCurrentVersionFollowsTheCode() {
+        String text = new TermsService(repository).current().content();
+
+        assertTrue(text.contains("versão 2"));
+        assertFalse(text.contains("RASCUNHO"));
+        // regras que o codigo aplica: aviso previo, divida que nao some, CNH nao guardada, operadores
+        assertTrue(text.contains("30 dias depois do pedido"));
+        assertTrue(text.contains("não apaga dívidas"));
+        assertTrue(text.contains("não são guardados"));
+        assertTrue(text.contains("OpenRouteService"));
     }
 }

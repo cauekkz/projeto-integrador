@@ -45,6 +45,7 @@ import br.com.vanroute.backend.repositories.DocumentRepository;
 import br.com.vanroute.backend.repositories.DriverSchoolsRepository;
 import br.com.vanroute.backend.repositories.UserDriverContractRepository;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -115,9 +116,6 @@ public class ContractService {
         if (!StorageService.isOwnedBy(documentDto.url(), driverId)) {
             throw new BadRequestException("O PDF do contrato precisa ser um arquivo enviado por você");
         }
-        if (!storageService.exists(documentDto.url())) {
-            throw new BadRequestException("O PDF do contrato não foi encontrado. Envie o arquivo de novo");
-        }
         if (!studentResponsibleService.isAdmin(request.responsibleId(), request.studentId())) {
             throw new BadRequestException("O Responsável não possui conexão com a criança informada.");
         }
@@ -129,21 +127,23 @@ public class ContractService {
             throw new AccessDeniedException("Motorista não possui essa escola");
         }
 
-        boolean hasActiveOrPending = userDriverContractRepository
-                .existsByDriverUserIdAndStudentIdAndContractStatusIn(driverId, request.studentId(), 
-                List.of(ContractStatus.PENDING, ContractStatus.ACTIVE));
-
-        if (hasActiveOrPending) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe um contrato pendente ou ativo para este motorista e aluno");
+        // trava o aluno ate o fim da transacao: duas propostas ao mesmo tempo pro mesmo aluno (duplo clique)
+        // passam uma de cada vez, e a segunda ja ve a primeira
+        Student studentRef = entityManager.find(Student.class, request.studentId(), LockModeType.PESSIMISTIC_WRITE);
+        if (studentRef == null) {
+            throw new EntityNotFoundException("Aluno não encontrado");
+        }
+        ContractRequestDTO contractDto = request.contract();
+        if (userDriverContractRepository.existsPendingOrOverlapping(driverId, request.studentId(),
+                contractDto.startDate(), contractDto.endDate())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Já existe uma proposta pendente, um contrato agendado ou um contrato ativo nesse período para este motorista e aluno");
         }
 
         Driver driverRef = entityManager.getReference(Driver.class, driverId);
         School schoolRef = entityManager.getReference(School.class, request.schoolId());
         Responsible responsibleRef = entityManager.getReference(Responsible.class, request.responsibleId());
-        Student studentRef = entityManager.getReference(Student.class, request.studentId());
         User uploaderUserRef = entityManager.getReference(User.class, driverId);
-
-        ContractRequestDTO contractDto = request.contract();
 
         Contract contract = new Contract();
         contract.setPeriodicity(contractDto.periodicity());
@@ -154,16 +154,16 @@ public class ContractService {
         
         contract = contractRepository.save(contract);
 
-        
         Document document = new Document();
-        document.setUrl(documentDto.url());
+        // PDF conferido e copiado pra uma pasta em que ninguem grava: o que foi assinado nao muda depois
+        document.setUrl(storageService.freezeContractPdf(documentDto.url(), contract.getId()));
         document.setEntityId(contract.getId());
         // documento de proposta e sempre o contrato
         document.setType(DocumentType.TRANSPORT_CONTRACT);
 
         document.setStatus(DocumentStatus.PENDING);
         document.setEntityType(DocumentEntityType.CONTRACT);
-        document.setUploadedAt(LocalDateTime.now());
+        document.setUploadedAt(LocalDateTime.now(TripService.ZONE));
         document.setUploadedBy(uploaderUserRef);
 
         documentRepository.save(document);
@@ -185,6 +185,8 @@ public class ContractService {
     @Transactional
     // aluno, escola e vinculo ja foram validados na proposta
     public void acceptContract(UUID contractId, UUID responsibleUserId) {
+        // primeiro trava o contrato: um segundo aceite ao mesmo tempo espera e ja encontra o contrato aceito
+        Contract contract = lockContract(contractId);
         UserDriverContract udc = userDriverContractRepository.findByContractId(contractId)
                 .orElseThrow(() -> new EntityNotFoundException("Contrato não encontrado"));
         
@@ -192,17 +194,19 @@ public class ContractService {
             throw new AccessDeniedException("Usuário não tem permissão para aceitar este contrato");
         }
 
-        Contract contract = udc.getContract();
         if (contract.getStatus() != ContractStatus.PENDING) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Contrato não está pendente");
         }
+        LocalDate today = LocalDate.now(TripService.ZONE);
         // proposta que passou da data de inicio geraria parcelas ja vencidas: o motorista manda outra
-        if (contract.getStartDate().isBefore(LocalDate.now(TripService.ZONE))) {
+        if (contract.getStartDate().isBefore(today)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "A data de início desta proposta já passou. Peça ao motorista uma nova proposta");
         }
 
-        contract.setStatus(ContractStatus.ACTIVE);
+        // comeca hoje: ACTIVE. Comeca depois: SCHEDULED, e o worker passa pra ACTIVE no dia (so entao o aluno
+        // pode entrar nas rotas)
+        contract.setStatus(contract.getStartDate().isAfter(today) ? ContractStatus.SCHEDULED : ContractStatus.ACTIVE);
         contractRepository.save(contract);
         // aceitar e assinar: o responsavel assina os mesmos termos e o documento fica assinado pelas duas partes
         documentRepository.findFirstByEntityTypeAndEntityId(DocumentEntityType.CONTRACT, contractId).ifPresent(document -> {
@@ -220,6 +224,11 @@ public class ContractService {
             payments.add(p);
         }
         paymentRepository.saveAll(payments);
+    }
+
+    private Contract lockContract(UUID contractId) {
+        return contractRepository.findByIdForUpdate(contractId)
+                .orElseThrow(() -> new EntityNotFoundException("Contrato não encontrado"));
     }
 
     static final int MAX_CONTRACT_YEARS = 2;
@@ -269,6 +278,7 @@ public class ContractService {
 
     @Transactional
     public void rejectContract(UUID contractId, UUID responsibleUserId) {
+        lockContract(contractId);
         UserDriverContract udc = userDriverContractRepository.findByContractId(contractId)
                 .orElseThrow(() -> new EntityNotFoundException("Contrato não encontrado"));
         
@@ -290,6 +300,7 @@ public class ContractService {
     // o motorista desiste da proposta antes do responsavel decidir
     @Transactional
     public void withdrawContract(UUID contractId, UUID driverId) {
+        lockContract(contractId);
         UserDriverContract udc = userDriverContractRepository.findByContractId(contractId)
                 .orElseThrow(() -> new EntityNotFoundException("Contrato não encontrado"));
 
@@ -312,7 +323,7 @@ public class ContractService {
         Signature signature = new Signature();
         signature.setDocument(document);
         signature.setUser(user);
-        signature.setSignedAt(LocalDateTime.now());
+        signature.setSignedAt(LocalDateTime.now(TripService.ZONE));
         signature.setDocumentHash(hash);
         signatureRepository.save(signature);
     }
