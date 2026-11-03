@@ -45,6 +45,9 @@ class ResponsibleServiceTest {
     @Mock
     private EmailVerificationService emailVerificationService;
 
+    @Mock
+    private TermsService termsService;
+
     private ResponsibleRequestDTO requestDTO;
 
     @BeforeEach
@@ -56,6 +59,7 @@ class ResponsibleServiceTest {
         requestDTO.setConfirmPassword("SenhaForte123!");
         requestDTO.setCpf("12345678901");
         requestDTO.setPhone("11999999999");
+        requestDTO.setAcceptedTermsVersion("1");
         requestDTO.setAddressRequestDTO(new AddressRequestDTO("Avenida Paulista", "01310-100", "São Paulo", "Bela Vista", 1000, "SP", null, null));
     }
 
@@ -78,7 +82,7 @@ class ResponsibleServiceTest {
 
         Responsible savedResponsible = new Responsible();
         savedResponsible.setUser(createdUser);
-        savedResponsible.setFinancialStatus(FinancialStatus.PENDING);
+        savedResponsible.setFinancialStatus(FinancialStatus.UP_TO_DATE);
         when(responsibleRepository.save(any(Responsible.class))).thenReturn(savedResponsible);
 
         ResponsibleResponseDTO response = responsibleService.createResponsible(requestDTO);
@@ -88,7 +92,9 @@ class ResponsibleServiceTest {
         assertEquals(requestDTO.getEmail(), response.email());
         assertEquals(requestDTO.getCpf(), response.cpf());
         assertEquals(requestDTO.getPhone(), response.phone());
-        assertEquals(FinancialStatus.PENDING, response.financialStatus());
+        assertEquals(FinancialStatus.UP_TO_DATE, response.financialStatus());
+        // nasce em dia; o worker marca OVERDUE quando tiver parcela atrasada
+        org.mockito.Mockito.verify(responsibleRepository).save(org.mockito.ArgumentMatchers.argThat(r -> r.getFinancialStatus() == FinancialStatus.UP_TO_DATE));
         assertEquals(List.of("ROLE_RESPONSIBLE"), response.roles());
 
         ArgumentCaptor<UserCreateDTO> userDtoCaptor = ArgumentCaptor.forClass(UserCreateDTO.class);
@@ -103,7 +109,7 @@ class ResponsibleServiceTest {
 
         verify(responsibleRepository, times(1)).save(any(Responsible.class));
         verify(emailVerificationService, times(1))
-                .generateAndSendCode("verificationEmail:email:carolina@example.com", "carolina@example.com");
+                .sendCodeAfterSignup("verificationEmail:email:carolina@example.com", "carolina@example.com");
         assertEquals(-23.56, response.address().latitude());
     }
 

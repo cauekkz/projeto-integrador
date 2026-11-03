@@ -32,6 +32,9 @@ class UserControllerTest {
     private UserService userService;
 
     @Mock
+    private br.com.vanroute.backend.services.AccountDeletionService accountDeletionService;
+
+    @Mock
     private Authentication authentication;
 
     @InjectMocks
@@ -117,28 +120,5 @@ class UserControllerTest {
                         any(UpdateUser.class),
                         eq(USER_ID)
                 );
-    }
-
-    // =========================================================
-    // DELETE /api/users/{id}/{code}
-    // =========================================================
-
-    @Test
-    void shouldDeleteUserSuccessfully() throws Exception {
-
-        UUID id = UUID.randomUUID();
-        String code = "123456";
-
-        doNothing()
-                .when(userService)
-                .deleteById(id, code);
-
-        mockMvc.perform(
-                        delete("/api/users/{id}/{code}", id, code)
-                )
-                .andExpect(status().isNoContent());
-
-        verify(userService)
-                .deleteById(id, code);
     }
 }

@@ -37,9 +37,11 @@ public class UserService {
     private final StorageService storageService;
     private final DriverRepository driverRepository;
     private final RefreshTokenService refreshTokenService;
+    private final TermsService termsService;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailVerificationService emailVerificationService, StorageService storageService, DriverRepository driverRepository, RefreshTokenService refreshTokenService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailVerificationService emailVerificationService, StorageService storageService, DriverRepository driverRepository, RefreshTokenService refreshTokenService, TermsService termsService) {
+        this.termsService = termsService;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailVerificationService = emailVerificationService;
@@ -147,7 +149,9 @@ public class UserService {
                 user.getCpf(),
                 user.roleNames(),
                 user.getPhotoKey(),
-                linkCode
+                linkCode,
+                TermsService.CURRENT_VERSION,
+                termsService.acceptedCurrent(user.getId())
         );
     }
 
@@ -155,10 +159,6 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public void deleteById(UUID id, String code) {
-        emailVerificationService.verifyCode(codeKey(id), code);
-        userRepository.deleteById(id);
-    }
 
     public Optional<User> findByCpf(String cpf) {
         return userRepository.findByCpf(cpf);

@@ -51,6 +51,9 @@ class UserServiceTest {
     @Mock
     private RefreshTokenService refreshTokenService;
 
+    @Mock
+    private TermsService termsService;
+
     @InjectMocks
     private UserService userService;
 
@@ -498,56 +501,6 @@ class UserServiceTest {
 
         verify(userRepository)
                 .findById(id);
-    }
-
-    // =========================================================
-    // DELETE USER
-    // =========================================================
-
-    @Test
-    void shouldDeleteUserSuccessfully() {
-
-        UUID id = UUID.randomUUID();
-        String code = "123456";
-
-        doNothing().when(emailVerificationService)
-                .verifyCode("User:SendCodeUser:" + id, code);
-
-        doNothing().when(userRepository)
-                .deleteById(id);
-
-        userService.deleteById(id, code);
-
-        verify(emailVerificationService)
-                .verifyCode("User:SendCodeUser:" + id, code);
-
-        verify(userRepository)
-                .deleteById(id);
-    }
-
-    @Test
-    void shouldNotDeleteUserWhenCodeIsInvalid() {
-
-        UUID id = UUID.randomUUID();
-        String code = "wrong-code";
-
-        doThrow(new RuntimeException("Invalid code"))
-                .when(emailVerificationService)
-                .verifyCode("User:SendCodeUser:" + id, code);
-
-        RuntimeException exception =
-                assertThrows(
-                        RuntimeException.class,
-                        () -> userService.deleteById(id, code)
-                );
-
-        assertEquals(
-                "Invalid code",
-                exception.getMessage()
-        );
-
-        verify(userRepository, never())
-                .deleteById(any(UUID.class));
     }
 
     // =========================================================

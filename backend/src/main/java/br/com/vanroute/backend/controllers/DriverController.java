@@ -5,7 +5,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import br.com.vanroute.backend.dtos.user.PixKeyDTO;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,6 +23,7 @@ import br.com.vanroute.backend.services.DocumentOcrExtractionService;
 import br.com.vanroute.backend.services.DriverService;
 import br.com.vanroute.backend.services.EmailVerificationService;
 import br.com.vanroute.backend.services.IcpValidationService;
+import br.com.vanroute.backend.services.TermsService;
 import jakarta.validation.Valid;
 
 import java.util.Map;
@@ -31,13 +36,15 @@ public class DriverController {
     private final IcpValidationService icpValidationService;
     private final DocumentOcrExtractionService documentOcrExtractionService;
     private final EmailVerificationService emailVerificationService;
+    private final TermsService termsService;
 
     @Autowired
     public DriverController(
             DriverService driverService,
             IcpValidationService icpValidationService,
             DocumentOcrExtractionService documentOcrExtractionService,
-            EmailVerificationService emailVerificationService) {
+            EmailVerificationService emailVerificationService, TermsService termsService) {
+        this.termsService = termsService;
         this.driverService = driverService;
         this.icpValidationService = icpValidationService;
         this.documentOcrExtractionService = documentOcrExtractionService;
@@ -46,6 +53,7 @@ public class DriverController {
 
     @PostMapping(value = "/auth/signup", consumes = {"multipart/form-data"})
     public ResponseEntity<?> createDriver(@Valid @ModelAttribute DriverRequestDTO dto) {
+        termsService.requireCurrent(dto.getAcceptedTermsVersion());
         try {
             icpValidationService.validateCnhSignature(dto.getDocumentPdf());
         } catch (Exception e) {
@@ -55,8 +63,9 @@ public class DriverController {
         String cpf = documentOcrExtractionService.extractFromCnh(dto.getDocumentPdf());
 
         Driver savedDriver = driverService.createDriver(dto, cpf);
+        termsService.accept(savedDriver.getUserId(), dto.getAcceptedTermsVersion());
         // fazer um try alguma coisa mais limpa possivel pra se isso nao funciona rmanda uma msg pro usuario reenviar o codigo no momento aparece uma msg de Redis nao funcionando (pq eu nem ligue) mas nao sei nem onde ta essa menssagem no fluxo 
-        emailVerificationService.generateAndSendCode("verificationEmail:email:" + savedDriver.getUser().getEmail(), savedDriver.getUser().getEmail());
+        emailVerificationService.sendCodeAfterSignup("verificationEmail:email:" + savedDriver.getUser().getEmail(), savedDriver.getUser().getEmail());
 
         return ResponseEntity.status(HttpStatus.CREATED).body("Motorista criado com sucesso");
 
@@ -78,6 +87,23 @@ public class DriverController {
     public ResponseEntity<Map<String, String>> getLinkCode(Authentication authentication) {
         String linkCode = driverService.getLinkCode(AuthenticatedUser.id(authentication));
         return ResponseEntity.ok(Map.of("linkCode", linkCode));
+    }
+
+    // chave Pix do motorista logado (o responsavel ve ela nas parcelas pra copiar e pagar)
+    @GetMapping("/pix-key")
+    public ResponseEntity<PixKeyDTO> getPixKey(Authentication authentication) {
+        return ResponseEntity.ok(driverService.getPixKey(AuthenticatedUser.id(authentication)));
+    }
+
+    @PutMapping("/pix-key")
+    public ResponseEntity<PixKeyDTO> setPixKey(@RequestBody(required = false) PixKeyDTO request, Authentication authentication) {
+        return ResponseEntity.ok(driverService.setPixKey(AuthenticatedUser.id(authentication), request));
+    }
+
+    @DeleteMapping("/pix-key")
+    public ResponseEntity<Void> removePixKey(Authentication authentication) {
+        driverService.removePixKey(AuthenticatedUser.id(authentication));
+        return ResponseEntity.noContent().build();
     }
     
 

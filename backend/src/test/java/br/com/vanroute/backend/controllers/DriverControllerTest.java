@@ -46,6 +46,9 @@ public class DriverControllerTest {
     @Mock
     private EmailVerificationService emailVerificationService;
 
+    @Mock
+    private br.com.vanroute.backend.services.TermsService termsService;
+
     @InjectMocks
     private DriverController driverController;
 
@@ -80,6 +83,7 @@ public class DriverControllerTest {
                 .param("password", "Hexa2026123!")
                 .param("confirmPassword", "Hexa2026123!")
                 .param("phone", "11999999999")
+                .param("acceptedTermsVersion", "1")
                 // .param("driverType", "B")
                 .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isCreated());
@@ -87,7 +91,7 @@ public class DriverControllerTest {
         verify(icpValidationService, times(1)).validateCnhSignature(any());
         verify(documentOcrExtractionService, times(1)).extractFromCnh(any());
         verify(driverService, times(1)).createDriver(any(), anyString());
-        verify(emailVerificationService, times(1)).generateAndSendCode(
+        verify(emailVerificationService, times(1)).sendCodeAfterSignup(
                 eq("verificationEmail:email:neymar@teste.com"),
                 eq("neymar@teste.com")
         );
@@ -105,6 +109,7 @@ public class DriverControllerTest {
                 .param("password", "Hexa2026123!")
                 .param("confirmPassword", "Hexa2026123!")
                 .param("phone", "11999999999")
+                .param("acceptedTermsVersion", "1")
                 // .param("driverType", "B")
                 .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isUnprocessableEntity());
@@ -112,7 +117,7 @@ public class DriverControllerTest {
         verify(icpValidationService, times(1)).validateCnhSignature(any());
         verify(documentOcrExtractionService, never()).extractFromCnh(any());
         verify(driverService, never()).createDriver(any(), anyString());
-        verify(emailVerificationService, never()).generateAndSendCode(any(), any());
+        verify(emailVerificationService, never()).sendCodeAfterSignup(any(), any());
     }
 
     @Test

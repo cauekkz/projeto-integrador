@@ -8,23 +8,27 @@ import br.com.vanroute.backend.services.StorageService;
 import java.util.Map;
 import br.com.vanroute.backend.models.user.User;//sem DTO por enquanto
 import br.com.vanroute.backend.services.UserService;
+import br.com.vanroute.backend.services.AccountDeletionService;
+import br.com.vanroute.backend.services.DataExportService;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
+    private final AccountDeletionService accountDeletionService;
+    private final DataExportService dataExportService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, AccountDeletionService accountDeletionService, DataExportService dataExportService) {
+        this.dataExportService = dataExportService;
         this.userService = userService;
+        this.accountDeletionService = accountDeletionService;
     }
 
     // o front chama logo apos o login: id proprio (pra saber quais mensagens sao "minhas"), foto e o codigo do motorista
@@ -61,10 +65,20 @@ public class UserController {
     }
 
     //nao sei se vai usar isso so pra teste
-    // deixa o deleteUser ser feliz
-    @DeleteMapping("/{id}/{code}")
-    public ResponseEntity<Void> deleteUser(@PathVariable UUID id, @PathVariable String code) {
-        userService.deleteById(id, code);
+    // exportar meus dados (LGPD): tudo que o app guarda da pessoa, em JSON. 429 se pedir de novo antes de 5 minutos
+    @GetMapping("/me/export")
+    public ResponseEntity<java.util.Map<String, Object>> exportMyData(Authentication authentication) {
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"meus-dados-vanroute.json\"")
+                .body(dataExportService.export(AuthenticatedUser.id(authentication)));
+    }
+
+    // excluir a propria conta: { "password": "..." }. 204; 400 senha errada; 409 com contrato ativo,
+    // proposta pendente ou parcela atrasada. Os dados pessoais somem e a conta vira "Usuario removido"
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteMyAccount(@RequestBody(required = false) java.util.Map<String, String> body,
+                                                Authentication authentication) {
+        accountDeletionService.deleteMyAccount(AuthenticatedUser.id(authentication), body == null ? null : body.get("password"));
         return ResponseEntity.noContent().build();
     }
 }
