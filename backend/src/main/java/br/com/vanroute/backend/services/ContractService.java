@@ -112,6 +112,9 @@ public class ContractService {
         if (documentDto.type() != null && !DocumentType.TRANSPORT_CONTRACT.name().equals(documentDto.type())) {
             throw new BadRequestException("O documento da proposta precisa ser do tipo TRANSPORT_CONTRACT");
         }
+        if (!StorageService.isOwnedBy(documentDto.url(), driverId)) {
+            throw new BadRequestException("O PDF do contrato precisa ser um arquivo enviado por você");
+        }
         if (!storageService.exists(documentDto.url())) {
             throw new BadRequestException("O PDF do contrato não foi encontrado. Envie o arquivo de novo");
         }

@@ -22,9 +22,10 @@ public class StorageController {
     @GetMapping("/presigned-url")
     public ResponseEntity<StorageService.PresignedUrlResponse> getPresignedUrl(
             @RequestParam String fileName,
-            @RequestParam(defaultValue = "application/octet-stream") String contentType) {
-        
-        StorageService.PresignedUrlResponse response = storageService.generatePresignedUrl(fileName, contentType);
+            @RequestParam(defaultValue = "application/octet-stream") String contentType,
+            Authentication authentication) {
+
+        StorageService.PresignedUrlResponse response = storageService.generatePresignedUrl(AuthenticatedUser.id(authentication), fileName, contentType);
         return ResponseEntity.ok(response);
     }
 

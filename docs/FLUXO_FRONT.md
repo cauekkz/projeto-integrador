@@ -285,6 +285,7 @@ Com o app **aberto**, mostre um aviso no topo (toast) quando chegar uma `notific
    - contrato: document.url da proposta
 Pra mostrar: GET /api/storage/download-url?fileKey=... → downloadUrl (vale 15 min)
 ```
+O `fileKey` vem como `uploads/{seuId}/...`: o caminho diz quem enviou. Só dá pra anexar (chat) ou usar como PDF do contrato um arquivo **que você mesmo enviou**; arquivo de outra pessoa dá **403** no chat e **400** na proposta. Pro front não muda nada: é só usar o `fileKey` que voltou do passo 1.
 
 ---
 
