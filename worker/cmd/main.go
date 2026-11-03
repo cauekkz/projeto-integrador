@@ -1,5 +1,7 @@
 // Worker das tarefas diarias do VanRoute, separado do backend: roda em uma instancia so, mesmo que o
-// backend tenha varias. Roda tudo ao subir e depois a cada WORKER_INTERVAL (padrao 24h).
+// backend tenha varias. Roda tudo ao subir e depois todo dia em WORKER_RUN_AT (padrao 00:05, horario de
+// Sao Paulo): logo depois da virada do dia, antes das viagens da manha. WORKER_INTERVAL (ex.: 1m) troca o
+// horario fixo por um intervalo, pra testar
 package main
 
 import (
@@ -23,23 +25,39 @@ func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	interval, err := time.ParseDuration(utils.GetEnv("WORKER_INTERVAL", "24h"))
+	next, err := scheduler()
 	if err != nil {
-		log.Fatal("WORKER_INTERVAL invalido: ", err)
+		log.Fatal(err)
 	}
 
 	runAll(ctx)
-	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
 	for {
+		wait := time.Until(next(time.Now()))
+		log.Printf("proximo ciclo em %s", wait.Round(time.Second))
 		select {
 		case <-ctx.Done():
 			log.Println("worker encerrado")
 			return
-		case <-ticker.C:
+		case <-time.After(wait):
 			runAll(ctx)
 		}
 	}
+}
+
+// devolve a funcao que calcula o proximo ciclo a partir de agora
+func scheduler() (func(time.Time) time.Time, error) {
+	if raw := utils.GetEnv("WORKER_INTERVAL", ""); raw != "" {
+		interval, err := time.ParseDuration(raw)
+		if err != nil {
+			return nil, err
+		}
+		return func(now time.Time) time.Time { return now.Add(interval) }, nil
+	}
+	at, err := time.Parse("15:04", utils.GetEnv("WORKER_RUN_AT", "00:05"))
+	if err != nil {
+		return nil, err
+	}
+	return func(now time.Time) time.Time { return jobs.NextRun(now, at.Hour(), at.Minute()) }, nil
 }
 
 // uma conexao por ciclo (o worker passa o dia parado; nao segura conexao aberta a toa)

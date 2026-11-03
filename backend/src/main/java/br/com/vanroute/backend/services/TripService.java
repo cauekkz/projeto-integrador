@@ -49,6 +49,7 @@ public class TripService {
     private final RouteService routeService;
     private final TripLiveService tripLiveService;
     private final TripNotificationService tripNotificationService;
+    private final UserDriverContractRepository userDriverContractRepository;
 
     // embarque/desembarque so com a van perto do ponto do aluno (0 desliga)
     @Value("${trip.max-stop-distance-meters:1000}")
@@ -60,7 +61,8 @@ public class TripService {
                        DriverRepository driverRepository, DriverVehicleRepository driverVehicleRepository,
                        VehicleRepository vehicleRepository, StudentResponsibleRepository studentResponsibleRepository,
                        RouteService routeService, TripLiveService tripLiveService,
-                       TripNotificationService tripNotificationService) {
+                       TripNotificationService tripNotificationService,
+                       UserDriverContractRepository userDriverContractRepository) {
         this.tripRepository = tripRepository;
         this.boardingRepository = boardingRepository;
         this.studentAbsenceRepository = studentAbsenceRepository;
@@ -74,6 +76,7 @@ public class TripService {
         this.routeService = routeService;
         this.tripLiveService = tripLiveService;
         this.tripNotificationService = tripNotificationService;
+        this.userDriverContractRepository = userDriverContractRepository;
     }
 
     // botao "iniciar rota": cria a trip de hoje a partir da posicao atual do motorista.
@@ -113,11 +116,14 @@ public class TripService {
 
         Vehicle vehicle = resolveVehicle(route, request.vehicleId(), driverId);
 
-        // alunos de hoje: quem tem student stop nessa rota com o dia da semana de hoje (a ordem dos pontos vem depois)
+        // alunos de hoje: quem tem student stop nessa rota com o dia da semana de hoje e contrato ACTIVE com o
+        // motorista (o contrato que acabou ou ainda nao comecou fica de fora, mesmo antes do worker rodar)
         WeekDay weekDay = WeekDay.valueOf(today.getDayOfWeek().name());
+        Set<UUID> withContract = new HashSet<>(userDriverContractRepository.findStudentIdsWithActiveContract(driverId));
         Map<UUID, Student> students = new LinkedHashMap<>();
         studentStopRepository.findByRouteWithStudent(routeId).stream()
                 .filter(stop -> stop.getWeekdays().contains(weekDay))
+                .filter(stop -> withContract.contains(stop.getStudent().getId()))
                 .forEach(stop -> students.putIfAbsent(stop.getStudent().getId(), stop.getStudent()));
         if (students.isEmpty()) {
             throw new BadRequestException("Nenhum aluno nessa rota hoje");
@@ -325,7 +331,8 @@ public class TripService {
     private Driver routeOwner(UUID routeId, UUID driverId) {
         Driver driver = driverRepository.findById(driverId)
                 .orElseThrow(() -> new AccessDeniedException("Driver not found"));
-        if (!routeDriverRepository.existsByRouteIdAndDriverUserId(routeId, driverId)) {
+        // so quem esta na rota hoje (end_date nulo); quem saiu da rota perde o acesso
+        if (!routeDriverRepository.existsByRouteIdAndDriverUserIdAndEndDateIsNull(routeId, driverId)) {
             throw new AccessDeniedException("Route does not belong to this driver");
         }
         return driver;

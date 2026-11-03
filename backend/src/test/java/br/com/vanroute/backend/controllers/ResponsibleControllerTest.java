@@ -2,7 +2,6 @@ package br.com.vanroute.backend.controllers;
 
 import br.com.vanroute.backend.dtos.route.AddressResponseDTO;
 import br.com.vanroute.backend.dtos.user.ResponsibleResponseDTO;
-import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import br.com.vanroute.backend.services.EmailVerificationService;
 import br.com.vanroute.backend.services.ResponsibleService;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,7 +65,6 @@ class ResponsibleControllerTest {
                 "carolina@example.com",
                 "12345678901",
                 "11999999999",
-                FinancialStatus.UP_TO_DATE,
                 List.of("ROLE_RESPONSIBLE"),
                 address
         );
@@ -102,7 +100,6 @@ class ResponsibleControllerTest {
                           "email": "carolina@example.com",
                           "cpf": "12345678901",
                           "phone": "11999999999",
-                          "financialStatus": "UP_TO_DATE",
                           "address": {
                             "street": "Avenida Paulista",
                             "zipCode": "01310-100",

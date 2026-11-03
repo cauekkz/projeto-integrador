@@ -1,5 +1,9 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.services.CnhParser;
+import br.com.vanroute.backend.services.TermsService;
+import java.time.LocalDate;
+
 import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.services.DocumentOcrExtractionService;
@@ -56,7 +60,8 @@ public class DriverControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(driverController).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(driverController)
+                .setControllerAdvice(new br.com.vanroute.backend.exceptions.handler.CustomEntityResponseHandler()).build();
 
         documentPdf = new MockMultipartFile(
                 "documentPdf",
@@ -68,7 +73,7 @@ public class DriverControllerTest {
     @Test
     void shouldCreateDriverSuccessfully() throws Exception {
         doNothing().when(icpValidationService).validateCnhSignature(any());
-        when(documentOcrExtractionService.extractFromCnh(any())).thenReturn("12345678901");
+        when(documentOcrExtractionService.extractFromCnh(any())).thenReturn(cnh("NEYMAR JUNIOR", "AD"));
 
         User user = new User();
         user.setEmail("neymar@teste.com");
@@ -83,7 +88,7 @@ public class DriverControllerTest {
                 .param("password", "Hexa2026123!")
                 .param("confirmPassword", "Hexa2026123!")
                 .param("phone", "11999999999")
-                .param("acceptedTermsVersion", "1")
+                .param("acceptedTermsVersion", TermsService.CURRENT_VERSION)
                 // .param("driverType", "B")
                 .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isCreated());
@@ -95,6 +100,39 @@ public class DriverControllerTest {
                 eq("verificationEmail:email:neymar@teste.com"),
                 eq("neymar@teste.com")
         );
+    }
+
+    // CNH lida pelo OCR: CPF valido, 34 anos, valida ate 2035
+    private static CnhParser.CnhData cnh(String name, String category) {
+        return new CnhParser.CnhData("52998224725", name, false, LocalDate.of(1992, 2, 5), LocalDate.of(2035, 1, 1), category);
+    }
+
+    private void signupWith(CnhParser.CnhData data, int expectedStatus) throws Exception {
+        doNothing().when(icpValidationService).validateCnhSignature(any());
+        when(documentOcrExtractionService.extractFromCnh(any())).thenReturn(data);
+
+        mockMvc.perform(multipart("/api/driver/auth/signup")
+                .file(documentPdf)
+                .param("name", "Neymar Junior")
+                .param("email", "neymar@teste.com")
+                .param("password", "Hexa2026123!")
+                .param("confirmPassword", "Hexa2026123!")
+                .param("phone", "11999999999")
+                .param("acceptedTermsVersion", TermsService.CURRENT_VERSION)
+                .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().is(expectedStatus));
+    }
+
+    @Test
+    void nameDifferentFromTheCnhIsRefused() throws Exception {
+        signupWith(cnh("OUTRA PESSOA", "AD"), 422);
+        verify(driverService, never()).createDriver(any(), anyString());
+    }
+
+    @Test
+    void cnhWithoutCategoryDIsRefused() throws Exception {
+        signupWith(cnh("NEYMAR JUNIOR", "B"), 422);
+        verify(driverService, never()).createDriver(any(), anyString());
     }
 
     @Test
@@ -109,7 +147,7 @@ public class DriverControllerTest {
                 .param("password", "Hexa2026123!")
                 .param("confirmPassword", "Hexa2026123!")
                 .param("phone", "11999999999")
-                .param("acceptedTermsVersion", "1")
+                .param("acceptedTermsVersion", TermsService.CURRENT_VERSION)
                 // .param("driverType", "B")
                 .contentType(MediaType.MULTIPART_FORM_DATA))
                 .andExpect(status().isUnprocessableEntity());

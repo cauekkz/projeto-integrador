@@ -8,10 +8,8 @@ Coisas que **funcionam hoje**, mas que valem uma decisão depois. Nada aqui é b
 
 | Onde | Situação hoje | Sugestão |
 |---|---|---|
-| `drivers.approval_status` | sempre `APPROVED`: a CNH já é validada (ICP-Brasil) no cadastro. Ninguém lê a coluna | apagar, **ou** usar se um dia existir moderação por um admin (aprovar ou suspender motorista) |
-| `responsibles.financial_status` | sempre `PENDING`, nunca muda. Aparece na resposta do cadastro | **decidir junto com o pagamento**: virar um valor calculado pelas parcelas (em dia, atrasado...) ou sair |
-| enum `FinancialStatus` (`UP_TO_DATE`, `OVERDUE`, `DEFAULTING`, `BLOCKED`) | só o `PENDING` é usado | idem: decidir no pagamento |
-| `contracts.status`: `INACTIVE`, `SUSPENDED`, `OVERDUE` | não são usados | `INACTIVE`: marcar o contrato quando passa da `endDate` (hoje **nada faz isso**, então um contrato vencido continua `ACTIVE`). `OVERDUE`/`SUSPENDED`: entram com o pagamento |
+| `drivers.approval_status` | sempre `APPROVED`: a CNH já é validada no cadastro (assinatura ICP-Brasil, nome, validade, categoria D/E e 21 anos). Ninguém lê a coluna | usar quando existir a aprovação dos documentos que a CNH não tem (curso de escolar, autorização do município, vistoria): `docs/PENDENCIAS_E_ERROS.md`, 1.3 |
+| `contracts.status`: `SUSPENDED`, `OVERDUE` | comentados no enum | entram se um dia existir suspensão de contrato |
 | `trips.status`: `SCHEDULED`, `PAUSED`, `FAILED` | a viagem só usa `STARTED`, `IN_PROGRESS`, `FINISHED` e `CANCELED` | apagar do enum, ou usar se surgir "pausar viagem" |
 | `vehicles.status`: `INACTIVE`, `UNDER_MAINTENANCE`, `BLOCKED`, `PENDING_DOCUMENTATION` | só `ACTIVE` é usado | útil se o motorista puder marcar a van "em manutenção" |
 | `documents.uploaded_at`, `documents.uploaded_by_user_id`, `student_absences.created_by` | gravados, nunca lidos | **manter**: é auditoria (quem fez e quando) e não custa nada |
@@ -22,7 +20,6 @@ Coisas que **funcionam hoje**, mas que valem uma decisão depois. Nada aqui é b
 
 ## 2. Ideias para depois
 
-- **Aluno com contrato inativo na viagem:** decidir se ele sai das rotas sozinho quando o contrato acaba.
 - **Aviso do grupo com data:** hoje o aviso é sempre "hoje". Dá para aceitar uma data ("não vou buscar na sexta").
 - **Assinatura com IP:** a assinatura guarda quem, quando e o hash dos termos. Guardar também o IP e o aparelho deixa a prova mais forte.
 

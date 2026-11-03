@@ -17,6 +17,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.data.redis.core.RedisTemplate;
+import br.com.vanroute.backend.websocket.WebSocketSessionRegistry;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
@@ -24,8 +28,9 @@ import java.util.List;
 import java.util.UUID;
 
 // "excluir minha conta" (LGPD): apaga os dados pessoais e mantem a linha como "Usuario removido", porque
-// contratos, parcelas, chat e viagens dos outros apontam pra ela. Recusa com contrato ativo, proposta
-// pendente ou parcela atrasada: a pessoa cancela ou quita antes
+// contratos, parcelas, chat e viagens dos outros apontam pra ela. Apaga tambem os arquivos que a pessoa enviou
+// (anexos do chat e fotos; o texto das mensagens fica no historico da outra parte) e fecha as sessoes WebSocket.
+// Recusa com contrato aceito, proposta pendente ou parcela atrasada: a pessoa cancela (aviso previo) ou quita antes
 @Service
 public class AccountDeletionService {
 
@@ -42,12 +47,15 @@ public class AccountDeletionService {
     private final PasswordEncoder passwordEncoder;
     private final CodeGenerator codeGenerator;
     private final EntityManager entityManager;
+    private final RedisTemplate<String, String> redisTemplate;
 
     public AccountDeletionService(UserRepository userRepository, DriverRepository driverRepository,
                                   UserDriverContractRepository userDriverContractRepository, PaymentRepository paymentRepository,
                                   StudentResponsibleRepository studentResponsibleRepository, StorageService storageService,
                                   RefreshTokenService refreshTokenService, PasswordEncoder passwordEncoder,
-                                  CodeGenerator codeGenerator, EntityManager entityManager) {
+                                  CodeGenerator codeGenerator, EntityManager entityManager,
+                                  RedisTemplate<String, String> redisTemplate) {
+        this.redisTemplate = redisTemplate;
         this.userRepository = userRepository;
         this.driverRepository = driverRepository;
         this.userDriverContractRepository = userDriverContractRepository;
@@ -67,7 +75,8 @@ public class AccountDeletionService {
         if (password == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new BadRequestException("Senha incorreta");
         }
-        if (userDriverContractRepository.existsOfUserWithStatus(userId, List.of(ContractStatus.ACTIVE, ContractStatus.PENDING))) {
+        if (userDriverContractRepository.existsOfUserWithStatus(userId,
+                List.of(ContractStatus.ACTIVE, ContractStatus.SCHEDULED, ContractStatus.PENDING))) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Cancele os contratos ativos e as propostas pendentes antes de excluir a conta");
         }
@@ -92,10 +101,10 @@ public class AccountDeletionService {
             leaveChildren(userId);
         }
         native_("DELETE FROM notifications WHERE user_id = :id", userId, null);
+        // os arquivos somem do storage: as mensagens ficam sem o anexo (mensagem so de anexo vira "[arquivo removido]")
+        native_("UPDATE chat_messages SET content = COALESCE(content, '[arquivo removido]'), attachment_url = NULL, "
+                + "attachment_type = NULL WHERE sender_user_id = :id AND attachment_url IS NOT NULL", userId, null);
 
-        if (user.getPhotoKey() != null) {
-            storageService.delete(user.getPhotoKey());
-        }
         user.setPhotoKey(null);
         user.setName(REMOVED_NAME);
         user.setCpf(null);
@@ -105,6 +114,15 @@ public class AccountDeletionService {
         // INACTIVE: o filtro do JWT recusa na hora, o refresh nao renova e o login nao acha (sem CPF)
         user.setStatus(UserStatus.INACTIVE);
         refreshTokenService.revokeAll(userId);
+        // depois do commit: se algo acima falhar, os arquivos e as sessoes continuam
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                storageService.deleteFolder(StorageService.UPLOAD_PREFIX + userId + "/");
+                storageService.deleteFolder(StorageService.PROFILE_PREFIX + userId + "/");
+                redisTemplate.convertAndSend(WebSocketSessionRegistry.REVOKE_CHANNEL, userId.toString());
+            }
+        });
     }
 
     // sai dos filhos: se tem outro responsavel, ele continua (e vira admin se quem saiu era o admin);

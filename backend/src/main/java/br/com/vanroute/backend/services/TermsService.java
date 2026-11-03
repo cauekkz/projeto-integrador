@@ -13,11 +13,12 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 // Termos de Uso e Politica de Privacidade: o texto de cada versao fica em resources/terms/v{versao}.md.
-// Versao nova = arquivo novo + mudar CURRENT_VERSION: todo mundo volta a ter termsAccepted=false no /users/me
+// Versao nova = arquivo novo + mudar CURRENT_VERSION: todo mundo volta a ter termsAccepted=false no /users/me e
+// o JwtAuthenticatorFilter bloqueia o resto da API (403 TERMS_NOT_ACCEPTED) ate a pessoa aceitar de novo
 @Service
 public class TermsService {
 
-    public static final String CURRENT_VERSION = "1";
+    public static final String CURRENT_VERSION = "2";
 
     private final TermsAcceptanceRepository termsAcceptanceRepository;
     private final String currentText;

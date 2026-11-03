@@ -17,12 +17,16 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectResponse;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.MetadataDirective;
+import software.amazon.awssdk.services.s3.model.S3Object;
 import br.com.vanroute.backend.exceptions.BadRequestException;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import br.com.vanroute.backend.repositories.ChatMessageRepository;
 import br.com.vanroute.backend.repositories.DocumentRepository;
 import org.springframework.security.access.AccessDeniedException;
-//IA FIRST
 import java.time.Duration;
 import java.util.UUID;
 
@@ -97,17 +101,98 @@ public class StorageService {
         return presignPut(PROFILE_PREFIX + userId + "/" + UUID.randomUUID() + ext, contentType);
     }
 
+    // limite de tamanho de anexo do chat e do PDF do contrato. A URL de upload nao consegue limitar
+    // (o tamanho nao e assinado), entao o arquivo e conferido quando e usado
+    public static final long MAX_FILE_BYTES = 10L * 1024 * 1024;
+
+    // PDF do contrato: depois de anexado a proposta, ele e copiado pra ca. Nenhuma URL de upload grava nessa pasta,
+    // entao o arquivo que as duas partes assinaram nao muda mais (a URL de upload original vale 15 minutos e
+    // deixaria o motorista trocar o PDF nesse tempo)
+    public static final String CONTRACTS_PREFIX = "contracts/";
+
     public boolean exists(String fileKey) {
+        return head(fileKey) != null;
+    }
+
+    private HeadObjectResponse head(String fileKey) {
         try {
-            s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(fileKey).build());
-            return true;
+            return s3Client.headObject(HeadObjectRequest.builder().bucket(bucketName).key(fileKey).build());
         } catch (NoSuchKeyException e) {
-            return false;
+            return null;
+        } catch (S3Exception e) {
+            if (e.statusCode() == 404) {
+                return null;
+            }
+            throw e;
+        }
+    }
+
+    // arquivo enviado pela pessoa, existente e dentro do limite (anexo do chat)
+    public void checkUploaded(String fileKey) {
+        HeadObjectResponse head = head(fileKey);
+        if (head == null) {
+            throw new BadRequestException("Arquivo não encontrado. Envie de novo");
+        }
+        if (head.contentLength() > MAX_FILE_BYTES) {
+            throw new BadRequestException("O arquivo pode ter no máximo " + (MAX_FILE_BYTES / (1024 * 1024)) + " MB");
+        }
+    }
+
+    // o front ja enviou o PDF pro MinIO (presigned-url + PUT) antes de mandar a proposta. Aqui o backend confere,
+    // sem baixar o arquivo, que ele existe, tem ate 10 MB e e um PDF de verdade (os 5 primeiros bytes sao %PDF-),
+    // e o MinIO copia ele pra contracts/{contractId}.pdf. O enviado so e apagado depois que a proposta e gravada:
+    // se ela falhar, o arquivo continua e o front pode tentar de novo com o mesmo fileKey
+    public String freezeContractPdf(String fileKey, UUID contractId) {
+        checkUploaded(fileKey);
+        byte[] start;
+        try {
+            start = s3Client.getObjectAsBytes(GetObjectRequest.builder().bucket(bucketName).key(fileKey).range("bytes=0-4").build())
+                    .asByteArray();
+        } catch (NoSuchKeyException e) {
+            throw new BadRequestException("O PDF do contrato não foi encontrado. Envie o arquivo de novo");
+        }
+        if (!new String(start, java.nio.charset.StandardCharsets.US_ASCII).startsWith("%PDF-")) {
+            throw new BadRequestException("O contrato precisa ser um arquivo PDF");
+        }
+        String frozenKey = CONTRACTS_PREFIX + contractId + ".pdf";
+        s3Client.copyObject(CopyObjectRequest.builder()
+                .sourceBucket(bucketName).sourceKey(fileKey)
+                .destinationBucket(bucketName).destinationKey(frozenKey)
+                .contentType("application/pdf").metadataDirective(MetadataDirective.REPLACE)
+                .build());
+        afterCommit(() -> delete(fileKey));
+        return frozenKey;
+    }
+
+    private static void afterCommit(Runnable action) {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            action.run();
+                        }
+                    });
+        } else {
+            action.run();
         }
     }
 
     public void delete(String fileKey) {
         s3Client.deleteObject(DeleteObjectRequest.builder().bucket(bucketName).key(fileKey).build());
+    }
+
+    // apaga tudo de uma pasta (excluir conta: uploads/{id}/ e profile/{id}/)
+    public void deleteFolder(String prefix) {
+        String token = null;
+        do {
+            var page = s3Client.listObjectsV2(ListObjectsV2Request.builder().bucket(bucketName).prefix(prefix)
+                    .continuationToken(token).build());
+            for (S3Object object : page.contents()) {
+                delete(object.key());
+            }
+            token = Boolean.TRUE.equals(page.isTruncated()) ? page.nextContinuationToken() : null;
+        } while (token != null);
     }
 
     private PresignedUrlResponse presignPut(String fileKey, String contentType) {

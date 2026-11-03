@@ -177,12 +177,12 @@ Saída **201** (o mesmo formato do `GET /api/trip/{tripId}` e do `today`):
 }
 ```
 - `id` é o **tripId**, usado pra abrir o WebSocket.
-- `stops` traz só os pontos com aluno hoje, em ordem.
+- `stops` traz só os pontos com aluno hoje, em ordem. Entra na viagem só o aluno com **contrato `ACTIVE` com esse motorista**: contrato agendado que ainda não começou, encerrado ou cancelado fica de fora, mesmo que o aluno ainda esteja na rota (ex.: férias entre um contrato e a renovação).
 - `schoolIds` só vem preenchido no ponto da escola.
 - `path`: `distance` em metros e `duration` em segundos até o fim. `coordinates` vem como `[longitude, latitude]`. O `path` inteiro vem `null` se a API falhou.
 
 Erros:
-- **403**: a rota não é dele;
+- **403**: a rota não é dele (ou ele já saiu da rota);
 - **400**: tem aluno com pendência na rota, sem van e sem van padrão, a van não é dele, nenhum aluno hoje, ou latitude/longitude faltando;
 - **409**: já existe trip hoje (use `restart=true`), ou a trip de hoje já foi finalizada.
 
@@ -331,7 +331,9 @@ Se outra pessoa mandar, recebe `{"type":"error","message":"Só o motorista envia
 | `CONTRACT_ACCEPTED` | o pai aceita | o motorista | "Contrato aceito" | `chatId`, `contractId` |
 | `CONTRACT_REJECTED` | o pai recusa | o motorista | "Contrato recusado" | `chatId`, `contractId` |
 | `CONTRACT_WITHDRAWN` | o motorista retira a proposta | o responsável | "Proposta retirada" | `chatId`, `contractId` |
-| `CANCELLATION_REQUESTED` / `CANCELLATION_REJECTED` / `CANCELLATION_WITHDRAWN` / `CONTRACT_CANCELED` | pedido de cancelamento e resposta (`docs/FLUXO_CONTRATO.md`, passo 9) | a outra parte | "Pedido de cancelamento", "Cancelamento recusado", ... | `contractId` |
+| `CANCELLATION_REQUESTED` / `CANCELLATION_WITHDRAWN` / `CONTRACT_CANCELED` | pedido de cancelamento com aviso prévio de 30 dias, desistência e cancelamento (`docs/FLUXO_CONTRATO.md`, passo 9) | a outra parte (no fim do aviso, os dois) | "Pedido de cancelamento", "Contrato cancelado", ... | `contractId` |
+| `CONTRACT_STARTED` / `CONTRACT_EXPIRED` / `CONTRACT_ENDED` | gravadas pelo worker diário: contrato agendado começou, proposta expirou, contrato chegou ao fim (`docs/WORKER.md`) | os dois | "Contrato começou", "Proposta expirada", "Contrato encerrado" | `contractId` |
+| `SYSTEM` | o worker fechou uma viagem esquecida aberta há mais de 20 horas; ou o admin removeu o responsável do aluno | o motorista / o responsável removido | "Viagem fechada automaticamente" / "Vínculo removido" | `tripId` / `studentId` |
 | `TRIP_STARTED` | o motorista inicia (ou reinicia) | pais com filho que vai hoje (falta avisada não recebe) | "A van saiu" / "A rota foi reiniciada" | `tripId`, `routeId`, `studentIds` |
 | `VAN_ON_THE_WAY` | o próximo ponto da van passa a ser do filho | os pais dos filhos desse ponto | "A van está indo buscar Ana" / "A van está indo buscar Ana na escola" (volta) / "Ana está a caminho da escola" / ".. a caminho de casa" | `tripId`, `routeStopId`, `studentIds`, `etaSeconds` |
 | `STUDENT_BOARDED` | o motorista marca o embarque | os pais do aluno | "Ana embarcou" | `tripId`, `studentIds` |
@@ -342,7 +344,7 @@ Se outra pessoa mandar, recebe `{"type":"error","message":"Só o motorista envia
 | `PAYMENT` | o motorista confirma ou cancela uma parcela | o responsável do contrato | "Pagamento confirmado" / "Parcela cancelada" | `paymentId`, `contractId` |
 | `DRIVER_NOTICE` | o motorista avisa um grupo (`POST /api/driver/groups/{id}/notice`) | os pais dos alunos do grupo | "Aviso do motorista" / "Carlos avisou que não vai buscar Ana hoje. Motivo: ..." | `groupId`, `driverId`, `date`, `studentIds` |
 
-- "Pais" são **todos os responsáveis** do aluno, não só o principal.
+- "Pais" são **todos os responsáveis** do aluno, não só o principal. Quem o admin remove do aluno (ou sai sozinho) deixa de receber na hora e perde o acesso às viagens, à localização e ao histórico (`docs/FLUXO_FRONT.md`, seção 13).
 - **Irmãos viram uma notificação só:** "A van está indo buscar Ana e Caio".
 - O `payload` serve pro app abrir a tela certa: com `tripId`, abre o acompanhamento; com `contractId`, o contrato.
 
@@ -487,4 +489,4 @@ O que muda em relação ao app real: o banco é o de teste, os cadastros são fi
 ## 10. O que ainda não existe
 - **Push com o app fechado** (Firebase Cloud Messaging ou Expo Push). Hoje, com o app fechado, a notificação fica guardada e aparece ao abrir. O celular não toca.
 - **Trânsito ao vivo** no tempo de chegada: só com API paga.
-- **Aluno com contrato inativo** entrando na trip: regra a decidir.
+- Viagem esquecida aberta: o worker fecha como `FINISHED`, sem `endTime`, depois de **20 horas** do início (a que passa da meia-noite continua). Ver `docs/WORKER.md`.

@@ -45,7 +45,8 @@ class VehicleServiceTest {
     private final MockMultipartFile crlv = new MockMultipartFile("documentPdf", new byte[]{1});
     private final CrlvExtractionService.CrlvData data = new CrlvExtractionService.CrlvData(
             "ABC1D23", "12345678901", "9BM906133LB000000", "M.BENZ/SPRINTER", 2019, 2020,
-            "BRANCA", "DIESEL", "ALUGUEL", 2026, 16);
+            "BRANCA", "DIESEL", "ALUGUEL", THIS_YEAR, 16);
+    private static final int THIS_YEAR = LocalDate.now(TripService.ZONE).getYear();
     private Driver driver;
 
     @BeforeEach
@@ -70,12 +71,12 @@ class VehicleServiceTest {
         assertEquals("ABC1D23", response.plate());
         assertEquals(16, response.capacity());
         assertEquals(VehicleStatus.ACTIVE, response.status());
-        assertEquals(LocalDate.now(), response.linkedSince());
+        assertEquals(LocalDate.now(TripService.ZONE), response.linkedSince());
         verify(driverVehicleRepository).save(any(DriverVehicle.class));
     }
 
     @Test
-    void existingVehicleIsOnlyLinkedWithoutChangingItsData() {
+    void existingVehicleIsLinkedAndGetsTheNewerCrlvData() {
         Vehicle existing = new Vehicle();
         existing.setId(UUID.randomUUID());
         existing.setPlate("ABC1D23");
@@ -86,12 +87,21 @@ class VehicleServiceTest {
         VehicleResponseDTO response = vehicleService.addVehicle(crlv, driver.getUserId());
 
         assertEquals(existing.getId(), response.id());
-        // o CRLV enviado e de 2026, mas a van existente nao e alterada
-        assertEquals(2024, existing.getLicensingYear());
+        // o CRLV enviado e mais novo: a van existente fica com o licenciamento atual (sem criar outra)
+        assertEquals(THIS_YEAR, existing.getLicensingYear());
         verify(vehicleRepository, never()).save(any());
         ArgumentCaptor<DriverVehicle> link = ArgumentCaptor.forClass(DriverVehicle.class);
         verify(driverVehicleRepository).save(link.capture());
         assertSame(existing, link.getValue().getVehicle());
+    }
+
+    @Test
+    void licensingOlderThanLastYearIsRefused() {
+        VehicleService.checkLicensing(THIS_YEAR - 1, THIS_YEAR);
+        ResponseStatusException expired = assertThrows(ResponseStatusException.class,
+                () -> VehicleService.checkLicensing(THIS_YEAR - 2, THIS_YEAR));
+        assertEquals(422, expired.getStatusCode().value());
+        assertThrows(ResponseStatusException.class, () -> VehicleService.checkLicensing(null, THIS_YEAR));
     }
 
     @Test

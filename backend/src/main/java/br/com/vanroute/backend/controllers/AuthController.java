@@ -38,8 +38,9 @@ public class AuthController {
 //    }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponseDTO> login(@RequestBody @Valid LoginRequestDTO loginRequestDTO) throws Exception {
-        return ResponseEntity.ok(authenticationService.login(loginRequestDTO).getBody());
+    public ResponseEntity<TokenResponseDTO> login(@RequestBody @Valid LoginRequestDTO loginRequestDTO,
+                                                  jakarta.servlet.http.HttpServletRequest request) {
+        return ResponseEntity.ok(authenticationService.login(loginRequestDTO, request.getRemoteAddr()).getBody());
     }
 
     // o JWT dura 15 min: o app troca o refreshToken por um par novo sem pedir a senha

@@ -1,23 +1,29 @@
 package config
 
 import (
-	"fmt"
+	"errors"
+	"net/url"
+	"os"
+
 	"worker/internal/utils"
 )
 
-func GetDatabaseURL() string {
-	databaseName := utils.GetEnv("DATABASE_NAME", "vanroute_db")
-	databaseUsername := utils.GetEnv("DATABASE_USERNAME", "postgres")
-	databasePassword := utils.GetEnv("DATABASE_PASSWORD", "123456")
-	databaseHost := utils.GetEnv("DATABASE_HOST", "localhost")
-	databasePort := utils.GetEnv("DATABASE_PORT", "5432")
-
-	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s",
-		databaseUsername,
-		databasePassword,
-		databaseHost,
-		databasePort,
-		databaseName,
-	)
+// endereco do PostgreSQL (o mesmo banco do backend), montado das variaveis DATABASE_*.
+// DATABASE_PASSWORD e obrigatoria (sem valor padrao, igual ao backend): em desenvolvimento e a do
+// docker-compose.yml. DATABASE_SSLMODE: "prefer" (padrao: usa SSL se o servidor tiver), "require" em producao
+// com banco em outra maquina, ou "disable"
+func GetDatabaseURL() (string, error) {
+	password := os.Getenv("DATABASE_PASSWORD")
+	if password == "" {
+		return "", errors.New("DATABASE_PASSWORD nao definida")
+	}
+	u := url.URL{
+		Scheme: "postgres",
+		// url.UserPassword escapa a senha (com @, : ou / ela quebraria o endereco)
+		User: url.UserPassword(utils.GetEnv("DATABASE_USERNAME", "postgres"), password),
+		Host: utils.GetEnv("DATABASE_HOST", "localhost") + ":" + utils.GetEnv("DATABASE_PORT", "5432"),
+		Path: "/" + utils.GetEnv("DATABASE_NAME", "vanroute_db"),
+	}
+	u.RawQuery = url.Values{"sslmode": {utils.GetEnv("DATABASE_SSLMODE", "prefer")}}.Encode()
+	return u.String(), nil
 }

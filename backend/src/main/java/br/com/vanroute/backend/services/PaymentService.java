@@ -7,7 +7,6 @@ import br.com.vanroute.backend.models.contract.Payment;
 import br.com.vanroute.backend.models.contract.UserDriverContract;
 import br.com.vanroute.backend.models.contract.enums.PaymentStatus;
 import br.com.vanroute.backend.models.notification.enums.NotificationType;
-import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import br.com.vanroute.backend.repositories.PaymentRepository;
 import br.com.vanroute.backend.repositories.UserDriverContractRepository;
 import jakarta.persistence.EntityManager;
@@ -113,7 +112,6 @@ public class PaymentService {
         payment.setPaymentMethod(request.method());
         payment.setPaidAt(LocalDateTime.now(TripService.ZONE));
         UserDriverContract udc = contractOf(payment);
-        refreshFinancialStatus(udc);
         notificationService.send(List.of(udc.getResponsible().getUserId()), NotificationType.PAYMENT, "Pagamento confirmado",
                 udc.getDriver().getUser().getName() + " confirmou o pagamento da parcela de "
                         + payment.getDueDate().format(BR_DATE) + " de " + udc.getStudent().getName(),
@@ -127,7 +125,6 @@ public class PaymentService {
         Payment payment = pendingOfDriver(paymentId, driverId);
         payment.setStatus(PaymentStatus.CANCELED);
         UserDriverContract udc = contractOf(payment);
-        refreshFinancialStatus(udc);
         notificationService.send(List.of(udc.getResponsible().getUserId()), NotificationType.PAYMENT, "Parcela cancelada",
                 udc.getDriver().getUser().getName() + " cancelou a parcela de " + payment.getDueDate().format(BR_DATE)
                         + " de " + udc.getStudent().getName() + ". Ela não precisa mais ser paga",
@@ -136,7 +133,8 @@ public class PaymentService {
     }
 
     private Payment pendingOfDriver(UUID paymentId, UUID driverId) {
-        Payment payment = paymentRepository.findById(paymentId)
+        // travada: duas confirmacoes ao mesmo tempo (duplo clique) nao passam as duas
+        Payment payment = paymentRepository.findByIdForUpdate(paymentId)
                 .orElseThrow(() -> new EntityNotFoundException("Parcela não encontrada"));
         UserDriverContract udc = contractOf(payment);
         if (!udc.getDriver().getUserId().equals(driverId)) {
@@ -146,13 +144,6 @@ public class PaymentService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Essa parcela já foi paga ou cancelada");
         }
         return payment;
-    }
-
-    // quitou ou dispensou a parcela: o responsavel volta a ficar em dia na hora, sem esperar o worker
-    private void refreshFinancialStatus(UserDriverContract udc) {
-        paymentRepository.flush();
-        long overdue = paymentRepository.countOverdueOfResponsible(udc.getResponsible().getUserId(), LocalDate.now(TripService.ZONE));
-        udc.getResponsible().setFinancialStatus(overdue > 0 ? FinancialStatus.OVERDUE : FinancialStatus.UP_TO_DATE);
     }
 
     private UserDriverContract contractOf(Payment payment) {

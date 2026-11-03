@@ -41,7 +41,7 @@ public class ResponsibleProfileService {
     }
 
     // o motorista (com chat ou contrato) ou o proprio responsavel. No proprio perfil aparecem todos os contratos
-    // e todas as parcelas atrasadas dele; pro motorista, so os filhos e as parcelas com ele
+    // e todas as parcelas atrasadas dele; pro motorista, so os filhos, as parcelas e a situacao com ele
     @Transactional(readOnly = true)
     public ResponsibleProfileResponseDTO profile(UUID responsibleId, UUID driverId) {
         boolean self = responsibleId.equals(driverId);
@@ -57,16 +57,15 @@ public class ResponsibleProfileService {
                 && !userDriverContractRepository.existsByDriverUserIdAndResponsibleUserId(driverId, responsibleId)) {
             throw new AccessDeniedException("Você só vê o perfil de um responsável com quem conversa ou tem contrato");
         }
-        LocalDate today = LocalDate.now(TripService.ZONE);
-        // situacao geral (inclusive com outros motoristas); as parcelas contadas sao so as com esse motorista
-        boolean overdueAnywhere = paymentRepository.countOverdueOfResponsible(responsibleId, today) > 0;
+        // so o que e entre os dois: atraso com outros motoristas nao aparece (o motorista nao e credor dessas parcelas)
+        long overdueWithDriver = paymentRepository.countOverdueBetween(driverId, responsibleId, LocalDate.now(TripService.ZONE));
         return new ResponsibleProfileResponseDTO(
                 responsibleId,
                 responsible.getUser().getName(),
                 responsible.getUser().getPhotoKey(),
                 responsible.getUser().getPhone(),
-                overdueAnywhere ? FinancialStatus.OVERDUE : FinancialStatus.UP_TO_DATE,
-                paymentRepository.countOverdueBetween(driverId, responsibleId, today),
+                overdueWithDriver > 0 ? FinancialStatus.OVERDUE : FinancialStatus.UP_TO_DATE,
+                overdueWithDriver,
                 userDriverContractRepository.findAllOfUser(responsibleId).stream()
                         .filter(udc -> udc.getDriver().getUserId().equals(driverId))
                         .map(udc -> {

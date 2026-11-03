@@ -1,7 +1,6 @@
 package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.exceptions.InvalidDocumentException;
-//IA PURA TEM Q ANALIZA
 
 import jakarta.annotation.PostConstruct;
 import net.sourceforge.tess4j.Tesseract;
@@ -19,15 +18,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 public class DocumentOcrExtractionService {
 
-    private static final Pattern CPF_PATTERN = Pattern.compile(
-            "(?<!\\d)(\\d{3})[.\\s-]?(\\d{3})[.\\s-]?(\\d{3})[.\\s-]?(\\d{2})(?!\\d)"
-    );
 
     private Tesseract tesseract;
 
@@ -48,26 +42,25 @@ public class DocumentOcrExtractionService {
         }
     }
 
-    public String extractFromCnh(MultipartFile pdfFile) {
+    // leituras do OCR, da mais confiavel pra menos (resolucao, modo de pagina): o OCR erra campos diferentes em
+    // cada uma, entao junta ate ter todos
+    private static final int[][] CNH_PASSES = {{450, 6}, {300, 6}, {450, 3}, {300, 3}};
+
+    // le a CNH (OCR da imagem do PDF): CPF, nome, nascimento, validade e categoria. Quem confere as regras e o
+    // CnhParser.check. O texto lido tem dado pessoal: nao vai na resposta nem no log. synchronized: o Tesseract
+    // e um so e nao e thread-safe (e cadastro de motorista e raro)
+    public synchronized CnhParser.CnhData extractFromCnh(MultipartFile pdfFile) {
         try {
-
-            BufferedImage image = renderPdfToImage(pdfFile.getBytes());
-
-            BufferedImage processed = preprocess(image);
-
-            String text = tesseract.doOCR(processed);
-
-            String cpf = extractCpf(text);
-
-            if (cpf == null) {
-                // o texto lido da CNH tem dado pessoal: nao vai na resposta nem no log
-                throw new InvalidDocumentException("Não foi possível ler o CPF da CNH. Envie o PDF original da CNH digital");
+            byte[] bytes = pdfFile.getBytes();
+            CnhParser.CnhData data = CnhParser.parse(null);
+            for (int[] pass : CNH_PASSES) {
+                tesseract.setPageSegMode(pass[1]);
+                data = data.orElse(CnhParser.parse(tesseract.doOCR(preprocess(renderPdfToImage(bytes, pass[0])))));
+                if (data.complete()) {
+                    break;
+                }
             }
-
-            return cpf;
-
-        } catch (InvalidDocumentException e) {
-            throw e;
+            return data;
         } catch (Exception e) {
             throw new InvalidDocumentException("Não foi possível ler a CNH. Envie o PDF original da CNH digital");
         }
@@ -88,48 +81,15 @@ public class DocumentOcrExtractionService {
         return gray;
     }
 
-    private BufferedImage renderPdfToImage(byte[] pdfBytes) throws IOException {
+    private BufferedImage renderPdfToImage(byte[] pdfBytes, int dpi) throws IOException {
         try (PDDocument document = Loader.loadPDF(pdfBytes)) {
 
             PDFRenderer renderer = new PDFRenderer(document);
 
-            return renderer.renderImageWithDPI(0, 450);
+            return renderer.renderImageWithDPI(0, dpi);
         }
     }
 
-    private String extractCpf(String text) {
-
-        if (text == null) return null;
-
-        Matcher matcher = CPF_PATTERN.matcher(text);
-
-        while (matcher.find()) {
-
-            String cpf = matcher.group(1)
-                    + matcher.group(2)
-                    + matcher.group(3)
-                    + matcher.group(4);
-
-            cpf = cpf.replaceAll("\\D", "");
-
-            if (isValidCpf(cpf)) {
-                return cpf;
-            }
-        }
-
-        return null;
-    }
-
-    private boolean isValidCpf(String cpf) {
-
-        if (cpf == null || cpf.length() != 11) return false;
-
-        if (cpf.chars().distinct().count() == 1) return false;
-
-        return true;
-    }
-
-   
     private Path resolveTessDataPath() throws IOException {
 
         for (String systemPath : new String[]{

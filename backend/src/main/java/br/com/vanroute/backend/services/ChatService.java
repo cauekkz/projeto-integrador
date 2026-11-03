@@ -45,7 +45,7 @@ public class ChatService {
 
     public void validateChatAccess(UUID chatId, UUID userId) {
         if (!chatRepository.existsByChatIdAndUserId(chatId, userId)) {
-            throw new IllegalArgumentException("Você não tem acesso a este chat.");
+            throw new org.springframework.security.access.AccessDeniedException("Você não tem acesso a este chat.");
         }
     }
 
@@ -60,7 +60,7 @@ public class ChatService {
     }
 
     public void UsersInChat(UUID chatId, UUID requesterId, UUID userId) {
-        Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new RuntimeException("Chat não encontrado"));
+        Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("Chat não encontrado"));
         User userOne = chat.getUserOne();
         User userTwo = chat.getUserTwo();
         boolean requesterInChat = userOne.getId().equals(requesterId) ||
@@ -69,7 +69,7 @@ public class ChatService {
         boolean otherInChat = userOne.getId().equals(userId) ||
                 userTwo.getId().equals(userId);
         if (!requesterInChat || !otherInChat) {
-            throw new IllegalArgumentException("Você não tem acesso a este chat.");
+            throw new org.springframework.security.access.AccessDeniedException("Você não tem acesso a este chat.");
         }
 
     }

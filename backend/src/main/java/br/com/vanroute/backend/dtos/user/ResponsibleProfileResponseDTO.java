@@ -7,8 +7,8 @@ import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import java.util.List;
 import java.util.UUID;
 
-// perfil do responsavel pro motorista. financialStatus e a situacao geral dele (com qualquer motorista);
-// overduePayments conta so as parcelas atrasadas com esse motorista (as dos outros nao aparecem)
+// perfil do responsavel. Pro motorista, financialStatus e overduePayments sao so das parcelas com ele (atraso com
+// outros motoristas nao aparece); no proprio perfil, de todos os contratos
 public record ResponsibleProfileResponseDTO(
         UUID id,
         String name,
