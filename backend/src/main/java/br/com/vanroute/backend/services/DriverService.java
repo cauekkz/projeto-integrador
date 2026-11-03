@@ -1,9 +1,11 @@
 package br.com.vanroute.backend.services;
 
-import br.com.vanroute.backend.exceptions.UserOrDriverOrResponsibleAlreadyRegisteredException;
 import org.springframework.stereotype.Service;
 
 import br.com.vanroute.backend.dtos.user.DriverRequestDTO;
+import br.com.vanroute.backend.dtos.user.PixKeyDTO;
+import br.com.vanroute.backend.models.user.enums.PixKeyType;
+import br.com.vanroute.backend.utils.PixKeys;
 import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.models.user.User;
@@ -58,13 +60,40 @@ public class DriverService {
             }
         }
 
-        throw new RuntimeException("Não foi possível gerar um código único.");
+        throw new IllegalStateException("Não foi possível gerar um código de conversa único depois de 5 tentativas");
     }
 
     // codigo de conversa do motorista autenticado (gerado no cadastro), pelo id do jwt
     public String getLinkCode(UUID userId) {
         return driverRepository.findById(userId)
                 .map(Driver::getLinkCode)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Motorista não encontrado."));
+    }
+
+    // chave Pix pra receber as parcelas; sem chave cadastrada devolve type e key nulos
+    public PixKeyDTO getPixKey(UUID userId) {
+        Driver driver = driver(userId);
+        return new PixKeyDTO(driver.getPixKeyType(), driver.getPixKey());
+    }
+
+    @Transactional
+    public PixKeyDTO setPixKey(UUID userId, PixKeyDTO request) {
+        Driver driver = driver(userId);
+        PixKeyType type = request == null ? null : request.type();
+        driver.setPix(type, PixKeys.normalize(type, request == null ? null : request.key()));
+        driverRepository.save(driver);
+        return new PixKeyDTO(driver.getPixKeyType(), driver.getPixKey());
+    }
+
+    @Transactional
+    public void removePixKey(UUID userId) {
+        Driver driver = driver(userId);
+        driver.setPix(null, null);
+        driverRepository.save(driver);
+    }
+
+    private Driver driver(UUID userId) {
+        return driverRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Motorista não encontrado."));
     }
 
