@@ -59,6 +59,10 @@ public class ChatMessageService {
     private ChatMessageResponseDTO save(UUID chatId, UUID userId, String content, AttachmentType attachmentType,
                                         String attachmentUrl, MessageType type, String payload) {
         chatService.validateChatAccess(chatId, userId);
+        // so anexa arquivo que a propria pessoa enviou (senao bastaria saber o fileKey de alguem pra ganhar acesso)
+        if (attachmentUrl != null && !StorageService.isOwnedBy(attachmentUrl, userId)) {
+            throw new org.springframework.security.access.AccessDeniedException("Só dá pra anexar arquivo que você mesmo enviou");
+        }
         
         br.com.vanroute.backend.models.chat.Chat chat = chatService.getChatById(chatId);
         br.com.vanroute.backend.models.user.User sender = userService.findById(userId).orElseThrow(() -> new jakarta.persistence.EntityNotFoundException("User not found"));

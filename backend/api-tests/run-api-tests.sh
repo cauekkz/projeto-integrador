@@ -570,6 +570,10 @@ check "upload do PDF do chat" 200 "$(curl -s -o /dev/null -w '%{http_code}' -X P
 req "mensagem com PDF anexado" 201 POST "/api/chats/$CHAT/messages" "$R1" "{\"content\":\"segue o documento\",\"attachmentType\":\"OTHER\",\"attachmentUrl\":\"$CHATPDF\"}"
 req "D1 pede download do PDF do chat" 200 GET "/api/storage/download-url?fileKey=$CHATPDF" "$D1"
 check "PDF do chat baixa identico" 0 "$(curl -s "$(echo "$BODY" | jq -r .downloadUrl)" | cmp -s - "$PDF"; echo $?)"
+echo "   dono do arquivo: o caminho do upload diz quem enviou"
+assert "upload fica na pasta de quem enviou" "[[ \"$CHATPDF\" == uploads/$R1_ID/* ]]"
+req "D1 anexa no chat o PDF que o R1 enviou" 403 POST "/api/chats/$CHAT/messages" "$D1" "{\"attachmentType\":\"OTHER\",\"attachmentUrl\":\"$CHATPDF\"}"
+req "D1 usa como contrato o PDF que o R1 enviou" 400 POST "/api/chats/$CHAT/contract" "$D1" "$(contract "$STUDENT2" | jq -c --arg k "$CHATPDF" '.document.url=$k')"
 echo "   documento de contrato"
 req "D1 presigned-url (PDF)" 200 GET "/api/storage/presigned-url?fileName=contrato.pdf&contentType=application/pdf" "$D1"
 UP=$(echo "$BODY" | jq -r .uploadUrl); PDFKEY=$(echo "$BODY" | jq -r .fileKey)
