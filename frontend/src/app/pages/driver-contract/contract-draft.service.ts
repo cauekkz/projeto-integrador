@@ -89,6 +89,13 @@ export class ContractDraftService {
     return erros;
   });
 
+  // o backend recusa proposta sem o PDF do contrato
+  readonly errosMidia = computed(() => {
+    const erros: { pdf?: string } = {};
+    if (!this.pdf()) erros.pdf = 'Anexe o PDF do contrato.';
+    return erros;
+  });
+
   // entra no fluxo: se for outro chat, comeca do zero
   iniciar(chatId: string) {
     if (this.chatId() !== chatId) {
