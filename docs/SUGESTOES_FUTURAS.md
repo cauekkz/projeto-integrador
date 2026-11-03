@@ -11,7 +11,6 @@ Coisas que **funcionam hoje**, mas que valem uma decisão depois. Nada aqui é b
 | `drivers.approval_status` | sempre `APPROVED`: a CNH já é validada (ICP-Brasil) no cadastro. Ninguém lê a coluna | apagar, **ou** usar se um dia existir moderação por um admin (aprovar ou suspender motorista) |
 | `responsibles.financial_status` | sempre `PENDING`, nunca muda. Aparece na resposta do cadastro | **decidir junto com o pagamento**: virar um valor calculado pelas parcelas (em dia, atrasado...) ou sair |
 | enum `FinancialStatus` (`UP_TO_DATE`, `OVERDUE`, `DEFAULTING`, `BLOCKED`) | só o `PENDING` é usado | idem: decidir no pagamento |
-| `payments.payment_method`, `payments.status` | o aceite do contrato gera as parcelas `PENDING`, e nada mais mexe nelas | é o assunto do pagamento |
 | `contracts.status`: `INACTIVE`, `SUSPENDED`, `OVERDUE` | não são usados | `INACTIVE`: marcar o contrato quando passa da `endDate` (hoje **nada faz isso**, então um contrato vencido continua `ACTIVE`). `OVERDUE`/`SUSPENDED`: entram com o pagamento |
 | `trips.status`: `SCHEDULED`, `PAUSED`, `FAILED` | a viagem só usa `STARTED`, `IN_PROGRESS`, `FINISHED` e `CANCELED` | apagar do enum, ou usar se surgir "pausar viagem" |
 | `vehicles.status`: `INACTIVE`, `UNDER_MAINTENANCE`, `BLOCKED`, `PENDING_DOCUMENTATION` | só `ACTIVE` é usado | útil se o motorista puder marcar a van "em manutenção" |

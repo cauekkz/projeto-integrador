@@ -308,7 +308,7 @@ Pra mostrar: GET /api/storage/download-url?fileKey=... → downloadUrl (vale 15 
 
 ## 10. O que o front ainda não tem do backend
 - **Push com o app fechado** (Firebase Cloud Messaging / Expo Push). Hoje, a notificação fica guardada e aparece ao abrir o app.
-- **"Esqueci a senha"** não está nas rotas atuais.
+- **"Esqueci a senha"** já existe no backend: `POST /api/auth/forgot-password/send-code` (manda o código pro e-mail) e `POST /api/auth/forgot-password` (troca a senha com o código). Falta a tela.
 - **Cota da API de mapas:** a chave grátis tem um limite diário (200 rotas). Quando ele acaba:
   - o cadastro de endereço dá **503**;
   - a trip continua funcionando, mas **sem a linha e sem o tempo**: trate `path`/`etaSeconds` `null` mostrando só a van.
@@ -322,7 +322,7 @@ O que o backend já oferece e o front ainda não usa. Detalhes de cada endpoint:
 | `services/dto/student/student.dto.ts` (`createStudentRequest`) | o endereço é **opcional** e tem três jeitos: `address` (novo), `addressId` (um endereço que a família já tem) ou `addresses?: { label?, address?, addressId? }[]` (vários de uma vez), mais `addressLabel?` (apelido, padrão "Casa"). Mande **um** jeito |
 | `services/dto/student/student.dto.ts` (`studentResponsibleResponse`) | `studentResponseDTO` traz `studentAddressResponseDTO: { id, label, address }` (o endereço "Casa") |
 | `components/student/add-student` | funciona como está (`address` vira o "Casa"). Melhoria: antes do formulário, mostrar os endereços que a família já tem (`GET /api/student/{id}/addresses` dos outros filhos) e mandar `addressId` em vez de digitar de novo |
-| tela nova: **endereços do filho** | `GET /api/student/{id}/addresses` → `[{ id, label, address }]`; adicionar: `POST .../addresses` `{ label, address }` ou `{ label, addressId }` (`409` se o filho já tem esse endereço); tirar: `DELETE .../addresses/{id}` (`409` se é o último ou tem viagem rodando com ele) |
+| tela nova: **endereços do filho** | `GET /api/student/{id}/addresses` → `[{ id, label, address }]`; adicionar: `POST .../addresses` `{ label, address }` ou `{ label, addressId }` (`409` se o filho já tem esse endereço); tirar: `DELETE .../addresses/{id}` (`409` se é o último ou tem viagem rodando com ele). **Adicionar e tirar: só o responsável admin** (os outros recebem `403`; esconda os botões pra quem não é admin, o `my-children?isAdmin=` diz) |
 | mensagens | mesmo **CEP + número** = mesmo endereço: o backend reaproveita sozinho. A latitude/longitude mandada pelo app é ignorada |
 | cadastro do responsável (resposta) | o papel vem em `roles: ["ROLE_RESPONSIBLE"]`, igual à claim `roles` do token |
 
@@ -367,4 +367,65 @@ Detalhes de cada endpoint: `backend/README.md`, seção 2b.
 | Pai: **perfil do motorista** (do chat ou do contrato) | `GET /api/driver/{driverId}/profile`: nome, foto, escolas, vans, média e avaliações |
 | Pai: **avaliar** | `PUT /api/driver/{driverId}/rating` `{ score 1-5, comment? }` (mostre o botão só se tem ou teve contrato; o `myRating` do perfil diz se ele já avaliou); apagar: `DELETE` |
 | Contrato | o `GET /api/contract/{contractId}` traz `documentStatus` e `signatures` ("assinado por Carlos em 20/01 e por Maria em 21/01") |
+
+
+## 12. O que o backend ganhou e o front ainda não usa (contrato, pagamento e histórico)
+Detalhes: `docs/FLUXO_CONTRATO.md`, `docs/FLUXO_PAGAMENTO.md` e `docs/FLUXO_TRIP.md` (seção 4.8.1).
+
+### Já feito no front
+- PDF do contrato **obrigatório** na proposta (o anexo diz "obrigatório" e não deixa enviar sem).
+- Ícones das notificações novas em `pages/notifications/notifications.ts` (tipo desconhecido cai no sino cinza).
+
+### Motorista
+| Tela | Chamadas |
+|---|---|
+| Card da proposta no chat: botão **"Retirar proposta"** (só enquanto `PENDING`) | `PUT /api/chats/{chatId}/contracts/{contractId}/withdraw`. O chat recebe `REJECTION` "Proposta Retirada" e o card fecha sozinho |
+| **Chave Pix** (configurações) | `GET/PUT/DELETE /api/driver/pix-key` `{ type: CPF/CNPJ/EMAIL/PHONE/RANDOM, key }`. Mostre a `key` que voltar (já normalizada). **400** com a mensagem se a chave não bate com o tipo |
+| **Parcelas** (lista com filtros por aluno, responsável, status e período) | `GET /api/payments?...` paginado. Botões nas `PENDING`/`OVERDUE`: **"Recebi"** (`PUT /api/payments/{id}/paid` `{ method }`, perguntando PIX/dinheiro/...) e **"Dispensar"** (`PUT /api/payments/{id}/cancel`). Confirme antes: **não tem volta** |
+| Lista de contratos | filtros `studentId`/`driverId`; mostre `overduePayments` e o `pendingCancellation` (com Aceitar/Recusar se foi o pai que pediu, ou Desistir se foi ele) |
+| **Cancelar contrato** | `POST /api/contract/{id}/cancellation` `{ reason }`. Se a resposta vier `ACCEPTED` com `unilateral: true`, o contrato já foi cancelado (2+ atrasadas); senão, "pedido enviado" |
+| **Perfil do responsável** (do chat ou do contrato) | `GET /api/responsible/{responsibleId}/profile`: nome, foto, telefone, situação **com ele** (`UP_TO_DATE`/`OVERDUE` + `overduePayments`) e os filhos com contrato com ele |
+
+### Responsável
+| Tela | Chamadas |
+|---|---|
+| **Parcelas** | `GET /api/payments` com filtros por filho e motorista. Nas `PENDING`/`OVERDUE`: mostre a `driverPixKey` com **botão de copiar** (se vier `null`, "o motorista ainda não cadastrou a chave Pix"). `OVERDUE` em vermelho. Avisar que pagou é pelo chat |
+| Lista de contratos | `pendingCancellation` com Aceitar/Recusar (pedido do motorista) ou Desistir (pedido dele) |
+| **Cancelar contrato** | `POST /api/contract/{id}/cancellation` `{ reason }` → sempre `PENDING` (o pai nunca cancela sozinho) |
+| **Histórico de viagens** por filho e por dia | `GET /api/trip/history?studentId=&date=` (ou `from`/`to`): embarcou às, chegou às, faltou, ocorrências |
+
+### Os dois
+- Notificações novas: `CANCELLATION_REQUESTED`, `CANCELLATION_REJECTED`, `CANCELLATION_WITHDRAWN`, `CONTRACT_CANCELED`, `CONTRACT_WITHDRAWN` e, do worker diário, `CONTRACT_EXPIRED` (proposta não respondida até o início), `CONTRACT_ENDED` (contrato chegou ao fim) e `PAYMENT` "Parcela atrasada". Todas com `contractId` no `payload` (as de parcela também com `paymentId`).
+- As do worker **não chegam pelo WebSocket** (o worker não tem a conexão): aparecem no próximo `GET /api/notifications` ou ao reabrir o app.
+- O detalhe do contrato (`GET /api/contract/{id}`) traz `cancellations` (histórico de pedidos) e `overduePayments`.
+
+### TODOs que já estavam no front
+- `pages/driver-route/driver-route.ts`: a tela de executar a rota usa dados fixos; trocar pelos alunos da viagem (`GET /api/trip/{tripId}`).
+- `pages/responsible-route/responsible-route.ts`: dois TODOs. A tela usa dados fixos; trocar pela viagem do dia (`GET /api/student/{id}/today-trips` + WebSocket da trip, que já manda só as paradas do filho).
+
+### Conta e código de e-mail
+| Tela | Chamadas |
+|---|---|
+| **Excluir minha conta** (os dois perfis) | `DELETE /api/users/me` `{ "password": "..." }` → **204** e faça logout. **400** senha errada; **409** com contrato ativo, proposta pendente ou parcela atrasada (mostre a `message`). Os dados pessoais somem e a conta vira "Usuário removido"; o mesmo CPF/e-mail pode se cadastrar de novo |
+| Reenviar código (cadastro, esqueci a senha, trocar e-mail) | **429** "Aguarde X segundos..." se pedir de novo antes de 1 minuto (o cadastro já conta como o primeiro envio): mostre a mensagem e um contador |
+| Digitar o código | errado → **400** "Código incorreto. Restam N tentativas."; na 5ª errada → **429** "Enviamos um novo código para o seu e-mail" (o anterior para de valer) |
+| Perfil do responsável (motorista) | cada filho traz `relationType` e `admin`; o detalhe do contrato traz `studentResponsibles` (todos os responsáveis do aluno, com rótulo) || **Termos de uso** | `GET /api/terms` (sem login) → `{ version, content }` (markdown). Depois do login, se o `/api/users/me` vier com `termsAccepted: false`, mostre os termos e chame `POST /api/terms/accept` `{ "version": "1" }` (204). Versão nova dos termos = todo mundo volta a ver |
+| **Exportar meus dados** | `GET /api/users/me/export` → JSON pra baixar (vem com `Content-Disposition`). **429** se pedir de novo antes de 5 minutos |
+| **Perfil do responsável (dele mesmo)** | `GET /api/responsible/{seuId}/profile`: situação financeira geral, todas as parcelas atrasadas e todos os contratos dos filhos |
+
+### Paginação (muda o formato de 2 rotas que o front já usa)
+Mesmo padrão de `GET /api/chats`, mensagens, notificações, parcelas, histórico e `my-children`: a resposta vira
+`{ content: [...], totalElements, totalPages, number, size, ... }` e aceita `?page=` (começa em 0) e `?size=`.
+
+| Rota | Antes | Agora |
+|---|---|---|
+| `GET /api/contract/my-contracts` | lista `[...]` | página (padrão 20), do início mais recente pro mais antigo. Filtros: `status`, `studentId`, `driverId` |
+| `GET /api/route/get-all-routes-and-stops` | lista `[...]` (incluía rotas que o motorista já deixou) | página (padrão 10), por nome. Filtros: `name` (parte do nome) e `active` (padrão `true`: só as rotas em que ele está hoje) |
+
+**O que o front precisa mudar:** `services/contract.service.ts` (`myContracts`) lê `response.content` em vez da lista, e a tela de contratos usa `totalPages` pra "carregar mais" (ou rolagem infinita, igual ao chat).
+
+### Cadastro: aceite dos termos obrigatório
+- Antes de cadastrar, mostre os termos (`GET /api/terms`) com um "Li e aceito".
+- Mande a versão aceita no cadastro: responsável `"acceptedTermsVersion": "1"` no JSON; motorista `acceptedTermsVersion=1` no multipart. Sem ela, ou com versão velha: **400**. **O cadastro atual do front quebra até mandar esse campo.**
+- No login, se o `/api/users/me` vier com `termsAccepted: false` (saiu uma versão nova), mostre os termos de novo e chame `POST /api/terms/accept`.
 

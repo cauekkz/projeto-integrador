@@ -217,6 +217,20 @@ Define a van padrão da rota.
 ```
 Lista vazia: o motorista ainda não iniciou. **403**: não é responsável desse aluno.
 
+### 4.8.1 `GET /api/trip/history` (pai e motorista)
+Histórico por aluno, uma linha por aluno por viagem, da mais recente pra mais antiga (paginado: `page`, `size`, padrão 20). O pai vê as viagens dos filhos; o motorista, as que ele dirigiu.
+Filtros opcionais: `studentId`, `driverId`, `routeId`, `date` (um dia) ou `from`/`to` (período, `AAAA-MM-DD`).
+```json
+{ "content": [ { "tripId": "...", "date": "2026-11-02", "tripStatus": "FINISHED", "startTime": "06:30:00", "endTime": "07:15:00",
+  "routeId": "...", "routeName": "Ida Manha", "driverId": "...", "driverName": "Carlos",
+  "studentId": "...", "studentName": "Ana", "boardingStatus": "DELIVERED",
+  "boardingTime": "2026-11-02T06:42:00", "unboardingTime": "2026-11-02T07:10:00", "occurrences": 1 } ],
+  "totalElements": 1, "totalPages": 1 }
+```
+`occurrences` é quantas ocorrências a viagem teve; o detalhe vem em `GET /api/trip/{tripId}/occurrences`. **400**: `to` antes de `from`.
+
+**Onde está no código:** [TripController.history](../backend/src/main/java/br/com/vanroute/backend/controllers/TripController.java#L56) chama [TripHistoryService.list](../backend/src/main/java/br/com/vanroute/backend/services/TripHistoryService.java#L38), que monta a consulta em `Boarding` (uma linha por aluno por viagem) só com os filtros que vieram, e conta as ocorrências das viagens da página numa consulta só. DTO: [TripHistoryItemDTO.java](../backend/src/main/java/br/com/vanroute/backend/dtos/trip/TripHistoryItemDTO.java#L1). Teste: seção 13h de [run-api-tests.sh](../backend/api-tests/run-api-tests.sh).
+
 ### 4.9 Faltas (pai)
 
 | Rota | Entrada | Saída |
@@ -316,6 +330,8 @@ Se outra pessoa mandar, recebe `{"type":"error","message":"Só o motorista envia
 | `CONTRACT_PROPOSED` | o motorista manda a proposta | o responsável | "Nova proposta de contrato" | `chatId`, `contractId` |
 | `CONTRACT_ACCEPTED` | o pai aceita | o motorista | "Contrato aceito" | `chatId`, `contractId` |
 | `CONTRACT_REJECTED` | o pai recusa | o motorista | "Contrato recusado" | `chatId`, `contractId` |
+| `CONTRACT_WITHDRAWN` | o motorista retira a proposta | o responsável | "Proposta retirada" | `chatId`, `contractId` |
+| `CANCELLATION_REQUESTED` / `CANCELLATION_REJECTED` / `CANCELLATION_WITHDRAWN` / `CONTRACT_CANCELED` | pedido de cancelamento e resposta (`docs/FLUXO_CONTRATO.md`, passo 9) | a outra parte | "Pedido de cancelamento", "Cancelamento recusado", ... | `contractId` |
 | `TRIP_STARTED` | o motorista inicia (ou reinicia) | pais com filho que vai hoje (falta avisada não recebe) | "A van saiu" / "A rota foi reiniciada" | `tripId`, `routeId`, `studentIds` |
 | `VAN_ON_THE_WAY` | o próximo ponto da van passa a ser do filho | os pais dos filhos desse ponto | "A van está indo buscar Ana" / "A van está indo buscar Ana na escola" (volta) / "Ana está a caminho da escola" / ".. a caminho de casa" | `tripId`, `routeStopId`, `studentIds`, `etaSeconds` |
 | `STUDENT_BOARDED` | o motorista marca o embarque | os pais do aluno | "Ana embarcou" | `tripId`, `studentIds` |
@@ -323,6 +339,7 @@ Se outra pessoa mandar, recebe `{"type":"error","message":"Só o motorista envia
 | `STUDENT_ABSENT` | o motorista marca como ausente | os pais do aluno | "Ana não embarcou" | `tripId`, `studentIds` |
 | `ABSENCE_REPORTED` | o pai avisa ou desfaz uma falta | os motoristas da rota | "Falta avisada" / "Falta desfeita" | `chatId`, `studentId`, `routeId`, `date`, `canceled` |
 | `OCCURRENCE` | o motorista registra uma ocorrência na viagem (`POST /api/trip/{tripId}/occurrences`) | os pais de **todos** os alunos da viagem | "Ocorrência na viagem: trânsito" / "Ida Manhã: acidente na marginal" | `tripId`, `occurrenceId`, `type` |
+| `PAYMENT` | o motorista confirma ou cancela uma parcela | o responsável do contrato | "Pagamento confirmado" / "Parcela cancelada" | `paymentId`, `contractId` |
 | `DRIVER_NOTICE` | o motorista avisa um grupo (`POST /api/driver/groups/{id}/notice`) | os pais dos alunos do grupo | "Aviso do motorista" / "Carlos avisou que não vai buscar Ana hoje. Motivo: ..." | `groupId`, `driverId`, `date`, `studentIds` |
 
 - "Pais" são **todos os responsáveis** do aluno, não só o principal.
@@ -471,4 +488,3 @@ O que muda em relação ao app real: o banco é o de teste, os cadastros são fi
 - **Push com o app fechado** (Firebase Cloud Messaging ou Expo Push). Hoje, com o app fechado, a notificação fica guardada e aparece ao abrir. O celular não toca.
 - **Trânsito ao vivo** no tempo de chegada: só com API paga.
 - **Aluno com contrato inativo** entrando na trip: regra a decidir.
-- **Pagamento** (o tipo `PAYMENT` existe, mas nada gera notificação dele ainda).

@@ -29,9 +29,31 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 |---|---|
 | 400 | dado inválido ou regra violada |
 | 401 | sem token ou token inválido/expirado |
-| 403 | sem permissão |
+| 403 | sem permissão (inclusive rota de outro perfil) |
 | 404 | não existe |
 | 409 | conflito (duplicado ou estado errado) |
+| 422 | documento (CNH, CRLV) não passou na validação |
+| 429 | muitas tentativas (código de e-mail) ou pediu outro código antes de 1 minuto |
+| 500 | erro interno: a mensagem é sempre "Erro interno no servidor" (o detalhe fica só no log) |
+
+**Quem pode chamar cada rota** (`config/SecurityConfig.java`; outro perfil recebe **403**):
+
+| Perfil | Rotas |
+|---|---|
+| sem login | `POST /api/auth/**` (login, refresh, logout, verificar e-mail, reenviar código, esqueci a senha), `POST /api/responsible/auth/signup`, `POST /api/driver/auth/**` |
+| só motorista | `/api/route/**`, `/api/school/**`, `/api/vehicle/**`, `/api/driver/groups/**`, `/api/driver/link-code`, `/api/driver/pix-key`, `GET /api/chats/{id}/students`, `POST /api/chats/{id}/contract`, `PUT .../contracts/{id}/withdraw`, `PUT /api/payments/{id}/paid` e `/cancel`, `POST /api/trip/start/{id}`, `/finish`, `POST .../occurrences`, `PUT /api/trip/{id}/student/**`, `GET /api/trip/route/{id}/today` |
+| só responsável | `/api/student/**`, `/api/invite-code/**`, `PUT .../contracts/{id}/accept` e `/reject`, `PUT`/`DELETE /api/driver/{id}/rating` |
+| os dois (logados) | o resto: chat, contrato e cancelamento, notificações, `GET /api/payments`, arquivos, histórico e ocorrências da viagem, perfil do motorista, perfil do responsável (o motorista dele ou ele mesmo), `/api/users/**`. Nessas, o service confere se a pessoa é parte daquele contrato, chat ou viagem |
+
+**Configuração por ambiente** (o Spring junta 3 fontes; a de cima vence):
+
+| Fonte | Onde | Pra quê |
+|---|---|---|
+| variáveis de ambiente | no servidor: `.env` na raiz (fora do git; modelo em `/.env.example`), lido pelo `docker compose` | produção: banco, Redis, MinIO, `JWT_KEY`, `ALLOWED_ORIGINS` (endereço do front), e-mail e mapas |
+| `src/main/resources/application-local.properties` | na sua máquina (fora do git; modelo em `application-local.properties.example`) | desenvolvimento: senha do banco, `JWT_KEY`, MinIO, e-mail e a chave do OpenRouteService |
+| `application.yml` / `application.properties` | no git | os padrões. Segredos **não** têm padrão: sem eles o backend não sobe |
+
+Os testes que sobem o Spring usam o banco `vanroute_test` (`src/test/resources/application-test.properties`), nunca o `vanroute_db`.
 
 ---
 
@@ -138,6 +160,8 @@ O ponto da rota **não tem endereço digitado**: ele usa o mesmo endereço do al
 | `POST /api/student/{id}/addresses` `{label, address}` | endereço novo (busca a coordenada uma vez). `201` |
 | `POST /api/student/{id}/addresses` `{label, addressId}` | **reaproveita** um endereço que já existe: de outro filho ou o de cobrança do responsável (só evita digitar de novo; cada filho tem a própria lista). `403` se o endereço não é dele nem de um filho dele; `409` se o aluno já tem esse endereço |
 | `DELETE /api/student/{id}/addresses/{studentAddressId}` | tira o endereço do aluno: apaga **só a ligação** (o endereço continua pra quem mais usa). O aluno **sai dos pontos de casa** com esse endereço (a rota fica com pendência), e o motorista recebe a notificação `ROUTE` "Endereço removido". `409` se for o último endereço do aluno, ou se tiver uma viagem rodando com ele agora |
+
+Ver os endereços: qualquer responsável do aluno. **Adicionar e tirar: só o responsável admin** (quem cadastrou o aluno); os outros recebem `403`, porque mexer nos endereços muda a rota.
 
 No cadastro do aluno (`POST /api/student/create-student`):
 - **um endereço:** `address` (novo) **ou** `addressId` (reaproveita um da família: de outro filho ou o seu), e `addressLabel` (opcional). Vira o "Casa";
@@ -317,7 +341,7 @@ A proposta nasce no chat. Criar, aceitar e recusar ficam no `ChatController`; a 
 | `POST /api/chats/{chatId}/contract` | motorista | `201`: `{ message, userDriverContractId, contract }`, onde `contract` já vem completo (formato abaixo) |
 | `PUT /api/chats/{chatId}/contracts/{contractId}/accept` | responsável do contrato | `200`; o contrato fica `ACTIVE`, as parcelas são geradas e o responsável **assina** (o documento fica `SIGNED`) |
 | `PUT /api/chats/{chatId}/contracts/{contractId}/reject` | responsável do contrato | `200`; o contrato fica `CANCELED` e o documento `REJECTED` |
-| `GET /api/contract/my-contracts?status=ACTIVE` | motorista ou responsável | `[{ contractId, userDriverContractId, status, periodicity, value, startDate, endDate, studentId, studentName, schoolId, schoolName, driverId, driverName, responsibleId, responsibleName }]`: os contratos em que o usuário é parte; `status` é opcional |
+| `GET /api/contract/my-contracts?status=ACTIVE` | motorista ou responsável | página `{ content: [{ contractId, userDriverContractId, status, periodicity, value, startDate, endDate, studentId, studentName, schoolId, schoolName, driverId, driverName, responsibleId, responsibleName, pendingCancellation, overduePayments }], totalElements, ... }`: os contratos em que o usuário é parte. Filtros opcionais: `status`, `studentId`, `driverId`; `page`/`size` (padrão 20) |
 | `GET /api/contract/{contractId}` | só as partes do contrato | detalhes (abaixo); os outros recebem `403` |
 
 Corpo da proposta. `responsibleId` é o `otherUserId` do chat (`GET /api/chats`), `studentId` vem de `GET /api/chats/{chatId}/students` e `schoolId` vem de `GET /api/school/my-schools`:
