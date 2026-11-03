@@ -7,7 +7,6 @@ import br.com.vanroute.backend.dtos.user.UserCreateDTO;
 import br.com.vanroute.backend.models.address.Address;
 import br.com.vanroute.backend.models.user.Responsible;
 import br.com.vanroute.backend.models.user.User;
-import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import br.com.vanroute.backend.models.user.enums.RoleTypeEnum;
 import br.com.vanroute.backend.repositories.ResponsibleRepository;
 import jakarta.transaction.Transactional;
@@ -47,7 +46,6 @@ public class ResponsibleService {
         Address address = addressService.findOrCreate(responsibleRequestDTO.getAddressRequestDTO());
         Responsible responsible = new Responsible();
         responsible.setUser(user);
-        responsible.setFinancialStatus(FinancialStatus.UP_TO_DATE);
         responsible.setAddress(address);
         Responsible newResponsible = responsibleRepository.save(responsible);
         termsService.accept(user.getId(), responsibleRequestDTO.getAcceptedTermsVersion());
@@ -60,7 +58,6 @@ public class ResponsibleService {
                 newResponsible.getUser().getEmail(),
                 newResponsible.getUser().getCpf(),
                 newResponsible.getUser().getPhone(),
-                newResponsible.getFinancialStatus(),
                 newResponsible.getUser().roleNames(),
                 new AddressResponseDTO(
                         address.getId(),

@@ -22,6 +22,7 @@ import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.models.user.Responsible;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.repositories.ContractCancellationRepository;
+import br.com.vanroute.backend.repositories.ContractRepository;
 import br.com.vanroute.backend.repositories.DriverGroupRepository;
 import br.com.vanroute.backend.repositories.PaymentRepository;
 import br.com.vanroute.backend.repositories.RouteDriverRepository;
@@ -42,6 +43,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -65,6 +67,8 @@ class ContractCancellationServiceTest {
 
     @Mock
     private UserDriverContractRepository userDriverContractRepository;
+    @Mock
+    private ContractRepository contractRepository;
     @Mock
     private ContractCancellationRepository cancellationRepository;
     @Mock
@@ -119,6 +123,7 @@ class ContractCancellationServiceTest {
         udc.setStudent(student);
         udc.setContract(contract);
         when(userDriverContractRepository.findDetailsByContractId(contractId)).thenReturn(Optional.of(udc));
+        when(contractRepository.findByIdForUpdate(contractId)).thenReturn(Optional.of(contract));
 
         // o aluno esta numa rota do motorista e num grupo dele
         route = new Route();
@@ -149,8 +154,9 @@ class ContractCancellationServiceTest {
         return user;
     }
 
-    private void overdue(long count) {
-        when(paymentRepository.countOverdue(eq(contractId), any())).thenReturn(count);
+    // tem parcela vencida ha 30 dias ou mais
+    private void oldOverdue(boolean exists) {
+        when(paymentRepository.existsUnpaidDueUntil(eq(contractId), any())).thenReturn(exists);
     }
 
     private ContractCancellation pendingFrom(UUID requesterId) {
@@ -180,21 +186,33 @@ class ContractCancellationServiceTest {
     }
 
     @Test
-    void responsibleAsksAndTheDriverIsNotified() {
-        overdue(5);
+    void responsibleAsksAndTheContractEndsAfterTheNotice() {
+        oldOverdue(false);
 
         CancellationResponseDTO result = service.request(contractId, responsibleId, new CancellationRequestDTO("  mudanca de cidade  "));
 
         assertEquals(CancellationStatus.PENDING, result.status());
         assertEquals("mudanca de cidade", result.reason());
+        assertEquals(LocalDate.now(TripService.ZONE).plusDays(ContractCancellationService.NOTICE_DAYS), result.effectiveDate());
         assertFalse(result.unilateral());
         assertNotCanceled();
         verify(notificationService).send(eq(List.of(driverId)), eq(NotificationType.CANCELLATION_REQUESTED), anyString(), anyString(), anyMap());
     }
 
     @Test
-    void driverWithOneOverduePaymentStillNeedsApproval() {
-        overdue(1);
+    void responsibleWithDebtCanAskButTheDebtStays() {
+        // o pedido do responsavel nao olha as parcelas: a divida continua (assertNotCanceled: nada muda agora)
+        oldOverdue(true);
+
+        CancellationResponseDTO result = service.request(contractId, responsibleId, new CancellationRequestDTO("vou mudar"));
+
+        assertEquals(CancellationStatus.PENDING, result.status());
+        assertNotCanceled();
+    }
+
+    @Test
+    void driverWithoutOldOverdueAlsoGivesNotice() {
+        oldOverdue(false);
 
         CancellationResponseDTO result = service.request(contractId, driverId, new CancellationRequestDTO("nao paga"));
 
@@ -204,8 +222,8 @@ class ContractCancellationServiceTest {
     }
 
     @Test
-    void driverWithTwoOverduePaymentsCancelsAlone() {
-        overdue(2);
+    void driverWithPaymentOverdueFor30DaysCancelsRightAway() {
+        oldOverdue(true);
 
         CancellationResponseDTO result = service.request(contractId, driverId, new CancellationRequestDTO("2 meses sem pagar"));
 
@@ -213,7 +231,32 @@ class ContractCancellationServiceTest {
         assertTrue(result.unilateral());
         assertEquals(driverId, result.decidedById());
         assertCanceled();
+        verify(paymentRepository).existsUnpaidDueUntil(contractId,
+                LocalDate.now(TripService.ZONE).minusDays(ContractCancellationService.OVERDUE_DAYS_TO_CANCEL_NOW));
         verify(notificationService).send(eq(List.of(responsibleId)), eq(NotificationType.CONTRACT_CANCELED), anyString(), anyString(), anyMap());
+    }
+
+    @Test
+    void scheduledContractCanBeCanceledToo() {
+        udc.getContract().setStatus(ContractStatus.SCHEDULED);
+        pendingFrom(responsibleId);
+
+        service.accept(contractId, driverId);
+
+        assertEquals(ContractStatus.CANCELED, udc.getContract().getStatus());
+    }
+
+    @Test
+    void renewedStudentStaysInTheRoutes() {
+        pendingFrom(responsibleId);
+        when(userDriverContractRepository.existsOtherAccepted(driverId, student.getId(), contractId)).thenReturn(true);
+
+        service.accept(contractId, driverId);
+
+        assertEquals(ContractStatus.CANCELED, udc.getContract().getStatus());
+        assertEquals(PaymentStatus.CANCELED, futurePayment.getStatus());
+        verify(studentStopRepository, never()).deleteAll(any());
+        assertTrue(group.getStudents().contains(student));
     }
 
     @Test
@@ -252,19 +295,7 @@ class ContractCancellationServiceTest {
         pendingFrom(responsibleId);
 
         assertThrows(AccessDeniedException.class, () -> service.accept(contractId, responsibleId));
-        assertThrows(AccessDeniedException.class, () -> service.reject(contractId, responsibleId));
         assertNotCanceled();
-    }
-
-    @Test
-    void rejectKeepsTheContract() {
-        pendingFrom(driverId);
-
-        CancellationResponseDTO result = service.reject(contractId, responsibleId);
-
-        assertEquals(CancellationStatus.REJECTED, result.status());
-        assertNotCanceled();
-        verify(notificationService).send(eq(List.of(driverId)), eq(NotificationType.CANCELLATION_REJECTED), anyString(), anyString(), anyMap());
     }
 
     @Test

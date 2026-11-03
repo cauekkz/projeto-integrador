@@ -4,11 +4,12 @@ import br.com.vanroute.backend.models.contract.enums.CancellationStatus;
 import br.com.vanroute.backend.models.user.User;
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-// pedido de cancelamento de um contrato ativo: uma parte pede, a outra aceita ou recusa.
-// Fica como historico mesmo depois de decidido
+// pedido de cancelamento com aviso previo: vale sozinho na effectiveDate, a nao ser que a outra parte aceite antes
+// (cancela na hora) ou quem pediu desista. Fica como historico mesmo depois de decidido
 @Entity
 @Table(name = "contract_cancellations")
 public class ContractCancellation {
@@ -35,9 +36,13 @@ public class ContractCancellation {
     @Column(nullable = false, length = 20)
     private CancellationStatus status;
 
-    // o motorista cancelou sozinho (responsavel com parcelas atrasadas)
+    // o motorista cancelou na hora, sem aviso (parcela vencida ha 30 dias ou mais)
     @Column(nullable = false)
     private boolean unilateral;
+
+    // fim do aviso previo: o contrato e cancelado nesse dia se ninguem fizer nada (so no pedido PENDING)
+    @Column(name = "effective_date")
+    private LocalDate effectiveDate;
 
     @ManyToOne
     @JoinColumn(name = "decided_by")
@@ -92,6 +97,14 @@ public class ContractCancellation {
 
     public void setUnilateral(boolean unilateral) {
         this.unilateral = unilateral;
+    }
+
+    public LocalDate getEffectiveDate() {
+        return effectiveDate;
+    }
+
+    public void setEffectiveDate(LocalDate effectiveDate) {
+        this.effectiveDate = effectiveDate;
     }
 
     public User getDecidedBy() {

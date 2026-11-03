@@ -73,7 +73,6 @@ public class StudentResponsibleMapper {
                 responsible.getUser().getEmail(),
                 responsible.getUser().getCpf(),
                 responsible.getUser().getPhone(),
-                responsible.getFinancialStatus(),
                 responsible.getUser().roleNames(),
                 new AddressResponseDTO(
                         responsible.getAddress().getId(),

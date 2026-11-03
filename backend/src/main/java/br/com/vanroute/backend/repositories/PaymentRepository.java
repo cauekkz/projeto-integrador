@@ -2,7 +2,9 @@ package br.com.vanroute.backend.repositories;
 
 import br.com.vanroute.backend.models.contract.Payment;
 import br.com.vanroute.backend.models.contract.enums.PaymentStatus;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -17,6 +20,17 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
 
     // atrasada = OVERDUE (o worker diario marca) ou PENDING vencida que o worker ainda nao marcou
     String OVERDUE = "(p.status = br.com.vanroute.backend.models.contract.enums.PaymentStatus.OVERDUE OR (p.status = br.com.vanroute.backend.models.contract.enums.PaymentStatus.PENDING AND p.dueDate < :today))";
+
+    // dar baixa ou cancelar le a parcela travada: duas confirmacoes ao mesmo tempo nao passam as duas
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Payment p WHERE p.id = :id")
+    Optional<Payment> findByIdForUpdate(@Param("id") UUID id);
+
+    // tem parcela nao paga vencida ate essa data (hoje - 30 dias: o motorista pode cancelar na hora)
+    @Query("SELECT COUNT(p) > 0 FROM Payment p WHERE p.contract.id = :contractId AND p.dueDate <= :limit AND " +
+            "p.status IN (br.com.vanroute.backend.models.contract.enums.PaymentStatus.PENDING, " +
+            "br.com.vanroute.backend.models.contract.enums.PaymentStatus.OVERDUE)")
+    boolean existsUnpaidDueUntil(@Param("contractId") UUID contractId, @Param("limit") LocalDate limit);
 
     @Query("SELECT COUNT(p) FROM Payment p WHERE p.contract.id = :contractId AND " + OVERDUE)
     long countOverdue(@Param("contractId") UUID contractId, @Param("today") LocalDate today);

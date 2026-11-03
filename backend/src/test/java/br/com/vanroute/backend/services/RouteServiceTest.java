@@ -83,7 +83,7 @@ class RouteServiceTest {
         driver.setUser(new User());
         when(authentication.getName()).thenReturn(driver.getUserId().toString());
         when(driverRepository.findById(driver.getUserId())).thenReturn(Optional.of(driver));
-        when(routeDriverRepository.existsByRouteIdAndDriverUserId(route.getId(), driver.getUserId())).thenReturn(true);
+        when(routeDriverRepository.existsByRouteIdAndDriverUserIdAndEndDateIsNull(route.getId(), driver.getUserId())).thenReturn(true);
     }
 
     @Test

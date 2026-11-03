@@ -19,14 +19,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,10 +50,15 @@ class AuthenticationServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private PasswordEncoder passwordEncoder;
+    private RefreshTokenService refreshTokenService;
 
     @Mock
-    private RefreshTokenService refreshTokenService;
+    private RedisTemplate<String, String> redisTemplate;
+
+    @Mock
+    private ValueOperations<String, String> valueOperations;
+
+    private static final String IP = "10.0.0.1";
 
     @BeforeEach
     void setup() {
@@ -57,28 +67,35 @@ class AuthenticationServiceTest {
                 "expirationTime",
                 3600L
         );
+        lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+    }
+
+    private static Authentication authenticated(User user) {
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(user);
+        return authentication;
     }
 
     @Test
-    void shouldLoginSuccessfullyWhenUserIsActive() throws Exception {
+    void shouldLoginSuccessfullyWhenUserIsActive() {
         LoginRequestDTO request = new LoginRequestDTO("12312312312", "123123");
 
         User user = new User();
         user.setCpf("12312312312");
         user.setStatus(UserStatus.ACTIVE);
-        when(userRepository.findByCpf("12312312312")).thenReturn(Optional.of(user));
-
-        Authentication authentication = mock(Authentication.class);
+        Authentication authentication = authenticated(user);
         when(authenticationManager.authenticate(any())).thenReturn(authentication);
         when(tokenProvider.generateToken(authentication)).thenReturn("jwt-token");
         when(refreshTokenService.create(any())).thenReturn("refresh-token");
 
-        ResponseEntity<TokenResponseDTO> response = authenticationService.login(request);
+        ResponseEntity<TokenResponseDTO> response = authenticationService.login(request, IP);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("jwt-token", response.getBody().token());
         assertEquals("refresh-token", response.getBody().refreshToken());
+        // acertou: zera as tentativas do CPF
+        verify(redisTemplate).delete("login:fail:cpf:12312312312");
     }
 
     @Test
@@ -110,52 +127,63 @@ class AuthenticationServiceTest {
     }
 
     @Test
-    void shouldThrowWhenUserIsNotFound() {
+    void unknownCpfAndWrongPasswordGiveTheSameAnswerAndCountTheFailure() {
         LoginRequestDTO request = new LoginRequestDTO("12345678900", "senhaErrada");
-        when(userRepository.findByCpf("12345678900")).thenReturn(Optional.empty());
+        when(authenticationManager.authenticate(any())).thenThrow(new BadCredentialsException("Bad credentials"));
+        when(valueOperations.increment(any())).thenReturn(1L);
 
         InvalidCredentialsException exception = assertThrows(
                 InvalidCredentialsException.class,
-                () -> authenticationService.login(request)
+                () -> authenticationService.login(request, IP)
         );
 
         assertEquals("Credenciais inválidas.", exception.getMessage());
+        verify(valueOperations).increment("login:fail:cpf:12345678900");
+        verify(valueOperations).increment("login:fail:ip:" + IP);
+        verify(redisTemplate).expire("login:fail:cpf:12345678900", AuthenticationService.LOCK_TIME);
     }
 
     @Test
-    void shouldThrowWhenEmailIsNotVerified() {
+    void unverifiedEmailIsOnlyToldAfterTheRightPassword() {
         LoginRequestDTO request = new LoginRequestDTO("12345678900", "senha123");
 
         User user = new User();
         user.setCpf("12345678900");
         user.setStatus(UserStatus.CHECK_EMAIL);
-        when(userRepository.findByCpf("12345678900")).thenReturn(Optional.of(user));
+        Authentication authentication = authenticated(user);
+        when(authenticationManager.authenticate(any())).thenReturn(authentication);
 
         BadRequestException exception = assertThrows(
                 BadRequestException.class,
-                () -> authenticationService.login(request)
+                () -> authenticationService.login(request, IP)
         );
 
         assertEquals("Verifique seu e-mail antes de fazer login.", exception.getMessage());
+        verifyNoInteractions(tokenProvider);
     }
 
     @Test
-    void shouldThrowExceptionWhenCredentialsAreInvalid() {
-        LoginRequestDTO request = new LoginRequestDTO("12345678900", "senhaErrada");
+    void lockedCpfIsRefusedWithoutCheckingThePassword() {
+        LoginRequestDTO request = new LoginRequestDTO("12345678900", "qualquer");
+        when(valueOperations.get("login:fail:cpf:12345678900")).thenReturn(String.valueOf(AuthenticationService.MAX_FAILURES_PER_CPF));
 
-        User user = new User();
-        user.setCpf("12345678900");
-        user.setStatus(UserStatus.ACTIVE);
-        when(userRepository.findByCpf("12345678900")).thenReturn(Optional.of(user));
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> authenticationService.login(request, IP));
 
-        when(authenticationManager.authenticate(any()))
-                .thenThrow(new BadCredentialsException("Bad credentials"));
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, exception.getStatusCode());
+        verifyNoInteractions(authenticationManager);
+    }
 
-        InvalidCredentialsException exception = assertThrows(
-                InvalidCredentialsException.class,
-                () -> authenticationService.login(request)
-        );
+    @Test
+    void lockedIpIsRefused() {
+        LoginRequestDTO request = new LoginRequestDTO("12345678900", "qualquer");
+        when(valueOperations.get("login:fail:cpf:12345678900")).thenReturn(null);
+        when(valueOperations.get("login:fail:ip:" + IP)).thenReturn(String.valueOf(AuthenticationService.MAX_FAILURES_PER_IP));
 
-        assertEquals("Credenciais inválidas.", exception.getMessage());
+        ResponseStatusException exception = assertThrows(ResponseStatusException.class,
+                () -> authenticationService.login(request, IP));
+
+        assertEquals(HttpStatus.TOO_MANY_REQUESTS, exception.getStatusCode());
+        verifyNoInteractions(authenticationManager);
     }
 }

@@ -1,6 +1,7 @@
 package br.com.vanroute.backend.config;
 
 import br.com.vanroute.backend.websocket.TripWebSocketHandler;
+import br.com.vanroute.backend.websocket.WebSocketSessionRegistry;
 import br.com.vanroute.backend.websocket.NotificationWebSocketHandler;
 import java.util.Collections;
 
@@ -10,6 +11,7 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.PatternTopic;
 import br.com.vanroute.backend.websocket.ChatWebSocketHandler;
 
@@ -38,12 +40,16 @@ public class RedisConfig {
             RedisConnectionFactory connectionFactory,
             ChatWebSocketHandler chatWebSocketHandler,
             TripWebSocketHandler tripWebSocketHandler,
-            NotificationWebSocketHandler notificationWebSocketHandler) {
+            NotificationWebSocketHandler notificationWebSocketHandler,
+            WebSocketSessionRegistry webSocketSessionRegistry) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         container.setConnectionFactory(connectionFactory);
         container.addMessageListener(chatWebSocketHandler, Collections.singletonList(new PatternTopic("chat-*")));
         container.addMessageListener(tripWebSocketHandler, Collections.singletonList(new PatternTopic("trip-*")));
         container.addMessageListener(notificationWebSocketHandler, Collections.singletonList(new PatternTopic("notification-*")));
+        // conta excluida: fecha as sessoes WebSocket da pessoa em todas as instancias
+        container.addMessageListener(webSocketSessionRegistry,
+                Collections.singletonList(new ChannelTopic(WebSocketSessionRegistry.REVOKE_CHANNEL)));
         return container;
     }
 }

@@ -1,5 +1,7 @@
 server:
   port: 9090
+  # atras do Nginx: o IP de quem chamou vem do X-Forwarded-For (limite de tentativas de login por IP)
+  forward-headers-strategy: framework
 
 #openrouteservice:
 #  api-key: ${OPENROUTESERVICE_API_KEY}
@@ -17,7 +19,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate
-    show-sql: true
+    # em desenvolvimento liga no application-local.yml
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -50,3 +53,10 @@ spring:
         bucket: ${MINIO_BUCKET_NAME:vanroute-storage}
       region:
         static: us-east-1
+
+# Swagger desligado por padrao (producao). Em desenvolvimento o application-local.yml liga
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

@@ -36,12 +36,14 @@ addr() { echo "{\"street\":\"$1\",\"zipCode\":\"$2\",\"city\":\"Sao Paulo\",\"ne
 
 parent() { # parent NOME RUA CEP BAIRRO NUM -> "cpf token"
   local c e; c=$(cpf); e="pai$RANDOM.$RUN@teste.local"
-  api POST /api/responsible/auth/signup "" "{\"name\":\"$1\",\"email\":\"$e\",\"password\":\"Senha@123\",\"confirmPassword\":\"Senha@123\",\"cpf\":\"$c\",\"phone\":\"11$RANDOM$RANDOM\",\"address\":$(addr "$2" "$3" "$4" "$5"),\"acceptedTermsVersion\":\"1\"}" >/dev/null
+  api POST /api/responsible/auth/signup "" "{\"name\":\"$1\",\"email\":\"$e\",\"password\":\"Senha@123\",\"confirmPassword\":\"Senha@123\",\"cpf\":\"$c\",\"phone\":\"11$RANDOM$RANDOM\",\"address\":$(addr "$2" "$3" "$4" "$5"),\"acceptedTermsVersion\":\"$TERMS_V\"}" >/dev/null
   local code; code=$(docker exec vanroute-redis redis-cli GET "verificationEmail:email:$e")
   api POST /api/auth/verify-email "" "{\"email\":\"$e\",\"code\":\"$code\"}" >/dev/null
   echo "$c $(api POST /api/auth/login "" "{\"cpf\":\"$c\",\"passwordHash\":\"Senha@123\"}" | jq -r .token)"
 }
 
+# versao atual dos Termos de Uso: cadastro e motoristas inseridos por SQL ja vem com o aceite
+TERMS_V=$(curl -s "$BASE/api/terms" | jq -r .version)
 HASH=""
 driver() { # driver NOME -> "cpf token linkCode vanId placa" (motorista e van por SQL, ja aprovados)
   local c; c=$(cpf); local plate; plate="DEM$(printf '%04d' $((RANDOM % 10000)))"
@@ -49,6 +51,7 @@ driver() { # driver NOME -> "cpf token linkCode vanId placa" (motorista e van po
 WITH u AS (INSERT INTO users (id,name,password_hash,cpf,email,phone,status,role,created_at)
            VALUES (gen_random_uuid(),'$1','$HASH','$c','motorista$RANDOM.$RUN@teste.local','21$RANDOM$RANDOM','ACTIVE','ROLE_DRIVER',now()) RETURNING id)
 , d AS (INSERT INTO drivers (user_id, approval_status, link_code) SELECT id,'APPROVED',upper(substr(md5(random()::text),1,9)) FROM u RETURNING user_id)
+, t AS (INSERT INTO terms_acceptances (id, user_id, version, accepted_at) SELECT gen_random_uuid(), user_id, '$TERMS_V', now() FROM d)
 , v AS (INSERT INTO vehicles (id, plate, model, year, capacity, status) VALUES (gen_random_uuid(),'$plate','Van Demo',2020,15,'ACTIVE') RETURNING id)
 INSERT INTO driver_vehicles (id, driver_id, vehicle_id, start_date) SELECT gen_random_uuid(), d.user_id, v.id, current_date FROM d, v;
 SQL
@@ -68,7 +71,7 @@ contract() { # contract TOKEN_MOTORISTA LINK ESCOLA TOKEN_PAI ALUNO: chat pelo c
   # o PDF do contrato vai pro storage antes da proposta
   local up; up=$(api GET "/api/storage/presigned-url?fileName=contrato.pdf&contentType=application/pdf" "$1")
   printf '%%PDF-1.4\nContrato de transporte escolar (demo)\n%%%%EOF\n' | curl -s -o /dev/null -X PUT -H 'Content-Type: application/pdf' --data-binary @- "$(echo "$up" | jq -r .uploadUrl)"
-  local c; c=$(api POST "/api/chats/$chat/contract" "$1" "{\"responsibleId\":\"$parentId\",\"studentId\":\"$5\",\"schoolId\":\"$3\",\"contract\":{\"periodicity\":\"MONTHLY\",\"value\":350.00,\"startDate\":\"$(date -d "$(date +%Y-%m-01) +1 month" +%F)\",\"endDate\":\"$(date -d "$(date +%Y-%m-01) +6 months -1 day" +%F)\"},\"document\":{\"url\":\"$(echo "$up" | jq -r .fileKey)\",\"type\":\"TRANSPORT_CONTRACT\"}}" | jq -r .contract.contractId)
+  local c; c=$(api POST "/api/chats/$chat/contract" "$1" "{\"responsibleId\":\"$parentId\",\"studentId\":\"$5\",\"schoolId\":\"$3\",\"contract\":{\"periodicity\":\"MONTHLY\",\"value\":350.00,\"startDate\":\"$(TZ=America/Sao_Paulo date +%F)\",\"endDate\":\"$(TZ=America/Sao_Paulo date -d "+5 months -1 day" +%F)\"},\"document\":{\"url\":\"$(echo "$up" | jq -r .fileKey)\",\"type\":\"TRANSPORT_CONTRACT\"}}" | jq -r .contract.contractId)
   api PUT "/api/chats/$chat/contracts/$c/accept" "$4" >/dev/null
 }
 # "adicionar aluno na rota" num passo so, num ponto NOVO (o backend poe na ordem certa); devolve o id do ponto da escola

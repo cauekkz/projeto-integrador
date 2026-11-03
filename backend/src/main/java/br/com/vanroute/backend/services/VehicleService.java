@@ -48,10 +48,12 @@ public class VehicleService {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "O CRLV não passou na auditoria digital.");
         }
         CrlvExtractionService.CrlvData data = crlvExtractionService.extract(crlv);
+        checkLicensing(data.licensingYear(), LocalDate.now(TripService.ZONE).getYear());
 
         // RENAVAM primeiro (nunca muda); a placa pode mudar na conversao pro padrao Mercosul
         Vehicle vehicle = vehicleRepository.findByRenavam(data.renavam())
                 .or(() -> vehicleRepository.findByPlate(data.plate()))
+                .map(existing -> refresh(existing, data))
                 .orElseGet(() -> vehicleRepository.save(newVehicle(data)));
 
         if (driverVehicleRepository.findFirstByDriverUserIdAndVehicleIdAndEndDateIsNull(driverId, vehicle.getId()).isPresent()) {
@@ -60,7 +62,7 @@ public class VehicleService {
         DriverVehicle link = new DriverVehicle();
         link.setDriver(driver);
         link.setVehicle(vehicle);
-        link.setStartDate(LocalDate.now());
+        link.setStartDate(LocalDate.now(TripService.ZONE));
         driverVehicleRepository.save(link);
 
         return toResponse(link);
@@ -80,7 +82,34 @@ public class VehicleService {
     public void unlinkVehicle(UUID vehicleId, UUID driverId) {
         DriverVehicle link = driverVehicleRepository.findFirstByDriverUserIdAndVehicleIdAndEndDateIsNull(driverId, vehicleId)
                 .orElseThrow(() -> new EntityNotFoundException("Você não está vinculado a essa van"));
-        link.setEndDate(LocalDate.now());
+        link.setEndDate(LocalDate.now(TripService.ZONE));
+    }
+
+    // o CRLV vale pelo exercicio (ano) do licenciamento. O licenciamento de um ano vence ao longo do ano seguinte
+    // (o prazo depende do final da placa), entao aceita o do ano atual e o do anterior; mais antigo esta vencido
+    static void checkLicensing(Integer licensingYear, int currentYear) {
+        if (licensingYear == null) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "Não foi possível ler o ano de licenciamento do CRLV. Envie o PDF original do CRLV digital");
+        }
+        if (licensingYear < currentYear - 1) {
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY,
+                    "O licenciamento da van está vencido (exercício " + licensingYear + "). Envie o CRLV do licenciamento atual");
+        }
+    }
+
+    // van que ja existe (outro motorista ou cadastro antigo): o CRLV mais novo atualiza os dados
+    private Vehicle refresh(Vehicle vehicle, CrlvExtractionService.CrlvData data) {
+        if (vehicle.getLicensingYear() == null || data.licensingYear() >= vehicle.getLicensingYear()) {
+            vehicle.setPlate(data.plate());
+            vehicle.setColor(data.color());
+            vehicle.setCategory(data.category());
+            vehicle.setLicensingYear(data.licensingYear());
+            if (data.passengers() != null) {
+                vehicle.setCapacity(data.passengers());
+            }
+        }
+        return vehicle;
     }
 
     private Vehicle newVehicle(CrlvExtractionService.CrlvData data) {

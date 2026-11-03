@@ -24,7 +24,7 @@ public class Chat {
     private User userTwo;
 
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP", nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt = LocalDateTime.now(br.com.vanroute.backend.services.TripService.ZONE);
 
     public UUID getId() {
         return id;

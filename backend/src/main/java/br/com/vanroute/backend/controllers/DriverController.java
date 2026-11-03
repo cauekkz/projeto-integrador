@@ -1,5 +1,9 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.services.CnhParser;
+import br.com.vanroute.backend.services.TripService;
+import java.time.LocalDate;
+
 import br.com.vanroute.backend.config.AuthenticatedUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -60,9 +64,12 @@ public class DriverController {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "A CNH não passou na auditoria digital.");
         }                                                                                       
 
-        String cpf = documentOcrExtractionService.extractFromCnh(dto.getDocumentPdf());
+        // CPF sai da CNH; o nome digitado tem que ser o da CNH, que precisa estar valida, ser D ou E e o motorista
+        // ter 21 anos ou mais (CTB art. 138)
+        CnhParser.CnhData cnh = documentOcrExtractionService.extractFromCnh(dto.getDocumentPdf());
+        CnhParser.check(cnh, dto.getName(), LocalDate.now(TripService.ZONE));
 
-        Driver savedDriver = driverService.createDriver(dto, cpf);
+        Driver savedDriver = driverService.createDriver(dto, cnh.cpf());
         termsService.accept(savedDriver.getUserId(), dto.getAcceptedTermsVersion());
         // fazer um try alguma coisa mais limpa possivel pra se isso nao funciona rmanda uma msg pro usuario reenviar o codigo no momento aparece uma msg de Redis nao funcionando (pq eu nem ligue) mas nao sei nem onde ta essa menssagem no fluxo 
         emailVerificationService.sendCodeAfterSignup("verificationEmail:email:" + savedDriver.getUser().getEmail(), savedDriver.getUser().getEmail());

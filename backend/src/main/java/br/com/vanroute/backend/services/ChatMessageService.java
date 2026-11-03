@@ -23,9 +23,11 @@ public class ChatMessageService {
     private final UserService userService;
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
+    private final StorageService storageService;
 
     public ChatMessageService(ChatMessageRepository chatMessageRepository, ChatService chatService, UserService userService,
-                              RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper) {
+                              RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper, StorageService storageService) {
+        this.storageService = storageService;
         this.chatMessageRepository = chatMessageRepository;
         this.chatService = chatService;
         this.userService = userService;
@@ -47,6 +49,22 @@ public class ChatMessageService {
         return save(chatId, userId, content, null, null, type, payload);
     }
 
+    // manda pro WebSocket so depois do commit (se a transacao falhar, ninguem ve mensagem que nao existe);
+    // fora de transacao, manda na hora
+    public void publishAfterCommit(UUID chatId, ChatMessageResponseDTO message) {
+        if (org.springframework.transaction.support.TransactionSynchronizationManager.isSynchronizationActive()) {
+            org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+                    new org.springframework.transaction.support.TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            publish(chatId, message);
+                        }
+                    });
+        } else {
+            publish(chatId, message);
+        }
+    }
+
     // manda a mensagem pros participantes conectados no WebSocket (Redis pub/sub)
     public void publish(UUID chatId, ChatMessageResponseDTO message) {
         try {
@@ -62,6 +80,10 @@ public class ChatMessageService {
         // so anexa arquivo que a propria pessoa enviou (senao bastaria saber o fileKey de alguem pra ganhar acesso)
         if (attachmentUrl != null && !StorageService.isOwnedBy(attachmentUrl, userId)) {
             throw new org.springframework.security.access.AccessDeniedException("Só dá pra anexar arquivo que você mesmo enviou");
+        }
+        // o arquivo existe e tem no maximo 10 MB
+        if (attachmentUrl != null) {
+            storageService.checkUploaded(attachmentUrl);
         }
         
         br.com.vanroute.backend.models.chat.Chat chat = chatService.getChatById(chatId);

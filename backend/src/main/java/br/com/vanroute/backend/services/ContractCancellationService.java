@@ -14,6 +14,7 @@ import br.com.vanroute.backend.models.student.StudentStop;
 import br.com.vanroute.backend.models.trip.enums.TripStatus;
 import br.com.vanroute.backend.models.user.User;
 import br.com.vanroute.backend.repositories.ContractCancellationRepository;
+import br.com.vanroute.backend.repositories.ContractRepository;
 import br.com.vanroute.backend.repositories.DriverGroupRepository;
 import br.com.vanroute.backend.repositories.PaymentRepository;
 import br.com.vanroute.backend.repositories.RouteDriverRepository;
@@ -30,25 +31,32 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-// cancelamento de contrato ativo: uma parte pede com o motivo e a outra aceita ou recusa; quem pediu pode desistir.
-// Excecao: com 2+ parcelas atrasadas o pedido do motorista ja cancela, sem esperar o responsavel.
-// Cancelar tira o aluno das rotas e dos grupos do motorista e cancela as parcelas que ainda iam vencer;
-// as vencidas continuam devidas e o resto (contrato, documento, assinaturas, parcelas, chat, viagens) fica no historico
+// cancelamento de contrato aceito (SCHEDULED ou ACTIVE) com aviso previo: qualquer parte pede com o motivo e o
+// contrato e cancelado sozinho em NOTICE_DAYS (o worker faz isso no dia). Antes disso a outra parte pode aceitar
+// (cancela na hora) e quem pediu pode desistir. Ninguem recusa: ninguem fica preso no contrato.
+// Excecao: com parcela vencida ha OVERDUE_DAYS_TO_CANCEL_NOW dias ou mais, o pedido do motorista cancela na hora.
+// Parcelas que vencem ate o cancelamento continuam devidas (inclusive as do aviso); multa de clausula do PDF fica
+// fora do app. Cancelar tira o aluno das rotas e grupos do motorista e cancela as parcelas que ainda iam vencer;
+// o resto (contrato, documento, assinaturas, parcelas, chat, viagens) fica no historico
 @Service
 public class ContractCancellationService {
 
-    // parcelas vencidas e nao pagas pro motorista poder cancelar sozinho
-    static final int OVERDUE_TO_CANCEL_ALONE = 2;
+    static final int NOTICE_DAYS = 30;
+    static final int OVERDUE_DAYS_TO_CANCEL_NOW = 30;
     static final int REASON_MAX = 500;
+    private static final DateTimeFormatter BR_DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final Set<ContractStatus> CANCELABLE = EnumSet.of(ContractStatus.SCHEDULED, ContractStatus.ACTIVE);
     private static final Set<TripStatus> ACTIVE_TRIP = EnumSet.of(TripStatus.STARTED, TripStatus.IN_PROGRESS, TripStatus.PAUSED);
 
     private final UserDriverContractRepository userDriverContractRepository;
+    private final ContractRepository contractRepository;
     private final ContractCancellationRepository cancellationRepository;
     private final PaymentRepository paymentRepository;
     private final RouteDriverRepository routeDriverRepository;
@@ -59,11 +67,13 @@ public class ContractCancellationService {
     private final NotificationService notificationService;
 
     public ContractCancellationService(UserDriverContractRepository userDriverContractRepository,
+                                       ContractRepository contractRepository,
                                        ContractCancellationRepository cancellationRepository, PaymentRepository paymentRepository,
                                        RouteDriverRepository routeDriverRepository, StudentStopRepository studentStopRepository,
                                        StudentAbsenceRepository studentAbsenceRepository, DriverGroupRepository driverGroupRepository,
                                        TripRepository tripRepository, NotificationService notificationService) {
         this.userDriverContractRepository = userDriverContractRepository;
+        this.contractRepository = contractRepository;
         this.cancellationRepository = cancellationRepository;
         this.paymentRepository = paymentRepository;
         this.routeDriverRepository = routeDriverRepository;
@@ -83,132 +93,129 @@ public class ContractCancellationService {
         if (reason.length() > REASON_MAX) {
             throw new BadRequestException("O motivo pode ter no máximo " + REASON_MAX + " caracteres");
         }
-        UserDriverContract udc = activeContractOf(contractId, userId);
+        UserDriverContract udc = acceptedContractOf(contractId, userId);
         if (cancellationRepository.existsByContractIdAndStatus(contractId, CancellationStatus.PENDING)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe um pedido de cancelamento esperando resposta");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Já existe um pedido de cancelamento em andamento");
         }
 
         User requester = partyUser(udc, userId);
         LocalDateTime now = LocalDateTime.now(TripService.ZONE);
+        LocalDate today = now.toLocalDate();
         ContractCancellation cancellation = new ContractCancellation();
         cancellation.setContract(udc.getContract());
         cancellation.setRequestedBy(requester);
         cancellation.setReason(reason);
         cancellation.setRequestedAt(now);
-        cancellation.setStatus(CancellationStatus.PENDING);
 
         boolean driver = udc.getDriver().getUserId().equals(userId);
-        if (driver && overdue(contractId) >= OVERDUE_TO_CANCEL_ALONE) {
+        if (driver && paymentRepository.existsUnpaidDueUntil(contractId, today.minusDays(OVERDUE_DAYS_TO_CANCEL_NOW))) {
             cancel(udc);
             cancellation.setUnilateral(true);
             cancellation.decide(CancellationStatus.ACCEPTED, requester, now);
             cancellationRepository.save(cancellation);
             notifyOther(udc, userId, NotificationType.CONTRACT_CANCELED, "Contrato cancelado",
                     requester.getName() + " cancelou o contrato de " + udc.getStudent().getName()
-                            + " por parcelas em atraso. Motivo: " + reason);
+                            + " por parcela em atraso há mais de " + OVERDUE_DAYS_TO_CANCEL_NOW + " dias. As parcelas vencidas continuam devidas. Motivo: " + reason);
         } else {
+            cancellation.setStatus(CancellationStatus.PENDING);
+            cancellation.setEffectiveDate(today.plusDays(NOTICE_DAYS));
             cancellationRepository.save(cancellation);
             notifyOther(udc, userId, NotificationType.CANCELLATION_REQUESTED, "Pedido de cancelamento",
-                    requester.getName() + " pediu para cancelar o contrato de " + udc.getStudent().getName() + ". Motivo: " + reason);
+                    requester.getName() + " pediu para cancelar o contrato de " + udc.getStudent().getName()
+                            + ". Ele será cancelado em " + cancellation.getEffectiveDate().format(BR_DATE)
+                            + " (aviso prévio de " + NOTICE_DAYS + " dias), ou antes, se você aceitar. Motivo: " + reason);
         }
         return CancellationResponseDTO.of(cancellation);
     }
 
-    // a outra parte aceita: cancela na hora
+    // a outra parte aceita antes do fim do aviso: cancela na hora
     @Transactional
     public CancellationResponseDTO accept(UUID contractId, UUID userId) {
-        UserDriverContract udc = activeContractOf(contractId, userId);
-        ContractCancellation cancellation = pendingAnsweredBy(contractId, userId);
+        UserDriverContract udc = acceptedContractOf(contractId, userId);
+        ContractCancellation cancellation = pending(contractId);
+        if (cancellation.getRequestedBy().getId().equals(userId)) {
+            throw new AccessDeniedException("Quem pediu o cancelamento não pode aceitar o próprio pedido");
+        }
         cancel(udc);
         cancellation.decide(CancellationStatus.ACCEPTED, partyUser(udc, userId), LocalDateTime.now(TripService.ZONE));
         notifyOther(udc, userId, NotificationType.CONTRACT_CANCELED, "Cancelamento aceito",
-                partyUser(udc, userId).getName() + " aceitou cancelar o contrato de " + udc.getStudent().getName());
+                partyUser(udc, userId).getName() + " aceitou cancelar o contrato de " + udc.getStudent().getName()
+                        + ". O contrato foi cancelado agora");
         return CancellationResponseDTO.of(cancellation);
     }
 
-    // a outra parte recusa: o contrato continua ativo
-    @Transactional
-    public CancellationResponseDTO reject(UUID contractId, UUID userId) {
-        UserDriverContract udc = activeContractOf(contractId, userId);
-        ContractCancellation cancellation = pendingAnsweredBy(contractId, userId);
-        cancellation.decide(CancellationStatus.REJECTED, partyUser(udc, userId), LocalDateTime.now(TripService.ZONE));
-        notifyOther(udc, userId, NotificationType.CANCELLATION_REJECTED, "Cancelamento recusado",
-                partyUser(udc, userId).getName() + " recusou o cancelamento do contrato de " + udc.getStudent().getName()
-                        + ". O contrato continua ativo");
-        return CancellationResponseDTO.of(cancellation);
-    }
-
-    // quem pediu desiste
+    // quem pediu desiste antes do fim do aviso
     @Transactional
     public CancellationResponseDTO withdraw(UUID contractId, UUID userId) {
-        UserDriverContract udc = activeContractOf(contractId, userId);
+        UserDriverContract udc = acceptedContractOf(contractId, userId);
         ContractCancellation cancellation = pending(contractId);
         if (!cancellation.getRequestedBy().getId().equals(userId)) {
             throw new AccessDeniedException("Só quem pediu o cancelamento pode desistir dele");
         }
         cancellation.decide(CancellationStatus.WITHDRAWN, partyUser(udc, userId), LocalDateTime.now(TripService.ZONE));
         notifyOther(udc, userId, NotificationType.CANCELLATION_WITHDRAWN, "Pedido de cancelamento retirado",
-                partyUser(udc, userId).getName() + " desistiu de cancelar o contrato de " + udc.getStudent().getName());
+                partyUser(udc, userId).getName() + " desistiu de cancelar o contrato de " + udc.getStudent().getName()
+                        + ". O contrato continua");
         return CancellationResponseDTO.of(cancellation);
     }
 
-    private UserDriverContract activeContractOf(UUID contractId, UUID userId) {
+    // trava o contrato antes de tudo (pedido, aceite e desistencia ao mesmo tempo, ou o worker no fim do aviso,
+    // passam um de cada vez) e confere que quem chama e parte e que o contrato ainda pode ser cancelado
+    private UserDriverContract acceptedContractOf(UUID contractId, UUID userId) {
+        contractRepository.findByIdForUpdate(contractId)
+                .orElseThrow(() -> new EntityNotFoundException("Contrato não encontrado"));
         UserDriverContract udc = userDriverContractRepository.findDetailsByContractId(contractId)
                 .orElseThrow(() -> new EntityNotFoundException("Contrato não encontrado"));
         if (!udc.getDriver().getUserId().equals(userId) && !udc.getResponsible().getUserId().equals(userId)) {
             throw new AccessDeniedException("Usuário não faz parte deste contrato");
         }
-        if (udc.getContract().getStatus() != ContractStatus.ACTIVE) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Só um contrato ativo pode ser cancelado");
+        if (!CANCELABLE.contains(udc.getContract().getStatus())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Só um contrato aceito (agendado ou ativo) pode ser cancelado");
         }
         return udc;
     }
 
     private ContractCancellation pending(UUID contractId) {
         return cancellationRepository.findByContractIdAndStatus(contractId, CancellationStatus.PENDING)
-                .orElseThrow(() -> new EntityNotFoundException("Nenhum pedido de cancelamento esperando resposta"));
+                .orElseThrow(() -> new EntityNotFoundException("Nenhum pedido de cancelamento em andamento"));
     }
 
-    // aceitar e recusar e da outra parte, nao de quem pediu
-    private ContractCancellation pendingAnsweredBy(UUID contractId, UUID userId) {
-        ContractCancellation cancellation = pending(contractId);
-        if (cancellation.getRequestedBy().getId().equals(userId)) {
-            throw new AccessDeniedException("Quem pediu o cancelamento não pode responder o próprio pedido");
-        }
-        return cancellation;
-    }
-
-    private long overdue(UUID contractId) {
-        return paymentRepository.countOverdue(contractId, LocalDate.now(TripService.ZONE));
-    }
-
-    // cancela de fato: contrato, parcelas futuras, rotas, faltas e grupos do motorista
+    // cancela de fato: contrato, parcelas futuras e, se o aluno nao tiver outro contrato aceito com o motorista
+    // (renovacao), rotas, faltas futuras e grupos. O worker faz a mesma coisa no fim do aviso (CancelAfterNotice)
     private void cancel(UserDriverContract udc) {
         LocalDate today = LocalDate.now(TripService.ZONE);
         UUID studentId = udc.getStudent().getId();
-        List<UUID> routeIds = routeDriverRepository.findByDriverUserIdAndEndDateIsNull(udc.getDriver().getUserId()).stream()
+        UUID driverId = udc.getDriver().getUserId();
+        Contract contract = udc.getContract();
+        boolean keepInRoutes = userDriverContractRepository.existsOtherAccepted(driverId, studentId, contract.getId());
+        List<UUID> routeIds = routeDriverRepository.findByDriverUserIdAndEndDateIsNull(driverId).stream()
                 .map(rd -> rd.getRoute().getId())
                 .toList();
-        List<StudentStop> stops = routeIds.isEmpty() ? List.of() : studentStopRepository.findByStudentIdAndStopRouteIdIn(studentId, routeIds);
-        // com a van rodando com o aluno, tirar ele da rota quebraria a viagem: espera terminar
+        List<StudentStop> stops = keepInRoutes || routeIds.isEmpty() ? List.of()
+                : studentStopRepository.findByStudentIdAndStopRouteIdIn(studentId, routeIds);
+        // com a van rodando com o aluno, tirar ele da rota quebraria a viagem: espera terminar. Olha hoje e ontem: a
+        // viagem que comecou 23:50 ainda roda depois da meia-noite (as esquecidas o worker fecha depois de 20 horas)
         boolean tripRunning = stops.stream().map(stop -> stop.getStop().getRoute().getId()).distinct()
-                .anyMatch(routeId -> tripRepository.findFirstByRouteIdAndDateAndStatusIn(routeId, today, ACTIVE_TRIP).isPresent());
+                .anyMatch(routeId -> tripRepository.findFirstByRouteIdAndDateAndStatusIn(routeId, today, ACTIVE_TRIP).isPresent()
+                        || tripRepository.findFirstByRouteIdAndDateAndStatusIn(routeId, today.minusDays(1), ACTIVE_TRIP).isPresent());
         if (tripRunning) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "Tem uma viagem rodando com " + udc.getStudent().getName() + " agora. Tente depois que ela terminar");
         }
 
-        Contract contract = udc.getContract();
         contract.setStatus(ContractStatus.CANCELED);
-        // as que ainda iam vencer somem; as vencidas continuam devidas
+        // as que ainda iam vencer somem; as vencidas (e a de hoje) continuam devidas
         paymentRepository.findByContractIdAndStatusAndDueDateAfter(contract.getId(), PaymentStatus.PENDING, today)
                 .forEach(payment -> payment.setStatus(PaymentStatus.CANCELED));
+        if (keepInRoutes) {
+            return;
+        }
         studentStopRepository.deleteAll(stops);
         if (!routeIds.isEmpty()) {
             studentAbsenceRepository.deleteAll(
                     studentAbsenceRepository.findByStudentIdAndRouteIdInAndDateGreaterThanEqual(studentId, routeIds, today));
         }
-        driverGroupRepository.findByDriverUserIdOrderByNameAsc(udc.getDriver().getUserId())
+        driverGroupRepository.findByDriverUserIdOrderByNameAsc(driverId)
                 .forEach(group -> group.getStudents().removeIf(student -> student.getId().equals(studentId)));
     }
 

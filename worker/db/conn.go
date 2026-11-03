@@ -8,5 +8,9 @@ import (
 )
 
 func Conn(ctx context.Context) (*pgx.Conn, error) {
-	return pgx.Connect(ctx, config.GetDatabaseURL())
+	address, err := config.GetDatabaseURL()
+	if err != nil {
+		return nil, err
+	}
+	return pgx.Connect(ctx, address)
 }

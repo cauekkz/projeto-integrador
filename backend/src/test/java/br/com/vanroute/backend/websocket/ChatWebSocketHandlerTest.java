@@ -25,6 +25,10 @@ public class ChatWebSocketHandlerTest {
     @Mock
     private ChatService chatService;
 
+    // sessoes por usuario (fecha as de quem exclui a conta); mock aqui, o registro tem teste proprio
+    @Mock
+    private WebSocketSessionRegistry registry;
+
     @InjectMocks
     private ChatWebSocketHandler chatWebSocketHandler;
 

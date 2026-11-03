@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.UUID;
 
 import br.com.vanroute.backend.models.contract.enums.ContractStatus;
@@ -15,9 +16,36 @@ import java.util.Optional;
 @Repository
 public interface UserDriverContractRepository extends JpaRepository<UserDriverContract, UUID> {
 
-    boolean existsByDriverUserIdAndStudentIdAndContractStatusIn(UUID driverId, UUID studentId, List<ContractStatus> statuses);
+    // o responsavel assinou contrato com o aluno num desses status (sair do aluno ou ser removido)
+    boolean existsByResponsibleUserIdAndStudentIdAndContractStatusIn(UUID responsibleId, UUID studentId, List<ContractStatus> statuses);
 
     Optional<UserDriverContract> findByContractId(UUID contractId);
+
+    // nova proposta pro mesmo motorista e aluno: no maximo o contrato atual e UM proximo. Bloqueia se ja existe
+    // proposta esperando, ou um contrato agendado (SCHEDULED: a renovacao ja foi feita), ou um ACTIVE no mesmo
+    // periodo. Nunca existem dois contratos valendo ao mesmo tempo, nem uma fila de contratos futuros
+    @Query("SELECT COUNT(u) > 0 FROM UserDriverContract u JOIN u.contract c " +
+            "WHERE u.driver.userId = :driverId AND u.student.id = :studentId AND (" +
+            "c.status IN (br.com.vanroute.backend.models.contract.enums.ContractStatus.PENDING, " +
+            "br.com.vanroute.backend.models.contract.enums.ContractStatus.SCHEDULED) OR (" +
+            "c.status = br.com.vanroute.backend.models.contract.enums.ContractStatus.ACTIVE " +
+            "AND c.startDate <= :endDate AND c.endDate >= :startDate))")
+    boolean existsPendingOrOverlapping(@Param("driverId") UUID driverId, @Param("studentId") UUID studentId,
+                                       @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    // outro contrato aceito (SCHEDULED ou ACTIVE) do mesmo motorista com o aluno, alem desse: ao encerrar ou cancelar
+    // um, o aluno continua nas rotas e grupos (renovacao)
+    @Query("SELECT COUNT(u) > 0 FROM UserDriverContract u JOIN u.contract c " +
+            "WHERE u.driver.userId = :driverId AND u.student.id = :studentId AND c.id <> :contractId " +
+            "AND c.status IN (br.com.vanroute.backend.models.contract.enums.ContractStatus.SCHEDULED, " +
+            "br.com.vanroute.backend.models.contract.enums.ContractStatus.ACTIVE)")
+    boolean existsOtherAccepted(@Param("driverId") UUID driverId, @Param("studentId") UUID studentId,
+                                @Param("contractId") UUID contractId);
+
+    // alunos com contrato ACTIVE com o motorista (so esses entram numa viagem)
+    @Query("SELECT u.student.id FROM UserDriverContract u WHERE u.driver.userId = :driverId " +
+            "AND u.contract.status = br.com.vanroute.backend.models.contract.enums.ContractStatus.ACTIVE")
+    List<UUID> findStudentIdsWithActiveContract(@Param("driverId") UUID driverId);
 
     // detalhe do contrato numa consulta so, em vez de uma por relacao lazy
     @Query("SELECT u FROM UserDriverContract u " +

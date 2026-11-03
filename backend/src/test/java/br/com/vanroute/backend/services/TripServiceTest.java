@@ -60,6 +60,10 @@ class TripServiceTest {
     @Mock private RouteService routeService;
     @Mock private TripLiveService tripLiveService;
     @Mock private TripNotificationService tripNotificationService;
+    @Mock private UserDriverContractRepository userDriverContractRepository;
+
+    // alunos com contrato ACTIVE com o motorista (todos os criados por student(), menos os tirados no teste)
+    private final List<UUID> withContract = new java.util.ArrayList<>();
 
     @InjectMocks
     private TripService tripService;
@@ -78,12 +82,14 @@ class TripServiceTest {
         route.setName("Ida");
         driver = new Driver();
         driver.setUserId(UUID.randomUUID());
+        when(userDriverContractRepository.findStudentIdsWithActiveContract(driver.getUserId()))
+                .thenAnswer(invocation -> List.copyOf(withContract));
         vehicle = new Vehicle();
         vehicle.setId(UUID.randomUUID());
 
         when(routeRepository.findById(route.getId())).thenReturn(Optional.of(route));
         when(driverRepository.findById(driver.getUserId())).thenReturn(Optional.of(driver));
-        when(routeDriverRepository.existsByRouteIdAndDriverUserId(route.getId(), driver.getUserId())).thenReturn(true);
+        when(routeDriverRepository.existsByRouteIdAndDriverUserIdAndEndDateIsNull(route.getId(), driver.getUserId())).thenReturn(true);
         when(routeService.pendingOf(route.getId())).thenReturn(List.of());
         when(tripRepository.findFirstByRouteIdAndDateAndStatusNot(route.getId(), today, TripStatus.CANCELED)).thenReturn(Optional.empty());
         when(driverVehicleRepository.findFirstByDriverUserIdAndVehicleIdAndEndDateIsNull(driver.getUserId(), vehicle.getId()))
@@ -100,6 +106,7 @@ class TripServiceTest {
         Student s = new Student();
         s.setId(UUID.randomUUID());
         s.setName(name);
+        withContract.add(s.getId());
         return s;
     }
 
@@ -157,6 +164,23 @@ class TripServiceTest {
         verify(tripLiveService).setPosition(any(Trip.class), eq(-23.55), eq(-46.63));
         verify(tripLiveService).refresh(any(Trip.class), eq(true));
         verify(tripLiveService).publish(any());
+    }
+
+    @Test
+    void studentWithoutAnActiveContractStaysOutOfTheTrip() {
+        Student ana = student("Ana");
+        Student old = student("Contrato acabou");
+        withContract.remove(old.getId());
+        RouteStop stop = routeStop(1);
+        when(studentStopRepository.findByRouteWithStudent(route.getId())).thenReturn(List.of(
+                studentStop(ana, stop, StudentStopAction.BOARDING, todayWeekDay),
+                studentStop(old, stop, StudentStopAction.BOARDING, todayWeekDay)));
+
+        tripService.start(route.getId(), startRequest(), false, driver.getUserId());
+
+        ArgumentCaptor<Boarding> boardings = ArgumentCaptor.forClass(Boarding.class);
+        verify(boardingRepository, times(1)).save(boardings.capture());
+        assertEquals("Ana", boardings.getValue().getStudent().getName());
     }
 
     @Test

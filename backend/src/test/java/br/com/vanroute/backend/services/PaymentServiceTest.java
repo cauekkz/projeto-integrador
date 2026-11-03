@@ -13,7 +13,6 @@ import br.com.vanroute.backend.models.student.Student;
 import br.com.vanroute.backend.models.user.Driver;
 import br.com.vanroute.backend.models.user.Responsible;
 import br.com.vanroute.backend.models.user.User;
-import br.com.vanroute.backend.models.user.enums.FinancialStatus;
 import br.com.vanroute.backend.models.user.enums.PixKeyType;
 import br.com.vanroute.backend.repositories.PaymentRepository;
 import br.com.vanroute.backend.repositories.UserDriverContractRepository;
@@ -98,7 +97,7 @@ class PaymentServiceTest {
         payment.setStatus(PaymentStatus.PENDING);
         // vencida: aparece como OVERDUE enquanto nao for paga
         payment.setDueDate(LocalDate.now(TripService.ZONE).minusDays(3));
-        when(paymentRepository.findById(payment.getId())).thenReturn(Optional.of(payment));
+        when(paymentRepository.findByIdForUpdate(payment.getId())).thenReturn(Optional.of(payment));
         when(userDriverContractRepository.findDetailsByContractId(contract.getId())).thenReturn(Optional.of(udc));
     }
 
@@ -130,26 +129,6 @@ class PaymentServiceTest {
         assertThrows(BadRequestException.class, () -> service.markPaid(payment.getId(), driverId, new MarkPaidRequestDTO(null)));
         assertEquals(PaymentStatus.PENDING, payment.getStatus());
         verify(notificationService, never()).send(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), anyString(), anyString(), anyMap());
-    }
-
-    @Test
-    void confirmingTheLastOverduePutsTheResponsibleBackUpToDate() {
-        when(paymentRepository.countOverdueOfResponsible(org.mockito.ArgumentMatchers.eq(responsibleId), org.mockito.ArgumentMatchers.any()))
-                .thenReturn(0L);
-
-        service.markPaid(payment.getId(), driverId, new MarkPaidRequestDTO(PaymentMethod.PIX));
-
-        assertEquals(FinancialStatus.UP_TO_DATE, responsible.getFinancialStatus());
-    }
-
-    @Test
-    void stillOverdueIfAnotherPaymentIsLate() {
-        when(paymentRepository.countOverdueOfResponsible(org.mockito.ArgumentMatchers.eq(responsibleId), org.mockito.ArgumentMatchers.any()))
-                .thenReturn(1L);
-
-        service.cancel(payment.getId(), driverId);
-
-        assertEquals(FinancialStatus.OVERDUE, responsible.getFinancialStatus());
     }
 
     @Test

@@ -1,5 +1,9 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.dtos.student.StudentResponsibleLinkDTO;
+import br.com.vanroute.backend.services.StudentResponsibleService;
+import org.springframework.web.bind.annotation.PutMapping;
+
 import org.springframework.web.bind.annotation.DeleteMapping;
 import br.com.vanroute.backend.services.TripService;
 import br.com.vanroute.backend.services.StudentAbsenceService;
@@ -44,10 +48,12 @@ public class StudentController {
     private final StudentAbsenceService studentAbsenceService;
     private final TripService tripService;
     private final StudentAddressService studentAddressService;
+    private final StudentResponsibleService studentResponsibleService;
 
     public StudentController(StudentService studentService, StudentLinkService studentLinkService,
                              StudentAbsenceService studentAbsenceService, TripService tripService,
-                             StudentAddressService studentAddressService) {
+                             StudentAddressService studentAddressService, StudentResponsibleService studentResponsibleService) {
+        this.studentResponsibleService = studentResponsibleService;
         this.studentService = studentService;
         this.studentLinkService = studentLinkService;
         this.studentAbsenceService = studentAbsenceService;
@@ -94,6 +100,28 @@ public class StudentController {
 
         // 201 sem Location: o vinculo nao tem rota propria pra consultar (aparece em GET /api/student/my-children)
         return ResponseEntity.status(201).build();
+    }
+
+    // responsaveis do aluno (nome, rotulo e admin)
+    @GetMapping("/{studentId}/responsibles")
+    public ResponseEntity<List<StudentResponsibleLinkDTO>> responsibles(@PathVariable UUID studentId, Authentication authentication) {
+        return ResponseEntity.ok(studentResponsibleService.list(studentId, AuthenticatedUser.id(authentication)));
+    }
+
+    // o admin remove outro responsavel, ou o proprio responsavel sai (o admin passa o admin antes)
+    @DeleteMapping("/{studentId}/responsibles/{responsibleId}")
+    public ResponseEntity<Void> removeResponsible(@PathVariable UUID studentId, @PathVariable UUID responsibleId,
+                                                  Authentication authentication) {
+        studentResponsibleService.remove(studentId, responsibleId, AuthenticatedUser.id(authentication));
+        return ResponseEntity.noContent().build();
+    }
+
+    // o admin passa o admin para outro responsavel ja vinculado
+    @PutMapping("/{studentId}/responsibles/{responsibleId}/admin")
+    public ResponseEntity<Void> transferAdmin(@PathVariable UUID studentId, @PathVariable UUID responsibleId,
+                                              Authentication authentication) {
+        studentResponsibleService.transferAdmin(studentId, responsibleId, AuthenticatedUser.id(authentication));
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{studentId}/routes")

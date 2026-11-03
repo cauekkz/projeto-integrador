@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface RouteDriverRepository extends JpaRepository<RouteDriver, UUID> {
-    boolean existsByRouteIdAndDriverUserId(UUID routeId, UUID driverId);
+    // motorista esta na rota hoje (quem saiu, com end_date, perde o acesso)
+    boolean existsByRouteIdAndDriverUserIdAndEndDateIsNull(UUID routeId, UUID driverId);
     List<RouteDriver> findByDriverUserId(UUID driverId);
 
     // rotas do motorista por nome (name = "%" pra todas); activeOnly = so as que ele esta hoje

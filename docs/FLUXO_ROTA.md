@@ -178,7 +178,8 @@ ponto 3 (Escola X)         → student_stop: Ana, ALIGHTING, SCHOOL, todos   (+ 
 
 | Regra | Erro |
 |---|---|
-| precisa de contrato **ativo** entre o motorista e o aluno | 403 |
+| precisa de contrato **`ACTIVE`** entre o motorista e o aluno (agendado, que ainda não começou, não serve) | 403 |
+| o motorista precisa **estar na rota** hoje (quem saiu da rota perde o acesso a ela e às viagens dela) | 403 |
 | `HOME`/`OTHER`: o ponto tem que ser **um endereço cadastrado do aluno** | 400 |
 | `HOME`/`OTHER` não pode ficar no ponto de uma escola; `SCHOOL` só no ponto da escola do contrato | 400 |
 | a mesma ação (ex.: dois embarques) no mesmo dia, na mesma rota | 409 |

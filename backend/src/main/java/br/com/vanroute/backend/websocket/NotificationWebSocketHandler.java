@@ -30,13 +30,18 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler implement
     // userId -> (id da sessao -> sessao); o mesmo usuario pode estar em mais de um aparelho
     private final Map<UUID, Map<String, WebSocketSession>> sessions = new ConcurrentHashMap<>();
 
-    public NotificationWebSocketHandler(NotificationService notificationService, ObjectMapper objectMapper) {
+    private final WebSocketSessionRegistry registry;
+
+    public NotificationWebSocketHandler(NotificationService notificationService, ObjectMapper objectMapper,
+                                        WebSocketSessionRegistry registry) {
+        this.registry = registry;
         this.notificationService = notificationService;
         this.objectMapper = objectMapper;
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+        registry.register(session);
         if (session.getPrincipal() == null) {
             session.close(CloseStatus.NOT_ACCEPTABLE.withReason("Unauthenticated"));
             return;
@@ -68,6 +73,7 @@ public class NotificationWebSocketHandler extends TextWebSocketHandler implement
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        registry.unregister(session);
         if (session.getPrincipal() == null) {
             return;
         }

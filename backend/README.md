@@ -29,11 +29,11 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 |---|---|
 | 400 | dado inválido ou regra violada |
 | 401 | sem token ou token inválido/expirado |
-| 403 | sem permissão (inclusive rota de outro perfil) |
+| 403 | sem permissão (inclusive rota de outro perfil). Com `{"code":"TERMS_NOT_ACCEPTED","version":"2"}`: o usuário ainda não aceitou a versão atual dos termos (só ver/aceitar os termos, `/me`, sair, exportar e excluir a conta funcionam) |
 | 404 | não existe |
 | 409 | conflito (duplicado ou estado errado) |
-| 422 | documento (CNH, CRLV) não passou na validação |
-| 429 | muitas tentativas (código de e-mail) ou pediu outro código antes de 1 minuto |
+| 422 | documento (CNH, CRLV) não passou na validação: assinatura, nome diferente do da CNH, CNH vencida, categoria sem D/E, menos de 21 anos, licenciamento da van vencido |
+| 429 | muitas tentativas: código de e-mail, outro código antes de 1 minuto, ou login bloqueado (5 senhas erradas no CPF ou 30 no IP: 15 minutos) |
 | 500 | erro interno: a mensagem é sempre "Erro interno no servidor" (o detalhe fica só no log) |
 
 **Quem pode chamar cada rota** (`config/SecurityConfig.java`; outro perfil recebe **403**):
@@ -52,6 +52,8 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 | variáveis de ambiente | no servidor: `.env` na raiz (fora do git; modelo em `/.env.example`), lido pelo `docker compose` | produção: banco, Redis, MinIO, `JWT_KEY`, `ALLOWED_ORIGINS` (endereço do front), e-mail e mapas |
 | `src/main/resources/application-local.properties` | na sua máquina (fora do git; modelo em `application-local.properties.example`) | desenvolvimento: senha do banco, `JWT_KEY`, MinIO, e-mail e a chave do OpenRouteService |
 | `application.yml` / `application.properties` | no git | os padrões. Segredos **não** têm padrão: sem eles o backend não sobe |
+
+**Perfil:** no desenvolvimento o perfil é `local` (padrão do `application.properties`), que liga o Swagger (`/swagger-ui.html`, `/v3/api-docs`) e o log de SQL ([application-local.yml](src/main/resources/application-local.yml)). Em produção, suba com `SPRING_PROFILES_ACTIVE=prod`: o Swagger e o log de SQL ficam desligados.
 
 Os testes que sobem o Spring usam o banco `vanroute_test` (`src/test/resources/application-test.properties`), nunca o `vanroute_db`.
 
@@ -247,7 +249,7 @@ O CRLV **não precisa** estar no nome do motorista, e o PDF **não é guardado**
 
 | Endpoint | Quem | O que faz |
 |---|---|---|
-| `POST /api/vehicle/add-vehicle` (multipart, campo `documentPdf`) | motorista | `201` com a van. Se a van já existe (procura pelo **RENAVAM**, que nunca muda, e depois pela **placa**), só **vincula** o motorista à van existente, sem alterar os dados dela. A assinatura é validada sempre, para ninguém se vincular a uma van com um PDF falso. `422` se o PDF não for um CRLV digital válido. `409` se o motorista já está vinculado a essa van |
+| `POST /api/vehicle/add-vehicle` (multipart, campo `documentPdf`) | motorista | `201` com a van. Licenciamento (exercício) de mais de um ano atrás: `422`. Se a van já existe (procura pelo **RENAVAM**, que nunca muda, e depois pela **placa**), **vincula** o motorista à van existente e, se o CRLV enviado for mais novo, atualiza placa, cor, categoria, lotação e licenciamento. A assinatura é validada sempre, para ninguém se vincular a uma van com um PDF falso. `422` se o PDF não for um CRLV digital válido. `409` se o motorista já está vinculado a essa van |
 | `GET /api/vehicle/my-vehicles` | motorista | vans **ativas** do motorista (ele pode ter várias) |
 | `PUT /api/vehicle/{vehicleId}/unlink` | motorista | o motorista para de usar a van (`end_date` = hoje). O histórico fica, e depois ele pode vincular de novo. `204` |
 
@@ -339,7 +341,7 @@ A proposta nasce no chat. Criar, aceitar e recusar ficam no `ChatController`; a 
 |---|---|---|
 | `GET /api/chats/{chatId}/students` | só o **motorista** que participa do chat | `[{ id, name }]`: filhos do pai da conversa de que ele é admin (o botão "ver filhos" usado para escolher o aluno da proposta) |
 | `POST /api/chats/{chatId}/contract` | motorista | `201`: `{ message, userDriverContractId, contract }`, onde `contract` já vem completo (formato abaixo) |
-| `PUT /api/chats/{chatId}/contracts/{contractId}/accept` | responsável do contrato | `200`; o contrato fica `ACTIVE`, as parcelas são geradas e o responsável **assina** (o documento fica `SIGNED`) |
+| `PUT /api/chats/{chatId}/contracts/{contractId}/accept` | responsável do contrato (o contrato tem que ser dessa conversa) | `200`; o contrato fica `ACTIVE` se começa hoje, ou `SCHEDULED` se começa depois (o worker ativa no dia); as parcelas são geradas e o responsável **assina** (o documento fica `SIGNED`) |
 | `PUT /api/chats/{chatId}/contracts/{contractId}/reject` | responsável do contrato | `200`; o contrato fica `CANCELED` e o documento `REJECTED` |
 | `GET /api/contract/my-contracts?status=ACTIVE` | motorista ou responsável | página `{ content: [{ contractId, userDriverContractId, status, periodicity, value, startDate, endDate, studentId, studentName, schoolId, schoolName, driverId, driverName, responsibleId, responsibleName, pendingCancellation, overduePayments }], totalElements, ... }`: os contratos em que o usuário é parte. Filtros opcionais: `status`, `studentId`, `driverId`; `page`/`size` (padrão 20) |
 | `GET /api/contract/{contractId}` | só as partes do contrato | detalhes (abaixo); os outros recebem `403` |
@@ -363,6 +365,10 @@ Detalhes do contrato:
                   { "userId": "...", "name": "Maria",  "signedAt": "2027-01-21T08:30:00", "valid": true } ] }
 ```
 **Assinatura:** propor é o motorista assinar, e aceitar é o responsável assinar. Cada assinatura guarda **quem, quando e o hash (SHA-256) dos termos**: as partes, o aluno, a escola, o valor, o período e o documento. É uma assinatura eletrônica simples, com registro de autoria e integridade. `valid` diz se os termos de hoje ainda são os que foram assinados; se alguém mudar o contrato no banco, vira `false`. `documentStatus`: `PENDING` até o aceite, `SIGNED` ou `REJECTED`.
+**PDF:** na proposta, o backend confere no MinIO (sem baixar) que o arquivo existe, tem até 10 MB e é PDF de verdade, e o MinIO copia ele pra `contracts/{contractId}.pdf`, onde nenhuma URL de upload grava. O `documentFileKey` é essa chave.
+
+**Status, renovação e cancelamento:** `SCHEDULED` → `ACTIVE` → `INACTIVE`/`CANCELED`; no máximo o contrato atual e um próximo por motorista e aluno; cancelamento com aviso prévio de 30 dias. Tudo em `docs/FLUXO_CONTRATO.md`.
+
 A mensagem PROPOSAL do chat traz só os IDs no `payload`. Para mostrar a proposta, o front chama `GET /api/contract/{contractId}` com o `contractId` do payload. Os dados vêm sempre atualizados do banco.
 
 ---
@@ -417,7 +423,8 @@ O perfil **não tem** CPF, e-mail nem telefone (a conversa é pelo chat). De que
 ```json
 { "content": "texto", "attachmentType": "IMAGE", "attachmentUrl": "<fileKey>" }
 ```
-- Precisa de texto e/ou anexo.
+- Precisa de texto e/ou anexo. O anexo tem que ser um arquivo que você enviou, com no máximo **10 MB** (senão `400`).
+- Chat de que você não participa: `403`.
 - **Não** aceita `messageType` nem `payload`: toda mensagem de usuário é `REGULAR_CHAT`. As mensagens `PROPOSAL`, `APPROVAL` e `REJECTION` só o sistema gera, no fluxo de contrato.
 
 Resposta (também é o que chega pelo WebSocket):
@@ -444,6 +451,7 @@ O arquivo **não passa pelo backend**: o front envia e baixa direto do MinIO, us
 2. PUT <uploadUrl> com o arquivo no corpo e o header Content-Type igual ao do passo 1   (direto no MinIO)
 3. usar o fileKey: attachmentUrl da mensagem ou document.url da proposta
 ```
+Limite de **10 MB** (anexo e PDF do contrato), conferido quando o arquivo é usado: a URL de upload não consegue limitar o tamanho. O PDF da proposta é copiado pra `contracts/{contractId}.pdf` e o enviado é apagado depois que a proposta é gravada (se ela falhar, o mesmo `fileKey` serve pra tentar de novo).
 
 **Dono do arquivo:** o upload vai pra pasta de quem enviou (`uploads/{id}/...`), então o caminho já diz o dono, sem tabela. Anexar no chat ou usar como PDF da proposta só com arquivo da própria pasta (outro dá `403` no chat e `400` na proposta). Sem isso, quem soubesse o `fileKey` de outra pessoa podia anexar no próprio chat e ganhar acesso ao arquivo. O bucket sozinho não resolve: pra ele todo mundo é o backend, que assina os links.
 
@@ -459,7 +467,7 @@ Quem pode baixar:
 | Arquivo | Quem |
 |---|---|
 | anexo de chat | quem participa do chat |
-| PDF de contrato | as partes do contrato |
+| PDF de contrato (`contracts/{contractId}.pdf`) | as partes do contrato |
 | foto de perfil | qualquer usuário logado |
 | arquivo que você enviou (`uploads/{seuId}/...`) | você |
 
@@ -481,10 +489,18 @@ Quem pode baixar:
   - valida CPF, senha forte, confirmação de senha e **endereço obrigatório** (o de cobrança);
   - aceita o endereço em `address` ou `addressRequestDTO`;
   - envia o código de verificação por e-mail; o login só funciona depois do `POST /api/auth/verify-email`;
-  - a resposta traz o papel em `roles: ["ROLE_RESPONSIBLE"]`.
+  - a resposta traz o papel em `roles: ["ROLE_RESPONSIBLE"]`;
+  - exige `acceptedTermsVersion` igual à versão atual dos termos (`GET /api/terms`).
+- **Cadastro de motorista** (`POST /api/driver/auth/signup`, multipart com a CNH digital em `documentPdf`):
+  - confere a assinatura ICP-Brasil da CNH e lê por OCR o CPF, o nome, o nascimento, a validade e a categoria;
+  - o `name` digitado tem que ser o da CNH (sem importar acentos e maiúsculas), a CNH tem que estar válida, ser **D ou E**, e o motorista ter **21 anos ou mais**: senão `422` com a mensagem;
+  - o PDF da CNH não é guardado.
+- **Login** (`POST /api/auth/login`): CPF inexistente e senha errada dão o mesmo `401`; "Verifique seu e-mail" (`400`) só aparece com a senha certa. 5 senhas erradas no mesmo CPF (ou 30 no mesmo IP) bloqueiam por 15 minutos (`429`).
+- **Responsáveis do aluno:** `GET /api/student/{studentId}/responsibles` (qualquer responsável do aluno), `DELETE /api/student/{studentId}/responsibles/{responsibleId}` (o admin remove outro, ou a pessoa sai; o admin passa o admin antes) e `PUT /api/student/{studentId}/responsibles/{responsibleId}/admin` (o admin passa o admin). Quem tem contrato ou proposta em andamento com o aluno não sai (`409`). Detalhes em `docs/FLUXO_FRONT.md`, seção 13.
+- **Termos:** quando sai uma versão nova, o resto da API responde `403` `TERMS_NOT_ACCEPTED` até a pessoa aceitar (`POST /api/terms/accept`).
 - **Papel do usuário:** cada usuário tem **um** papel (`ROLE_DRIVER`, `ROLE_RESPONSIBLE` ou `ROLE_ADMIN`), na coluna `users.role`. Ele vai no JWT, na claim `roles` (ex.: `["ROLE_DRIVER"]`), e no `GET /api/users/me`.
 - **Escola** (`POST /api/school/add-school`): se a escola (nome + rua) já existe, o motorista é **vinculado** a ela. `409` se já estiver vinculado.
-- **JWT:** expira (`JWT_EXPIRATION`, padrão 15 min), e token vencido dá `401`. O `sub` é o **id do usuário**. A chave vem de `JWT_KEY`; o valor padrão do `application.yml` é só para desenvolvimento.
+- **JWT:** expira (`JWT_EXPIRATION`, padrão 15 min), e token vencido dá `401`. O `sub` é o **id do usuário**. A chave vem de `JWT_KEY`, que não tem valor padrão (em desenvolvimento fica no `application-local.properties`).
 - **Renovar o token sem senha:** o login também devolve `refreshToken` (30 dias, `JWT_REFRESH_EXPIRATION`). Com token vencido (`401`), o front chama `POST /api/auth/refresh` `{"refreshToken"}`, recebe um par novo (o usado deixa de valer) e repete a chamada. `POST /api/auth/logout` `{"refreshToken"}` apaga. No Redis fica só o hash do refreshToken. Passo a passo pro front em `docs/FLUXO_TRIP.md`, seção 4.10.
 - **Notificações:** `GET /api/notifications`, `GET /api/notifications/unread-count`, `PUT /api/notifications/{id}/read`, `PUT /api/notifications/read-all` e o WebSocket `ws://<host>/notifications?token=<jwt>` (veja `docs/FLUXO_TRIP.md`, seção 6).
 - **No backend**, o `authentication.getName()` devolve o **id** do usuário. Use `AuthenticatedUser.id(authentication)` (um `UUID`, sem ir ao banco). Os services recebem `UUID userId`, e o CPF só é usado no login e na checagem de cadastro duplicado.
@@ -492,7 +508,7 @@ Quem pode baixar:
 
 ## 6. Banco
 
-As migrations ficam em `src/main/resources/db/migration` e o Flyway aplica sozinho quando o backend sobe (a última é a **V29**). Migration que já rodou não se edita: mudança de banco é sempre numa migration nova, com o próximo número (**V30**). Para zerar o banco local: `docker compose down -v`.
+As migrations ficam em `src/main/resources/db/migration` e o Flyway aplica sozinho quando o backend sobe (a última é a **V36**). Migration que já rodou não se edita: mudança de banco é sempre numa migration nova, com o próximo número (**V37**). Para zerar o banco local: `docker compose down -v`.
 
 | Assunto | Tabelas |
 |---|---|
