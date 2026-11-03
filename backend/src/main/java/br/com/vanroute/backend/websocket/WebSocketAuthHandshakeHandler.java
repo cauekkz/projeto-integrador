@@ -7,7 +7,6 @@ import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
 import java.security.Principal;
 import java.util.Map;
-//chat lixo
 public class WebSocketAuthHandshakeHandler extends DefaultHandshakeHandler {
 
     static final String AUTHENTICATION_ATTRIBUTE = "AUTHENTICATION";

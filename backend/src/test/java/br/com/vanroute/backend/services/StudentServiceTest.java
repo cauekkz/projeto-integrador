@@ -26,7 +26,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 
-import br.com.vanroute.backend.dtos.geocode.Coordenadas;
 import br.com.vanroute.backend.dtos.student.AddressRequestDTO;
 import br.com.vanroute.backend.dtos.user.StudentRequestDTO;
 import br.com.vanroute.backend.mapper.StudentResponsibleMapper;

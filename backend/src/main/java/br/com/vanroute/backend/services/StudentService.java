@@ -93,7 +93,6 @@ public class StudentService {
             studentResponsible.setRelationType(dto.relationType());
             studentResponsible.setAdmin(true);
 
-            //obrigado felipe já ia fica maluco
             Responsible responsible = responsibleRepository.findById(responsibleId)
                     .orElseThrow(() -> new AccessDeniedException("Responsible not found"));
             studentResponsible.setResponsible(responsible);

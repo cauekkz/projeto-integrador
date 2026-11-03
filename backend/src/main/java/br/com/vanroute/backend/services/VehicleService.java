@@ -38,7 +38,6 @@ public class VehicleService {
         this.icpValidationService = icpValidationService;
         this.crlvExtractionService = crlvExtractionService;
     }
-    //maldição
     @Transactional
     public VehicleResponseDTO addVehicle(MultipartFile crlv, UUID driverId) {
         Driver driver = driverRepository.findById(driverId)

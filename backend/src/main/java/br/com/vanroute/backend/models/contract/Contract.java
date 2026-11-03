@@ -2,7 +2,6 @@ package br.com.vanroute.backend.models.contract;
 
 import br.com.vanroute.backend.models.contract.enums.ContractPeriodicity;
 import br.com.vanroute.backend.models.contract.enums.ContractStatus;
-import br.com.vanroute.backend.models.school.School;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -25,7 +24,7 @@ public class Contract {
 
  
 
-    //valor por periodicity nesse recinto hemoglobina
+    // valor de cada periodo (por mes, se for MONTHLY), nao o total do contrato
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal value;
 

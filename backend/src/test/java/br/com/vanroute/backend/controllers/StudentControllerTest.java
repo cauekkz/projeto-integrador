@@ -2,9 +2,7 @@ package br.com.vanroute.backend.controllers;
 
 import br.com.vanroute.backend.dtos.student.StudentLinkRequestDTO;
 import br.com.vanroute.backend.dtos.student.StudentCodeRequestDTO;
-import br.com.vanroute.backend.dtos.user.StudentRequestDTO;
 import br.com.vanroute.backend.models.student.Student;
-import br.com.vanroute.backend.models.student.StudentResponsible;
 import br.com.vanroute.backend.models.student.enums.RelationType;
 import br.com.vanroute.backend.services.StudentLinkService;
 import br.com.vanroute.backend.services.StudentService;
@@ -24,7 +22,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.UUID;
 

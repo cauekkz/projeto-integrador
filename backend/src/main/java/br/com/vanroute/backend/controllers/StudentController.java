@@ -92,7 +92,7 @@ public class StudentController {
             Authentication authentication) {
         studentLinkService.createStudentResponsibleRelation(code.code(), AuthenticatedUser.id(authentication));
 
-        // TODO: usar .created(uri) apontando pro recurso criado
+        // 201 sem Location: o vinculo nao tem rota propria pra consultar (aparece em GET /api/student/my-children)
         return ResponseEntity.status(201).build();
     }
 

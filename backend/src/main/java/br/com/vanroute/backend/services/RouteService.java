@@ -1,5 +1,11 @@
 package br.com.vanroute.backend.services;
 
+import br.com.vanroute.backend.dtos.route.RouteFilterRequestDTO;
+
+import org.springframework.data.domain.Pageable;
+
+import org.springframework.data.domain.Page;
+
 import br.com.vanroute.backend.config.AuthenticatedUser;
 import java.util.LinkedHashMap;
 import java.util.HashMap;
@@ -308,33 +314,23 @@ public class RouteService {
                 .toList();
     }
 
-    public List<RouteWithStopsResponse> findAll(Authentication authentication) {
+    // rotas do motorista com os pontos, paginadas por nome. Padrao: so as que ele esta hoje (active=true)
+    public Page<RouteWithStopsResponse> findAll(Authentication authentication, RouteFilterRequestDTO filter, Pageable pageable) {
 
         Driver driver = driverRepository.findById(AuthenticatedUser.id(authentication))
                 .orElseThrow(() -> new AccessDeniedException("Driver not found"));
+        boolean activeOnly = filter == null || filter.active() == null || filter.active();
+        String name = filter == null || filter.name() == null || filter.name().isBlank()
+                ? "%" : "%" + filter.name().trim().toLowerCase() + "%";
 
-        List<Route> routes = routeDriverRepository.findByDriverUserId(driver.getUserId())
-                .stream()
-                .map(RouteDriver::getRoute)
-                .toList();
-
-        List<RouteWithStopsResponse> response = new ArrayList<>();
-
-        for (Route route : routes) {
-
-            List<RouteStopResponse> stops = routeStopRepository.findByRouteIdOrderByOrderIndexAsc(route.getId()).stream()
-                    .map(this::toResponse)
-                    .toList();
-
-            response.add(new RouteWithStopsResponse(
-                    route.getId(),
-                    route.getName(),
-                    driver.getUser().getName(),
-                    stops
-            ));
-        }
-
-        return response;
+        return routeDriverRepository.findPageOfDriver(driver.getUserId(), activeOnly, name, pageable)
+                .map(link -> new RouteWithStopsResponse(
+                        link.getRoute().getId(),
+                        link.getRoute().getName(),
+                        driver.getUser().getName(),
+                        routeStopRepository.findByRouteIdOrderByOrderIndexAsc(link.getRoute().getId()).stream()
+                                .map(this::toResponse)
+                                .toList()));
     }
 
     // so o motorista vinculado a rota (route_drivers) pode le-la ou altera-la

@@ -67,7 +67,7 @@ public class StudentAddressService {
 
     @Transactional
     public StudentPlaceResponseDTO add(UUID studentId, StudentAddressRequestDTO request, UUID responsibleId) {
-        checkResponsible(studentId, responsibleId);
+        checkAdmin(studentId, responsibleId);
         Student student = studentRepository.findById(studentId)
                 .orElseThrow(() -> new EntityNotFoundException("Student not found"));
         return toResponse(attach(student, resolve(request.address(), request.addressId(), responsibleId), request.label()));
@@ -106,7 +106,7 @@ public class StudentAddressService {
     // o aluno sai dos pontos de casa que usam ele (a rota fica com pendencia) e o motorista e avisado
     @Transactional
     public void remove(UUID studentId, UUID studentAddressId, UUID responsibleId) {
-        checkResponsible(studentId, responsibleId);
+        checkAdmin(studentId, responsibleId);
         StudentAddress studentAddress = studentAddressRepository.findByIdAndStudentId(studentAddressId, studentId)
                 .orElseThrow(() -> new EntityNotFoundException("Endereço não encontrado"));
         if (studentAddressRepository.countByStudentId(studentId) <= 1) {
@@ -132,6 +132,14 @@ public class StudentAddressService {
                 studentName + " não usa mais o endereço \"" + studentAddress.getLabel() + "\". Ele saiu do ponto "
                         + removed.get(0).getStop().getOrderIndex() + " da rota " + route.getName() + ": escolha o novo ponto",
                 Map.of("routeId", route.getId(), "studentId", studentId)));
+    }
+
+    // mexer nos enderecos muda a rota: so o admin do aluno (os outros responsaveis so veem)
+    private void checkAdmin(UUID studentId, UUID responsibleId) {
+        checkResponsible(studentId, responsibleId);
+        if (!studentResponsibleRepository.existsByResponsible_UserIdAndStudent_IdAndIsAdminTrue(responsibleId, studentId)) {
+            throw new AccessDeniedException("Só o responsável admin do aluno adiciona ou tira endereços");
+        }
     }
 
     private void checkResponsible(UUID studentId, UUID responsibleId) {
