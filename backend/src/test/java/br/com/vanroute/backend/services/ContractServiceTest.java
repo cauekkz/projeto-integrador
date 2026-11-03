@@ -127,7 +127,7 @@ public class ContractServiceTest {
 
     private static ContractProposalRequestDTO proposal(ContractRequestDTO terms) {
         return new ContractProposalRequestDTO(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), terms,
-                new DocumentRequestDTO("uploads/" + driverId + "/x.pdf", "TRANSPORT_CONTRACT"));
+                new DocumentRequestDTO("uploads/" + UUID.randomUUID() + "/x.pdf", "TRANSPORT_CONTRACT"));
     }
 
     @Test
