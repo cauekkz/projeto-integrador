@@ -1,468 +1,727 @@
-# Como montar o front: telas, chamadas e conexões
+# Guia do front: o que existe, o que está quebrado, o que falta e a ordem das chamadas
 
-Este guia mostra **a ordem das coisas**: o que cada tela chama, quando, e quais conexões ficam abertas. Não define o
-visual. Os JSON completos de cada rota estão em:
-- `backend/README.md`: rotas em geral (cadastro, rota, van, contrato, chat, arquivos);
-- `docs/FLUXO_TRIP.md`: execução da rota, WebSocket da trip e notificações;
-- `docs/FLUXO_CONTRATO.md`: contrato passo a passo.
+Este é o documento de construção do front. Ele diz:
+- o que já existe;
+- o que está quebrado e como consertar;
+- quais telas faltam;
+- para cada tela, **quais rotas da API chamar e em que ordem**.
 
-Base: `http://HOST:9090` (HTTP) e `ws://HOST:9090` (WebSocket).
+O formato completo dos JSON de cada domínio está nos outros docs. Aqui fica só o necessário para montar as telas:
+
+| Doc | Assunto |
+|---|---|
+| `backend/README.md` | todas as rotas, erros e perfis |
+| `docs/FLUXO_CONTRATO.md` | proposta, aceite, renovação, cancelamento com aviso prévio, perfil do responsável |
+| `docs/FLUXO_PAGAMENTO.md` | chave Pix e parcelas |
+| `docs/FLUXO_ROTA.md` | montar a rota (pontos, alunos, ordem, pendências) |
+| `docs/FLUXO_TRIP.md` | executar e acompanhar a viagem, WebSocket da viagem, faltas, notificações |
+| `docs/WORKER.md` | o que muda sozinho todo dia (o front só vê o resultado) |
+
+**Como trabalhar:**
+1. Siga os padrões da seção 1: serviços, DTOs, interceptor, guardas, pop-up e sinais. Não crie um padrão novo.
+2. Antes de mexer numa tela existente, corrija os itens da seção 3 (quebrados).
+3. Depois construa as telas da seção 6, na ordem da seção 9.
+4. Cada chamada nova vai num serviço em `services/` com o DTO em `services/dto/<dominio>/`.
 
 ---
 
-## 1. As três peças que vêm antes das telas
+## 1. Como o front é feito (siga esses padrões)
 
-Monte estas três peças primeiro. Toda tela usa elas.
+- **Angular 21**, componentes `standalone`, estado com `signal`/`computed`, `inject()`. Testes em Vitest (`*.spec.ts`).
+- **Pastas:**
+  - `pages/` = tela com rota própria;
+  - `components/` = pedaços reaproveitados ou telas antigas;
+  - `shared/` = header, footer, `trail-header` (cabeçalho com "voltar"), botão, `code-input`, máscaras (`shared/directives`: CPF, CEP com busca, telefone, data, nome) e `pop-up`.
+- **API:**
+  - `services/api.ts` define `API_URL = '/api'`;
+  - o `proxy.conf.json` do `ng serve` repassa `/api` pro backend, `/ws` pros WebSockets e `/storage` pro MinIO;
+  - WebSocket: `wsUrl('/chat/' + id)` (vira `ws(s)://<host>/ws/chat/...`);
+  - links do MinIO: passe por `urlDoStorage(url)` antes de usar.
+- **Sessão** (`services/auth.service.ts` + `interceptor/auth.interceptor.ts`):
+  - `token` e `refreshToken` ficam no `localStorage`;
+  - o interceptor põe o `Authorization` em tudo menos `/auth/*`;
+  - com o token vencido, ele renova antes; com 401, renova **uma vez** e repete;
+  - se a renovação também falhar, limpa a sessão e volta pra `/`.
+- **Erros:** o interceptor mostra o `message` do backend num pop-up (`PopUpService.showError`). Se a tela trata o erro sozinha, mande `context: new HttpContext().set(SKIP_ERROR_POPUP, true)` na chamada.
+- **Guardas** (`interceptor/route.interceptor.ts`):
+  - `guestGuard` nas telas públicas (quem já está logado vai pra sua home);
+  - `routeGuard` + `roleGuard` com `data: { rolesPermitted: ['ROLE_DRIVER' | 'ROLE_RESPONSIBLE'] }` nas telas logadas.
 
-### 1.1 Cliente HTTP (um só pro app todo)
-- Guarda o `token` e o `refreshToken` no **armazenamento seguro** do celular (Expo: `expo-secure-store`). Nunca no AsyncStorage.
-- Põe `Authorization: Bearer <token>` em toda chamada.
-- **Deu 401:**
-  1. chama `POST /api/auth/refresh` `{"refreshToken"}` **uma vez só**, mesmo que várias chamadas tenham falhado juntas (as outras esperam essa terminar);
-  2. guarda o **par novo** (os dois tokens mudam);
-  3. repete as chamadas que falharam;
-  4. se o refresh também der 401, apaga os tokens e vai pro login.
-- Erro do backend vem sempre como `{"timestamp", "message", "details"}`. Mostre o `message` pro usuário: ele já vem em português.
+  **Toda tela nova usa isso.**
+- **Rotas novas** em `app.routes.ts` com `loadComponent` (lazy), igual a `contracts`, `contract-view` e `notifications`.
+- **Ícones:** Bootstrap Icons (`bi-...`).
+- **Datas:** a API manda e recebe `AAAA-MM-DD`, e horários sem fuso no horário de São Paulo. Use os helpers que já existem em `contract.dto.ts` (`isoParaData`, `valorEmReais`, `periodicidadeLabel`).
+- **IDs:** o front **nunca inventa ID**. Todo ID veio de uma resposta anterior da API.
+
+### É web, não app nativo
+O doc antigo falava de Expo e `expo-secure-store`; **não vale**. Consequências:
+- **GPS do motorista:** `navigator.geolocation.watchPosition`.
+  - Só funciona em **HTTPS** (ou `localhost`). No celular, use o túnel (cloudflared).
+  - O navegador **não manda GPS com a aba fechada ou a tela apagada**. Use a Wake Lock API (`navigator.wakeLock.request('screen')`) na tela da viagem e avise o motorista pra deixar a tela aberta.
+- **Notificação com o app fechado (push):** não existe ainda (issue #150). As notificações chegam pelo WebSocket com a aba aberta e ficam guardadas.
+- **Mapa:** o front ainda não tem biblioteca de mapa. Leaflet com OpenStreetMap resolve. O `path` da viagem vem como `[longitude, latitude]`: inverta pro Leaflet.
+
+---
+
+## 2. O que já existe
+
+| Rota Angular | Arquivo | Perfil | O que faz | Situação |
+|---|---|---|---|---|
+| `/` | `pages/home` | público | escolher motorista ou responsável | ok |
+| `/login/:tipo` | `pages/auth/login` + `components/login-signup/login-form` | público | login, "esqueci a senha" (`forgot-password`) | ok; falta tratar o **429** (seção 3) |
+| `/signup/:tipo` | `pages/auth/signup` + `signup-driver` / `signup-responsible` | público | cadastro | **quebrado**: falta o aceite dos termos (seção 3.1) |
+| `/email-code` | `components/login-signup/email-code` | público | código do e-mail e reenvio | ok |
+| `/responsible-home` | `pages/responsible-home` | responsável | home com os filhos | parcial: sem viagens do dia, sem faltas |
+| `/add-student` | `components/student/add-student` | responsável | cadastrar filho, gerar código de vínculo | ok |
+| `/student-code` | `components/student/student-code` | responsável | usar o código de vínculo de outro responsável | ok |
+| `/dependentes` | `components/student/dependentes` | responsável | lista de filhos | parcial: sem detalhe do filho |
+| `/driver-code` | `components/driver-code` | responsável | resgatar o código do motorista (abre o chat) | ok |
+| `/driver-home` | `pages/driver-home` | motorista | home | parcial: o botão de rota abre a tela de rota com dados fixos |
+| `/driver-route` | `pages/driver-route` | motorista | executar a rota | **dados fixos** (TODO no código): refazer (seção 6.2.6) |
+| `/driver-link-code` | `pages/driver-link-code` | motorista | mostrar o código de conversa | ok |
+| `/driver-schools` | `pages/driver-schools` | motorista | escolas | ok |
+| `/driver-contract/:chatId` | `pages/driver-contract` | motorista | montar e enviar a proposta (aluno → contrato → PDF → revisão) | ok; ajustes na seção 3.6 |
+| `/chat`, `/chat-details/:id` | `pages/chat`, `components/chat/*` | os dois | lista de conversas, conversa, card da proposta (aceitar/recusar) | ok; falta "retirar proposta" (seção 6.2.3) |
+| `/contracts` | `pages/contracts` | os dois | lista de contratos com abas | **quebrado**: a lista é paginada (seção 3.2) |
+| `/contract/:contractId` | `pages/contract-view` | os dois | detalhe e PDF | parcial: sem cancelamento, assinaturas, parcelas e responsáveis |
+| `/responsible-route` | `pages/responsible-route` | responsável | acompanhar a viagem | **dados fixos** (TODO no código): refazer (seção 6.3.6) |
+| `/notifications` | `pages/notifications` | os dois | lista e navegação pelo tipo | parcial: tipos novos (seção 3.5) |
+| `/profile-info/:tipo` | `pages/profile-info` | os dois | dados, foto, trocar e-mail/telefone | parcial: sem exportar dados e excluir conta |
+| `/profile-select` | `components/profile-select` | os dois | menu do perfil | ok; ganha itens novos (seção 6) |
+
+**Serviços que existem:** `auth`, `chat` (HTTP + WebSocket do chat), `contract`, `notification` (HTTP + WebSocket de notificações), `school`, `storage`, `student`, `student-photo`, `register`.
+
+**Foto do filho:** fica só no `localStorage` (`student-photo.service.ts`). O backend não guarda foto de aluno; deixe assim.
+
+---
+
+## 3. Quebrado ou desatualizado: consertar primeiro
+
+### 3.1 Cadastro sem o aceite dos termos (cadastro dá 400)
+O backend exige `acceptedTermsVersion` igual à versão atual dos termos (hoje `"2"`).
+1. Na tela de cadastro (os dois perfis), antes de enviar, chame `GET /api/terms` → `{ version, content }`. O `content` é markdown: renderize num modal ou numa área rolável.
+2. Checkbox "Li e aceito os Termos de Uso e a Política de Privacidade", obrigatório.
+3. Mande a `version` recebida, **nunca fixa no código**:
+   - responsável (JSON): `"acceptedTermsVersion": version` no `createUserRequest` (`services/dto/auth/auth.dto.ts`) e no `createUser`;
+   - motorista (multipart): `formData.append('acceptedTermsVersion', version)` no `createDriver`.
+
+### 3.2 Lista de contratos paginada (`/contracts` quebrada)
+`GET /api/contract/my-contracts` devolve **página**: `{ content: [...], totalElements, totalPages, number, size }`.
+- `contract.service.ts` → `getMyContracts(params)`: tipar como `Page<contractSummaryResponse>` e ler `content`.
+- Aceita `?status=&studentId=&driverId=&page=&size=` (padrão 20). Use `totalPages` pra "carregar mais".
+- Crie um tipo genérico `Page<T>` em `services/dto` (vale pra chats, mensagens, notificações, parcelas, histórico, `my-children` e rotas).
+
+### 3.3 `deleteUser` chama uma rota que não existe
+`auth.service.ts` → `deleteUser(id)` faz `DELETE /api/users/{id}`, que não existe mais. Troque por `deleteMyAccount(password)` → `DELETE /api/users/me` com corpo `{ "password": "..." }` (seção 6.4.4).
+
+### 3.4 Status e campos do contrato (`services/dto/contract/contract.dto.ts`)
+- `ContractStatus` passa a ser `'PENDING' | 'SCHEDULED' | 'ACTIVE' | 'INACTIVE' | 'CANCELED'`. `SUSPENDED` e `OVERDUE` não existem mais.
+- Na tela `/contracts`:
+  - tabela `STATUS`: `SCHEDULED: { texto: 'Agendado', icone: 'bi-calendar-check' }`;
+  - tire `SUSPENDED` e `OVERDUE`;
+  - abas: "Aprovados" = `['SCHEDULED', 'ACTIVE']`; "Bloqueados" = `['CANCELED', 'INACTIVE']`.
+- `contractSummaryResponse` ganha:
+  - `pendingCancellation: cancellationResponse | null`;
+  - `overduePayments: number`.
+- `contractDetailsResponse` ganha:
+  - `documentStatus: 'PENDING' | 'SIGNED' | 'REJECTED' | null`;
+  - `signatures: { userId, name, signedAt, valid }[]`;
+  - `cancellations: cancellationResponse[]`;
+  - `overduePayments: number`;
+  - `studentResponsibles: { responsibleId, name, relationType, admin }[]`;
+  - `schoolAddress`.
+- `cancellationResponse`:
+  ```ts
+  {
+    id, status: 'PENDING' | 'ACCEPTED' | 'COMPLETED' | 'WITHDRAWN' | 'REJECTED',
+    unilateral, reason, requestedById, requestedByName, requestedAt,
+    effectiveDate, decidedById, decidedByName, decidedAt
+  }
+  ```
+
+### 3.5 Notificações (`pages/notifications/notifications.ts`)
+- Tire `CANCELLATION_REJECTED` (ninguém recusa cancelamento mais; pode deixar o ícone pra notificação antiga).
+- Acrescente ícone e destino dos tipos da seção 7: `CONTRACT_STARTED`, `CONTRACT_EXPIRED`, `CONTRACT_ENDED`, `SYSTEM`, `OCCURRENCE`, `DRIVER_NOTICE` e `ABSENCE_REPORTED`.
+
+### 3.6 Proposta de contrato (`pages/driver-contract`)
+- O comentário no topo diz "PDF opcional": o PDF é **obrigatório** (o backend recusa sem ele).
+- Erros do backend pra mostrar com a `message`:
+  - **400**: não é PDF de verdade, passa de 10 MB, não existe;
+  - **409**: já existe proposta pendente, contrato agendado ou contrato no mesmo período pra esse aluno.
+- Cada proposta aceita **consome** o PDF: o backend copia pra `contracts/{id}.pdf` e apaga o enviado. Depois de uma proposta criada com sucesso, a próxima precisa de um upload novo; o `draft.limpar()` já faz isso.
+- Se a proposta **falhar**, o arquivo continua no lugar e o `fileKey` guardado pelo `draft` pode ser reenviado.
+- Datas: `startDate` pode ser hoje ou depois. Se for depois, o contrato aceito fica `SCHEDULED` até o dia (seção 6.2.4).
+
+### 3.7 Erros novos que as telas precisam mostrar
+
+| Onde | Status | O que fazer |
+|---|---|---|
+| qualquer chamada logada | **403** com `{"code":"TERMS_NOT_ACCEPTED","version":"2"}` | abrir a tela de reaceite dos termos (seção 4.3); não mostrar pop-up genérico |
+| login | **429** "Muitas tentativas de login..." | mostrar a mensagem; não tentar de novo sozinho (bloqueio de 15 min) |
+| login | **400** "Verifique seu e-mail..." | só aparece com a senha certa: oferecer reenviar o código e ir pro `/email-code` |
+| cadastro do motorista | **422** | mostrar a `message`: assinatura inválida, nome diferente do da CNH, CNH vencida, categoria sem D/E, menos de 21 anos |
+| cadastro de van | **422** | CRLV inválido ou licenciamento vencido |
+| anexo do chat | **400** "O arquivo pode ter no máximo 10 MB" | conferir o tamanho antes de subir |
+| chat de outra pessoa | **403** (antes era 400) | voltar pra lista de conversas |
+
+### 3.8 TODO errado no acompanhamento
+`pages/responsible-route` tem um TODO dizendo que o backend devia filtrar as paradas: **ele já filtra**. O WebSocket da viagem manda pro pai só as paradas do próprio filho. A tela inteira é refeita na seção 6.3.6.
+
+---
+
+## 4. Regras que valem pro app inteiro
+
+### 4.1 Status de erro
 
 | Status | O que a tela faz |
 |---|---|
-| 400 | dado inválido: mostra o `message` perto do campo |
-| 401 | o cliente renova sozinho; se não der, volta pro login |
-| 403 | "você não tem acesso a isso" |
-| 404 | "não encontrado" (ou trata como lista vazia, quando fizer sentido) |
-| 409 | regra de negócio (ex.: "A van está a 5.6 km do ponto do aluno"): mostra o `message` |
-| 503 | serviço de mapas fora/cota: "tente mais tarde" |
+| 400 | dado inválido ou regra: mostrar o `message` perto do campo |
+| 401 | o interceptor renova; se não der, volta pro login (já feito) |
+| 403 | sem acesso ("você não tem acesso a isso"); com `code: TERMS_NOT_ACCEPTED`, seção 4.3 |
+| 404 | não encontrado (ou lista vazia, quando fizer sentido) |
+| 409 | regra de negócio (estado errado, duplicado, "a van está a 5,6 km do ponto"): mostrar o `message` |
+| 422 | documento (CNH, CRLV) recusado: mostrar o `message` |
+| 429 | muitas tentativas: mostrar o `message` (traz quanto esperar) |
+| 503 | serviço de mapas fora ou sem cota: "tente mais tarde" |
 
-### 1.2 Gerenciador de WebSocket (reaproveitado pelas 3 conexões)
-- URL com o token: `ws://HOST/<caminho>?token=<token atual>`.
-- **Caiu** (rede, app em segundo plano): reconecta com espera crescente (1 s, 2 s, 5 s, 10 s) e com o **token atual**. Se o token venceu, renova antes.
-- **Código 1003:** o usuário não tem acesso (não é do chat, não é da trip). **Não reconecte.**
-- **Ao reconectar, chega o estado atual na hora**: o front não precisa pedir nada.
+O corpo de erro é `{ "timestamp", "message", "details" }`. O `message` já vem em português.
 
-### 1.3 As conexões e quando ficam abertas
+### 4.2 Páginas (listas)
+Toda lista grande é paginada: `?page=` começa em 0 e `?size=` vai até 100. A resposta tem `content`, `totalElements`, `totalPages`, `number` e `size`. Isso vale pra:
+- chats e mensagens;
+- notificações;
+- `my-contracts`;
+- parcelas;
+- histórico de viagens;
+- `my-children`;
+- `get-all-routes-and-stops`.
 
-| WebSocket | Abre quando | Fecha quando | O que chega |
-|---|---|---|---|
-| `/notifications?token=` | o app abre, logado | logout | `unread-count` ao conectar e `notification` a cada aviso |
-| `/chat/{chatId}?token=` | a tela do chat abre | sai da tela do chat | cada mensagem nova (dos dois lados e do sistema) |
-| `/trip/{tripId}?token=` | motorista executando a rota, ou pai acompanhando | a trip termina, ou sai da tela | `trip-update` a cada mudança (GPS, embarque, falta...) |
+### 4.3 Termos de uso (reaceite)
+- O `GET /api/users/me` traz `termsVersion` e `termsAccepted`.
+- Se `termsAccepted` for `false` (saiu uma versão nova), **todas as outras rotas respondem 403 `TERMS_NOT_ACCEPTED`**. As exceções são: os termos, o próprio `/me`, sair, exportar os dados e excluir a conta.
+- **Faça assim:**
+  1. No `authInterceptor`, se o erro for 403 com `error.error?.code === 'TERMS_NOT_ACCEPTED'`, navegue pra `/terms` (sem pop-up).
+  2. Também confira `termsAccepted` logo depois do login e ao abrir o app.
+  3. Tela nova `/terms` (logada, os dois perfis):
+     - `GET /api/terms`;
+     - mostra o markdown;
+     - "Aceito" → `POST /api/terms/accept` `{ "version": <version> }` → **204** → volta pra home;
+     - "Não aceito" → explica que não dá pra usar sem aceitar e oferece **sair** ou **excluir a conta**.
 
-**Não tem polling em lugar nenhum.** Atualizações de tempo real chegam pelos WebSockets. O HTTP é usado só ao abrir uma tela e nas ações do usuário.
-
----
-
-## 2. Abrir o app
-
+### 4.4 Arquivos (upload e download)
 ```
-splash
- ├─ tem refreshToken salvo?
- │    não → tela de login
- │    sim → GET /api/users/me  (se der 401, o cliente renova sozinho; se não der, login)
- ├─ roles contém ROLE_DRIVER → app do motorista, senão → app do responsável
- ├─ abre ws /notifications   (badge = unread-count)
- └─ home do perfil
+upload:
+1. GET /api/storage/presigned-url?fileName=<nome>&contentType=<mime>  → { uploadUrl, fileKey }
+2. fetch(urlDoStorage(uploadUrl), { method: 'PUT', body: arquivo, headers: { 'Content-Type': <mime> } })   (sem token)
+3. usar o fileKey (anexo do chat ou document.url da proposta)
+
+download / exibir:
+GET /api/storage/download-url?fileKey=<fileKey> → { downloadUrl }  → urlDoStorage(downloadUrl) no <img>/<a>. Vale 15 min
 ```
+- **Limite:** 10 MB (anexo e PDF), conferido quando o arquivo é usado. Confira antes de subir.
+- **Dono:** só dá pra usar um arquivo que a própria pessoa enviou.
+- **Foto de perfil:** `GET /api/users/photo-upload-url?fileName=&contentType=image/...` → PUT → `PUT /api/users/update-photo` `{ fileKey }` (já feito em `profile-info`).
 
-`GET /api/users/me` devolve `{id, name, email, phone, cpf, roles, photoKey, linkCode}`. Guarde no estado global:
-- `id`: pra saber quais mensagens do chat são suas (`senderId === me.id`);
-- `linkCode`: só vem pro motorista. É o código que ele passa pros pais.
+### 4.5 WebSockets (três conexões)
 
----
+| Conexão | Abre | Fecha | Recebe | Manda |
+|---|---|---|---|---|
+| `wsUrl('/notifications')?token=` | ao entrar logado (já feito em `notification.service.ts`) | no logout | o total de não lidas ao conectar e cada notificação nova | nada |
+| `wsUrl('/chat/' + chatId)?token=` | ao abrir a conversa (já feito) | ao sair da conversa | cada mensagem nova (inclusive as do sistema) | nada (envio é por HTTP) |
+| `wsUrl('/trip/' + tripId)?token=` | motorista executando ou pai acompanhando (**falta**) | viagem `FINISHED`/`CANCELED` ou ao sair da tela | `trip-update` a cada mudança (formato em `docs/FLUXO_TRIP.md`) | o motorista: `{"type":"position","latitude":..,"longitude":..}` a cada 3 a 5 s |
 
-## 3. Cadastro e login
+Regras de reconexão:
+- **Caiu:** reconecta com espera crescente (1 s, 2 s, 5 s, 10 s), sempre com um token válido (`authService.getValidToken()`). Ao reconectar, o estado atual chega sozinho.
+- **Fechou com o código 1003** (sem acesso) ou **1008** (conta excluída): **não reconecta**.
 
-### Responsável
-1. `POST /api/responsible/auth/signup` com nome, e-mail, CPF, telefone, senha, confirmação e **endereço**. A senha precisa de maiúscula, minúscula, número e símbolo.
-2. Tela "digite o código do e-mail": `POST /api/auth/verify-email` `{email, code}`.
-   - Botão "reenviar": `POST /api/auth/send-verification-code?email=...`.
-3. Login.
-
-### Motorista
-1. Escolhe o PDF da **CNH digital**. Pra validar antes do resto do formulário: `POST /api/driver/auth/verify-CNH` (multipart `documentPdf`). **422** = não é uma CNH digital válida.
-2. `POST /api/driver/auth/signup` (multipart): `documentPdf`, `name`, `email`, `password`, `confirmPassword`, `phone`. O CPF sai da própria CNH.
-3. Código do e-mail e login, igual ao responsável.
-
-### Login
-`POST /api/auth/login` `{cpf, passwordHash}` (o campo se chama `passwordHash`, mas vai a senha digitada)
-→ `{token, expiresIn, refreshToken, refreshExpiresIn}`. Salva os dois e segue o fluxo da seção 2.
-
-### Sair
-`POST /api/auth/logout` `{refreshToken}`, apaga os tokens e fecha os WebSockets.
+**Não existe polling.** O tempo real vem dos WebSockets. HTTP só ao abrir a tela e nas ações do usuário.
 
 ---
 
-## 4. Perfil e foto (os dois perfis)
+## 5. Abrir o app, cadastro e login
 
-| Ação | Chamadas |
-|---|---|
-| ver foto de alguém | `photoKey` (do `/me` ou do chat) → `GET /api/storage/download-url?fileKey=` → usa o `downloadUrl` no `<Image>`. O link vale 15 min, então guarde em cache por pouco tempo |
-| trocar a foto | `GET /api/users/photo-upload-url?fileName=&contentType=image/jpeg` → `PUT <uploadUrl>` com a imagem (direto no MinIO, sem token) → `PUT /api/users/update-photo` `{fileKey}` |
-| editar e-mail/telefone | `POST /api/users/send-code-updateUser` (manda um código pro e-mail) → `PUT /api/users/update-user` `{email, phone, code}` |
+### 5.1 Abrir o app (já feito; conferir os termos)
+```
+/ (guestGuard)
+ ├─ sem sessão → escolher perfil → /login/:tipo
+ └─ com sessão → GET /api/users/me
+       ├─ termsAccepted false → /terms
+       ├─ ROLE_DRIVER → /driver-home      ROLE_RESPONSIBLE → /responsible-home
+       └─ abre o WebSocket de notificações
+```
+`/me` → `{ id, name, email, phone, cpf, roles, photoKey, linkCode, termsVersion, termsAccepted }`. Guarde o `id`: é como o chat sabe quais mensagens são suas (`senderId === me.id`).
+
+### 5.2 Cadastro do responsável (consertar: seção 3.1)
+1. `GET /api/terms`.
+2. `POST /api/responsible/auth/signup` com:
+   ```json
+   { "name", "email", "password", "confirmPassword", "cpf", "phone",
+     "address": { "street", "number", "neighborhood", "city", "state", "zipCode" },
+     "acceptedTermsVersion" }
+   ```
+   A senha precisa de maiúscula, minúscula, número e símbolo.
+3. `/email-code`:
+   - `POST /api/auth/verify-email` `{ email, code }`;
+   - reenviar: `POST /api/auth/send-verification-code?email=`. Dá **429** antes de 1 minuto (o cadastro conta como o primeiro envio).
+   - O código errado responde **400** com "restam N tentativas". Na 5ª errada, **429** e o backend manda um código novo.
+4. Login.
+
+### 5.3 Cadastro do motorista (consertar: seções 3.1 e 3.7)
+1. O motorista escolhe o PDF da **CNH digital**. Validação antecipada (opcional, já existe): `POST /api/driver/auth/verify-CNH` (multipart `documentPdf`); **422** = não é CNH digital assinada.
+2. Avise na tela: **"use o nome completo exatamente como está na CNH"**. O backend compara, sem acentos e sem diferenciar maiúsculas, e exige CNH válida, categoria **D ou E** e **21 anos ou mais**.
+3. `GET /api/terms`, depois `POST /api/driver/auth/signup` (multipart): `documentPdf`, `name`, `email`, `password`, `confirmPassword`, `phone`, `acceptedTermsVersion`. O CPF sai da CNH.
+   - **422**: mostrar a `message`.
+   - A leitura da CNH pode levar alguns segundos: mostre "lendo a CNH...".
+4. `/email-code` e login, igual ao responsável.
+
+### 5.4 Login, esqueci a senha e sair (já feitos; conferir os erros)
+- `POST /api/auth/login` `{ cpf, passwordHash }`. O campo se chama `passwordHash`, mas vai a senha digitada.
+  - Resposta: `{ token, expiresIn, refreshToken, refreshExpiresIn }`.
+  - Erros: **401** credenciais inválidas; **400** "Verifique seu e-mail" (oferecer reenviar o código); **429** bloqueado por 15 min.
+- Esqueci a senha:
+  1. `POST /api/auth/forgot-password/send-code?email=`;
+  2. `POST /api/auth/forgot-password` com o código e a senha nova.
+- Sair: `POST /api/auth/logout` `{ refreshToken }`, limpa a sessão e fecha os WebSockets.
 
 ---
 
-## 5. App do motorista
+## 6. Telas por perfil (o que existe e o que falta, com a ordem das chamadas)
 
-### 5.1 Primeiro uso (preparação)
+Legenda: ✅ existe · 🟡 existe mas falta parte · ❌ falta.
+
+### 6.1 Menu do perfil (`/profile-select`)
+Itens novos a acrescentar:
+
+| Item | Perfil | Tela |
+|---|---|---|
+| Minhas vans | motorista | 6.2.1 |
+| Chave Pix | motorista | 6.2.1 |
+| Minhas rotas | motorista | 6.2.5 |
+| Grupos | motorista | 6.2.8 |
+| Parcelas | os dois | 6.2.7 / 6.3.7 |
+| Histórico de viagens | os dois | 6.2.9 / 6.3.8 |
+| Privacidade e dados (termos, exportar, excluir conta) | os dois | 6.4 |
+
+### 6.2 Motorista
+
+#### 6.2.1 Preparação (escolas ✅, vans ❌, Pix ❌, código ✅)
 
 | Tela | Ao abrir | Ações |
 |---|---|---|
-| Minhas escolas | `GET /api/school/my-schools` | adicionar: `POST /api/school/add-school`. Se a escola já existe, só vincula |
-| Minhas vans | `GET /api/vehicle/my-vehicles` | adicionar pelo **CRLV digital**: `POST /api/vehicle/add-vehicle` (multipart `documentPdf`; **422** = PDF inválido). Parar de usar: `PUT /api/vehicle/{id}/unlink` |
-| Meu código | `/me.linkCode` | mostrar pra passar pros pais (copiar/compartilhar) |
+| Escolas `/driver-schools` ✅ | `GET /api/school/my-schools` | adicionar: `POST /api/school/add-school` `{ name, phone, email, addressRequestDTO: {...} }`. Se a escola já existe, só vincula |
+| **Minhas vans** `/driver-vehicles` ❌ | `GET /api/vehicle/my-vehicles` → `[{ id, plate, model, year, color, capacity, licensingYear, status, linkedSince, ... }]` | adicionar pelo **CRLV digital**: `POST /api/vehicle/add-vehicle` (multipart `documentPdf`) → 201 com a van. **422**: CRLV inválido ou licenciamento vencido. Parar de usar: `PUT /api/vehicle/{id}/unlink` (**204**) |
+| **Chave Pix** `/driver-pix` ❌ | `GET /api/driver/pix-key` → `{ type, key }` (os dois `null` sem chave) | salvar: `PUT /api/driver/pix-key` `{ type: 'CPF' \| 'CNPJ' \| 'EMAIL' \| 'PHONE' \| 'RANDOM', key }`; mostre a `key` que voltar (já normalizada). **400**: a chave não bate com o tipo. Remover: `DELETE /api/driver/pix-key` |
+| Meu código `/driver-link-code` ✅ | `GET /api/driver/link-code` (ou `/me.linkCode`) | copiar e compartilhar |
 
-### 5.2 Conversar e fechar contrato
-1. **Lista de conversas:** `GET /api/chats`, com `otherUserId`, `otherUserName` e `otherUserPhotoKey`. As conversas nascem quando o pai usa o código do motorista.
-2. **Tela do chat:**
-   - ao abrir: `GET /api/chats/{chatId}/messages` e abre o `ws /chat/{chatId}`;
-   - enviar: `POST /api/chats/{chatId}/messages` `{content}` (com anexo: seção 8).
-3. **Mensagens do sistema:** `messageType` diferente de `REGULAR_CHAT` vira um **card**:
-   - `PROPOSAL`: proposta (botão "ver");
-   - `APPROVAL` e `REJECTION`: resposta da proposta;
-   - `ABSENCE`: falta avisada.
-4. **Propor contrato** (botão no chat, `docs/FLUXO_CONTRATO.md`):
-   - o aluno sai de `GET /api/chats/{chatId}/students`;
-   - a escola sai de `GET /api/school/my-schools`;
-   - o PDF é opcional (seção 8);
-   - envia com `POST /api/chats/{chatId}/contract`.
-5. **Meus contratos:** `GET /api/contract/my-contracts?status=ACTIVE`. Detalhe: `GET /api/contract/{id}`.
+#### 6.2.2 Conversas ✅
+- Lista: `GET /api/chats?page=&size=` → `otherUserId`, `otherUserName`, `otherUserPhotoKey`.
+- Conversa:
+  - ao abrir: `GET /api/chats/{chatId}/messages?page=&size=` e abre o WebSocket do chat;
+  - enviar: `POST /api/chats/{chatId}/messages` `{ content?, attachmentType?: 'IMAGE' | 'CONTRACT_DOCUMENT' | 'OTHER', attachmentUrl?: fileKey }`.
+- Mensagens do sistema (`messageType` ≠ `REGULAR_CHAT`) viram card:
+  - `PROPOSAL`: card da proposta (`JSON.parse(payload).contractId`);
+  - `APPROVAL` / `REJECTION`: resposta (também usado pra proposta retirada ou expirada);
+  - `ABSENCE`: falta avisada pelo pai.
+- **Novo: botão "Ver perfil"** no topo da conversa → 6.2.10.
 
-### 5.3 Montar uma rota (uma vez, e quando mudar)
+#### 6.2.3 Proposta de contrato (✅ enviar; ❌ retirar)
+Envio, já feito em `/driver-contract/:chatId`:
+1. aluno: `GET /api/chats/{chatId}/students` → `[{ id, name }]`;
+2. escola: `GET /api/school/my-schools`;
+3. PDF: upload (seção 4.4);
+4. `POST /api/chats/{chatId}/contract` `{ responsibleId, studentId, schoolId, contract: { periodicity, value, startDate, endDate }, document: { url: fileKey, type: 'TRANSPORT_CONTRACT' } }` → **201** `{ message, userDriverContractId, contract }`.
 
+**❌ Retirar a proposta:** no card `PROPOSAL` do motorista, enquanto o contrato estiver `PENDING`, botão "Retirar proposta" → `PUT /api/chats/{chatId}/contracts/{contractId}/withdraw` (**200**). O chat recebe um `REJECTION` "Proposta Retirada" e o card fecha.
+
+#### 6.2.4 Contratos (✅ lista e detalhe; ❌ cancelamento, assinaturas, parcelas)
+- Lista `/contracts`: corrigir a paginação (3.2) e os status (3.4).
+  - Cada item mostra `overduePayments` (selo vermelho se > 0).
+  - Se tiver `pendingCancellation`: "Cancela em DD/MM" (`effectiveDate`).
+- Detalhe `/contract/:contractId`: `GET /api/contract/{contractId}`. Mostrar:
+  - status: `SCHEDULED` = "Agendado — começa em DD/MM";
+  - PDF: `GET /api/storage/download-url?fileKey=<documentFileKey>` (a chave agora é `contracts/{id}.pdf`);
+  - assinaturas ("assinado por Carlos em 20/01 e por Maria em 21/01"; `valid: false` = "termos alterados depois da assinatura");
+  - `studentResponsibles` (todos os responsáveis do aluno, sem telefone);
+  - histórico de `cancellations`;
+  - botão **"Parcelas"** → lista de parcelas filtrada por `contractId` (6.2.7).
+- **❌ Cancelar** (contrato `SCHEDULED` ou `ACTIVE`):
+  1. botão "Cancelar contrato" → modal com o motivo (obrigatório, até 500 caracteres) e o aviso "o contrato será cancelado em 30 dias, ou antes se a outra parte aceitar; parcelas que vencerem até lá continuam devidas";
+  2. `POST /api/contract/{contractId}/cancellation` `{ reason }` → **201** com o pedido;
+  3. se voltar `status: ACCEPTED` e `unilateral: true`, o contrato **já foi cancelado** (havia parcela vencida há 30 dias ou mais). Senão, mostre "Cancela em `effectiveDate`".
+- **❌ Pedido em andamento** (`pendingCancellation` no detalhe e na lista):
+  - pedido da **outra parte**: "Aceitar e cancelar agora" → `PUT /api/contract/{contractId}/cancellation/accept`;
+  - pedido **meu**: "Desistir" → `DELETE /api/contract/{contractId}/cancellation`;
+  - **não existe "Recusar"**.
+- Erros: **409** já existe pedido em andamento, contrato não está aceito, ou a van está rodando com o aluno agora ("tente depois que a viagem terminar").
+- **Renovação:** com um contrato `ACTIVE`, o motorista pode propor **um** próximo contrato pro mesmo aluno, começando **depois** do fim do atual. Ofereça "Renovar" no detalhe de um contrato `ACTIVE` sem renovação: abre a proposta com o aluno preenchido e a data de início = fim + 1 dia. Se sobrepor, ou já existir outro pendente ou agendado: **409**.
+
+#### 6.2.5 Rotas ❌ (montar a rota)
+Detalhes, JSON e regras em `docs/FLUXO_ROTA.md`.
 ```
-Minhas rotas ── GET /api/route/get-all-routes-and-stops
- └─ Nova rota ── POST /api/route/create-route {name}       (ex.: "Ida manhã"; a volta é outra rota)
-     └─ Editor da rota ── GET /api/route/{routeId}/stops    (pontos em ordem, com alunos e escolas)
-         ├─ + aluno na rota .... GET /api/route/stop-options   (alunos dele com os endereços)
-         │                        POST /api/route/{routeId}/add-student/{studentId}
-         │                        {action, locationType, newStop: true | routeStopId, studentAddressId?, weekdays?, orderIndex?}
-         │                        → devolve {stops, pending}. newStop = ponto novo; routeStopId = um ponto que já existe
-         │                        (a tela mostra os pontos daquele endereço e um "novo ponto"; SCHOOL = a escola do contrato)
-         │                        (tela: "Ana · Casa · embarca · seg-sex"; depois "Ana · Escola · desce")
-         ├─ trocar ordem ....... PUT /api/route/stop/{stopId}/swap-order {orderIndex}
-         ├─ mover aluno ........ PUT /api/route/student-stop/{id}/move {routeStopId}
-         ├─ dias do aluno ...... PUT /api/route/student-stop/{id}/weekdays {weekdays}
-         ├─ remover ............ DELETE student-stop / school-stop / stop
-         ├─ van padrão ......... PUT /api/route/{routeId}/set-vehicle/{vehicleId}
-         └─ pendências ......... GET /api/route/{routeId}/pending   (lista vazia = rota pronta)
+Minhas rotas /driver-routes
+ └─ GET /api/route/get-all-routes-and-stops?active=true&name=&page=   (página; active=false inclui as que ele deixou)
+     ├─ Nova rota → POST /api/route/create-route { name }   ("Ida manhã"; a volta é outra rota)
+     └─ abrir uma → Editor /driver-routes/:routeId
+          ├─ GET /api/route/{routeId}/stops      (pontos em ordem, com alunos e escolas)
+          ├─ GET /api/route/{routeId}/pending    (pendências; [] = rota pronta)
+          ├─ + aluno:
+          │    1. GET /api/route/stop-options → { students: [{ studentId, studentName, addresses: [{ id, label, address }] }] }
+          │       (só alunos com contrato ACTIVE; a escola não aparece: é sempre a do contrato)
+          │    2. escolhe ação (embarque/desembarque), local (HOME/OTHER com um endereço, ou SCHOOL),
+          │       dias da semana e o ponto: um que já existe naquele endereço (routeStopId) ou "novo ponto" (newStop: true, orderIndex opcional)
+          │    3. POST /api/route/{routeId}/add-student/{studentId}
+          │       { action, locationType, newStop? | routeStopId?, studentAddressId?, weekdays?, orderIndex? }
+          │       → { stops, pending }   (redesenha com a resposta; não precisa de outro GET)
+          ├─ trocar ordem ... PUT /api/route/stop/{routeStopId}/swap-order { orderIndex }
+          ├─ mover aluno .... PUT /api/route/student-stop/{studentStopId}/move { routeStopId }
+          ├─ dias ........... PUT /api/route/student-stop/{studentStopId}/weekdays { weekdays: ['MONDAY', ...] }
+          ├─ remover ........ DELETE /api/route/student-stop/{id} | /school-stop/{id} | /stop/{id}  → { stops, pending }
+          └─ van padrão ..... PUT /api/route/{routeId}/set-vehicle/{vehicleId}   (vans de GET /api/vehicle/my-vehicles)
 ```
+- Mostre `pending` como aviso ("Ana: falta desembarque na sexta").
+- A viagem só inicia sem pendência; o **400** traz quem e o que falta.
+- Cada aluno precisa de embarque **e** desembarque em cada dia; o embarque vem antes na ordem.
+- **403** no `add-student`: sem contrato `ACTIVE` com o aluno (contrato `SCHEDULED` ainda não serve), ou o motorista não está mais na rota.
 
-**Pro editor (design):**
-- mostre as pendências como aviso ("Ana sem desembarque na sexta");
-- a rota só pode ser iniciada sem pendências;
-- cada aluno precisa de um **embarque** e um **desembarque**;
-- na ida, normalmente o embarque é em casa e o desembarque na escola.
-
-### 5.4 Executar a rota (tela estilo iFood)
-
+#### 6.2.6 Executar a viagem ❌ (refazer `/driver-route`)
+Detalhes e o formato do `trip-update` em `docs/FLUXO_TRIP.md`.
 ```
-Tela da rota (abre)
+/driver-route/:routeId (abre)
  └─ GET /api/trip/route/{routeId}/today
-     ├─ 404 ............ botão "Iniciar rota"
-     ├─ 200 ativa ...... "Continuar" (só abre o WebSocket) | "Recomeçar do zero"
-     └─ 200 FINISHED ... "Rota de hoje finalizada"
+     ├─ 404 ........... botão "Iniciar rota"
+     ├─ 200 ativa ..... "Continuar" (só abre o WebSocket) | "Recomeçar do zero"
+     └─ 200 FINISHED .. "Rota de hoje finalizada"
 
 Iniciar
- ├─ pede permissão de localização (de preferência "sempre", pra seguir com a tela apagada)
- ├─ pega o GPS atual
- ├─ POST /api/trip/start/{routeId} {latitude, longitude, vehicleId?}   (sem vehicleId = van padrão)
- ├─ abre ws /trip/{tripId}
- └─ liga o watchPosition: a cada 3–5 s manda {"type":"position","latitude","longitude"} pelo WebSocket
+ ├─ pede a localização (navigator.geolocation; HTTPS) e liga a Wake Lock
+ ├─ POST /api/trip/start/{routeId}  { latitude, longitude, vehicleId? }   (sem vehicleId = van padrão)
+ │     recomeçar: POST /api/trip/start/{routeId}?restart=true  (id novo: troque o WebSocket)
+ ├─ abre o WebSocket da viagem
+ └─ watchPosition: a cada 3 a 5 s manda {"type":"position","latitude","longitude"} pelo WebSocket
 
-Durante (tudo que aparece na tela vem do trip-update do WebSocket)
- ├─ mapa: a van (latitude/longitude), a linha (path, [lng,lat] → inverter), os pontos (stops)
- ├─ barra do topo: "Próximo ponto em X min" (targetStopId + etaSeconds)
- ├─ lista de pontos: alunos de cada ponto com o status
- ├─ "embarcou" → PUT /api/trip/{tripId}/student/{id}/board
- ├─ "desceu"   → PUT /api/trip/{tripId}/student/{id}/alight
- ├─ "ausente"  → PUT /api/trip/{tripId}/student/{id}/absent   (não apareceu)
- │     embarcou/desceu só funcionam com a van a até 1 km do ponto: o 409 traz a distância
- ├─ "navegar" → abre Google Maps/Waze com os pontos em ordem (lat/lng dos stops)
- └─ todos atendidos (targetStopId === null): aviso + botão grande "Finalizar rota"
+Durante (o que aparece vem do trip-update)
+ ├─ mapa: van, linha (path [lng,lat] → inverter), pontos
+ ├─ "Próximo ponto em X min" (targetStopId + etaSeconds)
+ ├─ alunos de cada ponto com o status
+ ├─ embarcou ... PUT /api/trip/{tripId}/student/{studentId}/board
+ ├─ desceu ..... PUT /api/trip/{tripId}/student/{studentId}/alight
+ ├─ ausente .... PUT /api/trip/{tripId}/student/{studentId}/absent
+ │     (embarcou e desceu só com a van a até 1 km do ponto: o 409 traz a distância)
+ ├─ ocorrência . POST /api/trip/{tripId}/occurrences { type, description }
+ │     type: VEHICLE | STUDENT | TRAFFIC | DISCIPLINARY | FINANCIAL | MEDICAL | OTHER  (os pais de todos os alunos são avisados)
+ ├─ navegar .... abre Google Maps ou Waze com os pontos em ordem
+ └─ todos atendidos (targetStopId === null): "Finalizar rota" em destaque
 
-Finalizar → POST /api/trip/{tripId}/finish → fecha o WebSocket e para o GPS
+Finalizar → POST /api/trip/{tripId}/finish → fecha o WebSocket, para o GPS e solta a Wake Lock
 ```
+- A home do motorista (`/driver-home`) precisa escolher **qual rota** executar: liste `GET /api/route/get-all-routes-and-stops?active=true` e abra `/driver-route/:routeId`.
+- Só entram na viagem alunos com contrato **ACTIVE** com o motorista: aluno de contrato agendado, encerrado ou cancelado não aparece, mesmo que ainda esteja na rota.
+- Viagem esquecida aberta: o sistema fecha sozinho depois de 20 horas e manda a notificação `SYSTEM` "Viagem fechada automaticamente".
+- Os botões não mudam a tela por conta própria: espere o `trip-update` (chega em menos de 1 s) ou use a resposta do PUT.
 
-**Pontos de atenção:**
-- **O app precisa mandar GPS com a tela apagada**, porque o motorista dirige com o celular no suporte. No Expo, isso é o `expo-location` com tarefa em segundo plano (`startLocationUpdatesAsync`) e a permissão "sempre".
-- **Recomeçar** cria uma trip nova, com **id novo**: troque o WebSocket.
-- **Os botões não mudam a tela sozinhos:** depois de um PUT, espere o `trip-update` (ele chega em menos de 1 s) ou use a resposta do PUT.
+#### 6.2.7 Parcelas ❌ `/payments`
+Detalhes em `docs/FLUXO_PAGAMENTO.md`.
+- Ao abrir: `GET /api/payments?status=&studentId=&responsibleId=&contractId=&from=&to=&page=&size=`. Cada item vem como:
+  ```json
+  { "id", "contractId", "studentName", "responsibleName", "value", "dueDate",
+    "status", "paymentMethod", "paidAt", "driverPixKeyType", "driverPixKey" }
+  ```
+- Status:
+  - `PENDING` em dia; `OVERDUE` atrasada (em vermelho);
+  - `PAID` paga; `CANCELED` dispensada.
+  - O filtro `status=OVERDUE` já traz as vencidas que o worker ainda não marcou.
+- Nas `PENDING` e `OVERDUE`, dois botões, sempre com confirmação (**não têm volta**):
+  - **"Recebi"** → pergunta o método (PIX, dinheiro, boleto, cartão) → `PUT /api/payments/{id}/paid` `{ method: 'PIX' | 'CASH' | 'BOLETO' | 'CREDIT_CARD' }`;
+  - **"Dispensar"** → `PUT /api/payments/{id}/cancel`.
+- **409**: já paga ou dispensada (ex.: dois cliques).
+- Parcela vencida de contrato cancelado continua aparecendo e pode receber baixa.
 
----
+#### 6.2.8 Grupos ❌ `/driver-groups`
+- `GET /api/driver/groups` → `[{ id, name, students: [{ studentId, studentName }] }]`.
+- Criar: `POST /api/driver/groups` `{ name }`. Renomear: `PUT /api/driver/groups/{id}` `{ name }`. Apagar: `DELETE /api/driver/groups/{id}`.
+- Pôr aluno: escolha entre os alunos de `GET /api/contract/my-contracts?status=ACTIVE` → `POST /api/driver/groups/{id}/students/{studentId}`. Tirar: `DELETE .../students/{studentId}`.
+  - **403**: sem contrato `ACTIVE` com o aluno.
+- **"Avisar o grupo"** ("não vou buscar hoje"): `POST /api/driver/groups/{id}/notice` `{ reason? }` (até 300 caracteres) → `{ notifiedResponsibles }`: "X responsáveis avisados".
 
-## 6. App do responsável
+#### 6.2.9 Histórico de viagens ❌ `/trip-history`
+- `GET /api/trip/history?studentId=&routeId=&date=` (ou `from`/`to`) `&page=` → página com:
+  ```json
+  { "tripId", "date", "tripStatus", "startTime", "endTime", "routeName", "studentName",
+    "boardingStatus", "boardingTime", "unboardingTime", "occurrences" }
+  ```
+- `endTime` `null` com `FINISHED` = fechada pelo sistema.
+- Ocorrências de uma viagem: `GET /api/trip/{tripId}/occurrences` → `[{ id, type, description, dateTime, driverName }]`.
 
-### 6.1 Filhos
+#### 6.2.10 Perfil do responsável ❌ `/responsible-profile/:responsibleId`
+- Abre do chat ou do detalhe do contrato: `GET /api/responsible/{responsibleId}/profile`. Resposta:
+  ```json
+  { "id", "name", "photoKey", "phone", "financialStatus", "overduePayments",
+    "students": [{ "studentId", "studentName", "contractId", "contractStatus", "relationType", "admin" }] }
+  ```
+- `financialStatus` (`UP_TO_DATE`/`OVERDUE`) e `overduePayments` são **só das parcelas com esse motorista**.
+- **403**: o motorista não conversa nem tem contrato com esse responsável.
 
-| Tela | Chamadas |
-|---|---|
-| Meus filhos | `GET /api/student/my-children` (paginado: `content[]`) |
-| Cadastrar filho | `POST /api/student/create-student` `{name, birthDate, relationType, notes?, address \| addressId, addressLabel?}`. `relationType`: `FINANCIAL`, `LEGAL` ou `WITHDRAWAL`. O endereço vira o "Casa" do filho. Se outro filho usa o mesmo endereço, dá pra mandar o `addressId` dele em vez de digitar (cada filho tem a própria lista) |
-| Endereços do filho (onde é buscado/deixado) | `GET /api/student/{id}/addresses`; novo: `POST .../addresses {label, address}` ou reaproveitado: `{label, addressId}`; tirar: `DELETE .../addresses/{id}` (apaga só a ligação; o motorista é avisado e escolhe o novo ponto). No cadastro do filho dá pra mandar vários de uma vez (`addresses: [...]`). **Dica de tela:** antes do campo de endereço, mostre os endereços que a família já tem (o seu de cobrança e os dos outros filhos) pra escolher, em vez de digitar de novo. Se digitar igual, o backend reaproveita sozinho |
-| Dividir com outro responsável | quem cadastrou: `POST /api/student/generate-link` `{id, relationType}` → devolve um código. O outro responsável: `POST /api/student/confirm-link` `{code}` |
-| Rotas do filho | `GET /api/student/{id}/routes` → `[{id, name}]` |
+### 6.3 Responsável
 
-### 6.2 Achar o motorista e fechar contrato
-1. Tela "Tenho um código": `POST /api/invite-code/redeem` `{inviteCode}` → devolve o `chatId` (abre o chat).
-2. No chat, a proposta chega como card `PROPOSAL`. O `payload` é texto com JSON dentro: `JSON.parse(payload).contractId`.
-3. **Ver proposta:**
-   - `GET /api/contract/{contractId}`;
-   - o PDF: `GET /api/storage/download-url?fileKey=<documentFileKey>`.
-4. **Responder:**
-   - aceitar: `PUT /api/chats/{chatId}/contracts/{contractId}/accept`;
-   - recusar: `.../reject`.
+#### 6.3.1 Filhos (✅ cadastrar e listar; ❌ detalhe do filho)
+- Lista: `GET /api/student/my-children?page=` (página).
+- Cadastrar ✅: `POST /api/student/create-student` `{ name, birthDate, relationType: 'FINANCIAL' | 'LEGAL' | 'WITHDRAWAL', notes?, address | addressId, addressLabel? }`. Quem cadastra vira o **admin** do filho.
+- **❌ Detalhe do filho** `/student/:studentId`. Ao abrir, em paralelo:
+  - `GET /api/student/{id}/addresses`;
+  - `GET /api/student/{id}/responsibles`;
+  - `GET /api/student/{id}/routes` → `[{ id, name }]`;
+  - `GET /api/student/{id}/absences`.
 
-### 6.3 Dia a dia: a home do responsável
+  Seções da tela: endereços (6.3.2), responsáveis (6.3.3), rotas, faltas (6.3.5) e "Histórico de viagens" (6.3.8).
+
+#### 6.3.2 Endereços do filho ❌ (dentro do detalhe do filho)
+- Listar: `GET /api/student/{id}/addresses` → `[{ id, label, address }]`.
+- Adicionar (só o **admin**):
+  - endereço novo: `POST /api/student/{id}/addresses` `{ label, address }`;
+  - reaproveitar um que a família já tem: `{ label, addressId }`.
+
+  **409**: o filho já tem esse endereço. Mesmo CEP e número = mesmo endereço (o backend reaproveita sozinho).
+- Tirar (só o admin): `DELETE /api/student/{id}/addresses/{studentAddressId}`. O motorista é avisado.
+- **Dica:** antes de digitar, mostre os endereços da família (o do responsável e os dos outros filhos) pra escolher.
+
+#### 6.3.3 Responsáveis do filho ❌ (dentro do detalhe do filho)
+- Listar: `GET /api/student/{id}/responsibles` → `[{ responsibleId, name, relationType, admin }]`.
+- **Convidar** ✅ (já existe em `add-student` / `student-code`):
+  1. o admin gera o código: `POST /api/student/generate-link` `{ id: studentId, relationType }` (vale 15 min);
+  2. o outro responsável usa: `POST /api/student/confirm-link` `{ code }`.
+- **❌ Remover** (só o admin; não pode remover a si mesmo): `DELETE /api/student/{id}/responsibles/{responsibleId}` (**204**). A pessoa removida perde **na hora** o acesso às rotas, viagens, localização e histórico do filho.
+- **❌ Sair** (qualquer um, menos o admin): o mesmo `DELETE` com o próprio id. Depois volta pra lista de filhos.
+- **❌ Passar o admin** (só o admin): `PUT /api/student/{id}/responsibles/{responsibleId}/admin` (**204**).
+- Erros:
+  - **403**: quem não é admin removendo outro ou passando o admin;
+  - **409**: o admin tentando sair sem passar o admin, ou remover alguém com contrato ou proposta em andamento com o filho (cancele antes).
+- Passar o admin não muda quem paga: as parcelas de um contrato continuam com quem assinou. As próximas propostas do motorista vão pro admin novo.
+
+#### 6.3.4 Motorista: código, conversa, proposta, perfil e avaliação
+- Código do motorista ✅ (`/driver-code`): `POST /api/invite-code/redeem` `{ inviteCode }` → `chatId` (texto) → abre a conversa.
+- Proposta ✅ (card no chat): ver com `GET /api/contract/{contractId}`; aceitar e recusar já existem.
+  - Aceitar: `PUT /api/chats/{chatId}/contracts/{contractId}/accept`. Se a data de início ainda não chegou, o contrato fica **`SCHEDULED`**; mostre "Agendado: começa em DD/MM".
+  - Recusar: `PUT /api/chats/{chatId}/contracts/{contractId}/reject`.
+  - **409** ao aceitar: a data de início já passou (peça outra proposta) ou já foi decidido.
+- **❌ Perfil do motorista** `/driver-profile/:driverId` (do chat ou do contrato): `GET /api/driver/{driverId}/profile` → `{ driverId, name, photoKey, memberSince, schools, vehicles, ratingAverage, ratingCount, myRating, recentRatings }`.
+  - **403**: sem conversa nem contrato com ele.
+- **❌ Avaliar** (botão no perfil, só pra quem tem ou teve contrato `ACTIVE`/`INACTIVE` com ele): `PUT /api/driver/{driverId}/rating` `{ score: 1..5, comment? }`.
+  - O `myRating` do perfil diz se já avaliou (aí o botão vira "editar").
+  - Apagar: `DELETE /api/driver/{driverId}/rating`.
+
+#### 6.3.5 Home e faltas (🟡 home; ❌ viagens do dia e faltas)
 ```
-Home (cards por filho)
- ├─ GET /api/student/{id}/today-trips  → trips de hoje desse filho
+/responsible-home (cards por filho)
+ ├─ GET /api/student/my-children
+ ├─ por filho: GET /api/student/{id}/today-trips → [{ tripId, routeId, routeName, tripStatus, boardingStatus }]
  │     []  → "A van ainda não saiu"
- │     [ ] → card da trip com o status do filho e o botão "Acompanhar"
- ├─ GET /api/student/{id}/absences     → faltas de hoje em diante
- └─ escuta o ws /notifications:
-       TRIP_STARTED (payload.tripId) → atualiza o card (sem polling) e pode abrir o acompanhamento direto
+ │     [..] → card com o status do filho e o botão "Acompanhar" (6.3.6)
+ ├─ por filho: GET /api/student/{id}/absences → faltas de hoje em diante [{ id, routeId, routeName, date }]
+ └─ notificação TRIP_STARTED pelo WebSocket (payload.tripId) → atualiza o card (sem polling)
 ```
-Chame o `today-trips` **ao abrir a home**, ao voltar pro app e quando chegar uma notificação de trip. **Não fique repetindo**: quem avisa que a van saiu é a notificação.
+Chame `today-trips` **ao abrir a home**, ao voltar pro app e quando chegar uma notificação de viagem. Não fique repetindo.
 
 **Faltas:**
 
 | Botão | Quando mostrar | Chamada |
 |---|---|---|
-| "Não vai hoje" / "não vai dia X" | antes da viagem, ou durante ela **enquanto o filho não embarcou** | `POST /api/student/{id}/absences` `{routeId, date}` |
-| "Ele vai sim" | **só antes de a viagem do dia começar** | `DELETE /api/student/{id}/absences/{absenceId}` |
+| "Não vai hoje" / "Não vai dia X" (escolhe a rota em `GET /api/student/{id}/routes`) | antes da viagem, ou durante ela **enquanto o filho não embarcou** | `POST /api/student/{id}/absences` `{ routeId, date }` |
+| "Ele vai sim" (desfazer) | **só antes de a viagem do dia começar** | `DELETE /api/student/{id}/absences/{absenceId}` |
 
-### 6.4 Acompanhar (tela estilo Uber)
-Abre o `ws /trip/{tripId}`. Cada `trip-update` traz um `mode`, e a tela inteira é decidida por ele:
+**400**: data que já passou, ou o filho não está nessa rota. **409**: a falta já existe, o filho já embarcou, ou a viagem já começou (pra desfazer).
 
-| `mode` | O que desenhar |
+#### 6.3.6 Acompanhar a viagem ❌ (refazer `/responsible-route`)
+- Rota: `/responsible-route/:tripId`.
+- Abre só o WebSocket da viagem (`wsUrl('/trip/' + tripId)`); o estado chega ao conectar. Não precisa de GET.
+- Cada `trip-update` traz um `mode`, e ele decide a tela inteira:
+
+| `mode` | Desenhar |
 |---|---|
-| `FOLLOWING` | mapa com a van, a **linha até o destino do filho** (`path`), o pino do destino (casa ou escola, pelo `action`/`locationType` do filho) e a caixa "**X MIN**" (`etaSeconds`) |
-| `ON_BOARD` | "Seu filho está na van": **só a van** no mapa (sem linha, sem tempo); a van ainda vai buscar outros alunos |
-| `DONE` | "Acompanhamento encerrado: Ana foi entregue às 07:32" (`students[].deliveredAt`); pode fechar o WebSocket |
-| `STATUS` | sem mapa: só o status do filho ("aguardando", "embarcou", "ausente") |
+| `FOLLOWING` | mapa com a van, a **linha até o destino do filho** (`path`), o pino do destino e "X MIN" (`etaSeconds`) |
+| `ON_BOARD` | "Seu filho está na van": só a van no mapa |
+| `DONE` | "Ana foi entregue às 07:32" (`students[].deliveredAt`); pode fechar o WebSocket |
+| `STATUS` | sem mapa, só o status ("aguardando", "embarcou", "ausente") |
 
-Mais duas regras:
-- `status: CANCELED` = o motorista recomeçou a rota: chame `today-trips` de novo e abra a trip nova.
-- `status: FINISHED`: feche o WebSocket.
+- `status: CANCELED` = o motorista recomeçou: chame `today-trips` de novo e abra a viagem nova. `status: FINISHED`: feche o WebSocket.
+- O pai vê **só as paradas do próprio filho**; o backend já filtra.
+- Fechou com o código 1003: o responsável não tem mais acesso (foi removido do filho). Volte pra home.
 
-Pro mapa:
-- `path` vem como `[longitude, latitude]`;
-- a van **vira** pela direção do movimento (posição anterior → nova) e **desliza** entre as posições;
-- o tempo do `etaSeconds` já vem descontado; entre as mensagens, pode ir diminuindo no relógio do celular.
+#### 6.3.7 Parcelas ❌ `/payments` (mesma tela do motorista, outro modo)
+- `GET /api/payments?studentId=&driverId=&status=&page=`.
+- Nas `PENDING` e `OVERDUE`, mostre a **chave Pix do motorista** (`driverPixKey`, com o tipo) e o botão **"Copiar chave Pix"** (`navigator.clipboard.writeText`).
+  - Se `driverPixKey` vier `null`: "o motorista ainda não cadastrou a chave Pix".
+- O pai **não dá baixa**: quem confirma é o motorista. Pra avisar que pagou, botão "Avisar no chat" → abre a conversa com o motorista.
+- Só o responsável que **assinou** o contrato vê as parcelas dele.
+- `OVERDUE` em vermelho.
+
+#### 6.3.8 Histórico de viagens e ocorrências ❌ `/trip-history`
+- O mesmo `GET /api/trip/history?studentId=&date=` (ou `from`/`to`) da seção 6.2.9: embarcou às, chegou às, faltou, ocorrências.
+- Todos os responsáveis do filho veem.
+- Ocorrências: `GET /api/trip/{tripId}/occurrences`. A notificação `OCCURRENCE` abre direto essa lista.
+
+#### 6.3.9 Perfil do responsável (dele mesmo) ❌
+`GET /api/responsible/{meuId}/profile`: situação financeira geral, todas as parcelas atrasadas e todos os contratos dos filhos. Pode ser uma seção do `/profile-info/:tipo`.
+
+### 6.4 Os dois perfis: conta e privacidade
+
+| # | Tela/ação | Situação | Chamadas |
+|---|---|---|---|
+| 6.4.1 | Dados e foto (`/profile-info`) | ✅ | `GET /api/users/me`; foto (4.4); e-mail/telefone: `POST /api/users/send-code-updateUser` → `PUT /api/users/update-user` `{ email, phone, code }` |
+| 6.4.2 | Termos de uso | ❌ | `/terms` (4.3): ler `GET /api/terms` a qualquer hora, inclusive no menu |
+| 6.4.3 | **Exportar meus dados** | ❌ | `GET /api/users/me/export` → JSON pra baixar (crie um `Blob` e baixe como `meus-dados.json`). **429**: de novo antes de 5 minutos |
+| 6.4.4 | **Excluir minha conta** | ❌ | confirmação dupla com a senha → `DELETE /api/users/me` `{ "password": "..." }` → **204**: limpe a sessão, feche os WebSockets e vá pra `/`. **400** senha errada; **409** com contrato aceito (agendado ou ativo), proposta pendente ou parcela atrasada: mostre a `message` e um link pra lista de contratos/parcelas. Explique antes: os dados pessoais e os arquivos enviados somem; contratos, parcelas e mensagens ficam no histórico das outras partes sem o nome |
+
+### 6.5 Notificações (`/notifications`, 🟡)
+- Lista: `GET /api/notifications?unread=false&page=0&size=20` → `{ id, type, title, message, payload, createdAt, read }`.
+- Tocar numa: `PUT /api/notifications/{id}/read` e navega pelo `type` (seção 7).
+- Marcar todas: `PUT /api/notifications/read-all`.
+- Badge: o total chega ao conectar no WebSocket de notificações (já feito).
 
 ---
 
-## 7. Notificações (os dois perfis)
+## 7. Notificações: tipo → quem recebe → pra onde leva
 
-| Tela/lugar | Chamadas |
-|---|---|
-| badge do sino | `unread-count` que chega ao conectar no `ws /notifications` (+1 a cada `notification`) |
-| lista | `GET /api/notifications?page=0&size=20` (`?unread=true` só as não lidas) |
-| tocar numa | `PUT /api/notifications/{id}/read` e navega pelo `type` (tabela abaixo) |
-| "marcar todas" | `PUT /api/notifications/read-all` |
+| `type` | Quem recebe | `payload` | Abre |
+|---|---|---|---|
+| `CONTRACT_PROPOSED` | responsável | `chatId`, `contractId` | contrato ou chat |
+| `CONTRACT_ACCEPTED` / `CONTRACT_REJECTED` | motorista | `chatId`, `contractId` | contrato |
+| `CONTRACT_WITHDRAWN` | responsável | `chatId`, `contractId` | contrato |
+| `CANCELLATION_REQUESTED` | a outra parte | `contractId` | contrato (com "Aceitar e cancelar agora") |
+| `CANCELLATION_WITHDRAWN` | a outra parte | `contractId` | contrato |
+| `CONTRACT_CANCELED` | a outra parte (no fim do aviso, os dois) | `contractId` | contrato |
+| `CONTRACT_STARTED` | os dois | `contractId` | contrato (o motorista já pode pôr o aluno na rota) |
+| `CONTRACT_EXPIRED` | os dois | `contractId` | contrato |
+| `CONTRACT_ENDED` | os dois | `contractId` | contrato |
+| `PAYMENT` | responsável | `paymentId`, `contractId` | parcelas filtradas pelo contrato |
+| `TRIP_STARTED` / `VAN_ON_THE_WAY` | responsável | `tripId` (…) | acompanhar (`/responsible-route/:tripId`) |
+| `STUDENT_BOARDED` / `STUDENT_DELIVERED` / `STUDENT_ABSENT` | responsável | `tripId`, `studentIds` | acompanhar ou home |
+| `OCCURRENCE` | responsável | `tripId`, `occurrenceId`, `type` | ocorrências da viagem |
+| `DRIVER_NOTICE` | responsável | `groupId`, `driverId`, `date` | só mostra o texto |
+| `ABSENCE_REPORTED` | motorista | `chatId`, `studentId`, `routeId`, `date` | chat com o pai |
+| `SYSTEM` | motorista ("Viagem fechada automaticamente", `tripId`) ou responsável ("Vínculo removido", `studentId`) | — | histórico de viagens / lista de filhos |
+| `CANCELLATION_REJECTED` | — | — | só em notificação antiga; não é mais enviada |
 
-Pra onde cada notificação leva (`payload` já é um objeto):
-
-| `type` | Quem recebe | Abre |
-|---|---|---|
-| `CONTRACT_PROPOSED` | responsável | contrato (`payload.contractId`) ou o chat (`payload.chatId`) |
-| `CONTRACT_ACCEPTED` / `CONTRACT_REJECTED` | motorista | contrato / chat |
-| `TRIP_STARTED` | responsável | acompanhamento (`payload.tripId`) |
-| `VAN_ON_THE_WAY` | responsável | acompanhamento (`payload.tripId`, com `etaSeconds`) |
-| `STUDENT_BOARDED` / `STUDENT_DELIVERED` / `STUDENT_ABSENT` | responsável | acompanhamento / home do filho |
-| `ABSENCE_REPORTED` | motorista | chat com o pai (`payload.chatId`) |
-
-Com o app **aberto**, mostre um aviso no topo (toast) quando chegar uma `notification`. Com o app **fechado**, ainda não há push (seção 10).
-
----
-
-## 8. Arquivos (anexo do chat e PDF do contrato)
-```
-1. GET /api/storage/presigned-url?fileName=foto.jpg&contentType=image/jpeg  → {uploadUrl, fileKey}
-2. PUT <uploadUrl> com o arquivo e o mesmo Content-Type   (direto no MinIO, sem Authorization)
-3. usa o fileKey:
-   - chat:     POST /api/chats/{chatId}/messages {content?, attachmentType: IMAGE|CONTRACT_DOCUMENT|OTHER, attachmentUrl: fileKey}
-   - contrato: document.url da proposta
-Pra mostrar: GET /api/storage/download-url?fileKey=... → downloadUrl (vale 15 min)
-```
-O `fileKey` vem como `uploads/{seuId}/...`: o caminho diz quem enviou. Só dá pra anexar (chat) ou usar como PDF do contrato um arquivo **que você mesmo enviou**; arquivo de outra pessoa dá **403** no chat e **400** na proposta. Pro front não muda nada: é só usar o `fileKey` que voltou do passo 1.
+As notificações gravadas pelo worker diário (`CONTRACT_STARTED`, `CONTRACT_EXPIRED`, `CONTRACT_ENDED`, `CONTRACT_CANCELED` do fim do aviso, `PAYMENT` "Parcela atrasada" e `SYSTEM` da viagem) **não chegam pelo WebSocket**: aparecem no próximo `GET /api/notifications` ou ao reabrir o app.
 
 ---
 
-## 9. Mapa de telas → chamadas (resumo)
+## 8. Referência de rotas da API (todas que o front usa)
 
-| Tela | Ao abrir | Conexão aberta |
-|---|---|---|
-| Splash | `/api/users/me` | `ws /notifications` |
-| Login / cadastro | — | — |
-| Chats | `GET /api/chats` | — |
-| Chat | `GET /api/chats/{id}/messages` | `ws /chat/{id}` |
-| Contrato | `GET /api/contract/{id}` | — |
-| Motorista: rotas | `GET /api/route/get-all-routes-and-stops` | — |
-| Motorista: editor da rota | `GET /api/route/{id}/stops`, `/pending` | — |
-| Motorista: executar | `GET /api/trip/route/{id}/today` | `ws /trip/{tripId}` + GPS |
-| Responsável: home | `my-children`, `today-trips`, `absences` | — |
-| Responsável: acompanhar | — (o estado chega ao conectar) | `ws /trip/{tripId}` |
-| Notificações | `GET /api/notifications` | (o `ws /notifications` já está aberto) |
+Base `/api`. "M" = motorista, "R" = responsável, "—" = sem login. Detalhes nos docs da tabela do topo.
+
+### Conta e acesso
+| Método e rota | Quem | Corpo / parâmetros | Resposta |
+|---|---|---|---|
+| `GET /terms` | — | — | `{ version, content }` |
+| `POST /terms/accept` | M, R | `{ version }` | 204 |
+| `POST /responsible/auth/signup` | — | JSON (5.2) | 200 com o responsável |
+| `POST /driver/auth/verify-CNH` | — | multipart `documentPdf` | 200 / 422 |
+| `POST /driver/auth/signup` | — | multipart (5.3) | 201 |
+| `POST /auth/verify-email` | — | `{ email, code }` | 200 |
+| `POST /auth/send-verification-code?email=` | — | — | 200 / 429 |
+| `POST /auth/login` | — | `{ cpf, passwordHash }` | `{ token, expiresIn, refreshToken, refreshExpiresIn }` |
+| `POST /auth/refresh` | — | `{ refreshToken }` | par novo |
+| `POST /auth/logout` | — | `{ refreshToken }` | 204 |
+| `POST /auth/forgot-password/send-code?email=` · `POST /auth/forgot-password` | — | código e senha nova | 200 |
+| `GET /users/me` | M, R | — | `{ id, name, email, phone, cpf, roles, photoKey, linkCode, termsVersion, termsAccepted }` |
+| `POST /users/send-code-updateUser` · `PUT /users/update-user` | M, R | `{ email, phone, code }` | usuário |
+| `GET /users/photo-upload-url?fileName=&contentType=` · `PUT /users/update-photo` | M, R | `{ fileKey }` | `{ photoKey }` |
+| `GET /users/me/export` | M, R | — | JSON (429 em 5 min) |
+| `DELETE /users/me` | M, R | `{ password }` | 204 / 400 / 409 |
+
+### Arquivos
+| `GET /storage/presigned-url?fileName=&contentType=` | M, R | — | `{ uploadUrl, fileKey }` |
+|---|---|---|---|
+| `GET /storage/download-url?fileKey=` | M, R | — | `{ downloadUrl, fileKey }` / 403 |
+
+### Motorista: preparação
+| `GET /school/my-schools` · `POST /school/add-school` | M | `{ name, phone, email, addressRequestDTO }` | escolas |
+|---|---|---|---|
+| `GET /vehicle/my-vehicles` · `POST /vehicle/add-vehicle` · `PUT /vehicle/{id}/unlink` | M | multipart `documentPdf` | vans / 422 |
+| `GET` · `PUT` · `DELETE /driver/pix-key` | M | `{ type, key }` | `{ type, key }` |
+| `GET /driver/link-code` | M | — | `{ linkCode }` |
+
+### Chat e contrato
+| `POST /invite-code/redeem` | R | `{ inviteCode }` | `chatId` |
+|---|---|---|---|
+| `GET /chats?page=&size=` | M, R | — | página de conversas |
+| `GET /chats/{chatId}/messages?page=&size=` · `POST /chats/{chatId}/messages` | M, R | `{ content?, attachmentType?, attachmentUrl? }` | mensagem |
+| `GET /chats/{chatId}/students` | M | — | `[{ id, name }]` |
+| `POST /chats/{chatId}/contract` | M | proposta (6.2.3) | `{ message, userDriverContractId, contract }` |
+| `PUT /chats/{chatId}/contracts/{contractId}/accept` · `/reject` | R | — | 200 |
+| `PUT /chats/{chatId}/contracts/{contractId}/withdraw` | M | — | 200 |
+| `GET /contract/my-contracts?status=&studentId=&driverId=&page=&size=` | M, R | — | página |
+| `GET /contract/{contractId}` | partes | — | detalhe |
+| `POST /contract/{contractId}/cancellation` | partes | `{ reason }` | pedido (201) |
+| `PUT /contract/{contractId}/cancellation/accept` | a outra parte | — | pedido |
+| `DELETE /contract/{contractId}/cancellation` | quem pediu | — | pedido |
+| `GET /responsible/{responsibleId}/profile` | M (ou o próprio R) | — | perfil (6.2.10) |
+| `GET /driver/{driverId}/profile` | R (ou o próprio M) | — | perfil (6.3.4) |
+| `PUT` · `DELETE /driver/{driverId}/rating` | R | `{ score, comment? }` | avaliação |
+
+### Parcelas
+| `GET /payments?studentId=&driverId=&responsibleId=&contractId=&status=&from=&to=&page=&size=` | M, R | — | página |
+|---|---|---|---|
+| `PUT /payments/{id}/paid` | M | `{ method }` | parcela |
+| `PUT /payments/{id}/cancel` | M | — | parcela |
+
+### Filhos e responsáveis
+| `GET /student/my-children?page=` · `POST /student/create-student` | R | (6.3.1) | página / filho |
+|---|---|---|---|
+| `GET` · `POST /student/{id}/addresses` · `DELETE /student/{id}/addresses/{studentAddressId}` | R (alterar: admin) | `{ label, address \| addressId }` | endereços |
+| `GET /student/{id}/responsibles` | R | — | `[{ responsibleId, name, relationType, admin }]` |
+| `DELETE /student/{id}/responsibles/{responsibleId}` | R (admin, ou a própria pessoa) | — | 204 |
+| `PUT /student/{id}/responsibles/{responsibleId}/admin` | R (admin) | — | 204 |
+| `POST /student/generate-link` · `POST /student/confirm-link` | R | `{ id, relationType }` / `{ code }` | código / 201 |
+| `GET /student/{id}/routes` | R | — | `[{ id, name }]` |
+| `GET` · `POST /student/{id}/absences` · `DELETE /student/{id}/absences/{absenceId}` | R | `{ routeId, date }` | faltas |
+| `GET /student/{id}/today-trips` | R | — | viagens de hoje do filho |
+
+### Rotas (motorista)
+| `GET /route/get-all-routes-and-stops?name=&active=&page=` · `POST /route/create-route` | M | `{ name }` | página / rota |
+|---|---|---|---|
+| `GET /route/{id}` · `GET /route/{routeId}/stops` · `GET /route/{routeId}/pending` · `GET /route/stop-options` | M | — | rota, pontos, pendências, opções |
+| `POST /route/{routeId}/add-student/{studentId}` | M | (6.2.5) | `{ stops, pending }` |
+| `PUT /route/stop/{id}/swap-order` · `PUT /route/student-stop/{id}/move` · `PUT /route/student-stop/{id}/weekdays` | M | `{ orderIndex }` / `{ routeStopId }` / `{ weekdays }` | `{ stops, pending }` |
+| `DELETE /route/student-stop/{id}` · `/route/school-stop/{id}` · `/route/stop/{id}` | M | — | `{ stops, pending }` |
+| `PUT /route/{routeId}/set-vehicle/{vehicleId}` | M | — | rota |
+| `GET` · `POST` · `PUT` · `DELETE /driver/groups...` · `POST /driver/groups/{id}/notice` | M | (6.2.8) | grupos / `{ notifiedResponsibles }` |
+
+### Viagem
+| `GET /trip/route/{routeId}/today` · `POST /trip/start/{routeId}?restart=` | M | `{ latitude, longitude, vehicleId? }` | viagem |
+|---|---|---|---|
+| `GET /trip/{tripId}` | M | — | viagem |
+| `PUT /trip/{tripId}/student/{studentId}/board` · `/alight` · `/absent` | M | — | aluno |
+| `POST /trip/{tripId}/finish` | M | — | viagem |
+| `POST /trip/{tripId}/occurrences` · `GET /trip/{tripId}/occurrences` | M (registrar), M e R (ver) | `{ type, description }` | ocorrência(s) |
+| `GET /trip/history?studentId=&driverId=&routeId=&date=&from=&to=&page=` | M, R | — | página |
+
+### Notificações
+| `GET /notifications?unread=&page=&size=` · `GET /notifications/unread-count` · `PUT /notifications/{id}/read` · `PUT /notifications/read-all` | M, R | — | página / total |
+|---|---|---|---|
 
 ---
 
-## 10. O que o front ainda não tem do backend
-- **Push com o app fechado** (Firebase Cloud Messaging / Expo Push). Hoje, a notificação fica guardada e aparece ao abrir o app.
-- **"Esqueci a senha"** já existe no backend: `POST /api/auth/forgot-password/send-code` (manda o código pro e-mail) e `POST /api/auth/forgot-password` (troca a senha com o código). Falta a tela.
-- **Cota da API de mapas:** a chave grátis tem um limite diário por serviço (veja o painel da conta do OpenRouteService). Quando ele acaba:
-  - o cadastro de endereço dá **503**;
-  - a trip continua funcionando, mas **sem a linha e sem o tempo**: trate `path`/`etaSeconds` `null` mostrando só a van.
+## 9. Ordem sugerida de construção
 
-## 11. Telas que faltam no front (endereços, rota, grupos e perfil)
-O que o backend já oferece e o front ainda não usa. Detalhes de cada endpoint: `backend/README.md` (seções 1 e 2b) e `docs/FLUXO_ROTA.md`.
+1. **Consertos (seção 3):** termos no cadastro e `/terms` com o 403; `my-contracts` paginado e status `SCHEDULED`; `deleteUser`; notificações novas; mensagens dos erros novos.
+2. **Contrato completo:** detalhe com assinaturas, responsáveis e `pendingCancellation`; cancelar, aceitar e desistir; retirar proposta; renovar.
+3. **Motorista preparado:** vans, chave Pix e menu do perfil.
+4. **Parcelas** (os dois perfis).
+5. **Rotas** (lista e editor).
+6. **Viagem de verdade:** executar (motorista) e acompanhar (responsável), com o WebSocket da viagem e o mapa; home do responsável com viagens do dia e faltas.
+7. **Filho em detalhe:** endereços, responsáveis (remover, sair, passar o admin) e rotas.
+8. **Perfis e avaliação:** perfil do motorista com avaliação, perfil do responsável.
+9. **Grupos e aviso**, **histórico de viagens e ocorrências**.
+10. **Privacidade:** exportar dados e excluir conta.
 
-### Responsável: filho e endereços
-| Onde | O que fazer |
-|---|---|
-| `services/dto/student/student.dto.ts` (`createStudentRequest`) | o endereço é **opcional** e tem três jeitos: `address` (novo), `addressId` (um endereço que a família já tem) ou `addresses?: { label?, address?, addressId? }[]` (vários de uma vez), mais `addressLabel?` (apelido, padrão "Casa"). Mande **um** jeito |
-| `services/dto/student/student.dto.ts` (`studentResponsibleResponse`) | `studentResponseDTO` traz `studentAddressResponseDTO: { id, label, address }` (o endereço "Casa") |
-| `components/student/add-student` | funciona como está (`address` vira o "Casa"). Melhoria: antes do formulário, mostrar os endereços que a família já tem (`GET /api/student/{id}/addresses` dos outros filhos) e mandar `addressId` em vez de digitar de novo |
-| tela nova: **endereços do filho** | `GET /api/student/{id}/addresses` → `[{ id, label, address }]`; adicionar: `POST .../addresses` `{ label, address }` ou `{ label, addressId }` (`409` se o filho já tem esse endereço); tirar: `DELETE .../addresses/{id}` (`409` se é o último ou tem viagem rodando com ele). **Adicionar e tirar: só o responsável admin** (os outros recebem `403`; esconda os botões pra quem não é admin, o `my-children?isAdmin=` diz) |
-| mensagens | mesmo **CEP + número** = mesmo endereço: o backend reaproveita sozinho. A latitude/longitude mandada pelo app é ignorada |
-| cadastro do responsável (resposta) | o papel vem em `roles: ["ROLE_RESPONSIBLE"]`, igual à claim `roles` do token |
+---
 
-### Motorista: montar a rota (tela ainda não existe; `pages/driver-route` tem só o TODO)
-| Ação | Chamada |
-|---|---|
-| criar a rota | `POST /api/route/create-route` `{ name }` |
-| escolher aluno e endereço | `GET /api/route/stop-options` → `{ students: [{ studentId, studentName, addresses: [{ id, label, address }] }] }` (a escola não aparece: é sempre a do contrato) |
-| pôr o aluno na rota | `POST /api/route/{routeId}/add-student/{studentId}` `{ action, locationType, newStop?, routeStopId?, studentAddressId?, weekdays?, orderIndex? }`. **Uma chamada por ação**: embarque e desembarque são duas. **Obrigatório um dos dois:** `newStop: true` (ponto novo) ou `routeStopId` (ponto que já existe; pegue do `GET /api/route/{routeId}/stops` filtrando pelo endereço). `SCHOOL` não manda endereço (é a escola do contrato). `orderIndex` só no ponto novo |
-| escolher o ponto (tela) | depois de escolher o endereço (ou "escola"), mostre os pontos da rota que já estão nesse endereço ("Escola · ponto 2", "Escola · ponto 4") e a opção **"novo ponto"** (com posição opcional). O mesmo endereço pode ter mais de um ponto: a van pode voltar lá |
-| trocar ordem / mover / dias | `PUT /api/route/stop/{id}/swap-order`, `PUT /api/route/student-stop/{id}/move`, `PUT /api/route/student-stop/{id}/weekdays` |
-| excluir | `DELETE /api/route/student-stop/{id}`, `/school-stop/{id}`, `/stop/{id}`: devolvem **`200`** com a rota (`{ stops, pending }`) |
-
-**Resposta de toda alteração:** `{ stops: RouteStopResponse[], pending: RoutePendingResponse[] }`. A tela redesenha a rota com `stops` (não precisa de outro GET) e mostra `pending` como aviso: "Ana: falta desembarque na sexta". `pending` vazio = rota pronta.
-
-**Iniciar a viagem** com pendência dá `400` com a mensagem dizendo quem e o que falta: mostre a `message`.
-
-**Tipos sugeridos** (`services/dto/route/route.dto.ts`):
-```ts
-export interface RouteEditResponse { stops: RouteStop[]; pending: RoutePending[]; }
-export interface RoutePending { studentId: string; studentName: string; missingBoarding: WeekDay[]; missingAlighting: WeekDay[]; }
-export interface AddStudentToRouteRequest {
-  action: 'BOARDING' | 'ALIGHTING';
-  locationType: 'HOME' | 'SCHOOL' | 'OTHER';
-  newStop?: boolean;           // true = ponto novo   } um dos dois, obrigatório
-  routeStopId?: string;        // ponto que já existe }
-  studentAddressId?: string;   // HOME/OTHER no ponto novo
-  weekdays?: WeekDay[];        // sem = todos os dias
-  orderIndex?: number;         // só no ponto novo; sem = automático
-}
-```
-
-### Telas novas (grupos, ocorrências, perfil e avaliação)
-Detalhes de cada endpoint: `backend/README.md`, seção 2b.
-
-| Tela | Chamadas |
-|---|---|
-| Motorista: **grupos** | `GET/POST /api/driver/groups`, `PUT/DELETE /api/driver/groups/{id}`, `POST/DELETE /api/driver/groups/{id}/students/{studentId}` (alunos de `GET /api/contract/my-contracts?status=ACTIVE`) |
-| Motorista: botão **"avisar o grupo"** | `POST /api/driver/groups/{id}/notice` `{ reason? }` → `{ notifiedResponsibles }`. Mostre "X responsáveis avisados" |
-| Motorista: **ocorrência** durante a viagem | `POST /api/trip/{tripId}/occurrences` `{ type, description }` (tipos: veículo, aluno, trânsito, disciplinar, financeira, saúde, outro) |
-| Pai: notificações novas | `OCCURRENCE` (abre as ocorrências da viagem: `GET /api/trip/{tripId}/occurrences`) e `DRIVER_NOTICE` (só mostra o texto) |
-| Pai: **perfil do motorista** (do chat ou do contrato) | `GET /api/driver/{driverId}/profile`: nome, foto, escolas, vans, média e avaliações |
-| Pai: **avaliar** | `PUT /api/driver/{driverId}/rating` `{ score 1-5, comment? }` (mostre o botão só se tem ou teve contrato; o `myRating` do perfil diz se ele já avaliou); apagar: `DELETE` |
-| Contrato | o `GET /api/contract/{contractId}` traz `documentStatus` e `signatures` ("assinado por Carlos em 20/01 e por Maria em 21/01") |
-
-
-## 12. O que o backend ganhou e o front ainda não usa (contrato, pagamento e histórico)
-Detalhes: `docs/FLUXO_CONTRATO.md`, `docs/FLUXO_PAGAMENTO.md` e `docs/FLUXO_TRIP.md` (seção 4.8.1).
-
-### Já feito no front
-- PDF do contrato **obrigatório** na proposta (o anexo diz "obrigatório" e não deixa enviar sem).
-- Ícones das notificações novas em `pages/notifications/notifications.ts` (tipo desconhecido cai no sino cinza).
-
-### Motorista
-| Tela | Chamadas |
-|---|---|
-| Card da proposta no chat: botão **"Retirar proposta"** (só enquanto `PENDING`) | `PUT /api/chats/{chatId}/contracts/{contractId}/withdraw`. O chat recebe `REJECTION` "Proposta Retirada" e o card fecha sozinho |
-| **Chave Pix** (configurações) | `GET/PUT/DELETE /api/driver/pix-key` `{ type: CPF/CNPJ/EMAIL/PHONE/RANDOM, key }`. Mostre a `key` que voltar (já normalizada). **400** com a mensagem se a chave não bate com o tipo |
-| **Parcelas** (lista com filtros por aluno, responsável, status e período) | `GET /api/payments?...` paginado. Botões nas `PENDING`/`OVERDUE`: **"Recebi"** (`PUT /api/payments/{id}/paid` `{ method }`, perguntando PIX/dinheiro/...) e **"Dispensar"** (`PUT /api/payments/{id}/cancel`). Confirme antes: **não tem volta** |
-| Lista de contratos | filtros `studentId`/`driverId`; mostre `overduePayments` e o `pendingCancellation` com a data em que o contrato cai (`effectiveDate`): **"Aceitar e cancelar agora"** se foi o pai que pediu, ou **"Desistir"** se foi ele. Não existe mais "Recusar" |
-| **Cancelar contrato** | `POST /api/contract/{id}/cancellation` `{ reason }`. Se a resposta vier `ACCEPTED` com `unilateral: true`, o contrato já foi cancelado (parcela vencida há 30+ dias); senão, "o contrato será cancelado em `effectiveDate` (aviso prévio de 30 dias)" |
-| **Perfil do responsável** (do chat ou do contrato) | `GET /api/responsible/{responsibleId}/profile`: nome, foto, telefone, situação **com ele** (`UP_TO_DATE`/`OVERDUE` + `overduePayments`) e os filhos com contrato com ele |
-
-### Responsável
-| Tela | Chamadas |
-|---|---|
-| **Parcelas** | `GET /api/payments` com filtros por filho e motorista. Nas `PENDING`/`OVERDUE`: mostre a `driverPixKey` com **botão de copiar** (se vier `null`, "o motorista ainda não cadastrou a chave Pix"). `OVERDUE` em vermelho. Avisar que pagou é pelo chat |
-| Lista de contratos | `pendingCancellation` com a data em que o contrato cai (`effectiveDate`): **"Aceitar e cancelar agora"** (pedido do motorista) ou **"Desistir"** (pedido dele) |
-| **Cancelar contrato** | `POST /api/contract/{id}/cancellation` `{ reason }` → `PENDING` com `effectiveDate` (hoje + 30 dias): "o contrato será cancelado em ..., ou antes se o motorista aceitar". Avise que as parcelas que vencerem até lá continuam devidas |
-| **Histórico de viagens** por filho e por dia | `GET /api/trip/history?studentId=&date=` (ou `from`/`to`): embarcou às, chegou às, faltou, ocorrências |
-
-### Os dois
-- Notificações novas:
-  - do backend: `CANCELLATION_REQUESTED`, `CANCELLATION_WITHDRAWN`, `CONTRACT_CANCELED` e `CONTRACT_WITHDRAWN`;
-  - do worker diário: `CONTRACT_EXPIRED` (proposta não respondida até o início), `CONTRACT_STARTED` (contrato agendado começou), `CONTRACT_CANCELED` (fim do aviso prévio), `CONTRACT_ENDED` (contrato chegou ao fim), `PAYMENT` "Parcela atrasada" e `SYSTEM` "Viagem fechada automaticamente" (pro motorista, com `tripId`).
-
-  As de contrato vêm com `contractId` no `payload` (as de parcela também com `paymentId`). `CANCELLATION_REJECTED` não é mais enviada.
-- As do worker **não chegam pelo WebSocket** (o worker não tem a conexão): aparecem no próximo `GET /api/notifications` ou ao reabrir o app.
-- O detalhe do contrato (`GET /api/contract/{id}`) traz `cancellations` (histórico de pedidos) e `overduePayments`.
-
-### TODOs que já estavam no front
-- `pages/driver-route/driver-route.ts`: a tela de executar a rota usa dados fixos; trocar pelos alunos da viagem (`GET /api/trip/{tripId}`).
-- `pages/responsible-route/responsible-route.ts`: dois TODOs. A tela usa dados fixos; trocar pela viagem do dia (`GET /api/student/{id}/today-trips` + WebSocket da trip, que já manda só as paradas do filho).
-
-### Conta e código de e-mail
-| Tela | Chamadas |
-|---|---|
-| **Excluir minha conta** (os dois perfis) | `DELETE /api/users/me` `{ "password": "..." }` → **204** e faça logout. **400** senha errada; **409** com contrato aceito (agendado ou ativo), proposta pendente ou parcela atrasada (mostre a `message`). Os dados pessoais e os arquivos enviados somem, as conexões WebSocket abertas são fechadas, e a conta vira "Usuário removido"; o mesmo CPF/e-mail pode se cadastrar de novo |
-| Reenviar código (cadastro, esqueci a senha, trocar e-mail) | **429** "Aguarde X segundos..." se pedir de novo antes de 1 minuto (o cadastro já conta como o primeiro envio): mostre a mensagem e um contador |
-| Digitar o código | errado → **400** "Código incorreto. Restam N tentativas."; na 5ª errada → **429** "Enviamos um novo código para o seu e-mail" (o anterior para de valer) |
-| Perfil do responsável (motorista) | cada filho traz `relationType` e `admin`; o detalhe do contrato traz `studentResponsibles` (todos os responsáveis do aluno, com rótulo) |
-| **Termos de uso** | `GET /api/terms` (sem login) → `{ version, content }` (markdown). Depois do login, se o `/api/users/me` vier com `termsAccepted: false`, mostre os termos e chame `POST /api/terms/accept` `{ "version": "<a version do GET>" }` (204). Versão nova dos termos = todo mundo volta a ver, e o resto da API responde **403** `{ code: "TERMS_NOT_ACCEPTED", version }` até aceitar |
-| **Exportar meus dados** | `GET /api/users/me/export` → JSON pra baixar (vem com `Content-Disposition`). **429** se pedir de novo antes de 5 minutos |
-| **Perfil do responsável (dele mesmo)** | `GET /api/responsible/{seuId}/profile`: situação financeira geral, todas as parcelas atrasadas e todos os contratos dos filhos (o motorista só vê a situação com ele) |
-
-### Paginação (muda o formato de 2 rotas que o front já usa)
-Mesmo padrão de `GET /api/chats`, mensagens, notificações, parcelas, histórico e `my-children`: a resposta vira
-`{ content: [...], totalElements, totalPages, number, size, ... }` e aceita `?page=` (começa em 0) e `?size=`.
-
-| Rota | Antes | Agora |
-|---|---|---|
-| `GET /api/contract/my-contracts` | lista `[...]` | página (padrão 20), do início mais recente pro mais antigo. Filtros: `status`, `studentId`, `driverId` |
-| `GET /api/route/get-all-routes-and-stops` | lista `[...]` (incluía rotas que o motorista já deixou) | página (padrão 10), por nome. Filtros: `name` (parte do nome) e `active` (padrão `true`: só as rotas em que ele está hoje) |
-
-**O que o front precisa mudar:** `services/contract.service.ts` (`myContracts`) lê `response.content` em vez da lista, e a tela de contratos usa `totalPages` pra "carregar mais" (ou rolagem infinita, igual ao chat).
-
-### Cadastro: aceite dos termos obrigatório
-- Antes de cadastrar, mostre os termos (`GET /api/terms`) com um "Li e aceito".
-- Mande a versão aceita no cadastro: a `version` que veio do `GET /api/terms` (hoje `"2"`), em `"acceptedTermsVersion"` no JSON do responsável e em `acceptedTermsVersion` no multipart do motorista. Sem ela, ou com versão velha: **400**. **O cadastro atual do front quebra até mandar esse campo.** Não deixe a versão fixa no código: leia do `GET /api/terms`.
-- No login, se o `/api/users/me` vier com `termsAccepted: false` (saiu uma versão nova), mostre os termos de novo e chame `POST /api/terms/accept`. Até aceitar, as outras rotas respondem **403** `TERMS_NOT_ACCEPTED`: trate esse código num interceptor e abra a tela dos termos.
-
-## 13. Mudanças da auditoria (o que o front precisa ajustar)
-
-### Contrato
-- **Status novo `SCHEDULED`:** contrato aceito que ainda não começou. Mostre "Agendado — começa em `startDate`". Só vira `ACTIVE` na data de início (worker); até lá o motorista **não** consegue pôr o aluno na rota nem num grupo (**403** "Não existe contrato ativo"), e o aluno não entra nas viagens.
-- **Renovação:** o motorista pode propor **um** próximo contrato para o mesmo aluno, começando **depois** do fim do atual. Sobrepondo o atual, ou com outro já pendente ou agendado: **409** (no máximo o atual e um próximo).
-- **Cancelamento com aviso prévio:** sem "Recusar". Veja as tabelas da seção 12 e `docs/FLUXO_CONTRATO.md`, passo 9.
-- **PDF da proposta:** precisa ser PDF de verdade e ter no máximo **10 MB** (**400** com a mensagem). Cada proposta consome o arquivo enviado: para mandar outra proposta, envie o PDF de novo. O `documentFileKey` do contrato passa a ser `contracts/{contractId}.pdf` (o download continua igual, por `GET /api/storage/download-url`).
-- **Chat de outra pessoa:** acessar ou propor em chat do qual não participa agora dá **403** (antes **400**). Aceitar/recusar/retirar um contrato pelo chat errado também dá **403**.
-
-### Anexos do chat
-- Arquivo com mais de **10 MB**: **400** "O arquivo pode ter no máximo 10 MB". Confira o tamanho antes de enviar.
-
-### Login e cadastro
-- **5 senhas erradas no mesmo CPF** (ou 30 no mesmo IP) bloqueiam o login por **15 minutos**: **429** com a mensagem. Mostre a mensagem; não tente de novo automaticamente.
-- "Verifique seu e-mail" (**400**) só aparece com a senha certa. Com a senha errada, a resposta é sempre **401** "Credenciais inválidas", tenha conta ou não.
-- **Cadastro do motorista:** o nome digitado precisa ser o **mesmo da CNH** (sem importar acentos e maiúsculas). Também volta **422** com a mensagem se a CNH estiver vencida, não for categoria D ou E, ou o motorista tiver menos de 21 anos. Mostre a `message` no formulário.
-- **Cadastro de van:** CRLV com licenciamento de mais de um ano atrás volta **422** "O licenciamento da van está vencido".
-
-### Responsáveis do aluno (tela do filho)
-| Ação | Chamada |
-|---|---|
-| Ver os responsáveis | `GET /api/student/{studentId}/responsibles` → `[{ responsibleId, name, relationType, admin }]` (qualquer responsável do aluno) |
-| Remover um responsável (só o admin) | `DELETE /api/student/{studentId}/responsibles/{responsibleId}` → **204**. Quem é removido perde na hora o acesso às rotas, viagens, localização ao vivo e histórico do aluno, e recebe a notificação `SYSTEM` "Vínculo removido" |
-| Sair do aluno (qualquer um, menos o admin) | o mesmo `DELETE`, com o próprio id |
-| Passar o admin | `PUT /api/student/{studentId}/responsibles/{responsibleId}/admin` → **204** (só o admin; o outro precisa já estar vinculado) |
-
-Erros: **403** quem não é admin removendo outro ou passando o admin; **409** o admin tentando sair sem passar o admin, ou remover alguém que tem contrato ou proposta em andamento com o aluno (cancele antes).
-
-### Perfil do responsável (visto pelo motorista)
-- `financialStatus` e `overduePayments` agora são **só das parcelas com esse motorista**. Atraso com outro motorista não aparece mais.
-
+## 10. Limitações conhecidas
+- **Sem push com o app fechado** (#150): as notificações ficam guardadas e aparecem ao abrir.
+- **GPS do motorista no navegador** precisa da aba aberta e da tela ligada (Wake Lock); em HTTPS no celular.
+- **Cota da API de mapas** (OpenRouteService grátis):
+  - acabou a cota → o cadastro de endereço dá **503**;
+  - a viagem continua sem a linha e sem o tempo: trate `path`/`etaSeconds` `null` mostrando só a van.
+- **Foto do filho** só no navegador (`localStorage`); o backend não guarda.
+- **Pagamento** é Pix manual: o app não recebe dinheiro. Mercado Pago fica pra depois (#192).
