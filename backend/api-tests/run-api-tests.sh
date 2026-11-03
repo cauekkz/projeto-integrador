@@ -965,7 +965,7 @@ req "foto: troca pela nova" 200 PUT /api/users/update-photo "$R1" "{\"fileKey\":
 assert "foto antiga apagada do bucket" "! docker exec vanroute-minio sh -c 'ls /data/$BUCKET/$PHOTO' >/dev/null 2>&1 && docker exec vanroute-minio sh -c 'ls /data/$BUCKET/$PHOTO2' >/dev/null 2>&1"
 req "GET /users/{id} removido (expunha CPF, e-mail e telefone)" "40[0-9]" GET "/api/users/$R1_ID" "$R1"
 req "me" 200 GET /api/users/me "$R1"
-assert "me nao expoe passwordHash" "! echo \"\$BODY\" | grep -qi 'passwordHash\|\\\$2a\\\$'"
+assert "me nao expoe passwordHash" "! echo \"\$BODY\" | grep -qi 'passwordHash\|argon2\|\\\$2a\\\$'"
 req "envia codigo de atualizacao" 200 POST /api/users/send-code-updateUser "$R2"
 req "R2 ve seus dados (me)" 200 GET /api/users/me "$R2"; R2_ID=$(echo "$BODY" | jq -r .id)
 UCODE=$(redis GET "User:SendCodeUser:$R2_ID")

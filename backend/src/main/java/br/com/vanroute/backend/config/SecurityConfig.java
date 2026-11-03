@@ -10,7 +10,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.config.Customizer;
@@ -85,9 +85,17 @@ public class SecurityConfig {
         return http.build();
     }
 
+    // Argon2id com os parametros minimos da OWASP (19 MiB de memoria, 2 iteracoes, paralelismo 1):
+    // cada tentativa gasta memoria, o que encarece ataque com placa de video
+    static final int ARGON2_SALT_BYTES = 16;
+    static final int ARGON2_HASH_BYTES = 32;
+    static final int ARGON2_PARALLELISM = 1;
+    static final int ARGON2_MEMORY_KIB = 19456;
+    static final int ARGON2_ITERATIONS = 2;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new Argon2PasswordEncoder(ARGON2_SALT_BYTES, ARGON2_HASH_BYTES, ARGON2_PARALLELISM, ARGON2_MEMORY_KIB, ARGON2_ITERATIONS);
     }
 
     @Bean
