@@ -8,6 +8,6 @@ public record DriverGroupResponseDTO(
         String name,
         List<Member> students
 ) {
-    public record Member(UUID studentId, String studentName) {
+    public record Member(UUID studentId, String studentName, String photoKey) {
     }
 }

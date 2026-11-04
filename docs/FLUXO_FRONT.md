@@ -89,16 +89,16 @@ O doc antigo falava de Expo e `expo-secure-store`; **não vale**. Consequências
 | `/profile-info/:tipo` | `pages/profile-info` | os dois | dados, foto, trocar e-mail/telefone | parcial: sem exportar dados e excluir conta |
 | `/profile-select` | `components/profile-select` | os dois | menu do perfil | ok; ganha itens novos (seção 6) |
 
-**Serviços que existem:** `auth`, `chat` (HTTP + WebSocket do chat), `contract`, `notification` (HTTP + WebSocket de notificações), `school`, `storage`, `student`, `student-photo`, `register`.
+**Serviços que existem:** `auth`, `chat` (HTTP + WebSocket do chat), `contract`, `notification` (HTTP + WebSocket de notificações), `school`, `storage`, `student`, `student-photo` (apagar: use o `photoKey` da API), `register`.
 
-**Foto do filho:** fica só no `localStorage` (`student-photo.service.ts`). O backend não guarda foto de aluno; deixe assim.
+**Foto do filho:** agora fica no backend (seção 4.4). **Apague o `student-photo.service.ts`** (o `localStorage`) e use o `photoKey` que vem da API: assim a foto aparece também pro outro responsável e pro motorista.
 
 ---
 
 ## 3. Quebrado ou desatualizado: consertar primeiro
 
 ### 3.1 Cadastro sem o aceite dos termos (cadastro dá 400)
-O backend exige `acceptedTermsVersion` igual à versão atual dos termos (hoje `"2"`).
+O backend exige `acceptedTermsVersion` igual à versão atual dos termos (hoje `"3"`: a v3 incluiu a foto do aluno e a leitura das mensagens; quem aceitou a v2 aceita de novo pela tela da seção 4.3).
 1. Na tela de cadastro (os dois perfis), antes de enviar, chame `GET /api/terms` → `{ version, content }`. O `content` é markdown: renderize num modal ou numa área rolável.
 2. Checkbox "Li e aceito os Termos de Uso e a Política de Privacidade", obrigatório.
 3. Mande a `version` recebida, **nunca fixa no código**:
@@ -156,10 +156,10 @@ O backend exige `acceptedTermsVersion` igual à versão atual dos termos (hoje `
 
 | Onde | Status | O que fazer |
 |---|---|---|
-| qualquer chamada logada | **403** com `{"code":"TERMS_NOT_ACCEPTED","version":"2"}` | abrir a tela de reaceite dos termos (seção 4.3); não mostrar pop-up genérico |
+| qualquer chamada logada | **403** com `{"code":"TERMS_NOT_ACCEPTED","version":"3"}` | abrir a tela de reaceite dos termos (seção 4.3); não mostrar pop-up genérico |
 | login | **429** "Muitas tentativas de login..." | mostrar a mensagem; não tentar de novo sozinho (bloqueio de 15 min) |
 | login | **400** "Verifique seu e-mail..." | só aparece com a senha certa: oferecer reenviar o código e ir pro `/email-code` |
-| cadastro do motorista | **422** | mostrar a `message`: assinatura inválida, nome diferente do da CNH, CNH vencida, categoria sem D/E, menos de 21 anos |
+| cadastro do motorista | **422** | mostrar a `message`: assinatura inválida, CNH ilegível, CNH vencida, categoria sem D/E, menos de 21 anos |
 | cadastro de van | **422** | CRLV inválido ou licenciamento vencido |
 | anexo do chat | **400** "O arquivo pode ter no máximo 10 MB" | conferir o tamanho antes de subir |
 | chat de outra pessoa | **403** (antes era 400) | voltar pra lista de conversas |
@@ -221,13 +221,19 @@ GET /api/storage/download-url?fileKey=<fileKey> → { downloadUrl }  → urlDoSt
 - **Limite:** 10 MB (anexo e PDF), conferido quando o arquivo é usado. Confira antes de subir.
 - **Dono:** só dá pra usar um arquivo que a própria pessoa enviou.
 - **Foto de perfil:** `GET /api/users/photo-upload-url?fileName=&contentType=image/...` → PUT → `PUT /api/users/update-photo` `{ fileKey }` (já feito em `profile-info`).
+- **Foto do filho** (só o **responsável admin** troca; **403** pros outros):
+  1. `GET /api/student/{studentId}/photo-upload-url?fileName=&contentType=image/...` → `{ uploadUrl, fileKey }`;
+  2. PUT do arquivo no `uploadUrl`;
+  3. `PUT /api/student/{studentId}/photo` `{ fileKey }` → `{ photoKey }` (a foto antiga é apagada sozinha). Tirar: `DELETE /api/student/{studentId}/photo` (204).
+
+  Quem baixa (`download-url`): os responsáveis do filho e o motorista que tem ou teve contrato com ele. Sem foto (`photoKey: null`), mostre as iniciais.
 
 ### 4.5 WebSockets (três conexões)
 
 | Conexão | Abre | Fecha | Recebe | Manda |
 |---|---|---|---|---|
 | `wsUrl('/notifications')?token=` | ao entrar logado (já feito em `notification.service.ts`) | no logout | o total de não lidas ao conectar e cada notificação nova | nada |
-| `wsUrl('/chat/' + chatId)?token=` | ao abrir a conversa (já feito) | ao sair da conversa | cada mensagem nova (inclusive as do sistema) | nada (envio é por HTTP) |
+| `wsUrl('/chat/' + chatId)?token=` | ao abrir a conversa (já feito) | ao sair da conversa | cada mensagem nova (inclusive as do sistema) e o aviso de leitura `{"type":"read","chatId","userId","readAt"}` (**confira `type === 'read'` antes de tratar como mensagem**) | nada (envio e leitura são por HTTP) |
 | `wsUrl('/trip/' + tripId)?token=` | motorista executando ou pai acompanhando (**falta**) | viagem `FINISHED`/`CANCELED` ou ao sair da tela | `trip-update` a cada mudança (formato em `docs/FLUXO_TRIP.md`) | o motorista: `{"type":"position","latitude":..,"longitude":..}` a cada 3 a 5 s |
 
 Regras de reconexão:
@@ -268,8 +274,8 @@ Regras de reconexão:
 
 ### 5.3 Cadastro do motorista (consertar: seções 3.1 e 3.7)
 1. O motorista escolhe o PDF da **CNH digital**. Validação antecipada (opcional, já existe): `POST /api/driver/auth/verify-CNH` (multipart `documentPdf`); **422** = não é CNH digital assinada.
-2. Avise na tela: **"use o nome completo exatamente como está na CNH"**. O backend compara, sem acentos e sem diferenciar maiúsculas, e exige CNH válida, categoria **D ou E** e **21 anos ou mais**.
-3. `GET /api/terms`, depois `POST /api/driver/auth/signup` (multipart): `documentPdf`, `name`, `email`, `password`, `confirmPassword`, `phone`, `acceptedTermsVersion`. O CPF sai da CNH.
+2. **Tire o campo "nome" do cadastro do motorista**: o nome sai da CNH, igual ao CPF, e o front não decide nada sobre ele. Fica como a CNH traz: sem acento e, se for muito longo, cortado no fim. O backend exige CNH válida, categoria **D ou E** e **21 anos ou mais**.
+3. `GET /api/terms`, depois `POST /api/driver/auth/signup` (multipart): `documentPdf`, `email`, `password`, `confirmPassword`, `phone`, `acceptedTermsVersion` (**sem `name`**; se mandar, é ignorado).
    - **422**: mostrar a `message`.
    - A leitura da CNH pode levar alguns segundos: mostre "lendo a CNH...".
 4. `/email-code` e login, igual ao responsável.
@@ -314,9 +320,10 @@ Itens novos a acrescentar:
 | Meu código `/driver-link-code` ✅ | `GET /api/driver/link-code` (ou `/me.linkCode`) | copiar e compartilhar |
 
 #### 6.2.2 Conversas ✅
-- Lista: `GET /api/chats?page=&size=` → `otherUserId`, `otherUserName`, `otherUserPhotoKey`.
+- Lista: `GET /api/chats?page=&size=` → `otherUserId`, `otherUserName`, `otherUserPhotoKey`, `unreadCount` (bolinha com o número).
 - Conversa:
-  - ao abrir: `GET /api/chats/{chatId}/messages?page=&size=` e abre o WebSocket do chat;
+  - ao abrir: `GET /api/chats/{chatId}/messages?page=&size=`, abre o WebSocket do chat e chama `PUT /api/chats/{chatId}/read` (zera o `unreadCount`). Chame de novo a cada mensagem nova que chegar com a conversa aberta;
+  - **lida (✓✓):** cada mensagem traz `readAt` (`null` = ✓; preenchida = ✓✓). Com a conversa aberta, o evento `{"type":"read"}` do outro usuário marca todas as minhas mensagens como lidas (vale pras duas pontas: 6.3.4 usa a mesma tela);
   - enviar: `POST /api/chats/{chatId}/messages` `{ content?, attachmentType?: 'IMAGE' | 'CONTRACT_DOCUMENT' | 'OTHER', attachmentUrl?: fileKey }`.
 - Mensagens do sistema (`messageType` ≠ `REGULAR_CHAT`) viram card:
   - `PROPOSAL`: card da proposta (`JSON.parse(payload).contractId`);
@@ -472,7 +479,8 @@ Detalhes em `docs/FLUXO_PAGAMENTO.md`.
   - `GET /api/student/{id}/routes` → `[{ id, name }]`;
   - `GET /api/student/{id}/absences`.
 
-  Seções da tela: endereços (6.3.2), responsáveis (6.3.3), rotas, faltas (6.3.5) e "Histórico de viagens" (6.3.8).
+  Seções da tela: foto, endereços (6.3.2), responsáveis (6.3.3), rotas, faltas (6.3.5) e "Histórico de viagens" (6.3.8).
+- **Foto do filho** (topo do detalhe e na lista): `photoKey` do `my-children` → `download-url`; sem foto, iniciais. Botão "trocar foto" e "remover" **só pro admin** (fluxo na seção 4.4); pros outros responsáveis a foto é só leitura.
 
 #### 6.3.2 Endereços do filho ❌ (dentro do detalhe do filho)
 - Listar: `GET /api/student/{id}/addresses` → `[{ id, label, address }]`.
@@ -503,7 +511,7 @@ Detalhes em `docs/FLUXO_PAGAMENTO.md`.
   - Aceitar: `PUT /api/chats/{chatId}/contracts/{contractId}/accept`. Se a data de início ainda não chegou, o contrato fica **`SCHEDULED`**; mostre "Agendado: começa em DD/MM".
   - Recusar: `PUT /api/chats/{chatId}/contracts/{contractId}/reject`.
   - **409** ao aceitar: a data de início já passou (peça outra proposta) ou já foi decidido.
-- **❌ Perfil do motorista** `/driver-profile/:driverId` (do chat ou do contrato): `GET /api/driver/{driverId}/profile` → `{ driverId, name, photoKey, memberSince, schools, vehicles, ratingAverage, ratingCount, myRating, recentRatings }`.
+- **❌ Perfil do motorista** `/driver-profile/:driverId` (do chat ou do contrato): `GET /api/driver/{driverId}/profile` → `{ driverId, name, photoKey, memberSince, schools, vehicles: [{ model, color, plate }], ratingAverage, ratingCount, myRating, recentRatings }` (a van pro pai é só modelo, cor e placa: sem lotação).
   - **403**: sem conversa nem contrato com ele.
 - **❌ Avaliar** (botão no perfil, só pra quem tem ou teve contrato `ACTIVE`/`INACTIVE` com ele): `PUT /api/driver/{driverId}/rating` `{ score: 1..5, comment? }`.
   - O `myRating` do perfil diz se já avaliou (aí o botão vira "editar").
@@ -513,7 +521,9 @@ Detalhes em `docs/FLUXO_PAGAMENTO.md`.
 ```
 /responsible-home (cards por filho)
  ├─ GET /api/student/my-children
- ├─ por filho: GET /api/student/{id}/today-trips → [{ tripId, routeId, routeName, tripStatus, boardingStatus }]
+ ├─ por filho: GET /api/student/{id}/today-trips → [{ tripId, routeId, routeName, tripStatus, boardingStatus,
+ │                                                  driverId, driverName, driverPhotoKey, driverRating,
+ │                                                  vehiclePlate, vehicleModel, vehicleColor }]
  │     []  → "A van ainda não saiu"
  │     [..] → card com o status do filho e o botão "Acompanhar" (6.3.6)
  ├─ por filho: GET /api/student/{id}/absences → faltas de hoje em diante [{ id, routeId, routeName, date }]
@@ -544,6 +554,13 @@ Chame `today-trips` **ao abrir a home**, ao voltar pro app e quando chegar uma n
 
 - `status: CANCELED` = o motorista recomeçou: chame `today-trips` de novo e abra a viagem nova. `status: FINISHED`: feche o WebSocket.
 - O pai vê **só as paradas do próprio filho**; o backend já filtra.
+- **Card do motorista** ("Gustavo Gómez · ★ 4,6 · Sprinter prata · ABC1D23"): vem do `today-trips`. A van é a **dessa viagem**.
+  - foto: `driverPhotoKey` → `download-url`;
+  - nota: `driverRating`, ou nenhuma estrela se `null`;
+  - cor: `vehicleColor` vem em maiúsculas do CRLV ("PRATA"): mostre "prata";
+  - modelo: `vehicleModel` vem do CRLV ("M.BENZ/SPRINTER"): pode mostrar só o que vem depois da barra;
+  - botão de chat: a conversa de `GET /api/chats` com `otherUserId === driverId`.
+- **Próxima parada** ("Casa · R. Libertadores, 2026 · Embarque · em 22 min"): o ponto do WebSocket traz `street`, `number` e `neighborhood`, e o aluno traz `addressLabel` ("Casa"). No ponto da escola, o nome vem em `schoolNames` ("Fatec Ipiranga").
 - Fechou com o código 1003: o responsável não tem mais acesso (foi removido do filho). Volte pra home.
 
 #### 6.3.7 Parcelas ❌ `/payments` (mesma tela do motorista, outro modo)
@@ -578,6 +595,24 @@ Chame `today-trips` **ao abrir a home**, ao voltar pro app e quando chegar uma n
 - Badge: o total chega ao conectar no WebSocket de notificações (já feito).
 
 ---
+
+### 6.6 Ajustes do Figma ("Telas novas") em relação ao backend
+O Figma segue este guia. Onde o desenho mostra algo que a API não entrega, faça assim:
+
+| Onde no Figma | O que fazer |
+|---|---|
+| Chat: ✓✓ nas mensagens, "Enviado/Aceita/Retirada" com ✓✓ no card, e bolinha vermelha no botão de chat | **Pode fazer** (6.2.2): ✓✓ pelo `readAt` de cada mensagem, a bolinha pelo `unreadCount` de cada conversa (no botão do chat, some os `unreadCount` da lista). O texto do card ("Aceita", "Retirada") vem do tipo da mensagem do sistema |
+| Cadastro do motorista: campo "nome" | **Tire.** O nome sai da CNH (5.3) |
+| Detalhe e lista dos filhos: foto do aluno | **Pode fazer:** a foto agora fica no backend. Só o admin troca/remove (6.3.1); o motorista vê nas listas dele |
+| Termos de uso | a versão atual é a **3**: quem aceitou a v2 cai na tela de reaceite (4.3) ao abrir o app |
+| Chat: botão de microfone (áudio) | **Tire.** Não existe mensagem de áudio. Anexo é imagem, PDF ou outro arquivo, até 10 MB |
+| Fotos | **Motorista:** `driverPhotoKey` (viagem), `photoKey` do perfil do motorista ou `otherUserPhotoKey` do chat. **Responsável:** `photoKey` do perfil do responsável ou `otherUserPhotoKey` do chat. O detalhe do contrato **não** traz foto: use essas fontes. **Aluno:** `photoKey` em `my-children`, nos responsáveis e filhos do perfil, em `GET /chats/{id}/students`, nos membros do grupo e nos alunos da viagem (`students[].photoKey`). **Contrato:** não traz foto nenhuma; ele tem `studentId`, `driverId` e `responsibleId`: pegue a foto do aluno pelo `studentId` na lista de alunos que a tela já tem (`my-children` pro pai; filhos do chat ou membros do grupo pro motorista) e a das pessoas pelas fontes acima. Sem foto, use as iniciais ("LP") |
+| Imagem da van nos cards de contrato | **Tire.** O contrato não tem van (a van é escolhida por rota e viagem) e o backend não guarda foto de van. No lugar, use a foto do aluno (pelo `studentId`, ver "Fotos") |
+| Van | o backend guarda tudo que vem do CRLV (placa, modelo, ano, ano de fabricação, cor, combustível, categoria, lotação e licenciamento). **O motorista** vê tudo das vans dele em `GET /api/vehicle/my-vehicles`. **O responsável** vê só **modelo, cor e placa**: nas `vehicles` do perfil do motorista e no `today-trips` (a van da viagem). No Figma, tire o "15 lugares" do perfil do motorista. Textos do CRLV vêm em maiúsculas: formate na tela |
+| Histórico: viagem "fechada pelo sistema" | mostre o status **real** do aluno. "Entregue" só com `boardingStatus: DELIVERED`. Com `tripStatus: FINISHED` e `endTime` `null` (o worker fechou), um aluno `BOARDED` é **"Embarcou · viagem fechada pelo sistema"**, e não "Entregue" |
+| Viagem: "Avisou falta hoje" × "Ausente" | os dois chegam como `ABSENT`; a API não diferencia quem avisou de quem o motorista marcou. Mostre só **"Ausente"** |
+| Tirar o último endereço do filho | o backend responde **409** "O aluno precisa de pelo menos um endereço": mostre o aviso (não tem tela desenhada) |
+| Mensagens de erro | use sempre o `message` da API. Os dias da semana e o tipo da chave Pix já vêm em português ("sem embarque (segunda e sexta)", "Chave Pix inválida para o tipo e-mail") |
 
 ## 7. Notificações: tipo → quem recebe → pra onde leva
 
@@ -644,9 +679,10 @@ Base `/api`. "M" = motorista, "R" = responsável, "—" = sem login. Detalhes no
 ### Chat e contrato
 | `POST /invite-code/redeem` | R | `{ inviteCode }` | `chatId` |
 |---|---|---|---|
-| `GET /chats?page=&size=` | M, R | — | página de conversas |
+| `GET /chats?page=&size=` | M, R | — | página de conversas (com `unreadCount`) |
+| `PUT /chats/{chatId}/read` | M, R | — | 204 (mensagens trazem `readAt`) |
 | `GET /chats/{chatId}/messages?page=&size=` · `POST /chats/{chatId}/messages` | M, R | `{ content?, attachmentType?, attachmentUrl? }` | mensagem |
-| `GET /chats/{chatId}/students` | M | — | `[{ id, name }]` |
+| `GET /chats/{chatId}/students` | M | — | `[{ id, name, photoKey }]` |
 | `POST /chats/{chatId}/contract` | M | proposta (6.2.3) | `{ message, userDriverContractId, contract }` |
 | `PUT /chats/{chatId}/contracts/{contractId}/accept` · `/reject` | R | — | 200 |
 | `PUT /chats/{chatId}/contracts/{contractId}/withdraw` | M | — | 200 |
@@ -673,9 +709,10 @@ Base `/api`. "M" = motorista, "R" = responsável, "—" = sem login. Detalhes no
 | `DELETE /student/{id}/responsibles/{responsibleId}` | R (admin, ou a própria pessoa) | — | 204 |
 | `PUT /student/{id}/responsibles/{responsibleId}/admin` | R (admin) | — | 204 |
 | `POST /student/generate-link` · `POST /student/confirm-link` | R | `{ id, relationType }` / `{ code }` | código / 201 |
+| `GET /student/{id}/photo-upload-url?fileName=&contentType=` · `PUT` · `DELETE /student/{id}/photo` | R (admin) | `{ fileKey }` | `{ uploadUrl, fileKey }` / `{ photoKey }` / 204 |
 | `GET /student/{id}/routes` | R | — | `[{ id, name }]` |
 | `GET` · `POST /student/{id}/absences` · `DELETE /student/{id}/absences/{absenceId}` | R | `{ routeId, date }` | faltas |
-| `GET /student/{id}/today-trips` | R | — | viagens de hoje do filho |
+| `GET /student/{id}/today-trips` | R | — | viagens de hoje do filho, com o motorista (id, nome, foto, nota) e a van (placa, modelo, cor) |
 
 ### Rotas (motorista)
 | `GET /route/get-all-routes-and-stops?name=&active=&page=` · `POST /route/create-route` | M | `{ name }` | página / rota |
@@ -723,5 +760,4 @@ Base `/api`. "M" = motorista, "R" = responsável, "—" = sem login. Detalhes no
 - **Cota da API de mapas** (OpenRouteService grátis):
   - acabou a cota → o cadastro de endereço dá **503**;
   - a viagem continua sem a linha e sem o tempo: trate `path`/`etaSeconds` `null` mostrando só a van.
-- **Foto do filho** só no navegador (`localStorage`); o backend não guarda.
 - **Pagamento** é Pix manual: o app não recebe dinheiro. Mercado Pago fica pra depois (#192).

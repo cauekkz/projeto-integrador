@@ -3,6 +3,7 @@ package br.com.vanroute.backend.services;
 import br.com.vanroute.backend.dtos.trip.TripLiveStateDTO;
 import br.com.vanroute.backend.dtos.trip.TripLiveStopDTO;
 import br.com.vanroute.backend.dtos.trip.TripStudentDTO;
+import br.com.vanroute.backend.dtos.trip.StudentTripTodayDTO;
 import org.springframework.test.util.ReflectionTestUtils;
 import br.com.vanroute.backend.dtos.route.RoutePendingResponse;
 import br.com.vanroute.backend.dtos.trip.TripResponseDTO;
@@ -61,6 +62,7 @@ class TripServiceTest {
     @Mock private TripLiveService tripLiveService;
     @Mock private TripNotificationService tripNotificationService;
     @Mock private UserDriverContractRepository userDriverContractRepository;
+    @Mock private RatingRepository ratingRepository;
 
     // alunos com contrato ACTIVE com o motorista (todos os criados por student(), menos os tirados no teste)
     private final List<UUID> withContract = new java.util.ArrayList<>();
@@ -300,8 +302,9 @@ class TripServiceTest {
 
     // van parada em (lat, lng); a Ana embarca no ponto em (-23.5000, -46.6000)
     private void vanAt(Trip trip, Student ana, double lat, double lng) {
-        TripStudentDTO st = new TripStudentDTO(ana.getId(), "Ana", StudentStopAction.BOARDING, null, BoardingStatus.PENDING, null, null);
-        TripLiveStopDTO stop = new TripLiveStopDTO(UUID.randomUUID(), 1, -23.5000, -46.6000, List.of(st), List.of(), false, null, null);
+        TripStudentDTO st = new TripStudentDTO(ana.getId(), "Ana", StudentStopAction.BOARDING, null, BoardingStatus.PENDING, null, null, null, null);
+        TripLiveStopDTO stop = new TripLiveStopDTO(UUID.randomUUID(), 1, -23.5000, -46.6000, List.of(st), List.of(), false, null, null,
+                null, null, null, List.of());
         when(tripLiveService.state(trip.getId())).thenReturn(Optional.of(new TripLiveStateDTO(trip.getId(), "Ida", TripStatus.STARTED,
                 lat, lng, null, null, null, null, null, List.of(stop))));
     }
@@ -379,5 +382,52 @@ class TripServiceTest {
         when(tripRepository.findFirstByRouteIdAndDateAndStatusNot(route.getId(), today, TripStatus.CANCELED)).thenReturn(Optional.of(trip));
 
         assertThrows(ResponseStatusException.class, () -> tripService.checkAbsenceUndoAllowed(route.getId(), today));
+    }
+
+    @Test
+    void todayTripsComeWithTheDriverAndTheVan() {
+        UUID parentId = UUID.randomUUID();
+        Student ana = student("Ana");
+        when(studentResponsibleRepository.existsByResponsible_UserIdAndStudent_Id(parentId, ana.getId())).thenReturn(true);
+        br.com.vanroute.backend.models.user.User driverUser = new br.com.vanroute.backend.models.user.User();
+        driverUser.setName("Gustavo Gómez");
+        driverUser.setPhotoKey("profile/x.jpg");
+        driver.setUser(driverUser);
+        vehicle.setPlate("ABC1D23");
+        vehicle.setModel("Sprinter");
+        vehicle.setColor("PRATA");
+        Trip trip = new Trip();
+        trip.setId(UUID.randomUUID());
+        trip.setRoute(route);
+        trip.setStatus(TripStatus.STARTED);
+        trip.setDriver(driver);
+        trip.setVehicle(vehicle);
+        Boarding boarding = new Boarding();
+        boarding.setTrip(trip);
+        boarding.setStudent(ana);
+        boarding.setStatus(BoardingStatus.PENDING);
+        when(boardingRepository.findTodayOfStudent(eq(ana.getId()), any())).thenReturn(List.of(boarding));
+        when(ratingRepository.summaryOf(driver.getUserId())).thenReturn(List.<Object[]>of(new Object[]{4.567, 12L}));
+
+        StudentTripTodayDTO today = tripService.studentTripsToday(ana.getId(), parentId).get(0);
+
+        assertEquals(driver.getUserId(), today.driverId());
+        assertEquals("Gustavo Gómez", today.driverName());
+        assertEquals("profile/x.jpg", today.driverPhotoKey());
+        assertEquals(4.6, today.driverRating());
+        assertEquals(vehicle.getPlate(), today.vehiclePlate());
+        assertEquals(vehicle.getModel(), today.vehicleModel());
+        assertEquals(vehicle.getColor(), today.vehicleColor());
+    }
+
+    @Test
+    void startErrorListsTheMissingDaysInPortuguese() {
+        when(routeService.pendingOf(route.getId())).thenReturn(List.of(new RoutePendingResponse(UUID.randomUUID(), "Lucas Pereira",
+                java.util.EnumSet.of(WeekDay.FRIDAY, WeekDay.MONDAY), java.util.EnumSet.noneOf(WeekDay.class))));
+
+        BadRequestException e = assertThrows(BadRequestException.class,
+                () -> tripService.start(route.getId(), startRequest(), false, driver.getUserId()));
+
+        assertEquals("A rota tem alunos sem embarque ou desembarque em algum dia: Lucas Pereira sem embarque (segunda e sexta)", e.getMessage());
     }
 }

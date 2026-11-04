@@ -7,7 +7,8 @@ import br.com.vanroute.backend.models.trip.enums.BoardingStatus;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-// boardedAt/deliveredAt: quando embarcou e quando foi entregue (null enquanto nao aconteceu)
+// boardedAt/deliveredAt: quando embarcou e quando foi entregue (null enquanto nao aconteceu);
+// addressLabel: o apelido do endereco do aluno nesse ponto ("Casa", "Natacao"); null na escola
 public record TripStudentDTO(
         UUID studentId,
         String studentName,
@@ -15,6 +16,9 @@ public record TripStudentDTO(
         StudentStopLocationType locationType,
         BoardingStatus status,
         LocalDateTime boardedAt,
-        LocalDateTime deliveredAt
+        LocalDateTime deliveredAt,
+        String addressLabel,
+        // foto do aluno (fileKey) ou null
+        String photoKey
 ) {
 }

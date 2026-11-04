@@ -41,7 +41,7 @@ public record ContractDetailsResponseDTO(
         List<SignatureItem> signatures,
         // pedidos de cancelamento (pendente e historico), do mais antigo pro mais novo
         List<CancellationResponseDTO> cancellations,
-        // parcelas vencidas e nao pagas; com 2+ o motorista pode cancelar sozinho
+        // parcelas vencidas e nao pagas
         long overduePayments,
         // todos os responsaveis do aluno (o admin primeiro): o motorista ve quem e quem, sem telefone
         List<StudentResponsibleItem> studentResponsibles

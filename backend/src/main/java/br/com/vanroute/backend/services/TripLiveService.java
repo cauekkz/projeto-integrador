@@ -6,6 +6,8 @@ import br.com.vanroute.backend.dtos.trip.*;
 import br.com.vanroute.backend.models.address.Address;
 import br.com.vanroute.backend.models.route.RouteStop;
 import br.com.vanroute.backend.models.shared.enums.WeekDay;
+import br.com.vanroute.backend.models.school.SchoolStop;
+import br.com.vanroute.backend.models.student.StudentAddress;
 import br.com.vanroute.backend.models.student.enums.StudentStopAction;
 import br.com.vanroute.backend.models.trip.Boarding;
 import br.com.vanroute.backend.models.trip.Trip;
@@ -49,6 +51,7 @@ public class TripLiveService {
     private final StudentStopRepository studentStopRepository;
     private final SchoolStopRepository schoolStopRepository;
     private final StudentResponsibleRepository studentResponsibleRepository;
+    private final StudentAddressRepository studentAddressRepository;
     private final MapService mapService;
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
@@ -65,7 +68,9 @@ public class TripLiveService {
     public TripLiveService(TripRepository tripRepository, BoardingRepository boardingRepository,
                            RouteStopRepository routeStopRepository, StudentStopRepository studentStopRepository,
                            SchoolStopRepository schoolStopRepository, StudentResponsibleRepository studentResponsibleRepository,
-                           MapService mapService, RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper) {
+                           MapService mapService, RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper,
+                           StudentAddressRepository studentAddressRepository) {
+        this.studentAddressRepository = studentAddressRepository;
         this.tripRepository = tripRepository;
         this.boardingRepository = boardingRepository;
         this.routeStopRepository = routeStopRepository;
@@ -112,18 +117,31 @@ public class TripLiveService {
                             studentStop.getLocationType(),
                             boardings.get(studentStop.getStudent().getId()).getStatus(),
                             boardings.get(studentStop.getStudent().getId()).getBoardingTime(),
-                            boardings.get(studentStop.getStudent().getId()).getUnboardingTime()))
+                            boardings.get(studentStop.getStudent().getId()).getUnboardingTime(),
+                            addressLabel(studentStop.getStudent().getId(), stop),
+                            studentStop.getStudent().getPhotoKey()))
                     .toList();
             if (students.isEmpty()) {
                 continue;
             }
-            List<UUID> schoolIds = schoolStopRepository.findByStopId(stop.getId()).stream()
-                    .map(schoolStop -> schoolStop.getSchool().getId())
-                    .toList();
+            List<SchoolStop> schoolStops = schoolStopRepository.findByStopId(stop.getId());
+            List<UUID> schoolIds = schoolStops.stream().map(schoolStop -> schoolStop.getSchool().getId()).toList();
+            List<String> schoolNames = schoolStops.stream().map(schoolStop -> schoolStop.getSchool().getName()).toList();
             boolean done = students.stream().noneMatch(TripLiveService::pendingAtStop);
-            stops.add(new TripStopDTO(stop.getId(), stop.getOrderIndex(), toAddress(stop.getAddress()), students, schoolIds, done));
+            stops.add(new TripStopDTO(stop.getId(), stop.getOrderIndex(), toAddress(stop.getAddress()), students, schoolIds, done,
+                    schoolNames));
         }
         return stops;
+    }
+
+    // apelido que o aluno deu pro endereco desse ponto ("Casa"); no ponto da escola nao tem
+    private String addressLabel(UUID studentId, RouteStop stop) {
+        if (stop.getAddress() == null) {
+            return null;
+        }
+        return studentAddressRepository.findFirstByStudentIdAndAddressId(studentId, stop.getAddress().getId())
+                .map(StudentAddress::getLabel)
+                .orElse(null);
     }
 
     // ainda precisa parar nesse ponto por causa desse aluno?
@@ -236,7 +254,11 @@ public class TripLiveService {
                         stop.schoolIds(),
                         stop.done(),
                         stop.done() ? null : pathIndex.get(stop.routeStopId()),
-                        stop.done() ? null : eta.get(stop.routeStopId())))
+                        stop.done() ? null : eta.get(stop.routeStopId()),
+                        stop.address().street(),
+                        stop.address().number(),
+                        stop.address().neighborhood(),
+                        stop.schoolNames()))
                 .toList();
         TripLiveStateDTO state = new TripLiveStateDTO(trip.getId(), trip.getRoute().getName(), trip.getStatus(),
                 previous.latitude(), previous.longitude(), previous.positionAt(), computedAt,
@@ -267,7 +289,8 @@ public class TripLiveService {
         long now = System.currentTimeMillis();
         List<TripLiveStopDTO> stops = state.stops() == null ? List.of() : state.stops().stream()
                 .map(stop -> new TripLiveStopDTO(stop.routeStopId(), stop.orderIndex(), stop.latitude(), stop.longitude(),
-                        stop.students(), stop.schoolIds(), stop.done(), stop.pathIndex(), remaining(stop.etaSeconds(), state.computedAt(), now)))
+                        stop.students(), stop.schoolIds(), stop.done(), stop.pathIndex(), remaining(stop.etaSeconds(), state.computedAt(), now),
+                        stop.street(), stop.number(), stop.neighborhood(), stop.schoolNames()))
                 .toList();
         TripLiveStopDTO next = stops.stream().filter(stop -> !stop.done()).findFirst().orElse(null);
 

@@ -46,9 +46,15 @@ public class StorageService {
 
     private final ChatMessageRepository chatMessageRepository;
     private final DocumentRepository documentRepository;
+    private final br.com.vanroute.backend.repositories.StudentResponsibleRepository studentResponsibleRepository;
+    private final br.com.vanroute.backend.repositories.UserDriverContractRepository userDriverContractRepository;
 
     public StorageService(S3Client s3Client, S3Presigner s3Presigner, ChatMessageRepository chatMessageRepository,
-                          DocumentRepository documentRepository) {
+                          DocumentRepository documentRepository,
+                          br.com.vanroute.backend.repositories.StudentResponsibleRepository studentResponsibleRepository,
+                          br.com.vanroute.backend.repositories.UserDriverContractRepository userDriverContractRepository) {
+        this.studentResponsibleRepository = studentResponsibleRepository;
+        this.userDriverContractRepository = userDriverContractRepository;
         this.s3Client = s3Client;
         this.s3Presigner = s3Presigner;
         this.chatMessageRepository = chatMessageRepository;
@@ -109,6 +115,34 @@ public class StorageService {
     // entao o arquivo que as duas partes assinaram nao muda mais (a URL de upload original vale 15 minutos e
     // deixaria o motorista trocar o PDF nesse tempo)
     public static final String CONTRACTS_PREFIX = "contracts/";
+
+    public static final String STUDENT_PREFIX = "students/";
+
+    // foto do aluno: pasta do aluno (students/{studentId}/...); quem pode enviar e o StudentPhotoService que confere
+    public PresignedUrlResponse generateStudentPhotoUploadUrl(UUID studentId, String originalFilename, String contentType) {
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new BadRequestException("A foto do aluno precisa ser uma imagem");
+        }
+        String ext = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            ext = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        return presignPut(STUDENT_PREFIX + studentId + "/" + UUID.randomUUID() + ext, contentType);
+    }
+
+    // aluno dono da foto pelo caminho (students/{id}/...), ou null se o caminho nao e de foto de aluno
+    public static UUID studentOfPhoto(String fileKey) {
+        if (fileKey == null || !fileKey.startsWith(STUDENT_PREFIX)) {
+            return null;
+        }
+        String rest = fileKey.substring(STUDENT_PREFIX.length());
+        int slash = rest.indexOf('/');
+        try {
+            return slash < 0 ? null : UUID.fromString(rest.substring(0, slash));
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
 
     public boolean exists(String fileKey) {
         return head(fileKey) != null;
@@ -217,8 +251,12 @@ public class StorageService {
     // onde o arquivo foi enviado ou e parte do contrato do documento
     public PresignedDownloadResponse generateDownloadUrl(String fileKey, UUID userId) {
         // foto de perfil: qualquer usuario logado ve
+        UUID studentId = studentOfPhoto(fileKey);
         boolean allowed = fileKey.startsWith(PROFILE_PREFIX)
                 || isOwnedBy(fileKey, userId)
+                // foto do aluno: os responsaveis dele e o motorista que tem ou teve contrato com ele
+                || (studentId != null && (studentResponsibleRepository.existsByResponsible_UserIdAndStudent_Id(userId, studentId)
+                        || userDriverContractRepository.existsByDriverUserIdAndStudentId(userId, studentId)))
                 || chatMessageRepository.existsAttachmentVisibleTo(fileKey, userId)
                 || documentRepository.existsContractDocumentVisibleTo(fileKey, userId);
         if (!allowed) {

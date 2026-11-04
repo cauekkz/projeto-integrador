@@ -41,7 +41,6 @@ class DriverServiceTest {
 
     private DriverRequestDTO generateDriverRequestDTO() {
         DriverRequestDTO dto = new DriverRequestDTO();
-        dto.setName("Harry Kane");
         dto.setEmail("harry@example.com");
         dto.setPassword("england123!");
         dto.setPhone("11999999999");
@@ -55,7 +54,7 @@ class DriverServiceTest {
 
         User user = new User();
         user.setCpf(cpf);
-        user.setName(requestDTO.getName());
+        user.setName("Joao da Silva");
         user.setEmail(requestDTO.getEmail());
 
         when(userService.createUser(any(UserCreateDTO.class))).thenReturn(user);
@@ -67,7 +66,7 @@ class DriverServiceTest {
 
         when(driverRepository.saveAndFlush(any(Driver.class))).thenReturn(mockedDriver);
 
-        Driver result = driverService.createDriver(requestDTO, cpf);
+        Driver result = driverService.createDriver(requestDTO, cpf, "Joao da Silva");
 
         assertNotNull(result);
         assertEquals(user, result.getUser());
@@ -85,7 +84,7 @@ class DriverServiceTest {
                 .thenThrow(new UserOrDriverOrResponsibleAlreadyRegisteredException("Usuario/Motorista já cadastrado"));
 
         Exception exception = assertThrows(UserOrDriverOrResponsibleAlreadyRegisteredException.class, () -> {
-            driverService.createDriver(requestDTO, cpf);
+            driverService.createDriver(requestDTO, cpf, "Joao da Silva");
         });
 
         assertEquals("Usuario/Motorista já cadastrado", exception.getMessage());

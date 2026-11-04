@@ -26,7 +26,7 @@ public record ContractSummaryResponseDTO(
         String responsibleName,
         // pedido de cancelamento esperando resposta (null se nao tem)
         CancellationResponseDTO pendingCancellation,
-        // parcelas vencidas e nao pagas; com 2+ o motorista pode cancelar sozinho
+        // parcelas vencidas e nao pagas
         long overduePayments
 ) {
 }

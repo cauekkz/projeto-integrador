@@ -64,12 +64,12 @@ public class DriverController {
             throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "A CNH não passou na auditoria digital.");
         }                                                                                       
 
-        // CPF sai da CNH; o nome digitado tem que ser o da CNH, que precisa estar valida, ser D ou E e o motorista
+        // CPF e nome saem da CNH (nome longo fica como a CNH traz, cortado). A CNH precisa estar valida, ser D ou E e o motorista
         // ter 21 anos ou mais (CTB art. 138)
         CnhParser.CnhData cnh = documentOcrExtractionService.extractFromCnh(dto.getDocumentPdf());
-        CnhParser.check(cnh, dto.getName(), LocalDate.now(TripService.ZONE));
+        CnhParser.check(cnh, LocalDate.now(TripService.ZONE));
 
-        Driver savedDriver = driverService.createDriver(dto, cnh.cpf());
+        Driver savedDriver = driverService.createDriver(dto, cnh.cpf(), CnhParser.nameToSave(cnh));
         termsService.accept(savedDriver.getUserId(), dto.getAcceptedTermsVersion());
         // fazer um try alguma coisa mais limpa possivel pra se isso nao funciona rmanda uma msg pro usuario reenviar o codigo no momento aparece uma msg de Redis nao funcionando (pq eu nem ligue) mas nao sei nem onde ta essa menssagem no fluxo 
         emailVerificationService.sendCodeAfterSignup("verificationEmail:email:" + savedDriver.getUser().getEmail(), savedDriver.getUser().getEmail());
