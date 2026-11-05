@@ -10,13 +10,13 @@
       @if (tipoUsuario === 'motorista') {
         <h2>Olá, que bom que você voltou!</h2>
         <label>CPF do motorista</label>
-        <input type="text" placeholder="000.000.000-00" name="nome" [(ngModel)]="enteredCPF" appCpfMask required />
+        <input type="text" placeholder="000.000.000-00" name="cpf" [(ngModel)]="enteredCPF" appCpfMask required />
       }
 
       @if (tipoUsuario === 'responsavel') {
         <h2>Olá, que bom que você voltou!</h2>
         <label>CPF do responsável</label>
-        <input type="text" placeholder="000.000.000-00" name="nome" [(ngModel)]="enteredCPF" appCpfMask required />
+        <input type="text" placeholder="000.000.000-00" name="cpf" [(ngModel)]="enteredCPF" appCpfMask required />
       }
 
       @if (cpfInvalido) {
@@ -56,4 +56,34 @@
 
 @if (mostrarForgotPassword) {
   <app-forgot-password (voltarEvent)="mostrarForgotPassword = false" />
+}
+
+@if (etapaEmail === 'email') {
+  <div class="confirmar-email">
+    <app-header titulo="Confirme seu e-mail" (voltarEvent)="etapaEmail = 'nenhuma'" />
+
+    <div class="content">
+      <form (ngSubmit)="enviarCodigoEmail()">
+        <h2>Falta confirmar seu e-mail</h2>
+        <p>Digite o e-mail do cadastro. Vamos mandar um código novo.</p>
+
+        <label>E-mail</label>
+        <input type="email" placeholder="Digite seu e-mail" name="email" [(ngModel)]="enteredEmail" required />
+        @if (emailInvalido) {
+          <p class="error-message">O e-mail é obrigatório!</p>
+        }
+
+        <app-button texto="Enviar código" tipo="primary" (clickEvent)="enviarCodigoEmail()" />
+      </form>
+    </div>
+  </div>
+}
+
+@if (etapaEmail === 'codigo') {
+  <div class="confirmar-email">
+    <app-email-code
+      [email]="enteredEmail"
+      (verificadoEvent)="emailVerificado()"
+      (voltarEvent)="etapaEmail = 'email'" />
+  </div>
 }

@@ -5,7 +5,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 import { ForgotPassword } from './forgot-password';
 
-const API = 'http://localhost:9090/api';
+const API = '/api';
 
 describe('ForgotPassword', () => {
   let component: ForgotPassword;

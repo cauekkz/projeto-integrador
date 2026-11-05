@@ -71,7 +71,14 @@
             <span class="msg-hora">
               {{ msg.hora }}
               @if (msg.minha) {
-                <i class="bi bi-check2-all" [class.lida]="msg.lida"></i>
+                <!-- ✓ enviada; ✓✓ lida (readAt) -->
+                <i
+                  class="bi tique"
+                  [class.bi-check2]="!msg.lida"
+                  [class.bi-check2-all]="msg.lida"
+                  [class.lida]="msg.lida"
+                  [attr.aria-label]="msg.lida ? 'Lida' : 'Enviada'"
+                ></i>
               }
             </span>
           </div>

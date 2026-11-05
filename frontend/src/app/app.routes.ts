@@ -178,6 +178,12 @@ export const routes: Routes = [
     canActivate: [routeGuard, roleGuard],
     data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
   },
+  {
+    // termos atualizados: o interceptor traz pra ca quando o backend responde 403 TERMS_NOT_ACCEPTED
+    path: 'terms',
+    loadComponent: () => import('./pages/terms/terms').then((m) => m.TermsPage),
+    canActivate: [routeGuard],
+  },
   // qualquer url que nao bate com nada acima cai na 404 (tem que ser a ultima)
   {
     path: '**',

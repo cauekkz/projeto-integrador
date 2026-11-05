@@ -10,7 +10,7 @@ type SituacaoParada = 'feita' | 'atual' | 'proxima';
 
 // privacidade: o responsavel so ve as paradas do proprio dependente (casa e escola).
 // paradas de outros alunos (e a garagem do motorista) chegam so como quantidade, sem nome, endereco nem horario
-// TODO: o backend e quem tem que filtrar isso na resposta; o front nunca deve receber a casa dos outros
+// o backend ja filtra: o WebSocket da viagem manda pro responsavel so as paradas do proprio filho (tela refeita na etapa da viagem)
 type ParadaRota =
   | { tipo: 'dependente'; titulo: string; endereco: string; horario: string; situacao: SituacaoParada }
   | { tipo: 'outras'; quantidade: number; situacao: SituacaoParada };

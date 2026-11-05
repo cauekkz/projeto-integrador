@@ -7,7 +7,7 @@ import { authInterceptor } from '../../interceptor/auth.interceptor';
 import { PopUpService } from '../../shared/pop-up';
 import { DriverSchools } from './driver-schools';
 
-const API = 'http://localhost:9090/api';
+const API = '/api';
 
 function fakeToken(payload: object) {
   const base64 = (obj: object) => btoa(JSON.stringify(obj)).replace(/=+$/, '');

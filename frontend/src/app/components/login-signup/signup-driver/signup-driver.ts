@@ -4,14 +4,15 @@ import { RegisterService } from '../../../services/register.service';
 import { AuthService } from '../../../services/auth.service';
 import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
-import { PhoneMaskDirective, NameFormatDirective, PasswordToggleDirective } from '../../../shared/directives';
+import { PhoneMaskDirective, PasswordToggleDirective } from '../../../shared/directives';
+import { TermsAccept } from '../terms-accept/terms-accept';
 import { PopUpService } from '../../../shared/pop-up';
 import { limparMascara } from '../../../shared/utils';
 
 @Component({
   selector: 'app-signup-driver',
   standalone: true,
-  imports: [FormsModule, Header, Button, PhoneMaskDirective, NameFormatDirective, PasswordToggleDirective],
+  imports: [FormsModule, Header, Button, PhoneMaskDirective, PasswordToggleDirective, TermsAccept],
   templateUrl: './signup-driver.html',
   styleUrl: './signup-driver.css',
 })
@@ -28,18 +29,18 @@ export class SignupDriver {
     private popUpService: PopUpService,
   ) {}
 
-  nameInvalido = false;
   emailInvalido = false;
   passInvalido = false;
   confirmPassInvalido = false;
   phoneInvalido = false;
   passwordsDontMatch = false;
 
-  enteredName = '';
   enteredEmail = '';
   enteredPass = '';
   enteredConfirmPass = '';
   enteredPhone = '';
+  // versao dos termos marcada no checkbox (o backend exige a atual no cadastro)
+  versaoTermos: string | null = null;
 
   etapa = 1;
 
@@ -54,14 +55,12 @@ export class SignupDriver {
   signup() {
     this.passwordsDontMatch = false;
 
-    this.nameInvalido = this.verification(this.enteredName);
     this.emailInvalido = this.verification(this.enteredEmail);
     this.passInvalido = this.verification(this.enteredPass);
     this.confirmPassInvalido = this.verification(this.enteredConfirmPass);
     this.phoneInvalido = this.verification(this.enteredPhone);
 
     if (
-      this.nameInvalido ||
       this.emailInvalido ||
       this.passInvalido ||
       this.confirmPassInvalido ||
@@ -77,6 +76,11 @@ export class SignupDriver {
       return;
     }
 
+    if (!this.versaoTermos) {
+      this.popUpService.show('Aceite os Termos de Uso e a Política de Privacidade para continuar.', 'warning', 'Termos de Uso');
+      return;
+    }
+
     if (!this.registerService.selectedFile) {
       this.popUpService.show('É necessário anexar o arquivo PDF da CNH antes de continuar.', 'warning', 'CNH Obrigatória');
       return;
@@ -84,25 +88,21 @@ export class SignupDriver {
 
     const data = {
       documentPdf: this.registerService.selectedFile,
-      name: this.enteredName,
       email: this.enteredEmail,
       password: this.enteredPass,
       confirmPassword: this.enteredConfirmPass,
       phone: limparMascara(this.enteredPhone),
+      acceptedTermsVersion: this.versaoTermos,
     };
 
-    console.log('Enviando cadastro do motorista...');
-
     this.authService.createDriver(data).subscribe({
-      next: (response) => {
-        console.log('Motorista cadastrado com sucesso:', response);
+      next: () => {
         this.cadastroConcluidoEvent.emit({
           email: this.enteredEmail,
         });
       },
-      error: (err) => {
-        console.error('Erro ao cadastrar motorista:', err);
-      },
+      // o popup global mostra a mensagem do backend (CNH recusada, e-mail em uso, senha fraca...)
+      error: () => {},
     });
   }
 }

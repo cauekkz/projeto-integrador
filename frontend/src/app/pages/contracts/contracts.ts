@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, inject, signal, viewChild, effect } from '@angular/core';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { ContractService } from '../../services/contract.service';
@@ -8,29 +8,34 @@ import { Footer } from '../../shared/footer/footer';
 import {
   ContractStatus,
   contractSummaryResponse,
+  isoParaData,
   periodicidadeLabel,
 } from '../../services/dto/contract/contract.dto';
 
-type Aba = 'todos' | 'pendentes' | 'aprovados' | 'bloqueados';
+type Aba = 'todos' | ContractStatus;
 
-const ABAS: { id: Aba; label: string; status: ContractStatus[] | null }[] = [
-  { id: 'todos', label: 'Todos', status: null },
-  { id: 'pendentes', label: 'Pendentes', status: ['PENDING'] },
-  { id: 'aprovados', label: 'Aprovados', status: ['ACTIVE'] },
-  // negado, suspenso, em atraso e inativo: nenhum deles esta valendo
-  { id: 'bloqueados', label: 'Bloqueados', status: ['CANCELED', 'SUSPENDED', 'OVERDUE', 'INACTIVE'] },
+// uma aba por status do backend (Figma "Ambos · /contracts · status novos e paginação")
+const ABAS: { id: Aba; label: string }[] = [
+  { id: 'todos', label: 'Todos' },
+  { id: 'PENDING', label: 'Pendentes' },
+  { id: 'SCHEDULED', label: 'Agendados' },
+  { id: 'ACTIVE', label: 'Ativos' },
+  { id: 'INACTIVE', label: 'Inativos' },
+  { id: 'CANCELED', label: 'Cancelados' },
 ];
 
-const STATUS: Record<ContractStatus, { texto: string; icone: string }> = {
-  PENDING: { texto: 'Pendente', icone: 'bi-clock' },
-  ACTIVE: { texto: 'Aprovado', icone: 'bi-check-circle' },
-  CANCELED: { texto: 'Negado', icone: 'bi-x-circle' },
-  INACTIVE: { texto: 'Inativo', icone: 'bi-slash-circle' },
-  SUSPENDED: { texto: 'Suspenso', icone: 'bi-pause-circle' },
-  OVERDUE: { texto: 'Em atraso', icone: 'bi-exclamation-circle' },
+// texto e cor do selo (componente Selo do Figma)
+const STATUS: Record<ContractStatus, { texto: string; classe: string }> = {
+  PENDING: { texto: 'Pendente', classe: 'pendente' },
+  SCHEDULED: { texto: 'Agendado', classe: 'agendado' },
+  ACTIVE: { texto: 'Ativo', classe: 'ativo' },
+  INACTIVE: { texto: 'Inativo', classe: 'inativo' },
+  CANCELED: { texto: 'Cancelado', classe: 'cancelado' },
 };
 
-// contratos do usuario logado (aba "Contratos" do profile select)
+const TAMANHO_PAGINA = 20;
+
+// contratos do usuario logado (aba "Contratos" do profile select); o backend filtra e pagina
 @Component({
   selector: 'app-contracts',
   standalone: true,
@@ -43,6 +48,7 @@ export class Contracts implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
   private location = inject(Location);
+  private destroyRef = inject(DestroyRef);
 
   protected readonly abas = ABAS;
   protected readonly statusInfo = STATUS;
@@ -52,33 +58,102 @@ export class Contracts implements OnInit {
   protected abaAtiva = signal<Aba>('todos');
   protected contratos = signal<contractSummaryResponse[]>([]);
   protected carregando = signal(true);
+  protected carregandoMais = signal(false);
   protected erroCarregar = signal(false);
+  protected temMais = signal(false);
+  private pagina = 0;
+  // ignora resposta atrasada de uma aba que ja foi trocada
+  private pedidoAtual = 0;
 
-  protected filtrados = computed(() => {
-    const status = ABAS.find((a) => a.id === this.abaAtiva())?.status;
-    const todos = this.contratos();
-    return status ? todos.filter((c) => status.includes(c.status)) : todos;
-  });
+  // fim da lista: quando aparece na tela, busca a proxima pagina
+  private fimDaLista = viewChild<ElementRef<HTMLElement>>('fimDaLista');
+  private observador: IntersectionObserver | null = null;
+
+  constructor() {
+    effect(() => {
+      const fim = this.fimDaLista()?.nativeElement;
+      this.observador?.disconnect();
+      if (!fim || typeof IntersectionObserver === 'undefined') return;
+      this.observador = new IntersectionObserver((entradas) => {
+        if (entradas.some((e) => e.isIntersecting)) this.carregarMais();
+      });
+      this.observador.observe(fim);
+    });
+    this.destroyRef.onDestroy(() => this.observador?.disconnect());
+  }
 
   ngOnInit() {
     this.ehMotorista = this.authService.getRolesFromToken().includes('ROLE_DRIVER');
     this.carregar();
   }
 
+  trocarAba(aba: Aba) {
+    if (aba === this.abaAtiva()) return;
+    this.abaAtiva.set(aba);
+    this.carregar();
+  }
+
   carregar() {
+    this.pagina = 0;
+    this.contratos.set([]);
     this.carregando.set(true);
     this.erroCarregar.set(false);
-    this.contractService.getMyContracts().subscribe({
-      next: (contratos) => {
-        this.contratos.set(contratos ?? []);
-        this.carregando.set(false);
-      },
-      error: (error) => {
-        console.error('Erro ao carregar contratos:', error);
-        this.erroCarregar.set(true);
-        this.carregando.set(false);
-      },
-    });
+    this.buscarPagina();
+  }
+
+  carregarMais() {
+    if (!this.temMais() || this.carregando() || this.carregandoMais()) return;
+    this.pagina++;
+    this.carregandoMais.set(true);
+    this.buscarPagina();
+  }
+
+  private buscarPagina() {
+    const pedido = ++this.pedidoAtual;
+    const aba = this.abaAtiva();
+    this.contractService
+      .getMyContracts({ status: aba === 'todos' ? undefined : aba, page: this.pagina, size: TAMANHO_PAGINA })
+      .subscribe({
+        next: (pagina) => {
+          if (pedido !== this.pedidoAtual) return;
+          this.contratos.update((atuais) => [...atuais, ...(pagina.content ?? [])]);
+          this.temMais.set(!pagina.last);
+          this.carregando.set(false);
+          this.carregandoMais.set(false);
+        },
+        error: () => {
+          if (pedido !== this.pedidoAtual) return;
+          this.erroCarregar.set(this.pagina === 0);
+          this.temMais.set(false);
+          this.carregando.set(false);
+          this.carregandoMais.set(false);
+        },
+      });
+  }
+
+  // linhas de aviso do cartao: inicio do agendado, data do cancelamento pedido e parcelas atrasadas
+  inicioAgendado(c: contractSummaryResponse): string | null {
+    return c.status === 'SCHEDULED' ? diaMes(c.startDate) : null;
+  }
+
+  dataCancelamento(c: contractSummaryResponse): string | null {
+    return c.pendingCancellation?.effectiveDate ? diaMes(c.pendingCancellation.effectiveDate) : null;
+  }
+
+  atrasadas(c: contractSummaryResponse): string | null {
+    const n = c.overduePayments ?? 0;
+    if (n <= 0) return null;
+    return n === 1 ? '1 parcela atrasada' : `${n} parcelas atrasadas`;
+  }
+
+  // foto do aluno chega na etapa da foto (photoKey); por enquanto, iniciais
+  iniciais(nome: string): string {
+    return (nome ?? '')
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((parte) => parte[0].toUpperCase())
+      .join('');
   }
 
   visualizar(contrato: contractSummaryResponse) {
@@ -88,4 +163,9 @@ export class Contracts implements OnInit {
   voltar() {
     this.location.back();
   }
+}
+
+// AAAA-MM-DD -> DD/MM
+function diaMes(iso: string): string {
+  return isoParaData(iso).slice(0, 5);
 }

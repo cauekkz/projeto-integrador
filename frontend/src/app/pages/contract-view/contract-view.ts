@@ -18,8 +18,7 @@ const STATUS: Record<ContractStatus, { texto: string; classe: string }> = {
   ACTIVE: { texto: 'Aceito', classe: 'aceito' },
   CANCELED: { texto: 'Negado', classe: 'negado' },
   INACTIVE: { texto: 'Inativo', classe: 'neutro' },
-  SUSPENDED: { texto: 'Suspenso', classe: 'negado' },
-  OVERDUE: { texto: 'Em atraso', classe: 'negado' },
+  SCHEDULED: { texto: 'Agendado', classe: 'aceito' },
 };
 
 // analise do contrato (aberta pelo card do chat ou pela lista de contratos); ?chatId= volta pra conversa

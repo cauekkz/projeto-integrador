@@ -1,3 +1,4 @@
+import { PopUpService } from '../../../shared/pop-up';
 
 import {
   ChangeDetectorRef,
@@ -59,6 +60,7 @@ export class ChatDetails implements OnInit, OnDestroy {
 
   carregandoMensagens = true;
   private subscription?: Subscription;
+  private leituraSubscription?: Subscription;
 
   mensagens: Array<{
     id: string;
@@ -82,6 +84,7 @@ export class ChatDetails implements OnInit, OnDestroy {
   // o iframe do PDF precisa de SafeResourceUrl; guardado pra nao recarregar o PDF a cada deteccao de mudanca
   private previasPdf = new Map<string, SafeResourceUrl>();
   private sanitizer = inject(DomSanitizer);
+  private popUpService = inject(PopUpService);
 
   constructor(
     private route: ActivatedRoute,
@@ -176,7 +179,27 @@ export class ChatDetails implements OnInit, OnDestroy {
 
       this.adicionarMensagens([message]);
       this.rolarParaFim();
+
+      // chegou do outro com a conversa aberta: ja foi lida
+      if (message.senderId !== this.usuarioLogadoId) {
+        this.marcarComoLida();
+      }
     });
+
+    // o outro leu: todas as minhas mensagens viram ✓✓
+    this.leituraSubscription = this.chatService.reads$.subscribe((evento) => {
+      if (evento.chatId !== this.chatId || evento.userId === this.usuarioLogadoId) {
+        return;
+      }
+      this.mensagens = this.mensagens.map((item) => (item.minha && !item.lida ? { ...item, lida: true } : item));
+      this.cdr.markForCheck();
+    });
+  }
+
+  // PUT /chats/{id}/read: zera o unreadCount e avisa o outro (evento read no socket dele)
+  private marcarComoLida() {
+    if (!this.chatId) return;
+    this.chatService.markAsRead(this.chatId).subscribe({ error: () => {} });
   }
 
   private carregarNomeContato() {
@@ -220,6 +243,7 @@ export class ChatDetails implements OnInit, OnDestroy {
     if (this.chatId) this.notificacoes.marcarConversaVista(this.chatId);
     this.chatService.disconnect();
     this.subscription?.unsubscribe();
+    this.leituraSubscription?.unsubscribe();
   }
 
   private carregarMensagens() {
@@ -244,6 +268,7 @@ export class ChatDetails implements OnInit, OnDestroy {
             this.erroCarregar = '';
 
             this.rolarParaFim();
+            this.marcarComoLida();
           },
           error: (error) => {
             this.carregandoMensagens = false;
@@ -258,6 +283,12 @@ export class ChatDetails implements OnInit, OnDestroy {
       },
       error: (error) => {
         this.carregandoMensagens = false;
+
+        // chat de outra pessoa: o backend responde 403 (o pop-up global ja avisou) e volta pra lista
+        if (error?.status === 403) {
+          this.voltar();
+          return;
+        }
 
         this.erroCarregar = error?.status >= 500
           ? 'Você não tem acesso a esta conversa ou ela não existe.'
@@ -340,7 +371,8 @@ export class ChatDetails implements OnInit, OnDestroy {
       texto: message.content || '',
       minha: message.senderId === this.usuarioLogadoId,
       hora: this.formatHour(message.sentAt),
-      lida: message.senderId === this.usuarioLogadoId,
+      // ✓✓ so nas minhas, quando o outro ja leu
+      lida: message.senderId === this.usuarioLogadoId && !!message.readAt,
       attachmentUrl: message.attachmentUrl,
       attachmentType: message.attachmentType,
       anexoUrl: this.linkDoAnexo(message.attachmentUrl),
@@ -463,6 +495,12 @@ export class ChatDetails implements OnInit, OnDestroy {
       return;
     }
 
+    // mesmo limite do backend: confere antes de subir pra nao gastar o upload
+    if (file.size > ANEXO_TAMANHO_MAXIMO) {
+      this.popUpService.show('O arquivo pode ter no máximo 10 MB', 'error', 'Dados inválidos');
+      return;
+    }
+
     try {
       const fileKey = await this.chatService.uploadAttachment(file);
 
@@ -488,6 +526,9 @@ export class ChatDetails implements OnInit, OnDestroy {
     }
   }
 }
+
+// o backend recusa anexo maior que 10 MB (400 "O arquivo pode ter no máximo 10 MB")
+const ANEXO_TAMANHO_MAXIMO = 10 * 1024 * 1024;
 
 type TipoAnexo = 'imagem' | 'video' | 'pdf' | 'arquivo';
 

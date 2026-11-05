@@ -7,7 +7,9 @@ import {
   contractProposalRequest,
   contractProposalResponse,
   contractSummaryResponse,
+  myContractsRequest,
 } from './dto/contract/contract.dto';
+import { Page, paramsDePagina } from './dto/page.dto';
 import { API_URL } from './api';
 
 // a proposta de contrato nasce dentro do chat (docs/FLUXO_CONTRATO.md)
@@ -38,9 +40,14 @@ export class ContractService {
     });
   }
 
-  // contratos do usuario logado (motorista ou responsavel); a tela de contratos filtra por aba
-  getMyContracts() {
-    return this.http.get<contractSummaryResponse[]>(`${this.apiUrl}/contract/my-contracts`, {
+  // contratos do usuario logado (motorista ou responsavel), paginado; ?status= filtra no backend
+  getMyContracts(filtro: myContractsRequest = {}) {
+    const params: Record<string, string | number> = { ...paramsDePagina(filtro) };
+    if (filtro.status) params['status'] = filtro.status;
+    if (filtro.studentId) params['studentId'] = filtro.studentId;
+    if (filtro.driverId) params['driverId'] = filtro.driverId;
+    return this.http.get<Page<contractSummaryResponse>>(`${this.apiUrl}/contract/my-contracts`, {
+      params,
       context: new HttpContext().set(SKIP_ERROR_POPUP, true),
     });
   }

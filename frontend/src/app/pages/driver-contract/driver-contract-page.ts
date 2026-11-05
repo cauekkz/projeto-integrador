@@ -22,7 +22,8 @@ const ETAPAS: { id: EtapaContrato; label: string }[] = [
 ];
 
 // motorista monta a proposta de contrato pro responsavel do chat (docs/FLUXO_CONTRATO.md)
-// aluno -> contrato -> midia (revisao + PDF opcional) -> POST /api/chats/{chatId}/contract
+// aluno -> contrato -> midia (revisao + PDF obrigatorio, ate 10 MB) -> POST /api/chats/{chatId}/contract
+// cada proposta criada consome o PDF (o backend copia pra contracts/{id}.pdf): a proxima precisa de upload novo
 @Component({
   selector: 'app-driver-contract-page',
   standalone: true,
@@ -212,7 +213,7 @@ export class DriverContractPage implements OnInit {
         this.draft.registrarPdfEnviado(pdf, fileKey);
       } catch (error) {
         console.error('Erro ao enviar o PDF do contrato:', error);
-        this.erroEnvio.set('Não foi possível enviar o PDF. Tente novamente.');
+        this.mostrarErro('Não foi possível enviar o PDF. Tente novamente.');
         this.enviando.set(false);
         return;
       }
@@ -236,7 +237,7 @@ export class DriverContractPage implements OnInit {
       );
     } catch (error) {
       console.error('Erro ao criar o contrato:', error);
-      this.erroEnvio.set(this.mensagemErroEnvio(error));
+      this.mostrarErro(this.mensagemErroEnvio(error), error);
       this.enviando.set(false);
       return;
     }
@@ -245,6 +246,21 @@ export class DriverContractPage implements OnInit {
     this.draft.limpar();
     this.enviando.set(false);
     this.voltarParaChat(responsavel);
+  }
+
+  // todo aviso e pop-up (Figma "Motorista · /driver-contract · erro 409"): titulo pelo status, texto do backend
+  private mostrarErro(mensagem: string, error?: unknown) {
+    this.erroEnvio.set(mensagem);
+    const status = error instanceof HttpErrorResponse ? error.status : undefined;
+    if (status === 409) {
+      this.popUpService.show(mensagem, 'warning', 'Não foi possível concluir');
+    } else if (status === 400 || status === 422) {
+      this.popUpService.show(mensagem, 'error', 'Dados inválidos');
+    } else if (status === 403) {
+      this.popUpService.show(mensagem, 'error', 'Sem permissão');
+    } else {
+      this.popUpService.show(mensagem, 'error');
+    }
   }
 
   private mensagemErroEnvio(error: unknown): string {
@@ -260,7 +276,8 @@ export class DriverContractPage implements OnInit {
       case 403:
         return mensagemDoBackend(error) ?? 'Esta escola não está vinculada ao seu perfil de motorista.';
       case 409:
-        return 'Já existe um contrato pendente ou ativo com este dependente.';
+        // texto exato do backend: proposta pendente, contrato agendado ou ativo no mesmo periodo
+        return mensagemDoBackend(error) ?? 'Já existe uma proposta pendente, um contrato agendado ou um contrato ativo nesse período para este motorista e aluno';
       default:
         return 'Não foi possível enviar o contrato. Tente novamente.';
     }

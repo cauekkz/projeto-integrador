@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { Page, paramsDePagina } from './dto/page.dto';
 import { HttpClient } from '@angular/common/http';
 import {
   createStudentRequest,
@@ -46,14 +47,9 @@ export class StudentService {
       params.studentName = filters.studentName;
     }
 
-    if (filters?.page !== undefined) {
-      params.page = filters.page;
-    }
+    Object.assign(params, paramsDePagina(filters));
 
-    if (filters?.size !== undefined) {
-      params.size = filters.size;
-    }
-
-    return this.http.get(`${this.apiUrl}/my-children`, { params });
+    // os campos do aluno ganham tipo na etapa da foto do aluno (photoKey)
+    return this.http.get<Page<any>>(`${this.apiUrl}/my-children`, { params });
   }
 }

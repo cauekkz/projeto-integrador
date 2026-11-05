@@ -2,15 +2,7 @@
   <app-header titulo="Cadastro motorista" (voltarEvent)="voltar()" />
 
   <form class="form" (ngSubmit)="signup()">
-    <div class="field">
-      <label>Nome do motorista</label>
-      <input type="text" placeholder="Digite seu nome" [(ngModel)]="enteredName" name="name" appNameFormat />
-
-      @if (nameInvalido) {
-        <p class="error-message">O nome é obrigatório!</p>
-      }
-    </div>
-
+    <!-- o nome e o CPF saem da CNH: nao tem campo de nome -->
     <div class="field">
       <label>E-mail do motorista</label>
       <input
@@ -64,6 +56,8 @@
         <p class="error-message">As senhas não coincidem!</p>
       }
     </div>
+
+    <app-terms-accept (versaoAceitaChange)="versaoTermos = $event" />
 
     <app-button
       texto="Finalizar cadastro"

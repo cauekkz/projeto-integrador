@@ -31,10 +31,15 @@
         (keydown.enter)="abrirConversa(conversa)">
         <img [src]="conversa.foto" class="conversa-avatar" alt="">
         <div class="conversa-info">
-          <span class="conversa-nome">{{ conversa.nome }}</span>
-          <span class="conversa-msg">{{ conversa.ultimaMensagem }}</span>
+          <span class="conversa-nome" [class.nao-lida]="conversa.naoLida">{{ conversa.nome }}</span>
+          <span class="conversa-msg" [class.nao-lida]="conversa.naoLida">{{ conversa.ultimaMensagem }}</span>
         </div>
-        <span class="conversa-hora">{{ conversa.hora }}</span>
+        <div class="conversa-lado">
+          <span class="conversa-hora">{{ conversa.hora }}</span>
+          @if (conversa.naoLida) {
+            <span class="ponto-nao-lida" aria-label="Mensagem nova"></span>
+          }
+        </div>
       </div>
     }
   </div>

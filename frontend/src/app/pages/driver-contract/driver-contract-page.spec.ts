@@ -13,7 +13,7 @@ import { DriverContractPage } from './driver-contract-page';
 import { ContractDraftService } from './contract-draft.service';
 import { ContractAttachment } from '../../components/driver-contract/contract-attachment/contract-attachment';
 
-const API = 'http://localhost:9090/api';
+const API = '/api';
 
 function fakeToken(payload: object) {
   const base64 = (obj: object) => btoa(JSON.stringify(obj)).replace(/=+$/, '');
@@ -203,13 +203,17 @@ describe('Criação de contrato pelo motorista', () => {
       await esperar();
       let req = http.expectOne(`${API}/chats/chat-1/contract`);
       expect(req.request.body.document).toEqual({ url: 'arquivo-123.pdf', type: 'TRANSPORT_CONTRACT' });
-      req.flush({ message: 'conflito' }, { status: 409, statusText: 'Conflict' });
+      const conflito =
+        'Já existe uma proposta pendente, um contrato agendado ou um contrato ativo nesse período para este motorista e aluno';
+      req.flush({ message: conflito }, { status: 409, statusText: 'Conflict' });
       await esperar();
 
-      expect(page.erroEnvio()).toContain('pendente ou ativo');
+      // pop-up amarelo com o texto exato do backend (Figma "Motorista · /driver-contract · erro 409")
+      expect(page.erroEnvio()).toBe(conflito);
+      expect(popUp.show).toHaveBeenCalledWith(conflito, 'warning', 'Não foi possível concluir');
       expect(draft.studentId()).toBe('aluno-1');
       expect(router.navigate).not.toHaveBeenCalled();
-      // erro tratado na tela, sem popup global duplicado
+      // um pop-up so: o global fica desligado nessa chamada
       expect(popUp.showError).not.toHaveBeenCalled();
 
       page.avancar();

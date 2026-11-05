@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { firstValueFrom, map, Observable, of, Subject, switchMap } from 'rxjs';
-import { ChatMessage, ChatPage, ChatSummary, DriverLinkCode } from '../models/chat-message';
+import { ChatMessage, ChatReadEvent, ChatSummary, DriverLinkCode } from '../models/chat-message';
+import { Page } from './dto/page.dto';
 import { SKIP_ERROR_POPUP } from '../interceptor/http-context';
 import { AuthService } from './auth.service';
 import { API_URL, urlDoStorage, wsUrl } from './api';
@@ -18,6 +19,9 @@ export class ChatWebSocketService {
   private messageSubject = new Subject<ChatMessage>();
 
   public messages$ = this.messageSubject.asObservable();
+  // {"type":"read"} chega pelo mesmo socket: nao e mensagem
+  private readSubject = new Subject<ChatReadEvent>();
+  public reads$ = this.readSubject.asObservable();
 
   constructor(
     private http: HttpClient,
@@ -42,7 +46,7 @@ export class ChatWebSocketService {
   }
 
   getChats(page = 0, size = 10) {
-    return this.http.get<ChatPage<ChatSummary>>(`${this.apiUrl}/chats?page=${page}&size=${size}`);
+    return this.http.get<Page<ChatSummary>>(`${this.apiUrl}/chats?page=${page}&size=${size}`);
   }
 
   getLatestMessage(chatId: string): Observable<ChatMessage | null> {
@@ -89,8 +93,12 @@ export class ChatWebSocketService {
 
     this.socket.onmessage = (event: MessageEvent) => {
       try {
-        const message: ChatMessage = JSON.parse(event.data);
-        this.messageSubject.next(message);
+        const dados = JSON.parse(event.data);
+        if (dados?.type === 'read') {
+          this.readSubject.next(dados as ChatReadEvent);
+          return;
+        }
+        this.messageSubject.next(dados as ChatMessage);
       } catch (error) {
         console.error('Erro ao processar mensagem do WebSocket:', error);
       }
@@ -111,8 +119,16 @@ export class ChatWebSocketService {
     this.socket = undefined;
   }
 
+  // marca as mensagens do outro como lidas (zera o unreadCount); o outro recebe o evento read no socket. 204
+  // sem popup: falhar aqui nao atrapalha a conversa
+  markAsRead(chatId: string) {
+    return this.http.put<void>(`${this.apiUrl}/chats/${chatId}/read`, null, {
+      context: new HttpContext().set(SKIP_ERROR_POPUP, true),
+    });
+  }
+
   getMessages(chatId: string, page = 0, size = 30) {
-    return this.http.get<ChatPage<ChatMessage>>(
+    return this.http.get<Page<ChatMessage>>(
       `${this.apiUrl}/chats/${chatId}/messages?page=${page}&size=${size}`,
     );
   }

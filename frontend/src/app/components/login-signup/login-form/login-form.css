@@ -106,3 +106,20 @@ input {
 
 
 }
+
+/* confirmar o e-mail: cobre a tela de login, igual ao "esqueci a senha" */
+.confirmar-email {
+  position: fixed;
+  inset: 0;
+  background: white;
+  z-index: 200;
+  overflow-y: auto;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.confirmar-email p {
+  color: #475569;
+  margin-bottom: 16px;
+}

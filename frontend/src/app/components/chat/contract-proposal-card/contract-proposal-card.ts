@@ -14,8 +14,8 @@ const STATUS: Record<ContractStatus, { texto: string; classe: string }> = {
   ACTIVE: { texto: 'Aceito', classe: 'aceito' },
   CANCELED: { texto: 'Negado', classe: 'negado' },
   INACTIVE: { texto: 'Inativo', classe: 'neutro' },
-  SUSPENDED: { texto: 'Suspenso', classe: 'neutro' },
-  OVERDUE: { texto: 'Em atraso', classe: 'negado' },
+  // aceito com inicio no futuro (o card completo e refeito na etapa do contrato)
+  SCHEDULED: { texto: 'Agendado', classe: 'aceito' },
 };
 
 // card da mensagem PROPOSAL no chat: resumo do contrato, link pra analise e (pro responsavel) aceitar ou negar

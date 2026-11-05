@@ -1,3 +1,5 @@
+import { PageRequest } from '../page.dto';
+
 import { addressRequest } from '../auth/auth.dto';
 
 // resposta do POST /api/student/create-student
@@ -27,10 +29,8 @@ export interface generateStudentLink {
   relationType: string
 }
 
-export interface getMyChildrenRequest {
+export interface getMyChildrenRequest extends PageRequest {
   relationType?: string;
   isAdmin?: boolean;
   studentName?: string;
-  page?: number;
-  size?: number;
 }

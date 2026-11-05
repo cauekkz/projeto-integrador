@@ -8,11 +8,12 @@ import { CommonModule } from '@angular/common';
 import { CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective, CepBuscaDirective, EnderecoCep, PasswordToggleDirective } from '../../../shared/directives';
 import { PopUpService } from '../../../shared/pop-up';
 import { limparMascara } from '../../../shared/utils';
+import { TermsAccept } from '../terms-accept/terms-accept';
 
 @Component({
   selector: 'app-signup-responsible',
   standalone: true,
-  imports: [FormsModule, Header, Button, CommonModule, CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective, CepBuscaDirective, PasswordToggleDirective],
+  imports: [FormsModule, Header, Button, CommonModule, CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective, CepBuscaDirective, PasswordToggleDirective, TermsAccept],
   templateUrl: './signup-responsible.html',
   styleUrl: './signup-responsible.css',
 })
@@ -45,6 +46,8 @@ export class SignupResponsible {
   enteredPass = '';
   enteredConfirmPass = '';
   enteredPhone = '';
+  // versao dos termos marcada no checkbox (o backend exige a atual no cadastro)
+  versaoTermos: string | null = null;
 
   // o backend exige o endereco no cadastro (ele vira coordenada pro mapa da rota)
   enteredCep = '';
@@ -104,6 +107,11 @@ export class SignupResponsible {
       return;
     }
 
+    if (!this.versaoTermos) {
+      this.popUpService.show('Aceite os Termos de Uso e a Política de Privacidade para continuar.', 'warning', 'Termos de Uso');
+      return;
+    }
+
     const data = {
       name: this.enteredName,
       cpf: limparMascara(this.enteredCpf),
@@ -119,18 +127,17 @@ export class SignupResponsible {
         city: this.enteredCity.trim(),
         state: this.enteredState.trim().toUpperCase(),
       },
+      acceptedTermsVersion: this.versaoTermos,
     };
 
     this.authService.createUser(data).subscribe({
-      next: (response) => {
+      next: () => {
         this.cadastroConcluidoEvent.emit({
           email: this.enteredEmail,
         });
-        console.log(response);
       },
-      error: (err) => {
-        console.error(err);
-      },
+      // o popup global mostra a mensagem do backend (CPF invalido, e-mail em uso, senha fraca...)
+      error: () => {},
     });
   }
 }

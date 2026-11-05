@@ -18,7 +18,8 @@ export class ChatList implements OnInit {
   @Input() from = 'responsible-home';
   origem = 'responsible-home';
 
-  conversas: Array<{ id: string; nome: string; ultimaMensagem: string; hora: string; foto: string }> = [];
+  // naoLida: o backend conta as mensagens do outro que eu nao li (unreadCount); a tela mostra so um ponto
+  conversas: Array<{ id: string; nome: string; ultimaMensagem: string; hora: string; foto: string; naoLida: boolean }> = [];
   private pagina = 0;
   private temMais = true;
   private carregando = false;
@@ -58,6 +59,7 @@ export class ChatList implements OnInit {
             minute: '2-digit',
           }) : '',
           foto: '/testee.jpg',
+          naoLida: (chat.unreadCount ?? 0) > 0,
         }));
         this.conversas = [...this.conversas, ...novasConversas];
         this.pagina = response.number + 1;

@@ -166,20 +166,21 @@ export class AuthService {
 
   createDriver(data: {
     documentPdf: File;
-    name: string;
     email: string;
     password: string;
     confirmPassword: string;
     phone: string;
+    acceptedTermsVersion: string;
   }) {
+    // sem nome: o backend tira o nome e o CPF da CNH
     const formData = new FormData();
 
     formData.append('documentPdf', data.documentPdf);
-    formData.append('name', data.name);
     formData.append('email', data.email);
     formData.append('password', data.password);
     formData.append('confirmPassword', data.confirmPassword);
     formData.append('phone', limparMascara(data.phone));
+    formData.append('acceptedTermsVersion', data.acceptedTermsVersion);
 
     return this.http.post(`${this.apiUrl}/driver/auth/signup`, formData, {
       responseType: 'text',
@@ -237,8 +238,10 @@ export class AuthService {
     return firstValueFrom(this.storageService.getDownloadUrl(upload.fileKey));
   }
 
-  deleteUser(id: string) {
-    return this.http.delete(`${this.apiUrl}/users/${id}`);
+  // exclui a conta do usuario logado (LGPD): confirma com a senha; 204.
+  // 400 senha incorreta; 409 com contrato ativo, proposta pendente ou parcela atrasada (a tela de privacidade mostra)
+  deleteMyAccount(password: string) {
+    return this.http.delete<void>(`${this.apiUrl}/users/me`, { body: { password } });
   }
 
   verifyCNH(data: { documentPDF: File }) {
@@ -248,10 +251,12 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/driver/auth/verify-CNH`, formData);
   }
 
+  // o backend responde em texto puro: sem o responseType o sucesso virava erro de parse
   sendCode(email: string) {
     return this.http.post(
       `${this.apiUrl}/auth/send-verification-code?email=${encodeURIComponent(email)}`,
       {},
+      { responseType: 'text' },
     );
   }
 

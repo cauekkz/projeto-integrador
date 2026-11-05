@@ -29,9 +29,16 @@ const VISUAL: Record<string, Pick<ItemNotificacao, 'icone' | 'cor'>> = {
   CONTRACT_REJECTED: { icone: 'bi-x-circle-fill', cor: 'vermelho' },
   CONTRACT_WITHDRAWN: { icone: 'bi-x-circle-fill', cor: 'cinza' },
   CANCELLATION_REQUESTED: { icone: 'bi-exclamation-circle-fill', cor: 'amarelo' },
+  // so historico: ninguem recusa cancelamento mais, mas notificacao antiga ainda pode aparecer
   CANCELLATION_REJECTED: { icone: 'bi-check-circle-fill', cor: 'azul' },
   CANCELLATION_WITHDRAWN: { icone: 'bi-arrow-counterclockwise', cor: 'cinza' },
   CONTRACT_CANCELED: { icone: 'bi-x-octagon-fill', cor: 'vermelho' },
+  // gravadas pelo worker diario (Figma "Ambos · /notifications · tipos novos")
+  CONTRACT_STARTED: { icone: 'bi-calendar-check-fill', cor: 'verde' },
+  CONTRACT_EXPIRED: { icone: 'bi-hourglass-bottom', cor: 'cinza' },
+  CONTRACT_ENDED: { icone: 'bi-x-octagon-fill', cor: 'cinza' },
+  SYSTEM: { icone: 'bi-info-circle-fill', cor: 'azul' },
+  DRIVER_NOTICE: { icone: 'bi-megaphone-fill', cor: 'azul' },
   TRIP_STARTED: { icone: 'bi-truck-front-fill', cor: 'azul' },
   VAN_ON_THE_WAY: { icone: 'bi-geo-alt-fill', cor: 'azul' },
   STUDENT_BOARDED: { icone: 'bi-person-check-fill', cor: 'verde' },
@@ -42,7 +49,8 @@ const VISUAL: Record<string, Pick<ItemNotificacao, 'icone' | 'cor'>> = {
   OCCURRENCE: { icone: 'bi-exclamation-triangle-fill', cor: 'amarelo' },
 };
 
-const TIPOS_VIAGEM = ['TRIP_STARTED', 'VAN_ON_THE_WAY', 'STUDENT_BOARDED', 'STUDENT_DELIVERED', 'STUDENT_ABSENT'];
+// levam o responsavel pro acompanhamento da viagem (a ocorrencia e da viagem em andamento)
+const TIPOS_VIAGEM = ['TRIP_STARTED', 'VAN_ON_THE_WAY', 'STUDENT_BOARDED', 'STUDENT_DELIVERED', 'STUDENT_ABSENT', 'OCCURRENCE'];
 
 @Component({
   selector: 'app-notifications',

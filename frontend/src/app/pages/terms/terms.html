@@ -1,0 +1,17 @@
+<div class="terms-container">
+  <app-header titulo="Termos de Uso" (voltarEvent)="sair()" />
+
+  <div class="content">
+    <h2>Os termos foram atualizados</h2>
+    <p class="aviso">Para continuar usando o VanRoute, leia e aceite a versão {{ termos?.version }}.</p>
+
+    @if (termos) {
+      <div class="texto">{{ termos.content }}</div>
+    }
+  </div>
+
+  <div class="acoes">
+    <app-button texto="Li e aceito" tipo="primary" (clickEvent)="aceitar()" />
+    <app-button texto="Sair da conta" tipo="secondary" (clickEvent)="sair()" />
+  </div>
+</div>

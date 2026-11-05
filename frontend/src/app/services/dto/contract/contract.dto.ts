@@ -43,8 +43,52 @@ export interface contractProposalResponse {
   };
 }
 
-// enum ContractStatus do backend
-export type ContractStatus = 'PENDING' | 'ACTIVE' | 'INACTIVE' | 'CANCELED' | 'SUSPENDED' | 'OVERDUE';
+// enum ContractStatus do backend (SCHEDULED = aceito, esperando a data de inicio)
+export type ContractStatus = 'PENDING' | 'SCHEDULED' | 'ACTIVE' | 'INACTIVE' | 'CANCELED';
+
+// enum CancellationStatus do backend
+export type CancellationStatus = 'PENDING' | 'ACCEPTED' | 'COMPLETED' | 'WITHDRAWN' | 'REJECTED';
+
+// CancellationResponseDTO: pedido de cancelamento (com aviso previo) ou cancelamento unilateral
+export interface cancellationResponse {
+  id: string;
+  status: CancellationStatus;
+  unilateral: boolean;
+  reason: string | null;
+  requestedById: string;
+  requestedByName: string;
+  requestedAt: string; // AAAA-MM-DDTHH:mm:ss
+  effectiveDate: string | null; // AAAA-MM-DD: dia em que o contrato deixa de valer
+  decidedById: string | null;
+  decidedByName: string | null;
+  decidedAt: string | null;
+}
+
+export type DocumentStatus = 'PENDING' | 'SIGNED' | 'REJECTED';
+
+export interface contractSignature {
+  userId: string;
+  name: string;
+  signedAt: string;
+  valid: boolean;
+}
+
+export interface contractStudentResponsible {
+  responsibleId: string;
+  name: string;
+  relationType: string;
+  admin: boolean;
+}
+
+// AddressResponseDTO da escola
+export interface contractSchoolAddress {
+  street: string | null;
+  number: number | null;
+  neighborhood: string | null;
+  city: string | null;
+  state: string | null;
+  zipCode: string | null;
+}
 
 // GET /api/contract/{contractId} (ContractDetailsResponseDTO); so as duas partes do contrato conseguem ver
 export interface contractDetailsResponse {
@@ -59,6 +103,7 @@ export interface contractDetailsResponse {
   studentName: string;
   schoolId: string;
   schoolName: string;
+  schoolAddress: contractSchoolAddress | null;
   driverId: string;
   driverName: string;
   responsibleId: string;
@@ -66,9 +111,14 @@ export interface contractDetailsResponse {
   // fileKey do PDF no MinIO (null sem anexo); link via GET /api/storage/download-url
   documentFileKey: string | null;
   documentType: string | null;
+  documentStatus: DocumentStatus | null;
+  signatures: contractSignature[];
+  cancellations: cancellationResponse[];
+  overduePayments: number;
+  studentResponsibles: contractStudentResponsible[];
 }
 
-// GET /api/contract/my-contracts (ContractSummaryResponseDTO); ?status= filtra
+// GET /api/contract/my-contracts (pagina de ContractSummaryResponseDTO)
 export interface contractSummaryResponse {
   contractId: string;
   userDriverContractId: string;
@@ -85,6 +135,19 @@ export interface contractSummaryResponse {
   driverName: string;
   responsibleId: string;
   responsibleName: string;
+  // pedido de cancelamento em andamento (o contrato vale ate effectiveDate)
+  pendingCancellation: cancellationResponse | null;
+  // parcelas atrasadas desse contrato
+  overduePayments: number;
+}
+
+// filtros do my-contracts (MyContractsFilterRequestDTO) + pagina (padrao 20)
+export interface myContractsRequest {
+  status?: ContractStatus;
+  studentId?: string;
+  driverId?: string;
+  page?: number;
+  size?: number;
 }
 
 export function periodicidadeLabel(valor: ContractPeriodicity | null | undefined): string {

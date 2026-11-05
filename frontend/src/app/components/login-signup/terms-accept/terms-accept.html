@@ -1,0 +1,23 @@
+<div class="terms">
+  <label class="aceite">
+    <input
+      type="checkbox"
+      [checked]="aceito"
+      [disabled]="!termos"
+      (change)="alternar($any($event.target).checked)"
+    />
+    <span>
+      Li e aceito os
+      <button type="button" class="link" (click)="mostrarTexto = !mostrarTexto">
+        Termos de Uso e a Política de Privacidade
+      </button>
+      @if (termos) {
+        <small>(versão {{ termos.version }})</small>
+      }
+    </span>
+  </label>
+
+  @if (mostrarTexto && termos) {
+    <div class="texto">{{ termos.content }}</div>
+  }
+</div>
