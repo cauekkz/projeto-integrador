@@ -1,0 +1,81 @@
+<div class="pagina">
+  <app-trail-header [trilha]="['Motorista', 'Chave Pix']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <p class="aviso" role="status">Carregando chave Pix...</p>
+    } @else if (erroCarregar()) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar a chave Pix.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else if (editando()) {
+      <form class="formulario" (ngSubmit)="salvar()" animate.enter="entrar-fade">
+        <fieldset>
+          <legend>Tipo de chave</legend>
+          <div class="tipos" role="radiogroup" aria-label="Tipo de chave">
+            @for (t of tipos; track t.value) {
+              <button
+                type="button"
+                class="tipo"
+                role="radio"
+                [class.ativo]="tipo() === t.value"
+                [attr.aria-checked]="tipo() === t.value"
+                (click)="escolherTipo(t.value)"
+              >
+                {{ t.label }}
+              </button>
+            }
+          </div>
+        </fieldset>
+
+        <label for="chave">Chave</label>
+        <input
+          id="chave"
+          name="chave"
+          [(ngModel)]="valor"
+          [placeholder]="tipoAtual().placeholder"
+          [attr.inputmode]="tipoAtual().inputmode"
+          autocomplete="off"
+          maxlength="140"
+        />
+
+        <div class="rodape">
+          <button type="submit" class="btn btn-azul" [disabled]="enviando()">
+            {{ enviando() ? 'Salvando...' : 'Salvar chave' }}
+          </button>
+          @if (temChave()) {
+            <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="cancelarTroca()">Cancelar</button>
+          }
+        </div>
+      </form>
+    } @else if (chave(); as c) {
+      <section class="chave" animate.enter="entrar-fade">
+        <span>{{ tipoLabel(c.type) }}</span>
+        <strong>{{ c.key }}</strong>
+      </section>
+      <p class="info">Os responsáveis veem esta chave nas parcelas pendentes e atrasadas.</p>
+
+      <div class="rodape">
+        <button type="button" class="btn btn-azul" (click)="trocar()">Trocar chave</button>
+        <button type="button" class="btn btn-perigo" (click)="abrirRemover()">Remover chave</button>
+      </div>
+    }
+  </main>
+
+  <app-footer tipoUsuario="motorista" tipo="mapa" />
+</div>
+
+<!-- Figma "Motorista · /driver-pix · remover" -->
+@if (removerAberto()) {
+  <div class="fundo" animate.enter="entrar-fade" (click)="fecharRemover()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="remover-titulo" (click)="$event.stopPropagation()">
+      <h2 id="remover-titulo">Remover a chave Pix?</h2>
+      <p>Os responsáveis vão ver que você ainda não cadastrou uma chave.</p>
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="remover()">
+        {{ enviando() ? 'Removendo...' : 'Remover chave' }}
+      </button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharRemover()">Voltar</button>
+    </div>
+  </div>
+}

@@ -1,0 +1,80 @@
+<div class="pagina">
+  <app-trail-header [trilha]="['Motorista', 'Minhas vans']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <p class="aviso" role="status">Carregando vans...</p>
+    } @else if (erroCarregar()) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar as vans.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else if (!vans().length) {
+      <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-bus-front" aria-hidden="true"></i>
+        <h2>Você ainda não tem vans</h2>
+        <p>Adicione pelo CRLV digital em PDF. Os dados da van são lidos do documento.</p>
+        <button type="button" class="btn btn-azul" (click)="abrirAdicionar()">Adicionar van</button>
+      </section>
+    } @else {
+      <button type="button" class="btn btn-azul" (click)="abrirAdicionar()">Adicionar van</button>
+
+      <ul class="lista">
+        @for (van of vans(); track van.id; let i = $index) {
+          @let s = status(van);
+          <li class="card" animate.enter="entrar-subindo" [style.--i]="i">
+            <div class="topo">
+              <i class="bi bi-bus-front icone" aria-hidden="true"></i>
+              <strong class="placa">{{ van.plate }}</strong>
+              <span [class]="'selo ' + s.classe">{{ s.texto }}</span>
+            </div>
+            <p class="resumo">{{ resumo(van) }}</p>
+            @if (detalhes(van)) {
+              <p class="detalhes">{{ detalhes(van) }}</p>
+            }
+            <button type="button" class="btn btn-vermelho" (click)="confirmarParar(van)">Parar de usar</button>
+          </li>
+        }
+      </ul>
+    }
+  </main>
+
+  <app-footer tipoUsuario="motorista" tipo="mapa" />
+</div>
+
+<!-- Figma "Motorista · Adicionar van · enviar CRLV" -->
+@if (adicionando()) {
+  <div class="tela-cheia" role="dialog" aria-modal="true" aria-labelledby="adicionar-titulo" animate.enter="entrar-fade">
+    <header class="cabecalho">
+      <button type="button" class="voltar" aria-label="Voltar" [disabled]="enviando()" (click)="fecharAdicionar()">
+        <i class="bi bi-chevron-left" aria-hidden="true"></i>
+      </button>
+      <h1 id="adicionar-titulo">Adicionar van</h1>
+    </header>
+
+    <input #crlvInput type="file" accept="application/pdf" hidden (change)="selecionarCrlv($event)" />
+    <button type="button" class="upload" [disabled]="enviando()" (click)="crlvInput.click()">
+      <i class="bi" [class.bi-file-earmark-plus-fill]="!crlv()" [class.bi-file-earmark-pdf-fill]="crlv()" aria-hidden="true"></i>
+      <span>{{ crlv()?.name || 'Envie o CRLV digital em PDF' }}</span>
+    </button>
+    <p class="ajuda">A placa, o modelo, o ano e a lotação são lidos do CRLV. Licenciamento vencido não é aceito.</p>
+
+    <button type="button" class="btn btn-azul enviar" [disabled]="enviando()" (click)="enviar()">
+      {{ enviando() ? 'Enviando...' : 'Enviar' }}
+    </button>
+  </div>
+}
+
+<!-- Figma "Motorista · Parar de usar van" -->
+@if (parar(); as van) {
+  <div class="fundo" animate.enter="entrar-fade" (click)="fecharParar()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="parar-titulo" (click)="$event.stopPropagation()">
+      <h2 id="parar-titulo">Parar de usar esta van?</h2>
+      <p>A van {{ van.plate }} sai da sua lista de vans.</p>
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="pararDeUsar()">
+        {{ enviando() ? 'Enviando...' : 'Parar de usar' }}
+      </button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharParar()">Voltar</button>
+    </div>
+  </div>
+}

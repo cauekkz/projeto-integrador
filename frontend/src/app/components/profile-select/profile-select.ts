@@ -46,6 +46,11 @@ export class ProfileSelect {
     this.router.navigate(['/driver-schools']);
   }
 
+  irPara(rota: string) {
+    this.fecharEvent.emit();
+    this.router.navigate([rota]);
+  }
+
   irParaContratos() {
     this.fecharEvent.emit();
     this.router.navigate(['/contracts']);

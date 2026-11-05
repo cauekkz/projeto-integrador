@@ -27,6 +27,16 @@
         <i class="bi bi-mortarboard"></i>
         <span>Adicionar escola</span>
       </button>
+
+      <button class="menu-item" (click)="irPara('/driver-vehicles')">
+        <i class="bi bi-bus-front"></i>
+        <span>Minhas vans</span>
+      </button>
+
+      <button class="menu-item" (click)="irPara('/driver-pix')">
+        <i class="bi bi-qr-code"></i>
+        <span>Chave Pix</span>
+      </button>
     }
 
     @if (tipoUsuario === 'responsavel') {
@@ -39,6 +49,11 @@
     <button class="menu-item" (click)="irParaContratos()">
       <i class="bi bi-file-text"></i>
       <span>Contratos</span>
+    </button>
+
+    <button class="menu-item" (click)="irPara('/payments')">
+      <i class="bi bi-receipt"></i>
+      <span>Parcelas</span>
     </button>
 
     <button class="menu-item danger" (click)="sairDaConta()">

@@ -151,6 +151,27 @@ export const routes: Routes = [
     data: { rolesPermitted: ['ROLE_DRIVER'] },
   },
   {
+    // "Minhas vans" do profile select: vans pelo CRLV digital
+    path: 'driver-vehicles',
+    loadComponent: () => import('./pages/driver-vehicles/driver-vehicles').then((m) => m.DriverVehicles),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
+  },
+  {
+    // "Chave Pix" do profile select: os responsaveis veem nas parcelas
+    path: 'driver-pix',
+    loadComponent: () => import('./pages/driver-pix/driver-pix').then((m) => m.DriverPix),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
+  },
+  {
+    // "Parcelas" do profile select e do detalhe do contrato (?contractId=); os dois perfis, cada um no seu modo
+    path: 'payments',
+    loadComponent: () => import('./pages/payments/payments').then((m) => m.Payments),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+  },
+  {
     // aba "Contratos" do profile select (o backend devolve so os contratos do usuario logado)
     path: 'contracts',
     loadComponent: () => import('./pages/contracts/contracts').then((m) => m.Contracts),

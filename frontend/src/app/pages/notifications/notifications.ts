@@ -171,6 +171,8 @@ export class Notifications implements OnInit {
     const contractId = typeof payload['contractId'] === 'string' ? payload['contractId'] : null;
     const chatId = typeof payload['chatId'] === 'string' ? payload['chatId'] : null;
 
+    // PAYMENT (parcela atrasada, baixa, dispensa) abre as parcelas filtradas pelo contrato
+    if (n.type === 'PAYMENT' && contractId) return { rota: ['/payments'], query: { contractId } };
     if (contractId) return { rota: ['/contract', contractId], query: chatId ? { chatId } : undefined };
     if (TIPOS_VIAGEM.includes(n.type) && this.tipoUsuario === 'responsavel') return { rota: ['/responsible-route'] };
     if (chatId) return { rota: ['/chat-details', chatId], query: { from } };

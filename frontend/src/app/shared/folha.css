@@ -1,0 +1,103 @@
+/* pecas comuns das telas da etapa "Motorista preparado" (vans e Pix): pagina, botoes, folha de baixo */
+:host {
+  display: block;
+  background: #ffffff;
+}
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 13px 120px;
+  gap: 16px;
+}
+
+.conteudo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn {
+  width: 100%;
+  min-height: 40px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transicao-botao);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-azul { border: none; background: #0c66db; color: #ffffff; }
+.btn-azul:hover:not(:disabled) { background: #0a54b5; }
+.btn-vermelho { border: none; background: #dc2626; color: #ffffff; }
+.btn-vermelho:hover:not(:disabled) { background: #b91c1c; }
+.btn-perigo { border: 1px solid #fecaca; background: #ffffff; color: #b91c1c; }
+.btn-perigo:hover:not(:disabled) { background: #fef2f2; }
+.btn-contorno { border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; }
+
+.aviso {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #64748b;
+  padding: 24px 8px;
+}
+
+.aviso.erro { color: #b91c1c; }
+
+.link {
+  margin-top: 8px;
+  border: none;
+  background: transparent;
+  color: #0c66db;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.folha {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+  padding: 20px 22px 28px;
+  border-radius: 24px 24px 0 0;
+  background: #ffffff;
+  animation: folha-subir var(--dur-media, 0.25s) ease both;
+}
+
+.folha h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.folha p {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+@keyframes folha-subir {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}

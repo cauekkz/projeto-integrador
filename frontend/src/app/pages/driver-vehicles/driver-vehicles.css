@@ -1,0 +1,148 @@
+/* pagina, botoes e folha de baixo vem de shared/folha.css */
+
+.lista {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icone {
+  font-size: 1.3rem;
+  color: #0c66db;
+}
+
+.placa {
+  flex: 1;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.selo {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.selo.ativa { background: #ecfdf5; color: #047857; }
+.selo.inativa { background: #f1f5f9; color: #475569; }
+.selo.manutencao { background: #fffbeb; color: #b45309; }
+
+.resumo {
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.detalhes {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 16px;
+  text-align: center;
+}
+
+.vazio i {
+  font-size: 2.4rem;
+  color: #94a3b8;
+}
+
+.vazio h2 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.vazio p {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* "Adicionar van": tela inteira por cima da lista */
+.tela-cheia {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 24px 32px;
+  background: #ffffff;
+}
+
+.cabecalho {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-bottom: 24px;
+}
+
+.cabecalho h1 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.voltar {
+  position: absolute;
+  left: 0;
+  border: none;
+  background: none;
+  font-size: 1.6rem;
+  color: #0f172a;
+  cursor: pointer;
+}
+
+.upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  font: inherit;
+  color: #0f172a;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.upload i {
+  font-size: 3rem;
+}
+
+.ajuda {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.enviar {
+  margin-top: auto;
+}

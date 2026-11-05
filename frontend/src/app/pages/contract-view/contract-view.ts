@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Observable, forkJoin, of, switchMap, catchError } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { ContractService } from '../../services/contract.service';
 import { StorageService } from '../../services/storage.service';
 import { AuthService } from '../../services/auth.service';
@@ -275,7 +275,7 @@ export class ContractView implements OnInit {
     if (!c || this.renovando()) return;
     this.renovando.set(true);
 
-    const chat$: Observable<string | null> = this.chatId ? of(this.chatId) : this.buscarChatCom(c.responsibleId, 0);
+    const chat$: Observable<string | null> = this.chatId ? of(this.chatId) : this.chatService.findChatWith(c.responsibleId);
     chat$.subscribe({
       next: (chatId) => {
         this.renovando.set(false);
@@ -295,19 +295,6 @@ export class ContractView implements OnInit {
       },
       error: () => this.renovando.set(false),
     });
-  }
-
-  // GET /api/chats e paginado: procura a conversa com esse usuario pagina por pagina
-  private buscarChatCom(userId: string, page: number): Observable<string | null> {
-    return this.chatService.getChats(page, 50).pipe(
-      switchMap((pagina) => {
-        const chat = (pagina.content ?? []).find((item) => item.otherUserId === userId);
-        if (chat) return of(chat.id);
-        if (pagina.last || page + 1 >= pagina.totalPages) return of(null);
-        return this.buscarChatCom(userId, page + 1);
-      }),
-      catchError(() => of(null)),
-    );
   }
 
   voltar() {
