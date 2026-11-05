@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { SKIP_ERROR_POPUP } from '../interceptor/http-context';
 import {
+  cancellationResponse,
   chatStudentResponse,
   contractDetailsResponse,
   contractProposalRequest,
@@ -63,5 +64,26 @@ export class ContractService {
     return this.http.put<void>(`${this.apiUrl}/chats/${chatId}/contracts/${contractId}/reject`, null, {
       context: new HttpContext().set(SKIP_ERROR_POPUP, true),
     });
+  }
+
+  // o motorista retira a proposta ainda pendente (o chat recebe um REJECTION "Proposta Retirada"); erro no popup global
+  withdrawProposal(chatId: string, contractId: string) {
+    return this.http.put<void>(`${this.apiUrl}/chats/${chatId}/contracts/${contractId}/withdraw`, null);
+  }
+
+  // pede o cancelamento (aviso de 30 dias); ACCEPTED + unilateral = cancelado na hora (parcela vencida ha 30+ dias)
+  // 400/409 (motivo vazio, pedido em andamento, viagem rodando...) vao pro popup global com a mensagem do backend
+  requestCancellation(contractId: string, reason: string) {
+    return this.http.post<cancellationResponse>(`${this.apiUrl}/contract/${contractId}/cancellation`, { reason });
+  }
+
+  // a outra parte aceita o pedido: cancela agora
+  acceptCancellation(contractId: string) {
+    return this.http.put<cancellationResponse>(`${this.apiUrl}/contract/${contractId}/cancellation/accept`, null);
+  }
+
+  // quem pediu desiste (nao existe "recusar")
+  withdrawCancellation(contractId: string) {
+    return this.http.delete<cancellationResponse>(`${this.apiUrl}/contract/${contractId}/cancellation`);
   }
 }

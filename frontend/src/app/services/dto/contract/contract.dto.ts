@@ -166,3 +166,26 @@ export function isoParaData(iso: string | null | undefined): string {
   const [ano, mes, dia] = iso.split('-');
   return `${dia}/${mes}/${ano}`;
 }
+
+// rotulo do vinculo responsavel-aluno (RelationType)
+export const RELATION_LABEL: Record<string, string> = {
+  LEGAL: 'Legal',
+  FINANCIAL: 'Financeiro',
+  WITHDRAWAL: 'Retirada',
+};
+
+// AAAA-MM-DD ou AAAA-MM-DDTHH:mm:ss -> DD/MM
+export function diaMes(iso: string | null | undefined): string {
+  if (!iso) return '';
+  const [, mes, dia] = iso.slice(0, 10).split('-');
+  return `${dia}/${mes}`;
+}
+
+// AAAA-MM-DD + 1 dia -> DD/MM/AAAA (inicio da renovacao)
+export function diaSeguinte(iso: string): string {
+  const [ano, mes, dia] = iso.split('-').map(Number);
+  const data = new Date(Date.UTC(ano, mes - 1, dia + 1));
+  const dd = String(data.getUTCDate()).padStart(2, '0');
+  const mm = String(data.getUTCMonth() + 1).padStart(2, '0');
+  return `${dd}/${mm}/${data.getUTCFullYear()}`;
+}

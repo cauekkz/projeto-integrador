@@ -1,25 +1,19 @@
 @let c = contrato();
 
-<article class="card" aria-label="Contrato enviado">
+<article class="card" [attr.aria-label]="titulo()">
   <header class="topo">
     <span class="icone" aria-hidden="true"><i class="bi bi-file-earmark-text"></i></span>
     <div>
-      <h3>Contrato enviado</h3>
+      <h3>{{ titulo() }}</h3>
       <span class="subtitulo">Transporte escolar</span>
     </div>
   </header>
 
-  @if (podeDecidir()) {
-    <p class="texto">Um contrato foi enviado para você. Confira as informações abaixo.</p>
-  } @else {
-    <p class="texto">
-      Você enviou um contrato{{ c ? ' para ' + c.responsibleName : '' }}. Confira as informações abaixo.
-    </p>
-  }
+  <p class="texto">{{ texto() }}</p>
 
   <hr class="divisor">
 
-  @if (carregando()) {
+  @if (carregando() && !c) {
     <p class="aviso" role="status">Carregando contrato...</p>
   } @else if (erroCarregar() || !c) {
     <p class="aviso erro" role="alert">
@@ -32,15 +26,16 @@
       <span>{{ c.schoolName }} · {{ periodicidade() }}</span>
     </div>
 
+    <button type="button" class="btn btn-azul" (click)="visualizar()">Visualizar contrato</button>
+
     @if (pendente()) {
-      <button type="button" class="btn btn-azul" (click)="visualizar()">Visualizar contrato</button>
       @if (podeDecidir()) {
         <button type="button" class="btn btn-decisao" (click)="abrirDecisao()">Decisão</button>
       } @else {
-        <span class="status pendente">Aguardando decisão</span>
+        <button type="button" class="btn btn-retirar" (click)="abrirRetirada()">Retirar proposta</button>
       }
-    } @else if (statusInfo(); as info) {
-      <span [class]="'resultado ' + info.classe" animate.enter="entrar-escala" role="status">{{ info.texto }}</span>
+    } @else if (resultado(); as r) {
+      <span [class]="'resultado ' + r.classe" animate.enter="entrar-escala" role="status">{{ r.texto }}</span>
     }
   }
 
@@ -56,15 +51,26 @@
 @if (decisaoAberta()) {
   <div class="overlay" animate.enter="entrar-fade" animate.leave="sair-fade" role="dialog" aria-modal="true" aria-label="Decisão sobre o contrato" (click)="fecharDecisao()">
     <div class="decisao" animate.enter="entrar-escala" (click)="$event.stopPropagation()">
-      @if (erroDecisao()) {
-        <p class="aviso erro" role="alert">{{ erroDecisao() }}</p>
-      }
-      <button type="button" class="btn btn-azul" [disabled]="decidindo()" (click)="decidir(true)">
-        {{ decidindo() ? 'Enviando...' : 'Aceitar contrato' }}
+      <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="decidir(true)">
+        {{ enviando() ? 'Enviando...' : 'Aceitar contrato' }}
       </button>
-      <button type="button" class="btn btn-negar" [disabled]="decidindo()" (click)="decidir(false)">
+      <button type="button" class="btn btn-negar" [disabled]="enviando()" (click)="decidir(false)">
         Negar contrato
       </button>
+    </div>
+  </div>
+}
+
+<!-- Figma "Motorista · Chat · confirmar retirada": folha de baixo -->
+@if (retiradaAberta()) {
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="sair-fade" (click)="fecharRetirada()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="retirar-titulo" (click)="$event.stopPropagation()">
+      <h2 id="retirar-titulo">Retirar proposta?</h2>
+      <p>O contrato é cancelado e o responsável é avisado. Isso não tem volta.</p>
+      <button type="button" class="btn btn-retirar" [disabled]="enviando()" (click)="retirar()">
+        {{ enviando() ? 'Retirando...' : 'Retirar proposta' }}
+      </button>
+      <button type="button" class="btn btn-voltar" [disabled]="enviando()" (click)="fecharRetirada()">Voltar</button>
     </div>
   </div>
 }

@@ -96,6 +96,25 @@ export class ContractDraftService {
     return erros;
   });
 
+  // renovacao: nome do aluno do contrato ativo (o titulo vira "Renovar"); null = proposta comum
+  readonly renovacao = signal<string | null>(null);
+
+  // "Renovar" no detalhe de um contrato ACTIVE: mesmo aluno, escola e valor; comeca no dia seguinte ao fim do atual
+  prepararRenovacao(
+    chatId: string,
+    atual: { studentId: string; studentName: string; schoolId: string; periodicity: ContractPeriodicity; value: number; inicio: string },
+  ) {
+    this.limpar();
+    this.chatId.set(chatId);
+    this.studentId.set(atual.studentId);
+    this.schoolId.set(atual.schoolId);
+    this.periodicity.set(atual.periodicity);
+    this.valorCentavos.set(Math.round((atual.value ?? 0) * 100));
+    this.dataInicio.set(atual.inicio);
+    this.renovacao.set(atual.studentName);
+    this.etapa.set('contrato');
+  }
+
   // entra no fluxo: se for outro chat, comeca do zero
   iniciar(chatId: string) {
     if (this.chatId() !== chatId) {
@@ -118,6 +137,7 @@ export class ContractDraftService {
     this.dataFim.set('');
     this.pdf.set(null);
     this.pdfEnviado = null;
+    this.renovacao.set(null);
     this.mostrarErros.set(false);
   }
 

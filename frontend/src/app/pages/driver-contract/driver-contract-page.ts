@@ -61,6 +61,14 @@ export class DriverContractPage implements OnInit {
     }
 
     this.draft.iniciar(this.chatId);
+    const renovacao = this.draft.renovacao();
+    if (renovacao) {
+      this.popUpService.show(
+        'Com contrato ativo, dá para propor um próximo, que começa depois do fim do atual.',
+        'info',
+        `Renovação do contrato de ${renovacao}`,
+      );
+    }
     this.carregarDados();
   }
 

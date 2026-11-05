@@ -34,43 +34,11 @@
   color: #0f172a;
 }
 
-.titulo p {
-  margin-top: 6px;
-  font-size: 0.9rem;
-  color: #64748b;
-}
 
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-  padding: 3px 10px;
-  border-radius: 6px;
-  font-size: 0.78rem;
-  font-weight: 600;
-}
 
-.status.pendente,
-.status.aceito {
-  background: #e8fbe9;
-  color: #16a34a;
-}
 
-.status.negado {
-  background: #fee2e2;
-  color: #b91c1c;
-}
 
-.status.neutro {
-  background: #f1f5f9;
-  color: #475569;
-}
 
-.status.negado i,
-.status.neutro i {
-  display: none;
-}
 
 .card {
   display: flex;
@@ -81,8 +49,7 @@
   border-radius: 12px;
 }
 
-.card h2,
-.anexo-secao h2 {
+.card h2 {
   font-size: 1rem;
   font-weight: 600;
   color: #0f172a;
@@ -100,13 +67,6 @@
   gap: 12px;
 }
 
-.pessoa img {
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  object-fit: cover;
-}
 
 .rotulo,
 .grade dt {
@@ -130,66 +90,14 @@
   gap: 16px;
 }
 
-.anexo-secao {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 
-.anexo {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  background: #f8fafc;
-  color: inherit;
-  text-decoration: none;
-}
 
-.anexo i {
-  font-size: 1.4rem;
-  color: #64748b;
-}
 
-a.anexo i {
-  color: #dc2626;
-}
 
-.anexo strong {
-  display: block;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #0f172a;
-}
 
-.anexo span {
-  font-size: 0.82rem;
-  color: #64748b;
-}
 
-.rodape {
-  display: flex;
-  justify-content: center;
-}
 
-.btn-voltar {
-  width: 100%;
-  max-width: 320px;
-  min-height: 48px;
-  border: none;
-  border-radius: 12px;
-  background: #0b66d8;
-  color: #ffffff;
-  font-size: 0.98rem;
-  font-weight: 500;
-  cursor: pointer;
-}
 
-.btn-voltar:hover {
-  background: #0052a3;
-}
 
 .aviso {
   text-align: center;
@@ -209,4 +117,211 @@ a.anexo i {
   color: #0b66d8;
   font-weight: 600;
   cursor: pointer;
+}
+
+/* ---------- etapa 4: Figma "Etapa 2 · Contrato completo" ---------- */
+
+.agendado {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #0a54b5;
+}
+
+/* mesmos selos da lista /contracts */
+.selo {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 13px;
+}
+
+.selo.pendente { background: #fffbeb; color: #b45309; }
+.selo.agendado { background: #eff8fe; color: #0a54b5; }
+.selo.ativo { background: #ecfdf5; color: #047857; }
+.selo.inativo { background: #f1f5f9; color: #475569; }
+.selo.cancelado { background: #fef2f2; color: #b91c1c; }
+
+.iniciais {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border: 1px solid #afd9f7;
+  border-radius: 50%;
+  background: #eff8fe;
+  color: #0a54b5;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Contrato em PDF: caixa cinza com "Abrir" a direita */
+.pdf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.pdf strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.pdf span {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.abrir {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: #0c66db;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.abrir.carregando {
+  color: #64748b;
+  font-weight: 400;
+}
+
+.lista {
+  gap: 8px;
+}
+
+.lista p {
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+.lista .alerta {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.pedido span {
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn {
+  width: 100%;
+  min-height: 40px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transicao-botao);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-azul {
+  border: none;
+  background: #0c66db;
+  color: #ffffff;
+}
+
+.btn-azul:hover:not(:disabled) {
+  background: #0a54b5;
+}
+
+.btn-contorno {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.btn-perigo {
+  border: 1px solid #fecaca;
+  background: #ffffff;
+  color: #b91c1c;
+}
+
+.btn-perigo:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+/* folha de baixo (Figma "Cancelar contrato · motivo") */
+.fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.folha {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 480px;
+  padding: 20px 22px 28px;
+  border-radius: 24px 24px 0 0;
+  background: #ffffff;
+  animation: folha-subir var(--dur-media, 0.25s) ease both;
+}
+
+.folha h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.folha label {
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.folha textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.9rem;
+  resize: none;
+}
+
+.folha textarea:focus {
+  outline: 2px solid #0c66db;
+  outline-offset: -1px;
+}
+
+.contador {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+@keyframes folha-subir {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }

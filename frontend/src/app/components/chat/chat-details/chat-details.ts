@@ -19,7 +19,7 @@ import { ChatWebSocketService } from '../../../services/chat.service';
 import { AuthService } from '../../../services/auth.service';
 import { StorageService } from '../../../services/storage.service';
 import { NotificationService } from '../../../services/notification.service';
-import { ContractStatus } from '../../../services/dto/contract/contract.dto';
+import { DecisaoContrato } from '../contract-proposal-card/contract-proposal-card';
 import { ContractProposalCard } from '../contract-proposal-card/contract-proposal-card';
 
 @Component({
@@ -50,7 +50,7 @@ export class ChatDetails implements OnInit, OnDestroy {
   podeDecidirContrato = false;
 
   // contractId -> status decidido pelas mensagens APPROVAL/REJECTION que chegaram no chat
-  decisoesContrato = new Map<string, ContractStatus>();
+  decisoesContrato = new Map<string, DecisaoContrato>();
 
   @ViewChild('messagesContainer')
   private messagesContainer?: ElementRef<HTMLElement>;
@@ -359,7 +359,10 @@ export class ChatDetails implements OnInit, OnDestroy {
     for (const message of this.mensagens) {
       if (!message.contractId) continue;
       if (message.tipo === 'APPROVAL') this.decisoesContrato.set(message.contractId, 'ACTIVE');
-      if (message.tipo === 'REJECTION') this.decisoesContrato.set(message.contractId, 'CANCELED');
+      // o backend usa REJECTION tanto pra recusa quanto pra retirada do motorista ("Proposta Retirada")
+      if (message.tipo === 'REJECTION') {
+        this.decisoesContrato.set(message.contractId, message.texto === 'Proposta Retirada' ? 'WITHDRAWN' : 'CANCELED');
+      }
     }
 
     this.cdr.markForCheck();

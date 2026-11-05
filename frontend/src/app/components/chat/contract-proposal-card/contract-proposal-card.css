@@ -245,3 +245,64 @@
   border-radius: 10px;
   background: #ffffff;
 }
+
+/* ---------- retirar proposta (motorista, pendente) ---------- */
+
+.btn-retirar {
+  border: 1px solid #fecaca;
+  background: #ffffff;
+  color: #b91c1c;
+}
+
+.btn-retirar:hover:not(:disabled) {
+  background: #fef2f2;
+}
+
+.btn-voltar {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.35);
+}
+
+.folha {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+  padding: 20px 22px 28px;
+  border-radius: 24px 24px 0 0;
+  background: #ffffff;
+  animation: folha-subir var(--dur-media, 0.25s) ease both;
+}
+
+.folha h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.folha p {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.folha .btn {
+  min-height: 40px;
+  border-radius: 12px;
+}
+
+@keyframes folha-subir {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}

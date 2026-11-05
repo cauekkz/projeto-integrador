@@ -78,14 +78,37 @@ describe('ContractProposalCard (card do contrato no chat)', () => {
     expect(texto).toContain('Decisão');
   });
 
-  it('motorista não vê o botão de decisão, só o status', () => {
+  it('motorista vê "Proposta enviada" e pode retirar, sem o botão de decisão', () => {
     const fixture = criar(false);
     const texto = fixture.nativeElement.textContent;
     expect(texto).not.toContain('Decisão');
-    expect(texto).toContain('Aguardando decisão');
+    expect(texto).toContain('Proposta enviada');
+    expect(texto).toContain('Você ainda pode retirar');
+    expect(texto).toContain('Retirar proposta');
   });
 
-  it('aceitar chama o PUT do chat e atualiza o card', () => {
+  it('retirar chama o PUT withdraw e o card vira "Proposta Retirada"', () => {
+    const fixture = criar(false);
+    const card = fixture.componentInstance as any;
+
+    card.abrirRetirada();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Isso não tem volta');
+
+    card.retirar();
+    card.retirar();
+    const req = http.expectOne(`${API}/chats/chat-1/contracts/c-1/withdraw`);
+    expect(req.request.method).toBe('PUT');
+    req.flush(null);
+    fixture.detectChanges();
+
+    const texto = fixture.nativeElement.textContent;
+    expect(texto).toContain('Proposta Retirada');
+    expect(texto).toContain('Retirada');
+    expect(texto).not.toContain('Retirar proposta');
+  });
+
+  it('aceitar chama o PUT do chat e recarrega: agendado mostra a data de início', () => {
     const fixture = criar(true);
     const card = fixture.componentInstance as any;
 
@@ -97,29 +120,44 @@ describe('ContractProposalCard (card do contrato no chat)', () => {
     const req = http.expectOne(`${API}/chats/chat-1/contracts/c-1/accept`);
     expect(req.request.method).toBe('PUT');
     req.flush(null);
+    http.expectOne(`${API}/contract/c-1`).flush({ ...CONTRATO, status: 'SCHEDULED' });
     fixture.detectChanges();
 
-    expect(card.status()).toBe('ACTIVE');
-    expect(fixture.nativeElement.textContent).toContain('Aceito');
-    expect(fixture.nativeElement.textContent).not.toContain('Decisão');
+    const texto = fixture.nativeElement.textContent;
+    expect(texto).toContain('Proposta aceita');
+    expect(texto).toContain('Agendado: começa em 01/02.');
+    expect(texto).toContain('Aceita');
+    expect(texto).not.toContain('Decisão');
   });
 
-  it('409 avisa que já foi decidido e recarrega o contrato', () => {
+  it('409 vai pro popup com a mensagem do backend e recarrega o contrato', () => {
     const fixture = criar(true);
     const card = fixture.componentInstance as any;
 
-    card.decidir(false);
-    http.expectOne(`${API}/chats/chat-1/contracts/c-1/reject`).flush(null, { status: 409, statusText: 'Conflict' });
-    expect(card.erroDecisao()).toContain('já foi decidido');
+    card.decidir(true);
+    http
+      .expectOne(`${API}/chats/chat-1/contracts/c-1/accept`)
+      .flush({ message: 'A data de início desta proposta já passou' }, { status: 409, statusText: 'Conflict' });
+    expect(popUp.showError).toHaveBeenCalled();
 
     http.expectOne(`${API}/contract/c-1`).flush({ ...CONTRATO, status: 'CANCELED' });
     expect(card.status()).toBe('CANCELED');
   });
 
-  it('decisão que chega pelo chat (APPROVAL) vale mais que o status carregado', () => {
+  it('REJECTION "Proposta Retirada" pelo chat mostra a proposta retirada', () => {
+    const fixture = criar(true);
+    fixture.componentRef.setInput('decisao', 'WITHDRAWN');
+    fixture.detectChanges();
+    const texto = fixture.nativeElement.textContent;
+    expect(texto).toContain('O motorista retirou esta proposta');
+    expect(texto).not.toContain('Decisão');
+  });
+
+  it('APPROVAL pelo chat recarrega o contrato pra saber o status real', () => {
     const fixture = criar(true);
     fixture.componentRef.setInput('decisao', 'ACTIVE');
     fixture.detectChanges();
-    expect(fixture.nativeElement.textContent).toContain('Aceito');
+    expect(fixture.nativeElement.textContent).toContain('Proposta aceita');
+    http.expectOne(`${API}/contract/c-1`).flush({ ...CONTRATO, status: 'ACTIVE' });
   });
 });
