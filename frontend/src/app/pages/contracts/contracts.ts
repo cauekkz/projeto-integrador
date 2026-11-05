@@ -2,6 +2,8 @@ import { Component, DestroyRef, ElementRef, OnInit, inject, signal, viewChild, e
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { ContractService } from '../../services/contract.service';
+import { StudentService } from '../../services/student.service';
+import { switchMap } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { TrailHeader } from '../../shared/trail-header/trail-header';
 import { Footer } from '../../shared/footer/footer';
@@ -45,6 +47,7 @@ const TAMANHO_PAGINA = 20;
 })
 export class Contracts implements OnInit {
   private contractService = inject(ContractService);
+  private studentService = inject(StudentService);
   private authService = inject(AuthService);
   private router = inject(Router);
   private location = inject(Location);
@@ -61,6 +64,8 @@ export class Contracts implements OnInit {
   protected carregandoMais = signal(false);
   protected erroCarregar = signal(false);
   protected temMais = signal(false);
+  // foto do aluno pelo studentId (o contrato nao traz foto): pro responsavel, vem do my-children
+  protected fotos = signal<Map<string, string>>(new Map());
   private pagina = 0;
   // ignora resposta atrasada de uma aba que ja foi trocada
   private pedidoAtual = 0;
@@ -85,6 +90,7 @@ export class Contracts implements OnInit {
   ngOnInit() {
     this.ehMotorista = this.authService.getRolesFromToken().includes('ROLE_DRIVER');
     this.carregar();
+    if (!this.ehMotorista) this.carregarFotos();
   }
 
   trocarAba(aba: Aba) {
@@ -146,7 +152,18 @@ export class Contracts implements OnInit {
     return n === 1 ? '1 parcela atrasada' : `${n} parcelas atrasadas`;
   }
 
-  // foto do aluno chega na etapa da foto (photoKey); por enquanto, iniciais
+  private carregarFotos() {
+    this.studentService
+      .getMyChildren({ size: 100 })
+      .pipe(switchMap((pagina) => this.studentService.comFotos(pagina.content ?? [])))
+      .subscribe({
+        next: (filhos) =>
+          this.fotos.set(new Map(filhos.filter((f) => f.photoUrl).map((f) => [f.id, f.photoUrl as string]))),
+        error: () => {},
+      });
+  }
+
+  // sem foto (ou motorista, que ainda nao tem a lista de alunos aqui): iniciais
   iniciais(nome: string): string {
     return (nome ?? '')
       .split(' ')

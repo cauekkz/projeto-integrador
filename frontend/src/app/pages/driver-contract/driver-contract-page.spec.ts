@@ -92,7 +92,7 @@ describe('Criação de contrato pelo motorista', () => {
 
     it('exige dependente e escola que existam nas listas da API', () => {
       const draft = TestBed.inject(ContractDraftService);
-      draft.alunos.set([{ id: 'aluno-1', name: 'João' }]);
+      draft.alunos.set([{ id: 'aluno-1', name: 'João', photoKey: null }]);
       draft.studentId.set('id-inventado');
       expect(draft.errosAluno().aluno).toBeTruthy();
       expect(draft.errosAluno().escola).toBeTruthy();

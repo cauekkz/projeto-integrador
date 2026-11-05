@@ -52,7 +52,11 @@
               <hr class="divisor">
 
               <div class="aluno">
-                <span class="iniciais" aria-hidden="true">{{ iniciais(c.studentName) }}</span>
+                @if (fotos().get(c.studentId); as foto) {
+                  <img class="foto-aluno" [src]="foto" alt="" />
+                } @else {
+                  <span class="iniciais" aria-hidden="true">{{ iniciais(c.studentName) }}</span>
+                }
                 <div>
                   <strong>{{ c.studentName }}</strong>
                   <span>{{ c.schoolName }}</span>

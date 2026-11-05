@@ -1,0 +1,25 @@
+<div class="foto-aluno">
+  @if (photoUrl) {
+    <img class="foto" [src]="photoUrl" [alt]="'Foto de ' + nome" />
+  } @else {
+    <span class="foto iniciais" aria-hidden="true">{{ iniciais }}</span>
+  }
+
+  <div class="lado">
+    @if (texto) {
+      <p class="texto">{{ texto }}</p>
+    }
+
+    @if (admin) {
+      <input #fotoInput type="file" accept="image/*" hidden (change)="selecionar($event)" />
+      <div class="acoes">
+        <button type="button" class="link" [disabled]="enviando" (click)="fotoInput.click()">
+          {{ enviando ? 'Enviando...' : 'Trocar foto' }}
+        </button>
+        @if (photoUrl) {
+          <button type="button" class="link perigo" [disabled]="enviando" (click)="remover()">Remover foto</button>
+        }
+      </div>
+    }
+  </div>
+</div>

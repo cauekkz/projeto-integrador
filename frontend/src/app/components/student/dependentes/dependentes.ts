@@ -5,12 +5,13 @@ import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
 import { StudentService } from '../../../services/student.service';
 import { Router } from '@angular/router';
-import { StudentPhotoService } from '../../../services/student-photo.service';
+import { forkJoin, switchMap, map } from 'rxjs';
+import { StudentPhoto } from '../student-photo/student-photo';
 
 @Component({
   selector: 'app-dependentes',
   standalone: true,
-  imports: [CommonModule, Header, Button, FormsModule],
+  imports: [CommonModule, Header, Button, FormsModule, StudentPhoto],
   templateUrl: './dependentes.html',
   styleUrl: './dependentes.css',
 })
@@ -22,7 +23,6 @@ export class Dependentes implements OnInit {
   constructor(
     private studentService: StudentService,
     private router: Router,
-    private studentPhotoService: StudentPhotoService,
   ) {}
 
   ngOnInit() {
@@ -31,17 +31,17 @@ export class Dependentes implements OnInit {
 
   carregarDependentes() {
     this.carregando.set(true);
-    this.studentService
-      .getMyChildren({
-        relationType: this.filtroRelationType || undefined,
-      })
+    // foto vem do backend (photoKey -> link de leitura); admin = filhos do my-children?isAdmin=true
+    forkJoin({
+      filhos: this.studentService
+        .getMyChildren({ relationType: this.filtroRelationType || undefined, size: 100 })
+        .pipe(switchMap((pagina) => this.studentService.comFotos(pagina.content ?? []))),
+      admins: this.studentService.getAdminChildIds(),
+    })
+      .pipe(map(({ filhos, admins }) => filhos.map((d) => ({ ...d, admin: admins.has(d.id) }))))
       .subscribe({
-        next: (resposta: any) => {
-          const lista: any[] = resposta?.content ?? resposta ?? [];
-          // foto escolhida no cadastro (guardada neste navegador ate o backend ter foto de aluno)
-          this.dependentes.set(
-            lista.map((d) => ({ ...d, photoUrl: d.photoUrl || this.studentPhotoService.obter(d.id) })),
-          );
+        next: (lista) => {
+          this.dependentes.set(lista);
           this.carregando.set(false);
         },
         error: (err) => {
@@ -50,6 +50,22 @@ export class Dependentes implements OnInit {
           this.carregando.set(false);
         },
       });
+  }
+
+  // o admin trocou ou tirou a foto: atualiza so esse dependente
+  fotoMudou(dep: any, foto: { photoKey: string | null; photoUrl: string | null }) {
+    this.dependentes.update((lista) =>
+      lista.map((d) => (d.id === dep.id ? { ...d, photoKey: foto.photoKey, photoUrl: foto.photoUrl } : d)),
+    );
+  }
+
+  iniciais(nome: string | undefined): string {
+    return (nome ?? '')
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((parte) => parte[0].toUpperCase())
+      .join('');
   }
 
   toggleDependente(dep: any) {

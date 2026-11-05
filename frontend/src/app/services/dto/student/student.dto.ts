@@ -9,6 +9,7 @@ export interface studentResponsibleResponse {
     name: string;
     notes: string;
     birthDate: string;
+    photoKey: string | null;
   };
   responsibleResponseDTO: {
     name: string;
@@ -27,6 +28,15 @@ export interface createStudentRequest {
 export interface generateStudentLink {
   id: string;
   relationType: string
+}
+
+// item do GET /api/student/my-children (o aluno, com a chave da foto; sem foto = null)
+export interface studentChild {
+  id: string;
+  name: string;
+  notes: string | null;
+  birthDate: string; // AAAA-MM-DD
+  photoKey: string | null;
 }
 
 export interface getMyChildrenRequest extends PageRequest {

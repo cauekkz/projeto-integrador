@@ -173,6 +173,14 @@
   font-weight: 600;
 }
 
+.foto-aluno {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
 .aluno div {
   display: flex;
   flex-direction: column;

@@ -1,8 +1,8 @@
+import { switchMap } from 'rxjs';
 import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { NotificationService } from '../../services/notification.service';
 import { UserMe } from '../../models/user.model';
 import { StudentService } from '../../services/student.service';
-import { StudentPhotoService } from '../../services/student-photo.service';
 import { AuthService } from '../../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Footer } from '../../shared/footer/footer';
@@ -22,7 +22,6 @@ export class HomeScreen implements OnInit {
 
   // badge do sino: nao lidas de verdade (GET /api/notifications/unread-count + WebSocket)
   protected notificacoes = inject(NotificationService);
-  private studentPhotoService = inject(StudentPhotoService);
 
   constructor(
     private authService: AuthService,
@@ -48,11 +47,13 @@ export class HomeScreen implements OnInit {
   }
 
   carregarDependentes() {
-    this.studentService.getMyChildren().subscribe({
-      next: (resposta: any) => {
-        const lista: any[] = resposta?.content ?? resposta ?? [];
-        // foto escolhida no cadastro (guardada neste navegador ate o backend ter foto de aluno)
-        this.meusDependentes = lista.map((d) => ({ ...d, photoUrl: d.photoUrl || this.studentPhotoService.obter(d.id) }));
+    // foto do backend (photoKey -> link de leitura); sem foto, a tela mostra as iniciais
+    this.studentService
+      .getMyChildren({ size: 100 })
+      .pipe(switchMap((pagina) => this.studentService.comFotos(pagina.content ?? [])))
+      .subscribe({
+      next: (lista) => {
+        this.meusDependentes = lista;
         this.cdr.detectChanges();
       },
       error: () => {

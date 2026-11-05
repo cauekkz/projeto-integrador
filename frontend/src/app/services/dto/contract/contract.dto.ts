@@ -13,6 +13,8 @@ export const PERIODICITY_OPTIONS: { value: ContractPeriodicity; label: string }[
 export interface chatStudentResponse {
   id: string;
   name: string;
+  // foto do aluno (o motorista do chat pode baixar); null = iniciais
+  photoKey: string | null;
 }
 
 

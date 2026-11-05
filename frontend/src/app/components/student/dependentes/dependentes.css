@@ -74,3 +74,15 @@
 }
 
 /* select: estilo global em src/styles.css */
+
+/* sem foto: iniciais no lugar */
+.dependente-iniciais {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #afd9f7;
+  background: #eff8fe;
+  color: #0a54b5;
+  font-size: 13px;
+  font-weight: 600;
+}

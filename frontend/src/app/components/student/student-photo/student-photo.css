@@ -1,0 +1,64 @@
+/* Figma "Responsável · /student/:id · admin": foto 56px, texto e links ao lado */
+.foto-aluno {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.foto {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.iniciais {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #afd9f7;
+  background: #eff8fe;
+  color: #0a54b5;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.lado {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.texto {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #475569;
+}
+
+.acoes {
+  display: flex;
+  gap: 16px;
+}
+
+.link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #0c66db;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.link.perigo {
+  color: #dc2626;
+}
+
+.link:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
