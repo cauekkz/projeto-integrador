@@ -67,6 +67,8 @@ Falta:
 ---
 
 ## 3. Antes de ir para produção
+Problemas de publicação do front (Nginx, links do MinIO, mapa e HTTPS): [`DEPLOY.md`](DEPLOY.md).
+
 - **Perfil:** suba com `SPRING_PROFILES_ACTIVE=prod` (sem o `application-local.*`).
   - Assim o Swagger (`/swagger-ui`, `/v3/api-docs`) e o log de SQL ficam **desligados**: eles só ligam no perfil `local` ([application-local.yml](../backend/src/main/resources/application-local.yml)).
   - O perfil `local` é o padrão do `application.properties`, por isso no desenvolvimento tudo continua igual.
