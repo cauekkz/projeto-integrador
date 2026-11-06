@@ -1,4 +1,5 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, signal } from '@angular/core';
+import { AuthService } from '../../../services/auth.service';
 import { RegisterService } from '../../../services/register.service';
 import { Header } from '../../../shared/header/header';
 import { Button } from '../../../shared/button/button';
@@ -14,11 +15,26 @@ export class SignupCnhForm {
   @Output() prontoEvent = new EventEmitter<void>();
   @Output() voltarEvent = new EventEmitter<void>();
 
-  constructor(protected registerService: RegisterService) {}
+  protected validando = signal(false);
 
+  constructor(
+    protected registerService: RegisterService,
+    private authService: AuthService,
+  ) {}
+
+  // confere a assinatura da CNH antes do formulario: quem manda um PDF invalido nao preenche tudo a toa.
+  // recusada (422): o popup global mostra a mensagem do backend e a tela continua aqui
   pronto() {
-    if (this.registerService.selectedFile == null) return;
-    this.prontoEvent.emit();
+    const arquivo = this.registerService.selectedFile;
+    if (arquivo == null || this.validando()) return;
+    this.validando.set(true);
+    this.authService.verifyCNH({ documentPDF: arquivo }).subscribe({
+      next: () => {
+        this.validando.set(false);
+        this.prontoEvent.emit();
+      },
+      error: () => this.validando.set(false),
+    });
   }
 
   voltar() {

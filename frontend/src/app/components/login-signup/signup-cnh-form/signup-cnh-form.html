@@ -20,12 +20,14 @@
     <app-button
       texto="Excluir PDF"
       tipo="danger"
+      [disabled]="validando()"
       (clickEvent)="delete(fileInput)">
     </app-button>
 
     <app-button
-      texto="Confirmar"
+      [texto]="validando() ? 'Validando...' : 'Confirmar'"
       tipo="primary"
+      [disabled]="validando()"
       (clickEvent)="pronto()">
     </app-button>
   </div>
