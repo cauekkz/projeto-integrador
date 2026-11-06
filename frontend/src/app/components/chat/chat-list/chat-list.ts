@@ -19,7 +19,7 @@ export class ChatList implements OnInit {
   origem = 'responsible-home';
 
   // naoLida: o backend conta as mensagens do outro que eu nao li (unreadCount); a tela mostra so um ponto
-  conversas: Array<{ id: string; nome: string; ultimaMensagem: string; hora: string; foto: string; naoLida: boolean }> = [];
+  conversas: Array<{ id: string; idContato: string; nome: string; ultimaMensagem: string; hora: string; foto: string; naoLida: boolean }> = [];
   private pagina = 0;
   private temMais = true;
   private carregando = false;
@@ -52,6 +52,7 @@ export class ChatList implements OnInit {
       next: (response) => {
         const novasConversas = (response.content ?? []).map((chat) => ({
           id: chat.id,
+          idContato: chat.otherUserId,
           nome: chat.otherUserName,
           ultimaMensagem: 'Nenhuma mensagem ainda',
           hora: chat.createdAt ? new Date(chat.createdAt).toLocaleTimeString('pt-BR', {
@@ -137,10 +138,10 @@ export class ChatList implements OnInit {
       });
   }
 
-  abrirConversa(conversa: { id: string; nome: string; foto: string }) {
+  abrirConversa(conversa: { id: string; idContato?: string; nome: string; foto: string }) {
     this.router.navigate(['/chat-details', conversa.id], {
       queryParams: { from: this.origem },
-      state: { nomeContato: conversa.nome, fotoContato: conversa.foto },
+      state: { nomeContato: conversa.nome, fotoContato: conversa.foto, idContato: conversa.idContato },
     });
   }
 

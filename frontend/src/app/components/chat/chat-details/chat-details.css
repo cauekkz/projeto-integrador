@@ -421,3 +421,22 @@
   background: #fee2e2;
   color: #b91c1c;
 }
+
+/* nome e foto do contato: tocar abre o perfil dele */
+.contato {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.contato:disabled {
+  cursor: default;
+}

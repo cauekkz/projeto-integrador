@@ -1,133 +1,89 @@
-<div class="screen">
-  <div class="mapa-fullscreen">
-    <img src="/mapa-placeholder.png" alt="Mapa com a posição da van" class="mapa-img">
+<div class="tela" [class.aberto]="aberto()">
+  <app-trip-map class="mapa" [van]="van()" [caminho]="caminho()" [pontos]="destino()" [rotuloAlvo]="rotuloDestino()" />
+
+  <div class="topo">
+    <app-status-topbar
+      [foto]="usuario()?.photoUrl"
+      [emPercurso]="momento() !== 'encerrada' && momento() !== 'ausente'"
+      [texto]="textoStatus()"
+      [flutuante]="true"
+      (perfil)="mostrarPerfil.set(true)"
+    />
   </div>
 
-  <header class="topbar">
-    <button type="button" class="circulo" (click)="irParaPerfil()" aria-label="Abrir perfil">
-      <img [src]="usuarioLogado?.photoUrl || '/testee.jpg'" class="avatar" alt="">
+  <button type="button" class="recolher" aria-label="Voltar para o início" (click)="voltar()">
+    <i class="bi bi-arrows-angle-contract" aria-hidden="true"></i>
+  </button>
+
+  <!-- Figma "Card de acompanhamento" -->
+  <section class="cartao" aria-live="polite">
+    <button type="button" class="seta" [attr.aria-expanded]="aberto()" [attr.aria-label]="aberto() ? 'Recolher os dados' : 'Ver os dados da viagem'" (click)="aberto.set(!aberto())">
+      <i class="bi" [class.bi-chevron-up]="!aberto()" [class.bi-chevron-down]="aberto()" aria-hidden="true"></i>
     </button>
 
-    <div class="status" [attr.data-status]="rota().status" role="status">
-      <span class="dot" aria-hidden="true"></span>
-      <span class="status-texto">{{ statusTexto() }}</span>
-    </div>
-
-    <div class="notif-wrapper sino-clicavel" role="button" tabindex="0" aria-label="Abrir notificações" (click)="notificacoes.abrirTela()" (keydown.enter)="notificacoes.abrirTela()">
-      <span class="circulo" aria-hidden="true"><i class="bi bi-bell-fill"></i></span>
-      @if (notificacoes.naoLidas()) {
-        <span class="badge" [attr.aria-label]="notificacoes.naoLidas() + ' notificações não lidas'">{{ notificacoes.rotulo() }}</span>
-      }
-    </div>
-  </header>
-
-  @if (rotas().length > 1) {
-    <div class="dependentes" role="tablist" aria-label="Dependentes">
-      @for (r of rotas(); track r.dependente; let i = $index) {
-        <button
-          type="button"
-          role="tab"
-          class="chip"
-          [class.ativo]="i === selecionado()"
-          [attr.aria-selected]="i === selecionado()"
-          (click)="selecionar(i)"
-        >
-          {{ r.dependente }}
-        </button>
-      }
-    </div>
-  }
-
-  <section class="painel" aria-label="Rota do motorista">
-    <!-- recria o conteudo ao trocar de dependente pra animacao tocar de novo -->
-    @for (r of [rota()]; track r.dependente) {
-      <div class="painel-conteudo entrar-fade">
-        <div class="previsao">
-          <div>
-            <span class="previsao-rotulo">
-              {{ r.status === 'a-caminho' ? 'Chega na sua casa em' : 'Chega na escola em' }}
-            </span>
-            <strong class="previsao-tempo">{{ r.minutos }} min</strong>
-          </div>
-          <span class="previsao-dependente">
-            <i class="bi bi-backpack2-fill" aria-hidden="true"></i>
-            {{ r.dependente }}
-          </span>
-        </div>
-
-        <div class="progresso" role="progressbar" aria-label="Paradas concluídas"
-             [attr.aria-valuenow]="progresso()" aria-valuemin="0" aria-valuemax="100">
-          <span class="progresso-barra" [style.width.%]="progresso()"></span>
-        </div>
-
-        <div class="motorista">
-          @if (r.motorista.foto) {
-            <img [src]="r.motorista.foto" class="motorista-foto" alt="">
-          } @else {
-            <span class="motorista-foto iniciais" aria-hidden="true">{{ iniciais(r.motorista.nome) }}</span>
-          }
-          <div class="motorista-info">
-            <strong>{{ r.motorista.nome }}</strong>
-            <span>
-              <span class="placa">{{ r.van.placa }}</span>
-              {{ r.van.descricao }}
-            </span>
-          </div>
-          <button type="button" class="btn-chat" (click)="irParaChat()" aria-label="Conversar com o motorista">
-            <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
-          </button>
-        </div>
-
-        <button
-          type="button"
-          class="btn-paradas"
-          [attr.aria-expanded]="paradasAbertas()"
-          aria-controls="lista-paradas"
-          (click)="alternarParadas()"
-        >
-          <span>{{ paradasAbertas() ? 'Esconder paradas' : 'Ver paradas da rota' }} ({{ paradasDoDependente() }})</span>
-          <i class="bi bi-chevron-up seta" [class.aberta]="paradasAbertas()" aria-hidden="true"></i>
-        </button>
-
-        @if (paradasAbertas()) {
-          <ol id="lista-paradas" class="paradas" animate.enter="entrar-fade" animate.leave="sair-fade">
-            @for (p of r.paradas; track $index; let i = $index) {
-              <li
-                class="parada entrar-subindo"
-                [class.anonima]="p.tipo === 'outras'"
-                [attr.data-situacao]="p.situacao"
-                [style.--i]="i"
-              >
-                <span class="marcador" aria-hidden="true">
-                  @if (p.situacao === 'feita') {
-                    <i class="bi bi-check-lg"></i>
-                  } @else if (p.situacao === 'atual') {
-                    <i class="bi bi-truck-front-fill"></i>
-                  }
-                </span>
-                @if (p.tipo === 'dependente') {
-                  <div class="parada-info">
-                    <strong>{{ p.titulo }}</strong>
-                    <span>{{ p.endereco }}</span>
-                  </div>
-                  <time class="parada-hora">{{ p.horario }}</time>
-                } @else {
-                  <!-- parada de outro aluno: sem nome, endereco nem horario -->
-                  <div class="parada-info">
-                    <span class="parada-anonima">
-                      <i class="bi bi-shield-lock-fill" aria-hidden="true"></i>
-                      {{ textoOutras(p.quantidade, p.situacao) }}
-                    </span>
-                  </div>
-                }
-              </li>
+    @if (momento() === 'conectando') {
+      <p class="aviso" role="status">Conectando à viagem...</p>
+    } @else {
+      <p class="quem">{{ primeiroNome() }} · {{ viagem()?.routeName }}</p>
+      @switch (momento()) {
+        @case ('FOLLOWING') {
+          <div class="linha-titulo">
+            <h1>Chega em {{ minutos() }} min</h1>
+            @if (aberto() && previsao()) {
+              <div class="previsao">
+                <small>Previsão</small>
+                <strong>{{ previsao() }}</strong>
+              </div>
             }
-          </ol>
-          <p class="aviso-privacidade">
-            <i class="bi bi-lock-fill" aria-hidden="true"></i>
-            Por segurança, você vê só as paradas do seu dependente.
+          </div>
+        }
+        @case ('ON_BOARD') {
+          <h1>{{ primeiroNome() }} está na van</h1>
+          <p class="sub">
+            @if (aluno()?.boardedAt) {
+              Embarcou às {{ horaDe(aluno()?.boardedAt) }}.
+            }
+            O tempo volta a aparecer quando a van seguir para o destino dele.
           </p>
         }
+        @case ('DONE') {
+          <h1>{{ primeiroNome() }} foi entregue{{ aluno()?.deliveredAt ? ' às ' + horaDe(aluno()?.deliveredAt) : '' }}</h1>
+          <p class="sub">O acompanhamento desta viagem terminou.</p>
+        }
+        @case ('ausente') {
+          <h1>{{ primeiroNome() }} não vai nesta viagem</h1>
+          <p class="sub">A falta foi registrada.</p>
+        }
+        @case ('encerrada') {
+          <h1>Viagem encerrada</h1>
+          <p class="sub">O motorista finalizou a rota de hoje.</p>
+        }
+        @default {
+          <h1>Ainda não é a vez de {{ primeiroNome() }}</h1>
+          <p class="sub">A van aparece no mapa quando estiver indo até o ponto dele.</p>
+        }
+      }
+    }
+
+    @if (aberto() && dadosDoDia(); as dados) {
+      <div class="motorista" animate.enter="entrar-fade">
+        @if (fotoMotorista()) {
+          <img class="foto" [src]="fotoMotorista()" alt="" />
+        } @else {
+          <span class="foto iniciais" aria-hidden="true">{{ iniciais(dados.driverName) }}</span>
+        }
+        <div class="dados">
+          <strong>{{ dados.driverName }}</strong>
+          <small>
+            @if (dados.driverRating != null) {
+              <i class="bi bi-star-fill" aria-hidden="true"></i> {{ estrelas(dados.driverRating) }} ·
+            }
+            {{ textoVan() }}
+          </small>
+        </div>
+        <button type="button" class="chat" aria-label="Conversar com o motorista" [disabled]="abrindoChat()" (click)="abrirChat()">
+          <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+        </button>
       </div>
     }
   </section>
@@ -135,11 +91,6 @@
   <app-footer tipoUsuario="responsavel" />
 </div>
 
-@if (mostrarPerfil) {
-  <app-profile-select
-    animate.leave="sair-perfil"
-    tipoUsuario="responsavel"
-    [usuario]="usuarioLogado"
-    (fecharEvent)="fecharPerfil()"
-  />
+@if (mostrarPerfil()) {
+  <app-profile-select animate.leave="sair-perfil" tipoUsuario="responsavel" [usuario]="usuario()" (fecharEvent)="mostrarPerfil.set(false)" />
 }

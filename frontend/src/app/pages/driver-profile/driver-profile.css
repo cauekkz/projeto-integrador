@@ -1,0 +1,122 @@
+/* nota geral: "4,6" grande + estrelas + quantidade */
+.nota-geral {
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+}
+
+.media {
+  font-size: 34px !important;
+  font-weight: 700 !important;
+  color: #0f172a;
+}
+
+.estrelas {
+  display: inline-flex;
+  gap: 2px;
+  color: #cbd5e1;
+  font-size: 13px;
+}
+
+.estrelas.grandes {
+  font-size: 19px;
+}
+
+.estrelas .cheia {
+  color: #f59e0b;
+}
+
+/* escolas uma embaixo da outra com divisoria */
+.lista {
+  margin: 0;
+  padding: 4px 16px;
+  list-style: none;
+  gap: 0;
+}
+
+.lista li {
+  padding: 12px 0;
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.lista li + li {
+  border-top: 1px solid #e2e8f0;
+}
+
+.van {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.van > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.placa {
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #0f172a;
+}
+
+.avaliacao p {
+  font-size: 13px;
+  color: #45556c;
+}
+
+.avaliacao small {
+  color: #90a1b9;
+}
+
+.avaliacao.minha {
+  border-color: #bfdbfe;
+  background: #eff8fe;
+}
+
+.topo-avaliacao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topo-avaliacao strong {
+  font-size: 14px;
+}
+
+/* escolher a nota no "Avaliar motorista" */
+.escolher-nota {
+  display: flex;
+  gap: 8px;
+}
+
+.escolher-nota button {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 40px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.escolher-nota button.cheia {
+  color: #f59e0b;
+}
+
+.escolher-nota button:active {
+  transform: scale(0.9);
+}
+
+.tela-cheia .acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}

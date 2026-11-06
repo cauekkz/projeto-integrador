@@ -110,6 +110,10 @@ export class Payments implements OnInit {
   ngOnInit() {
     this.ehMotorista = this.authService.getRolesFromToken().includes('ROLE_DRIVER');
     this.contractId = this.route.snapshot.queryParamMap.get('contractId');
+    // ?status=OVERDUE (do perfil) abre direto a aba "Atrasadas"
+    const status = this.route.snapshot.queryParamMap.get('status');
+    const aba = ABAS.find((a) => a.id === status);
+    if (aba) this.abaAtiva.set(aba.id);
     this.carregar();
     if (!this.contractId) this.carregarOpcoes();
   }

@@ -174,7 +174,17 @@ export class Notifications implements OnInit {
     // PAYMENT (parcela atrasada, baixa, dispensa) abre as parcelas filtradas pelo contrato
     if (n.type === 'PAYMENT' && contractId) return { rota: ['/payments'], query: { contractId } };
     if (contractId) return { rota: ['/contract', contractId], query: chatId ? { chatId } : undefined };
-    if (TIPOS_VIAGEM.includes(n.type) && this.tipoUsuario === 'responsavel') return { rota: ['/responsible-route'] };
+    // ocorrencia: abre direto a lista de ocorrencias da viagem (docs 6.3.8)
+    if (n.type === 'OCCURRENCE' && typeof payload['tripId'] === 'string') {
+      return { rota: ['/trip-history', payload['tripId'], 'ocorrencias'] };
+    }
+    // aviso de viagem: abre o acompanhamento dessa viagem (payload.tripId); sem ele, a home
+    if (TIPOS_VIAGEM.includes(n.type) && this.tipoUsuario === 'responsavel') {
+      const tripId = typeof payload['tripId'] === 'string' ? payload['tripId'] : null;
+      const studentId = typeof payload['studentId'] === 'string' ? payload['studentId'] : null;
+      if (!tripId) return { rota: ['/responsible-home'] };
+      return { rota: ['/responsible-route', tripId], query: studentId ? { aluno: studentId } : undefined };
+    }
     if (chatId) return { rota: ['/chat-details', chatId], query: { from } };
     return null;
   }

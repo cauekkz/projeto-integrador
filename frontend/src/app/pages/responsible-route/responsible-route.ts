@@ -1,141 +1,257 @@
-import { ChangeDetectorRef, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { NotificationService } from '../../services/notification.service';
-import { AuthService } from '../../services/auth.service';
-import { UserMe } from '../../models/user.model';
-import { Footer } from '../../shared/footer/footer';
+import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
+import { StatusTopbar } from '../../shared/status-topbar/status-topbar';
+import { PopUpService } from '../../shared/pop-up';
+import { PontoNoMapa, TripMap } from '../../components/trip/trip-map/trip-map';
 import { ProfileSelect } from '../../components/profile-select/profile-select';
+import { AuthService } from '../../services/auth.service';
+import { ChatWebSocketService } from '../../services/chat.service';
+import { NotificationService } from '../../services/notification.service';
+import { StorageService } from '../../services/storage.service';
+import { StudentService } from '../../services/student.service';
+import { TripService, TripSocket } from '../../services/trip.service';
+import { formatarCrlv } from '../driver-vehicles/driver-vehicles';
+import { UserMe } from '../../models/user.model';
+import { horaDe, minutosAte, studentTripToday, tripStudent, tripUpdate, viagemAtiva } from '../../services/dto/trip/trip.dto';
 
-type SituacaoParada = 'feita' | 'atual' | 'proxima';
+// avisos da viagem que viram pop-up nesta tela (Figma "ON_BOARD · pop-up de embarque")
+const AVISOS_DA_VIAGEM = ['VAN_ON_THE_WAY', 'STUDENT_BOARDED', 'STUDENT_DELIVERED', 'STUDENT_ABSENT', 'OCCURRENCE'];
 
-// privacidade: o responsavel so ve as paradas do proprio dependente (casa e escola).
-// paradas de outros alunos (e a garagem do motorista) chegam so como quantidade, sem nome, endereco nem horario
-// o backend ja filtra: o WebSocket da viagem manda pro responsavel so as paradas do proprio filho (tela refeita na etapa da viagem)
-type ParadaRota =
-  | { tipo: 'dependente'; titulo: string; endereco: string; horario: string; situacao: SituacaoParada }
-  | { tipo: 'outras'; quantidade: number; situacao: SituacaoParada };
-
-interface RotaDependente {
-  dependente: string;
-  status: 'a-caminho' | 'embarcado' | 'entregue';
-  minutos: number;
-  motorista: { nome: string; foto: string | null };
-  van: { placa: string; descricao: string };
-  paradas: ParadaRota[];
+// "Sprinter prata · ABC1D23" (o CRLV vem "M.BENZ/SPRINTER" e "PRATA")
+export function textoDaVanDaViagem(viagem: studentTripToday): string {
+  const modelo = formatarCrlv((viagem.vehicleModel ?? '').split('/').pop());
+  const cor = (viagem.vehicleColor ?? '').toLowerCase();
+  const van = [modelo, cor].filter(Boolean).join(' ');
+  return [van, viagem.vehiclePlate].filter(Boolean).join(' · ');
 }
 
-const STATUS_TEXTO: Record<RotaDependente['status'], string> = {
-  'a-caminho': 'Motorista a caminho',
-  embarcado: 'Embarcado na van',
-  entregue: 'Entregue na escola',
-};
-
-// rota do motorista vista pelo responsavel: so o front por enquanto (dados de exemplo)
-// TODO: trocar pela viagem do dia do dependente quando o back expuser (trip em andamento + paradas + posicao da van)
+// Figma "Responsável · /responsible-route/:id": FOLLOWING, ON_BOARD, STATUS (e DONE/encerrada, sem tela no Figma)
+import { Footer } from '../../shared/footer/footer';
 @Component({
   selector: 'app-responsible-route',
   standalone: true,
-  imports: [Footer, ProfileSelect],
+  imports: [StatusTopbar, TripMap, ProfileSelect, Footer],
   templateUrl: './responsible-route.html',
   styleUrl: './responsible-route.css',
 })
 export class ResponsibleRoute implements OnInit {
-  mostrarPerfil = false;
-  usuarioLogado: UserMe | null = null;
-
-  protected notificacoes = inject(NotificationService);
-  private authService = inject(AuthService);
+  private activatedRoute = inject(ActivatedRoute);
   private router = inject(Router);
-  private cdr = inject(ChangeDetectorRef);
+  private tripService = inject(TripService);
+  private studentService = inject(StudentService);
+  private storageService = inject(StorageService);
+  private chatService = inject(ChatWebSocketService);
+  private authService = inject(AuthService);
+  private notificacoes = inject(NotificationService);
+  private popUpService = inject(PopUpService);
+  private destroyRef = inject(DestroyRef);
 
-  readonly rotas = signal<RotaDependente[]>([
-    {
-      dependente: 'Ana',
-      status: 'a-caminho',
-      minutos: 12,
-      motorista: { nome: 'Gustavo Lima', foto: null },
-      van: { placa: 'AVT-1914', descricao: 'Van branca com detalhe amarelo' },
-      paradas: [
-        { tipo: 'outras', quantidade: 2, situacao: 'feita' },
-        { tipo: 'dependente', titulo: 'Embarque da Ana', endereco: 'Sua casa · R. Libertadores, 2026', horario: '07:05', situacao: 'atual' },
-        { tipo: 'outras', quantidade: 1, situacao: 'proxima' },
-        { tipo: 'dependente', titulo: 'Colégio Santa Clara', endereco: 'Av. Paulista, 1500', horario: '07:30', situacao: 'proxima' },
-      ],
-    },
-    {
-      dependente: 'Pedro',
-      status: 'embarcado',
-      minutos: 8,
-      motorista: { nome: 'Gustavo Lima', foto: null },
-      van: { placa: 'AVT-1914', descricao: 'Van branca com detalhe amarelo' },
-      paradas: [
-        { tipo: 'dependente', titulo: 'Embarque do Pedro', endereco: 'Sua casa · R. Libertadores, 2026', horario: '07:05', situacao: 'feita' },
-        { tipo: 'outras', quantidade: 1, situacao: 'atual' },
-        { tipo: 'dependente', titulo: 'Escola Monteiro Lobato', endereco: 'R. Augusta, 300', horario: '07:25', situacao: 'proxima' },
-      ],
-    },
-  ]);
+  protected tripId = signal('');
+  // filho que abriu o acompanhamento (?aluno=); sem ele, o primeiro filho da viagem
+  private alunoPedido: string | null = null;
+  protected viagem = signal<tripUpdate | null>(null);
+  protected dadosDoDia = signal<studentTripToday | null>(null);
+  protected fotoMotorista = signal<string | null>(null);
+  protected usuario = signal<UserMe | null>(null);
+  protected mostrarPerfil = signal(false);
+  // cartao de baixo: recolhido mostra so o resumo; a seta pra cima puxa os dados
+  protected aberto = signal(false);
+  protected abrindoChat = signal(false);
+  private socket?: TripSocket;
+  private buscouDados = false;
 
-  readonly selecionado = signal(0);
-  readonly rota = computed(() => this.rotas()[this.selecionado()]);
-  readonly statusTexto = computed(() => STATUS_TEXTO[this.rota().status]);
-  // conta as paradas anonimas pela quantidade, senao a barra andaria errado
-  readonly progresso = computed(() => {
-    const peso = (p: ParadaRota) => (p.tipo === 'outras' ? p.quantidade : 1);
-    const paradas = this.rota().paradas;
-    const total = paradas.reduce((soma, p) => soma + peso(p), 0);
-    const feitas = paradas.filter((p) => p.situacao === 'feita').reduce((soma, p) => soma + peso(p), 0);
-    return total ? Math.round((feitas / total) * 100) : 0;
+  protected aluno = computed<tripStudent | null>(() => {
+    const alunos = this.viagem()?.students ?? [];
+    return alunos.find((a) => a.studentId === this.alunoPedido) ?? alunos[0] ?? null;
   });
-  // so as paradas do dependente contam no botao "Ver paradas"
-  readonly paradasDoDependente = computed(() => this.rota().paradas.filter((p) => p.tipo === 'dependente').length);
-  // painel com as paradas: comeca fechado pra deixar o mapa a vista
-  readonly paradasAbertas = signal(false);
+  protected primeiroNome = computed(() => (this.aluno()?.studentName ?? '').split(' ')[0]);
+  protected encerrada = computed(() => {
+    const status = this.viagem()?.status;
+    return !!status && !viagemAtiva(status);
+  });
+  // o que a tela mostra: o mode do backend, mais "encerrada" (FINISHED) e "ausente" (falta nesta viagem)
+  protected momento = computed<'conectando' | 'FOLLOWING' | 'ON_BOARD' | 'DONE' | 'ausente' | 'aguardando' | 'encerrada'>(() => {
+    const v = this.viagem();
+    if (!v) return 'conectando';
+    if (this.aluno()?.status === 'DELIVERED' || v.mode === 'DONE') return 'DONE';
+    if (this.aluno()?.status === 'ABSENT') return 'ausente';
+    if (this.encerrada()) return 'encerrada';
+    if (v.mode === 'FOLLOWING') return 'FOLLOWING';
+    if (v.mode === 'ON_BOARD') return 'ON_BOARD';
+    return 'aguardando';
+  });
+  protected textoStatus = computed(() => {
+    switch (this.momento()) {
+      case 'FOLLOWING':
+        return 'A caminho';
+      case 'ON_BOARD':
+        return 'Na van';
+      case 'DONE':
+        return 'Entregue';
+      case 'encerrada':
+      case 'ausente':
+        return 'Sem percurso';
+      default:
+        return 'Em percurso';
+    }
+  });
+  protected minutos = computed(() => minutosAte(this.viagem()?.etaSeconds));
+  // "07:02": agora + o tempo que falta
+  protected previsao = computed(() => {
+    const segundos = this.viagem()?.etaSeconds;
+    if (segundos == null) return null;
+    const chegada = new Date(Date.now() + segundos * 1000);
+    return `${String(chegada.getHours()).padStart(2, '0')}:${String(chegada.getMinutes()).padStart(2, '0')}`;
+  });
+  protected van = computed(() => {
+    const v = this.viagem();
+    if (this.momento() !== 'FOLLOWING' && this.momento() !== 'ON_BOARD') return null;
+    return v?.latitude != null && v?.longitude != null ? { latitude: v.latitude, longitude: v.longitude } : null;
+  });
+  protected caminho = computed(() => (this.momento() === 'FOLLOWING' ? this.viagem()?.path ?? null : null));
+  // o destino do filho e o fim da linha (o pai nao recebe os pontos): casa ou escola
+  protected destino = computed<PontoNoMapa[]>(() => {
+    const linha = this.caminho();
+    const aluno = this.aluno();
+    if (!linha?.length || !aluno) return [];
+    const [longitude, latitude] = linha[linha.length - 1];
+    return [{ id: 'destino', latitude, longitude, tipo: aluno.locationType === 'SCHOOL' ? 'escola' : 'casa', alvo: true }];
+  });
+  protected rotuloDestino = computed(() => {
+    const aluno = this.aluno();
+    if (aluno?.locationType === 'SCHOOL') return 'Escola';
+    return aluno?.addressLabel || 'Casa';
+  });
+  protected textoVan = computed(() => {
+    const dados = this.dadosDoDia();
+    return dados ? textoDaVanDaViagem(dados) : '';
+  });
+
+  protected readonly horaDe = horaDe;
 
   ngOnInit() {
-    this.notificacoes.iniciar();
-    this.authService.getMe().subscribe({
-      next: (user) => {
-        this.usuarioLogado = user;
-        this.cdr.detectChanges();
-      },
-      error: (err) => console.error('Erro ao buscar usuário:', err),
+    this.alunoPedido = this.activatedRoute.snapshot.queryParamMap.get('aluno');
+    this.authService.getMe().subscribe({ next: (u) => this.usuario.set(u), error: () => {} });
+    this.notificacoes.chegou.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((n) => {
+      if (AVISOS_DA_VIAGEM.includes(n.type) && n.payload?.['tripId'] === this.tripId()) {
+        this.popUpService.show(n.message, 'info', n.title);
+      }
+    });
+    this.destroyRef.onDestroy(() => this.fecharSocket());
+    // a viagem nova (recomeçada) chega pelo mesmo componente com outro :tripId
+    this.activatedRoute.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      this.abrir(params.get('tripId') ?? '');
     });
   }
 
-  selecionar(indice: number) {
-    this.selecionado.set(indice);
+  private abrir(tripId: string) {
+    this.fecharSocket();
+    this.tripId.set(tripId);
+    this.viagem.set(null);
+    this.buscouDados = false;
+    if (this.alunoPedido) this.buscarDadosDoDia(this.alunoPedido);
+    this.socket = this.tripService.conectar(tripId);
+    this.socket.atualizacoes.subscribe((atualizacao) => this.receber(atualizacao));
+    this.socket.fechou.subscribe(() => this.semAcesso());
   }
 
-  alternarParadas() {
-    this.paradasAbertas.update((aberto) => !aberto);
+  private receber(atualizacao: tripUpdate) {
+    if (atualizacao.tripId !== this.tripId()) return;
+    if (atualizacao.status === 'CANCELED') {
+      // o motorista recomeçou: a viagem nova tem outro id
+      this.irParaViagemNova();
+      return;
+    }
+    this.viagem.set(atualizacao);
+    const aluno = this.aluno();
+    if (!this.buscouDados && aluno) this.buscarDadosDoDia(aluno.studentId);
+    if (atualizacao.status === 'FINISHED') this.fecharSocket();
   }
 
-  textoOutras(quantidade: number, situacao: SituacaoParada): string {
-    const paradas = quantidade === 1 ? '1 parada' : `${quantidade} paradas`;
-    if (situacao === 'feita') return `${paradas} concluída${quantidade === 1 ? '' : 's'}`;
-    if (situacao === 'atual') return 'Van em outra parada';
-    return `${paradas} no caminho`;
+  // motorista e van desta viagem vem do today-trips do filho
+  private buscarDadosDoDia(alunoId: string) {
+    this.buscouDados = true;
+    this.studentService.getTodayTrips(alunoId).subscribe({
+      next: (viagens) => {
+        const dados = (viagens ?? []).find((v) => v.tripId === this.tripId()) ?? null;
+        this.dadosDoDia.set(dados);
+        if (dados?.driverPhotoKey) {
+          this.storageService.getDownloadUrl(dados.driverPhotoKey).subscribe({
+            next: (url) => this.fotoMotorista.set(url),
+            error: () => {},
+          });
+        }
+      },
+      error: (erro: HttpErrorResponse) => {
+        if (erro?.status === 403) this.semAcesso();
+      },
+    });
   }
 
-  iniciais(nome: string): string {
-    return nome
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((parte) => parte[0].toUpperCase())
-      .join('');
+  private irParaViagemNova() {
+    const alunoId = this.aluno()?.studentId ?? this.alunoPedido;
+    const rotaId = this.dadosDoDia()?.routeId;
+    this.fecharSocket();
+    if (!alunoId) {
+      this.voltar();
+      return;
+    }
+    this.studentService.getTodayTrips(alunoId).subscribe({
+      next: (viagens) => {
+        const nova = (viagens ?? []).find((v) => v.tripId !== this.tripId() && viagemAtiva(v.tripStatus) && (!rotaId || v.routeId === rotaId));
+        if (!nova) {
+          this.voltar();
+          return;
+        }
+        this.popUpService.show('O motorista recomeçou a rota.', 'info', 'A rota foi reiniciada');
+        this.router.navigate(['/responsible-route', nova.tripId], { queryParams: { aluno: alunoId }, replaceUrl: true });
+      },
+      error: () => this.voltar(),
+    });
   }
 
-  irParaChat() {
-    this.router.navigate(['/chat'], { queryParams: { from: 'responsible-home' } });
+  // Figma "acesso removido": fechou com 1003 ou today-trips deu 403
+  private semAcesso() {
+    this.fecharSocket();
+    this.popUpService.show('Você foi removido dos responsáveis deste filho.', 'warning', 'Você não tem mais acesso a esta viagem');
+    this.voltar();
   }
 
-  irParaPerfil() {
-    this.mostrarPerfil = true;
+  private fecharSocket() {
+    this.socket?.fechar();
+    this.socket = undefined;
   }
 
-  fecharPerfil() {
-    this.mostrarPerfil = false;
+  estrelas(nota: number | null | undefined): string {
+    return nota == null ? '' : nota.toFixed(1).replace('.', ',');
+  }
+
+  iniciais(nome: string | null | undefined): string {
+    return (
+      (nome ?? '')
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((p) => p[0].toUpperCase())
+        .join('') || '?'
+    );
+  }
+
+  // conversa com o motorista (GET /api/chats pelo otherUserId)
+  abrirChat() {
+    const motorista = this.dadosDoDia()?.driverId;
+    if (!motorista || this.abrindoChat()) return;
+    this.abrindoChat.set(true);
+    this.chatService.findChatWith(motorista).subscribe((chatId) => {
+      this.abrindoChat.set(false);
+      if (chatId) this.router.navigate(['/chat-details', chatId], { queryParams: { from: 'responsible-home' } });
+      else this.popUpService.show('Ainda não há conversa com este motorista.', 'info', 'Sem conversa');
+    });
+  }
+
+  voltar() {
+    this.router.navigate(['/responsible-home']);
   }
 }

@@ -2,7 +2,7 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: #f1f5f9;
+  background: #ffffff;
   box-sizing: border-box;
 }
 
@@ -153,197 +153,139 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  /* card centralizado no espaco entre a topbar e o footer fixo */
-  justify-content: center;
-  padding: 16px 16px calc(100px + env(safe-area-inset-bottom));
+  gap: 12px;
+  padding: 16px 13px calc(110px + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 
-.empty-container {
-  width: 100%;
+/* Figma "Card do filho" */
+.filhos {
+  list-style: none;
   display: flex;
-  justify-content: center;
-  padding-top: 40px;
-  box-sizing: border-box;
-}
-
-.empty-text {
+  flex-direction: column;
+  gap: 12px;
   margin: 0;
-  color: #94a3b8;
-  font-size: 15px;
-  text-align: center;
+  padding: 0;
 }
 
-.rota-card {
-  position: relative;
-  cursor: pointer;
-  width: 100%;
-  max-width: 400px;
+.cartao {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
   background: #ffffff;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
-  box-sizing: border-box;
 }
 
-.rota-header {
-  width: 100%;
-  height: 42px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding-left: 20px;
-  box-sizing: border-box;
-}
-
-.dot {
-  width: 7px;
-  height: 7px;
-  margin-right: 6px;
-  background: #94a3b8;
-  border-radius: 50%;
-}
-
-.status-text {
-  font-size: 12px;
-  font-weight: 600;
-  color: #64748b;
-}
-
-.mapa-preview {
-  position: relative;
-  z-index: 2;
-  width: calc(100% - 42px);
-  /* altura acompanha a largura do card */
-  aspect-ratio: 294 / 205;
-  margin: 0 auto;
-  border-radius: 15px;
-  overflow: hidden;
-  background: #d9d9d9;
-  box-sizing: border-box;
-}
-
-.mapa-img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}
-
-.rota-footer {
-  position: relative;
-  z-index: 1;
-  width: calc(100% - 16px);
-  height: 177px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  margin: -10px auto 8px;
-  padding: 52px 20px 0;
-  background: #0c66db;
-  border-radius: 16px;
-  box-shadow: 0 8px 12px rgba(87, 181, 228, 0.32);
-  box-sizing: border-box;
-}
-
-.rota-titulo {
-  margin: 0;
-  color: #ffffff;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.3;
-  text-align: center;
-}
-
-.van-card {
-  position: absolute;
-  left: 8px;
-  right: 8px;
-  bottom: 8px;
-  height: 75px;
+.quem {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 12px;
-  background: #e8f3ff;
-  border-radius: 16px;
-  box-sizing: border-box;
-  z-index: 5;
 }
 
-.van-img {
-  width: 68px;
-  height: 48px;
+.quem strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.foto {
   flex-shrink: 0;
-  object-fit: contain;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  object-fit: cover;
 }
 
-.van-info {
-  min-width: 0;
+.foto.iniciais {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #afd9f7;
+  background: #eff8fe;
+  color: #0a54b5;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.linha {
+  margin: 0;
+  font-size: 14px;
+  color: #45556c;
+}
+
+.falta {
+  margin: 0;
+  font-size: 14px;
+  color: #b45309;
+}
+
+.viagem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Figma "Selo" */
+.selo {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.selo.aguardando { background: #fffbeb; color: #b45309; }
+.selo.embarcou { background: #eff8fe; color: #0a54b5; }
+.selo.entregue { background: #ecfdf5; color: #047857; }
+.selo.ausente { background: #f1f5f9; color: #475569; }
+
+.botoes {
+  display: flex;
+  gap: 8px;
+}
+
+.botoes .btn {
+  flex: 1;
+  min-height: 36px;
+  font-size: 14px;
+}
+
+.vazio {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 2px;
+  gap: 10px;
+  margin: auto 18px;
 }
 
-.van-placa {
-  margin: 0;
-  color: #111827;
-  font-size: 15px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.van-desc {
-  margin: 0;
-  color: #1e293b;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.2;
-  white-space: nowrap;
-}
-
-.van-notif {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.van-notif i {
+.vazio h2 {
   font-size: 20px;
-  color: #0c66db;
+  font-weight: 600;
+  color: #0f172a;
 }
 
-.van-badge {
-  position: absolute;
-  top: -4px;
-  right: -3px;
-  min-width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 4px;
-  background: #ef1111;
-  color: #ffffff;
-  font-size: 9px;
-  font-weight: 700;
-  border-radius: 50%;
+.vazio p {
+  font-size: 14px;
+  color: #475569;
+}
+
+.folha .sub {
+  font-size: 13px;
+  color: #62748e;
+}
+
+.campo input[type='date'] {
+  width: 100%;
+  min-height: 43px;
+  padding: 0 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 14px;
+  color: #0f172a;
   box-sizing: border-box;
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  z-index: 100;
 }
 
 @media (max-width: 768px) {

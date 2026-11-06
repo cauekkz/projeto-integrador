@@ -1,50 +1,280 @@
-<div class="screen">
+<div class="pagina">
+  <app-trail-header [trilha]="['Motorista', 'Viagem']" [mostrarSino]="true" (voltarEvent)="voltar()" />
 
-  <div class="topbar">
-    <div class="notif-wrapper">
-      <div class="bell-btn" (click)="irParaPerfil()">
-        <img [src]="usuarioLogado?.photoUrl || '/testee.jpg'" class="avatar" alt="Foto do motorista">
-      </div>
-    </div>
-
-    <div class="info">
-      <span class="dot"></span>
-      <span class="status-text">Em percurso</span>
-    </div>
-
-    <div class="notif-wrapper sino-clicavel" role="button" tabindex="0" aria-label="Abrir notificações" (click)="notificacoes.abrirTela()" (keydown.enter)="notificacoes.abrirTela()">
-      <div class="bell-btn">
-        <i class="bi bi-bell-fill"></i>
-      </div>
-      @if (notificacoes.naoLidas()) {
-        <span class="badge" [attr.aria-label]="notificacoes.naoLidas() + ' notificações não lidas'">{{ notificacoes.rotulo() }}</span>
+  <main class="conteudo">
+    @switch (estado()) {
+      @case ('carregando') {
+        <p class="aviso" role="status">Carregando...</p>
       }
-    </div>
-  </div>
+      @case ('erro') {
+        <div class="aviso erro" role="alert">
+          <p>Não foi possível carregar a rota.</p>
+          <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+        </div>
+      }
+      @case ('semAcesso') {
+        <div class="aviso" role="alert">
+          <p>Você não está mais nesta rota.</p>
+          <button type="button" class="link" (click)="voltar()">Voltar para o início</button>
+        </div>
+      }
 
-  <div class="mapa-fullscreen">
-    <img src="/mapa-placeholder.png" alt="Mapa" class="mapa-img">
-  </div>
+      <!-- Figma "/driver-route/:id · iniciar", "localização negada" e "erro 400 ao iniciar" -->
+      @case ('antes') {
+        <app-route-card [nome]="rota()?.name ?? ''" [paradas]="paradas()" [clicavel]="false" />
+        <div class="campo">
+          <label for="van">Van da viagem</label>
+          @if (vans().length) {
+            <select id="van" name="van" [(ngModel)]="vanEscolhida">
+              @for (v of vans(); track v.id) {
+                <option [value]="v.id">{{ textoVan(v) }}</option>
+              }
+            </select>
+          } @else {
+            <p class="ajuda">Você ainda não tem vans. Adicione em "Minhas vans".</p>
+          }
+        </div>
+        <div class="acoes-fim">
+          <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="iniciar()">
+            {{ enviando() ? 'Iniciando...' : 'Iniciar rota' }}
+          </button>
+        </div>
+      }
 
-  <app-passengers-sheet
-    [embarcados]="alunosEmbarcados"
-    [esperando]="alunosEsperando"
-    (footerOcultoChange)="footerOculto = $event"
-  />
+      <!-- Figma "/driver-route/:id · viagem ativa" -->
+      @case ('aberta') {
+        <app-route-card [nome]="rota()?.name ?? ''" [paradas]="paradas()" [clicavel]="false" />
+        <div class="acoes-fim">
+          <button type="button" class="btn btn-azul" (click)="continuar()">Continuar</button>
+          <button type="button" class="btn btn-perigo" (click)="confirmandoRecomeco.set(true)">Recomeçar do zero</button>
+        </div>
+      }
 
-  <div class="footer-wrap" [class.escondido]="footerOculto" [attr.aria-hidden]="footerOculto">
-    <app-footer tipoUsuario="motorista" abaAtiva="meio" tipo="mapa" />
-  </div>
+      <!-- Figma "/driver-route/:id · finalizada hoje" -->
+      @case ('finalizada') {
+        <app-route-card [nome]="rota()?.name ?? ''" [paradas]="paradas()" [clicavel]="false" />
+      }
 
+      @case ('viagem') {
+        <!-- o mesmo mapa vira tela cheia no "expandir" -->
+        <div class="mapa" [class.expandido]="mapaExpandido()">
+          <app-trip-map [van]="van()" [caminho]="viagem()?.path ?? null" [pontos]="marcadores()" />
+          @if (!mapaExpandido()) {
+            @if (minutos() && pontoAtual()) {
+              <span class="pilula">Próximo ponto em {{ minutos() }} min</span>
+            }
+            <button type="button" class="redondo expandir" aria-label="Expandir mapa" (click)="mapaExpandido.set(true)">
+              <i class="bi bi-arrows-angle-expand" aria-hidden="true"></i>
+            </button>
+          }
+        </div>
+
+        @if (!viagem()) {
+          <p class="aviso" role="status">Conectando à viagem...</p>
+        } @else if (todosAtendidos()) {
+          <!-- Figma "Em viagem · todos atendidos" -->
+          <ul class="alunos">
+            @for (aluno of alunosDaViagem(); track aluno.studentId) {
+              <li class="aluno">
+                <ng-container *ngTemplateOutlet="cabecaAluno; context: { $implicit: aluno, detalhe: detalheFinal(aluno) }" />
+              </li>
+            }
+          </ul>
+          <div class="acoes-fim">
+            <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="finalizar()">
+              {{ enviando() ? 'Finalizando...' : 'Finalizar rota' }}
+            </button>
+          </div>
+        } @else {
+          <div class="acoes-viagem">
+            <button type="button" class="btn btn-contorno" (click)="abrirOcorrencia()">Ocorrência</button>
+            <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="confirmandoEncerrar.set(true)">Encerrar rota</button>
+          </div>
+
+          @if (pontoAtual(); as ponto) {
+            <!-- Figma "Em viagem · próximo ponto" e "descer na escola" -->
+            <div class="cabecalho-ponto">
+              <span class="ordem">{{ ponto.orderIndex }}</span>
+              <div class="endereco">
+                <strong>{{ nomeDoPonto(ponto) }}</strong>
+                @if (ponto.students.length) {
+                  <small>{{ tarefa(ponto.students[0]) }}</small>
+                }
+              </div>
+              <button type="button" class="mais" aria-label="Navegar até o ponto" (click)="pontoAberto.set(ponto)">
+                <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <ul class="alunos">
+              @for (aluno of ponto.students; track aluno.studentId + aluno.action) {
+                <li class="aluno">
+                  <ng-container *ngTemplateOutlet="cabecaAluno; context: { $implicit: aluno, detalhe: tarefa(aluno) }" />
+                  @if (podeEmbarcar(aluno)) {
+                    <div class="botoes">
+                      <button type="button" class="btn btn-azul" [disabled]="ocupados().has(aluno.studentId)" (click)="marcar(aluno, 'board')">Embarcou</button>
+                      <button type="button" class="btn btn-contorno" [disabled]="ocupados().has(aluno.studentId)" (click)="marcar(aluno, 'absent')">Ausente</button>
+                    </div>
+                  } @else if (podeDescer(aluno)) {
+                    <div class="botoes">
+                      <button type="button" class="btn btn-azul" [disabled]="ocupados().has(aluno.studentId)" (click)="marcar(aluno, 'alight')">Desceu</button>
+                    </div>
+                  }
+                </li>
+              }
+            </ul>
+          }
+
+          <!-- listas fechadas: proximos pontos e alunos embarcados -->
+          <section class="lista-fechada">
+            <button type="button" class="topo-lista" [attr.aria-expanded]="proximosAbertos()" (click)="proximosAbertos.set(!proximosAbertos())">
+              <span>Próximos pontos</span>
+              <strong>{{ proximos().length }}</strong>
+              <i class="bi bi-chevron-down" [class.aberta]="proximosAbertos()" aria-hidden="true"></i>
+            </button>
+            @if (proximosAbertos()) {
+              <ol class="itens">
+                @for (p of proximos(); track p.routeStopId) {
+                  <li>
+                    <span class="ordem pequena">{{ p.orderIndex }}</span>
+                    <div class="endereco">
+                      <strong>{{ nomeDoPonto(p) }}</strong>
+                      <small>{{ p.students.length === 1 ? p.students[0].studentName : p.students.length + ' alunos' }}</small>
+                    </div>
+                  </li>
+                } @empty {
+                  <li class="vazio-lista">Nenhum ponto depois deste.</li>
+                }
+              </ol>
+            }
+          </section>
+
+          <section class="lista-fechada">
+            <button type="button" class="topo-lista" [attr.aria-expanded]="embarcadosAbertos()" (click)="embarcadosAbertos.set(!embarcadosAbertos())">
+              <span>Alunos embarcados</span>
+              <strong>{{ embarcados().length }}</strong>
+              <i class="bi bi-chevron-down" [class.aberta]="embarcadosAbertos()" aria-hidden="true"></i>
+            </button>
+            @if (embarcadosAbertos()) {
+              <ul class="itens">
+                @for (a of embarcados(); track a.studentId) {
+                  <li>
+                    <div class="endereco">
+                      <strong>{{ a.studentName }}</strong>
+                      <small>{{ tarefa(a) }}</small>
+                    </div>
+                  </li>
+                } @empty {
+                  <li class="vazio-lista">Ninguém na van agora.</li>
+                }
+              </ul>
+            }
+          </section>
+        }
+      }
+    }
+  </main>
+
+  @if (estado() === 'finalizada' || estado() === 'erro' || estado() === 'semAcesso') {
+    <app-footer tipoUsuario="motorista" />
+  }
 </div>
 
-@if (mostrarPerfil) {
-  <app-profile-select
-    animate.leave="sair-perfil"
-    tipoUsuario="motorista"
-    [usuario]="usuarioLogado"
-    (fecharEvent)="fecharPerfil()"
-  />
+<!-- foto (ou iniciais), nome, detalhe e o selo do aluno (Figma "Aluno na viagem") -->
+<ng-template #cabecaAluno let-aluno let-detalhe="detalhe">
+  <div class="cabeca">
+    @if (aluno.photoKey && fotos()[aluno.photoKey]) {
+      <img class="foto" [src]="fotos()[aluno.photoKey]" alt="" />
+    } @else {
+      <span class="foto iniciais" aria-hidden="true">{{ iniciais(aluno.studentName) }}</span>
+    }
+    <div class="dados">
+      <strong>{{ aluno.studentName }}</strong>
+      <small>{{ detalhe }}</small>
+    </div>
+    <span [class]="'selo ' + seloDe(aluno).classe">{{ seloDe(aluno).texto }}</span>
+  </div>
+</ng-template>
+
+<!-- Figma "Em viagem · mapa expandido": barra de status, abrir no app de mapa, recolher e o rodape -->
+@if (estado() === 'viagem' && mapaExpandido()) {
+  <div class="sobre-mapa" animate.enter="entrar-fade">
+    <app-status-topbar [foto]="usuario()?.photoUrl" [emPercurso]="true" [flutuante]="true" (perfil)="mostrarPerfil.set(true)" />
+  </div>
+  <div class="botoes-mapa">
+    <button type="button" class="redondo grande" aria-label="Abrir no app de mapa" (click)="abrirNavegacao()">
+      <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="redondo recolher" aria-label="Recolher mapa" (click)="mapaExpandido.set(false)">
+      <i class="bi bi-arrows-angle-contract" aria-hidden="true"></i>
+    </button>
+  </div>
+  <app-footer tipoUsuario="motorista" />
 }
 
+<!-- Figma "Recomeçar · confirmar" -->
+@if (confirmandoRecomeco()) {
+  <div class="fundo" animate.enter="entrar-fade" (click)="fecharRecomeco()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="recomecar-titulo" (click)="$event.stopPropagation()">
+      <h2 id="recomecar-titulo">Recomeçar do zero?</h2>
+      <p class="sub">Todos os alunos voltam para aguardando e os responsáveis são avisados de que a rota foi reiniciada.</p>
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="iniciar(true)">
+        {{ enviando() ? 'Recomeçando...' : 'Recomeçar do zero' }}
+      </button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharRecomeco()">Voltar</button>
+    </div>
+  </div>
+}
 
+<!-- confirmar "Encerrar rota" antes de atender todos -->
+@if (confirmandoEncerrar()) {
+  <div class="fundo" animate.enter="entrar-fade" (click)="fecharEncerrar()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="encerrar-titulo" (click)="$event.stopPropagation()">
+      <h2 id="encerrar-titulo">Encerrar a rota agora?</h2>
+      <p class="sub">A viagem de hoje termina e não pode ser iniciada de novo. Quem ainda não foi atendido fica como está.</p>
+      <button type="button" class="btn btn-vermelho" [disabled]="enviando()" (click)="encerrar()">
+        {{ enviando() ? 'Encerrando...' : 'Encerrar rota' }}
+      </button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharEncerrar()">Voltar</button>
+    </div>
+  </div>
+}
+
+<!-- Figma "Registrar ocorrência" -->
+@if (registrando()) {
+  <div class="fundo" animate.enter="entrar-fade" (click)="fecharOcorrencia()">
+    <form class="folha" role="dialog" aria-modal="true" aria-labelledby="ocorrencia-titulo" (click)="$event.stopPropagation()" (ngSubmit)="registrar()">
+      <h2 id="ocorrencia-titulo">Registrar ocorrência</h2>
+      <p class="sub">Os responsáveis de todos os alunos da viagem são avisados.</p>
+      <p class="rotulo">Tipo</p>
+      <div class="chips">
+        @for (t of tiposOcorrencia; track t.tipo) {
+          <button type="button" class="chip" [class.ativo]="tipoOcorrencia() === t.tipo" [attr.aria-pressed]="tipoOcorrencia() === t.tipo" (click)="tipoOcorrencia.set(t.tipo)">{{ t.texto }}</button>
+        }
+      </div>
+      <div class="campo">
+        <label for="descricao">Descrição (obrigatória)</label>
+        <input id="descricao" name="descricao" [(ngModel)]="descricao" placeholder="Conte o que aconteceu" maxlength="1000" autocomplete="off" />
+      </div>
+      <button type="submit" class="btn btn-azul" [disabled]="enviando()">{{ enviando() ? 'Registrando...' : 'Registrar' }}</button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharOcorrencia()">Voltar</button>
+    </form>
+  </div>
+}
+
+<!-- tres pontinhos do ponto: navegar ate ele -->
+@if (pontoAberto(); as ponto) {
+  <div class="fundo" animate.enter="entrar-fade" (click)="pontoAberto.set(null)">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="navegar-titulo" (click)="$event.stopPropagation()">
+      <h2 id="navegar-titulo">Ponto {{ ponto.orderIndex }}</h2>
+      <p class="sub">{{ nomeDoPonto(ponto) }}</p>
+      <a class="btn btn-azul link-botao" [href]="linkGoogle(ponto)" target="_blank" rel="noopener">Abrir no Google Maps</a>
+      <a class="btn btn-contorno link-botao" [href]="linkWaze(ponto)" target="_blank" rel="noopener">Abrir no Waze</a>
+      <button type="button" class="btn btn-contorno" (click)="pontoAberto.set(null)">Voltar</button>
+    </div>
+  </div>
+}
+
+@if (mostrarPerfil()) {
+  <app-profile-select animate.leave="sair-perfil" tipoUsuario="motorista" [usuario]="usuario()" (fecharEvent)="mostrarPerfil.set(false)" />
+}

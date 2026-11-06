@@ -1,0 +1,205 @@
+/* Figma "Responsável · /student/:id" (1054:675, 1054:735, 1039:1425, 1039:1463) */
+.conteudo {
+  gap: 16px;
+}
+
+.secao {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.titulo-secao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.titulo-secao h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* "Adicionar", "Convidar", "Não vai", "Ele vai sim" */
+.acao-titulo {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: #0c66db;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.acao-titulo:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.cartao {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.cartao.coluna {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.cartao .linha {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.cartao .textos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cartao strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.cartao small {
+  font-size: 12px;
+  color: #62748e;
+}
+
+.nome-rota {
+  flex: 1;
+}
+
+/* lixeira vermelha do endereço */
+.lixeira {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 12px;
+  background: #e7000b;
+  color: #ffffff;
+  font-size: 17px;
+  cursor: pointer;
+  transition: var(--transicao-botao);
+}
+
+.lixeira:hover {
+  background: #c10007;
+}
+
+.selo-admin {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #eff8fe;
+  color: #0a54b5;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.links {
+  display: flex;
+  gap: 16px;
+}
+
+.link-azul,
+.link-vermelho {
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.link-azul {
+  color: #0c66db;
+}
+
+.link-vermelho {
+  color: #e7000b;
+}
+
+/* falta avisada: cartão amarelo */
+.cartao.falta {
+  border-color: #fde68a;
+  background: #fefce8;
+}
+
+/* "Lucas ainda não está em nenhuma rota" */
+.sem-rotas {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 48px;
+}
+
+.sem-rotas h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.sem-rotas p {
+  font-size: 13px;
+  color: #62748e;
+}
+
+.sub {
+  font-size: 13px;
+  color: #62748e;
+}
+
+/* código do convite */
+.codigo {
+  padding: 14px;
+  border-radius: 12px;
+  background: #eff8fe;
+  color: #0a54b5 !important;
+  font-size: 24px !important;
+  font-weight: 700;
+  letter-spacing: 4px;
+  text-align: center;
+}
+
+/* Número + Bairro, Cidade + Estado lado a lado */
+.dupla {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.dupla .campo {
+  min-width: 0;
+}
+
+/* "Histórico de viagens ›" */
+.linha-historico {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  color: #62748e;
+  cursor: pointer;
+}
+
+.linha-historico:hover {
+  background: #f8fafc;
+}

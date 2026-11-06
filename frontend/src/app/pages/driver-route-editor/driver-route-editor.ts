@@ -382,8 +382,9 @@ export class DriverRouteEditor implements OnInit {
     this.router.navigate(['/driver-route', this.routeId]);
   }
 
+  // a lista das rotas e a home
   voltar() {
-    this.router.navigate(['/driver-routes']);
+    this.router.navigate(['/driver-home']);
   }
 
   private aplicarSemAviso(edicao: routeEdit) {

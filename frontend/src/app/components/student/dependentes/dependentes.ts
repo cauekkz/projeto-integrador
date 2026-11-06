@@ -6,12 +6,12 @@ import { Button } from '../../../shared/button/button';
 import { StudentService } from '../../../services/student.service';
 import { Router } from '@angular/router';
 import { forkJoin, switchMap, map } from 'rxjs';
-import { StudentPhoto } from '../student-photo/student-photo';
+import { Footer } from '../../../shared/footer/footer';
 
 @Component({
   selector: 'app-dependentes',
   standalone: true,
-  imports: [CommonModule, Header, Button, FormsModule, StudentPhoto],
+  imports: [CommonModule, Header, Button, FormsModule, Footer],
   templateUrl: './dependentes.html',
   styleUrl: './dependentes.css',
 })
@@ -52,12 +52,6 @@ export class Dependentes implements OnInit {
       });
   }
 
-  // o admin trocou ou tirou a foto: atualiza so esse dependente
-  fotoMudou(dep: any, foto: { photoKey: string | null; photoUrl: string | null }) {
-    this.dependentes.update((lista) =>
-      lista.map((d) => (d.id === dep.id ? { ...d, photoKey: foto.photoKey, photoUrl: foto.photoUrl } : d)),
-    );
-  }
 
   iniciais(nome: string | undefined): string {
     return (nome ?? '')
@@ -68,10 +62,9 @@ export class Dependentes implements OnInit {
       .join('');
   }
 
-  toggleDependente(dep: any) {
-    this.dependentes.update((lista) =>
-      lista.map((d) => (d === dep ? { ...d, aberto: !d.aberto } : d)),
-    );
+  // Figma 1054:635: o cartao abre o filho em detalhe
+  abrirDependente(dep: any) {
+    this.router.navigate(['/student', dep.id]);
   }
 
   voltar() {

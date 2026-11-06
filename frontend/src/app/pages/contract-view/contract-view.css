@@ -325,3 +325,13 @@
   from { transform: translateY(100%); }
   to { transform: translateY(0); }
 }
+
+/* motorista abre o perfil do responsavel */
+.pessoa.clicavel {
+  cursor: pointer;
+}
+
+.seta-perfil {
+  margin-left: auto;
+  color: #90a1b9;
+}

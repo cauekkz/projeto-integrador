@@ -303,14 +303,22 @@ describe('Rotas do motorista', () => {
     });
   });
 
-  it('o meio do rodapé do motorista abre as rotas', () => {
+  it('o meio do rodapé do motorista: viagem aberta ou escolher a rota', () => {
     configurar();
     const fixture = TestBed.createComponent(Footer);
     fixture.componentInstance.tipoUsuario = 'motorista';
     fixture.detectChanges();
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    // sem viagem aberta: escolher a rota
     fixture.componentInstance.selecionarAba('meio');
+    http.expectOne((r) => r.url === '/api/route/get-all-routes-and-stops').flush({ content: [{ id: 'r-1', name: 'Ida', stops: [] }], last: true });
+    http.expectOne('/api/trip/route/r-1/today').flush({}, { status: 404, statusText: 'Not Found' });
     expect(navegar).toHaveBeenCalledWith(['/driver-routes']);
+    // com viagem aberta: direto pro mapa da viagem
+    fixture.componentInstance.selecionarAba('meio');
+    http.expectOne((r) => r.url === '/api/route/get-all-routes-and-stops').flush({ content: [{ id: 'r-1', name: 'Ida', stops: [] }], last: true });
+    http.expectOne('/api/trip/route/r-1/today').flush({ id: 't-1', status: 'IN_PROGRESS' });
+    expect(navegar).toHaveBeenCalledWith(['/driver-route', 'r-1'], { queryParams: { continuar: 1 } });
     expect(fixture.nativeElement.querySelector('.icone-rota')).not.toBeNull();
   });
 });

@@ -265,3 +265,10 @@
   font-size: 0.9rem;
   font-family: 'Inter', sans-serif;
 }
+
+.situacao-geral {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: 16px;
+}

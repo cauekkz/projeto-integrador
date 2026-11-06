@@ -1,4 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* mapa da viagem (Leaflet): sem este CSS os quadrados do mapa ficam soltos e a linha/pinos somem */
+@import 'leaflet/dist/leaflet.css';
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
+/* sem o cursor de digitar piscando ao clicar em texto comum (ex.: navegacao por cursor do Chrome, tecla F7); nos campos ele continua */
+html {
+  caret-color: transparent;
+}
+
+input,
+textarea,
+select,
+[contenteditable='true'] {
+  caret-color: auto;
+}
 
 * {
   box-sizing: border-box;
@@ -30,6 +45,16 @@
 ::view-transition-group(rodape) {
   animation-duration: var(--dur-media);
   animation-timing-function: var(--ease-suave);
+}
+
+/* o rodape novo ja nasce com a pilula onde estava e desliza ate a aba certa: mostra so ele, sem o velho apagando por baixo */
+::view-transition-old(rodape) {
+  animation: none;
+  opacity: 0;
+}
+
+::view-transition-new(rodape) {
+  animation: none;
 }
 
 @keyframes tela-sair {

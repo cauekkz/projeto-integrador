@@ -1,0 +1,125 @@
+.filtrar {
+  width: auto;
+}
+
+.cartao {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.topo {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.topo > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.topo strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.topo small {
+  font-size: 12px;
+  color: #62748e;
+}
+
+.detalhe {
+  font-size: 13px;
+  color: #45556c;
+}
+
+.selo {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 13px;
+}
+
+.selo.entregue { background: #ecfdf5; color: #047857; }
+.selo.embarcou { background: #eff8fe; color: #0a54b5; }
+.selo.ausente { background: #f1f5f9; color: #475569; }
+.selo.aguardando { background: #fffbeb; color: #b45309; }
+
+/* "1 ocorrência ›" */
+.ocorrencias {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: #0c66db;
+  cursor: pointer;
+}
+
+.vazio {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 120px;
+}
+
+.vazio h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.vazio p {
+  font-size: 14px;
+  color: #45556c;
+}
+
+.fim {
+  height: 1px;
+}
+
+/* campos da folha de filtro */
+.folha label {
+  font-size: 13px;
+  color: #314158;
+}
+
+.folha select,
+.folha input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.periodo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.periodo div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

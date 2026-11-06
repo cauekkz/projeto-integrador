@@ -1,0 +1,56 @@
+.cartao-grupo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  font: inherit;
+  text-align: left;
+  color: #62748e;
+  cursor: pointer;
+}
+
+.cartao-grupo:hover {
+  background: #f8fafc;
+}
+
+.textos {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.textos strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.textos small {
+  font-size: 12px;
+  color: #62748e;
+}
+
+/* "Você ainda não tem grupos" */
+.vazio {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 140px;
+}
+
+.vazio h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.vazio p {
+  font-size: 14px;
+  color: #45556c;
+}

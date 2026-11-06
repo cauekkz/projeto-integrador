@@ -1,20 +1,24 @@
 import { Component, DestroyRef, ElementRef, OnInit, effect, inject, signal, viewChild } from '@angular/core';
-import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { TrailHeader } from '../../shared/trail-header/trail-header';
+import { ActivatedRoute, Router } from '@angular/router';
+import { ProfileSelect } from '../../components/profile-select/profile-select';
+import { AuthService } from '../../services/auth.service';
+import { NotificationService } from '../../services/notification.service';
+import { UserMe } from '../../models/user.model';
 import { Footer } from '../../shared/footer/footer';
 import { PopUpService } from '../../shared/pop-up';
 import { RouteService } from '../../services/route.service';
 import { routeWithStops } from '../../services/dto/route/route.dto';
+import { RouteCard } from '../../components/route/route-card/route-card';
 
 const TAMANHO_PAGINA = 10;
 
-// Figma "Rotas · Motorista": lista (Ativas/Todas), sem rotas e a folha "Nova rota"
+// home do motorista (/driver-home): a lista das rotas (Ativas/Todas), sem rotas e a folha "Nova rota" (Figma "Rotas · Motorista"),
+// com o topo de sempre. A escolha da viagem do dia fica na aba do meio (/driver-routes, pages/driver-home)
 @Component({
   selector: 'app-driver-routes',
   standalone: true,
-  imports: [TrailHeader, Footer, FormsModule],
+  imports: [Footer, FormsModule, RouteCard, ProfileSelect],
   templateUrl: './driver-routes.html',
   styleUrls: ['../../shared/folha.css', '../../shared/rota.css', './driver-routes.css'],
 })
@@ -22,7 +26,13 @@ export class DriverRoutes implements OnInit {
   private routeService = inject(RouteService);
   private popUpService = inject(PopUpService);
   private router = inject(Router);
-  private location = inject(Location);
+  private route = inject(ActivatedRoute);
+  private authService = inject(AuthService);
+  // badge do sino: nao lidas de verdade
+  protected notificacoes = inject(NotificationService);
+
+  protected mostrarPerfil = signal(false);
+  protected usuarioLogado = signal<UserMe | null>(null);
   private destroyRef = inject(DestroyRef);
 
   // "Ativas" = so as rotas em que ele esta hoje; "Todas" inclui as que ele deixou
@@ -57,6 +67,13 @@ export class DriverRoutes implements OnInit {
   }
 
   ngOnInit() {
+    this.notificacoes.iniciar();
+    // voltando de "codigo de conversa"/"vincular motorista" reabre o painel do perfil
+    this.mostrarPerfil.set(this.route.snapshot.queryParamMap.get('perfil') === 'aberto');
+    this.authService.getMe().subscribe({
+      next: (user) => this.usuarioLogado.set(user),
+      error: (err) => console.error('Erro ao buscar motorista:', err),
+    });
     this.carregar();
   }
 
@@ -101,17 +118,6 @@ export class DriverRoutes implements OnInit {
     });
   }
 
-  // "3 pontos" / "1 ponto"
-  pontos(rota: routeWithStops): string {
-    const total = rota.stops?.length ?? 0;
-    return total === 1 ? '1 ponto' : `${total} pontos`;
-  }
-
-  // alunos diferentes na rota (o mesmo aluno embarca e desce)
-  alunos(rota: routeWithStops): number {
-    return new Set((rota.stops ?? []).flatMap((s) => s.students.map((a) => a.studentId))).size;
-  }
-
   abrir(rota: routeWithStops) {
     this.router.navigate(['/driver-routes', rota.id]);
   }
@@ -146,7 +152,10 @@ export class DriverRoutes implements OnInit {
     });
   }
 
-  voltar() {
-    this.location.back();
+  fecharPerfil() {
+    this.mostrarPerfil.set(false);
+    if (this.route.snapshot.queryParamMap.has('perfil')) {
+      this.router.navigate([], { queryParams: {}, replaceUrl: true });
+    }
   }
 }

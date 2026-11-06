@@ -5,7 +5,6 @@ import { Signup } from './pages/auth/signup/signup';
 import { EmailCode } from './components/login-signup/email-code/email-code';
 import { HomeScreen } from './pages/responsible-home/home-screen';
 import { AddStudent } from './components/student/add-student/add-student';
-import { DriverHome } from './pages/driver-home/driver-home';
 import { DriverRoute } from './pages/driver-route/driver-route';
 import { StudentCode } from './components/student/student-code/student-code';
 import { Dependentes } from './components/student/dependentes/dependentes';
@@ -69,28 +68,29 @@ export const routes: Routes = [
     data: { rolesPermitted: ['ROLE_RESPONSIBLE'] },
   },
   {
+    // home do motorista: a lista das rotas pra criar e montar (casinha do rodape; o login cai aqui)
     path: 'driver-home',
-    component: DriverHome,
+    loadComponent: () => import('./pages/driver-routes/driver-routes').then((m) => m.DriverRoutes),
     canActivate: [routeGuard, roleGuard],
     data: { rolesPermitted: ['ROLE_DRIVER'] },
   },
   {
+    // a viagem precisa da rota: sem ela, a aba do meio mostra qual escolher
     path: 'driver-route',
-    component: DriverRoute,
-    canActivate: [routeGuard, roleGuard],
-    data: { rolesPermitted: ['ROLE_DRIVER'] },
+    redirectTo: 'driver-routes',
+    pathMatch: 'full',
   },
   {
-    // "Iniciar rota" do editor; a tela da viagem e refeita na etapa 8
+    // viagem do dia da rota: iniciar, continuar, em viagem e finalizar
     path: 'driver-route/:routeId',
     component: DriverRoute,
     canActivate: [routeGuard, roleGuard],
     data: { rolesPermitted: ['ROLE_DRIVER'] },
   },
   {
-    // "Minhas rotas": botao do meio do rodape do motorista e menu
+    // aba do meio do rodape do motorista: "Qual rota você vai fazer agora?" (iniciar a viagem)
     path: 'driver-routes',
-    loadComponent: () => import('./pages/driver-routes/driver-routes').then((m) => m.DriverRoutes),
+    loadComponent: () => import('./pages/driver-home/driver-home').then((m) => m.DriverHome),
     canActivate: [routeGuard, roleGuard],
     data: { rolesPermitted: ['ROLE_DRIVER'] },
   },
@@ -207,8 +207,64 @@ export const routes: Routes = [
     data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
   },
   {
-    // rota do motorista vista pelo responsavel (botao do meio do footer e card do mapa da home)
+    // sem a viagem nao tem o que acompanhar: a home mostra os filhos e o "Acompanhar"
+    // aba do meio sem viagem rodando: tela "Não há uma rota para acompanhar"
     path: 'responsible-route',
+    pathMatch: 'full',
+    loadComponent: () => import('./pages/responsible-route/sem-viagem').then((m) => m.SemViagem),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_RESPONSIBLE'] },
+  },
+  {
+    // grupos do motorista ("avisar o grupo")
+    path: 'driver-groups',
+    loadComponent: () => import('./pages/driver-groups/driver-groups').then((m) => m.DriverGroups),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
+  },
+  {
+    path: 'driver-groups/:groupId',
+    loadComponent: () => import('./pages/driver-group/driver-group').then((m) => m.DriverGroup),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
+  },
+  {
+    // historico de viagens (motorista: das viagens dele; responsavel: dos filhos)
+    path: 'trip-history',
+    loadComponent: () => import('./pages/trip-history/trip-history').then((m) => m.TripHistory),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+  },
+  {
+    path: 'trip-history/:tripId/ocorrencias',
+    loadComponent: () => import('./pages/trip-occurrences/trip-occurrences').then((m) => m.TripOccurrences),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+  },
+  {
+    // perfil do motorista visto pelo responsavel (do chat), com avaliacao
+    path: 'driver-profile/:driverId',
+    loadComponent: () => import('./pages/driver-profile/driver-profile').then((m) => m.DriverProfile),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_RESPONSIBLE'] },
+  },
+  {
+    // perfil do responsavel visto pelo motorista (do chat ou do contrato)
+    path: 'responsible-profile/:responsibleId',
+    loadComponent: () => import('./pages/responsible-profile/responsible-profile').then((m) => m.ResponsibleProfile),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
+  },
+  {
+    // filho em detalhe: foto, enderecos, responsaveis, rotas e faltas
+    path: 'student/:studentId',
+    loadComponent: () => import('./pages/student-detail/student-detail').then((m) => m.StudentDetail),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_RESPONSIBLE'] },
+  },
+  {
+    // acompanhar a viagem do filho (?aluno= diz qual filho, se tiver mais de um na viagem)
+    path: 'responsible-route/:tripId',
     loadComponent: () => import('./pages/responsible-route/responsible-route').then((m) => m.ResponsibleRoute),
     canActivate: [routeGuard, roleGuard],
     data: { rolesPermitted: ['ROLE_RESPONSIBLE'] },

@@ -1,13 +1,6 @@
 <div class="dependentes-container">
   <app-header titulo="Dependentes" (voltarEvent)="voltar()"></app-header>
 
-  <select [(ngModel)]="filtroRelationType" (change)="carregarDependentes()">
-    <option value="">Todos</option>
-    <option value="LEGAL">Legal</option>
-    <option value="FINANCIAL">Financeiro</option>
-    <option value="WITHDRAWAL">Retirada</option>
-  </select>
-
   <app-button texto="Adicionar dependente" tipo="primary" (clickEvent)="adicionarDependente()"></app-button>
 
   <div class="lista-dependentes">
@@ -20,43 +13,17 @@
     }
 
     @for (dep of dependentes(); track dep.id) {
-      <div class="dependente-card">
-        <div class="dependente-linha" (click)="toggleDependente(dep)">
-          @if (dep.photoUrl) {
-            <img class="dependente-avatar" [src]="dep.photoUrl" alt="" />
-          } @else {
-            <span class="dependente-avatar dependente-iniciais" aria-hidden="true">{{ iniciais(dep.name) }}</span>
-          }
-          <span class="dependente-nome">{{ dep.name }}</span>
-          <i class="bi" [class.bi-chevron-up]="dep.aberto" [class.bi-chevron-down]="!dep.aberto"></i>
-        </div>
-
-        @if (dep.aberto) {
-          <div class="dependente-detalhes">
-            <!-- vai pro topo do /student/:id na etapa do filho em detalhe -->
-            <app-student-photo
-              [studentId]="dep.id"
-              [nome]="dep.name"
-              [photoUrl]="dep.photoUrl"
-              [admin]="dep.admin"
-              [texto]="dep.admin ? 'Você é o admin: só você troca a foto.' : ''"
-              (fotoMudou)="fotoMudou(dep, $event)"
-            />
-            <p><strong>Observações:</strong> {{ dep.notes || '—' }}</p>
-            <p><strong>Data Nascimento:</strong> {{ dep.birthDate || '—' }}</p>
-
-            @if (dep.responsibles?.length) {
-              <p><strong>Responsáveis:</strong></p>
-              @for (resp of dep.responsibles; track resp.id) {
-                <div class="responsavel-linha">
-                  <img class="dependente-avatar-sm" [src]="resp.photoUrl || '/testee.jpg'" alt="" />
-                  <span>{{ resp.name }}</span>
-                </div>
-              }
-            }
-          </div>
+      <button type="button" class="dependente-card dependente-linha" (click)="abrirDependente(dep)">
+        @if (dep.photoUrl) {
+          <img class="dependente-avatar" [src]="dep.photoUrl" alt="" />
+        } @else {
+          <span class="dependente-avatar dependente-iniciais" aria-hidden="true">{{ iniciais(dep.name) }}</span>
         }
-      </div>
+        <span class="dependente-nome">{{ dep.name }}</span>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
     }
   </div>
+
+  <app-footer tipoUsuario="responsavel" />
 </div>

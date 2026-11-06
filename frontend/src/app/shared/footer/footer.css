@@ -1,4 +1,5 @@
-/* barra flutuante, igual em todas as telas */
+/* Figma "Rodapé/Motorista · Rotas" (1072:5168): barra de vidro flutuante, igual em todas as telas.
+   vidro liquido = fundo azul bem transparente + desfoque do que esta atras + borda branca e brilho no topo */
 .bottombar {
   position: fixed;
   left: 16px;
@@ -6,84 +7,151 @@
   bottom: calc(16px + env(safe-area-inset-bottom));
   z-index: 100;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 448px;
+  gap: 6px;
+  max-width: 400px;
+  height: 68px;
   margin: 0 auto;
-  padding: 6px;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+  border-radius: 98px;
+  background: rgba(29, 95, 161, 0.1);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
+  box-shadow:
+    0 6px 18px rgba(15, 23, 41, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.25);
   /* nome pra View Transition: o footer fica parado na troca de telas (styles.css) */
   view-transition-name: rodape;
 }
 
+/* as abas ficam por cima da pilula */
 .tab {
-  width: 60px;
-  height: 60px;
+  position: relative;
+  z-index: 1;
+}
+
+.tab {
+  flex: 1;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #D2DEEF;
   border: none;
-  border-radius: 12px;
+  border-radius: 65px;
+  background: transparent;
+  color: #45556c;
   cursor: pointer;
   transition:
     background-color var(--dur-media) ease,
-    transform var(--dur-rapida) ease,
-    box-shadow var(--dur-media) ease;
+    color var(--dur-media) ease,
+    transform var(--dur-rapida) ease;
 }
 
 /* toque: afunda de leve */
 .tab:active {
-  transform: scale(0.92);
+  transform: scale(0.94);
 }
 
+.tab:hover {
+  background: rgba(12, 102, 219, 0.07);
+}
+
+/* aba atual: o icone fica azul; o fundo e a pilula que desliza */
 .tab.active {
-  box-shadow: 0 4px 12px rgba(12, 102, 219, 0.3);
+  color: #0c66db;
+}
+
+.tab.active:hover {
+  background: transparent;
 }
 
 .tab i {
-  font-size: 24px;
-  color: #0C66DB;
-  transition: color var(--dur-media) ease, transform var(--dur-media) var(--ease-suave);
+  font-size: 26px;
 }
 
-.tab.active i {
-  transform: scale(1.08);
-}
-
-.tab.active,
-.tab:hover {
-  background-color: #0C66DB;
-}
-
+/* chegou na aba: o icone cresce de leve */
 .tab.active i,
-.tab:hover i {
-  color: #ffffff;
+.tab.active .icone-rota {
+  animation: chegou 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.tab:focus-visible {
-  outline: 2px solid #0C66DB;
-  outline-offset: 2px;
+@keyframes chegou {
+  from { transform: scale(0.88); }
+  to { transform: scale(1.06); }
 }
 
-/* icone de rota do motorista (Figma "Rodapé/Motorista · Rotas"): o SVG vira mascara pra seguir a cor da aba */
+/* icone de rota do motorista (public/rota.svg): o SVG vira mascara pra seguir a cor da aba */
 .icone-rota {
-  width: 28px;
-  height: 28px;
-  background-color: #0C66DB;
+  display: block;
+  width: 32px;
+  height: 32px;
+  background-color: currentColor;
   -webkit-mask: url('/rota.svg') center / contain no-repeat;
   mask: url('/rota.svg') center / contain no-repeat;
-  transition: background-color var(--dur-media) ease, transform var(--dur-media) var(--ease-suave);
 }
 
-.tab.active .icone-rota {
-  transform: scale(1.08);
+/* Figma rgba(12,102,219,0.15). --para = aba atual (0, 1, 2); --de = de onde veio */
+.pilula {
+  --largura: calc((100% - 12px) / 3);
+  --passo: calc(var(--largura) + 6px);
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--para) * var(--passo));
+  right: calc((2 - var(--para)) * var(--passo));
+  border-radius: 65px;
+  background: rgba(12, 102, 219, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  pointer-events: none;
 }
 
-.tab.active .icone-rota,
-.tab:hover .icone-rota {
-  background-color: #ffffff;
+/* desliza de --de ate --para: a borda da frente chega antes e a de tras acompanha,
+   entao a pilula estica de leve no caminho e assenta ao chegar */
+.pilula.anda {
+  animation: pilula-esquerda 650ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.pilula.anda.direita {
+  animation-name: pilula-direita;
+}
+
+@keyframes pilula-direita {
+  0% {
+    left: calc(var(--de) * var(--passo));
+    right: calc((2 - var(--de)) * var(--passo));
+  }
+  55% {
+    left: calc((var(--de) + (var(--para) - var(--de)) * 0.4) * var(--passo));
+    right: calc((2 - var(--para)) * var(--passo));
+  }
+  100% {
+    left: calc(var(--para) * var(--passo));
+    right: calc((2 - var(--para)) * var(--passo));
+  }
+}
+
+@keyframes pilula-esquerda {
+  0% {
+    left: calc(var(--de) * var(--passo));
+    right: calc((2 - var(--de)) * var(--passo));
+  }
+  55% {
+    left: calc(var(--para) * var(--passo));
+    right: calc((2 - var(--de) + (var(--de) - var(--para)) * 0.4) * var(--passo));
+  }
+  100% {
+    left: calc(var(--para) * var(--passo));
+    right: calc((2 - var(--para)) * var(--passo));
+  }
+}
+
+/* quem pede menos movimento: sem deslizar nem pulinho */
+@media (prefers-reduced-motion: reduce) {
+  .pilula.anda {
+    animation: none;
+  }
+
+  .tab.active i,
+  .tab.active .icone-rota {
+    animation: none;
+  }
 }

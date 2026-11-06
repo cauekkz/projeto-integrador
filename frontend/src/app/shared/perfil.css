@@ -1,0 +1,124 @@
+/* pecas dos perfis vistos pelo outro lado (Figma 1057:635 motorista, 1057:1059 responsavel) */
+.conteudo {
+  gap: 16px;
+}
+
+.quem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.quem .foto {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.quem.pequeno .foto {
+  width: 48px;
+  height: 48px;
+}
+
+.quem h1 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.quem.pequeno strong {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.desde {
+  font-size: 13px;
+  color: #45556c;
+}
+
+.foto.iniciais {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #afd9f7;
+  background: #eff8fe;
+  color: #0a54b5;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.quem.pequeno .foto.iniciais {
+  font-size: 16px;
+}
+
+.secao {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.secao h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.cartao {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.cartao strong {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.cartao small {
+  font-size: 12px;
+  color: #62748e;
+}
+
+.selo {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 13px;
+}
+
+.selo.agendado { background: #eff8fe; color: #0a54b5; }
+.selo.ativo, .selo.em-dia { background: #ecfdf5; color: #047857; }
+.selo.pendente { background: #fffbeb; color: #b45309; }
+.selo.inativo { background: #f1f5f9; color: #475569; }
+.selo.cancelado, .selo.atrasada { background: #fef2f2; color: #b91c1c; }
+
+/* botao azul no fim da tela */
+.rodape-acao {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.rodape-acao.fixo {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.sub {
+  font-size: 13px;
+  color: #62748e;
+}

@@ -44,3 +44,45 @@ export interface getMyChildrenRequest extends PageRequest {
   isAdmin?: boolean;
   studentName?: string;
 }
+
+// endereco gravado no back (AddressResponseDTO)
+export interface addressResponse {
+  id: string;
+  street: string;
+  zipCode: string;
+  city: string;
+  neighborhood: string | null;
+  number: number | null;
+  state: string | null;
+  latitude: number | null;
+  longitude: number | null;
+}
+
+// GET /api/student/{id}/addresses: id = studentAddressId (o do DELETE), apelido e o endereco
+export interface studentPlace {
+  id: string;
+  label: string | null;
+  address: addressResponse;
+}
+
+// POST /api/student/{id}/addresses: endereco novo (address) OU um da familia (addressId)
+export interface studentAddressRequest {
+  label: string;
+  address?: addressRequest;
+  addressId?: string;
+}
+
+// GET /api/student/{id}/responsibles (responsibleId = id do usuario)
+export interface studentResponsibleLink {
+  responsibleId: string;
+  name: string;
+  relationType: 'LEGAL' | 'FINANCIAL' | 'WITHDRAWAL';
+  admin: boolean;
+}
+
+// "R. Libertadores, 2026 · Ipiranga, São Paulo"
+export function enderecoEmLinha(a: addressResponse): string {
+  const rua = a.number != null ? `${a.street}, ${a.number}` : a.street;
+  const lugar = [a.neighborhood, a.city].filter(Boolean).join(', ');
+  return lugar ? `${rua} · ${lugar}` : rua;
+}

@@ -25,12 +25,15 @@
       </section>
 
       <section class="card" animate.enter="entrar-subindo" style="--i: 1">
-        <div class="pessoa">
-          <span class="iniciais" aria-hidden="true">{{ iniciais(c.responsibleName) }}</span>
+        <!-- a outra pessoa do contrato: o motorista ve o responsavel, o responsavel ve o motorista; tocar abre o perfil -->
+        @let outroNome = ehMotorista ? c.responsibleName : c.driverName;
+        <div class="pessoa clicavel" role="link" tabindex="0" (click)="abrirPerfil(c)" (keydown.enter)="abrirPerfil(c)">
+          <span class="iniciais" aria-hidden="true">{{ iniciais(outroNome) }}</span>
           <div>
-            <span class="rotulo">Responsável</span>
-            <strong>{{ c.responsibleName }}</strong>
+            <span class="rotulo">{{ ehMotorista ? 'Responsável' : 'Motorista' }}</span>
+            <strong>{{ outroNome }}</strong>
           </div>
+          <i class="bi bi-chevron-right seta-perfil" aria-hidden="true"></i>
         </div>
         <hr class="divisor">
         <div class="pessoa">

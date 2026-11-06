@@ -4,8 +4,10 @@
     <button class="back-button" type="button" aria-label="Voltar" (click)="voltar()">
       <i class="bi bi-chevron-left"></i>
     </button>
-    <img [src]="fotoContato" class="contato-avatar" alt="">
-    <span class="contato-nome">{{ nomeContato }}</span>
+    <button type="button" class="contato" [disabled]="!idContato" [attr.aria-label]="'Ver o perfil de ' + nomeContato" (click)="abrirPerfilContato()">
+      <img [src]="fotoContato" class="contato-avatar" alt="">
+      <span class="contato-nome">{{ nomeContato }}</span>
+    </button>
     <button class="contrato-btn">
       <i class="bi bi-file-earmark-text"></i>
     </button>

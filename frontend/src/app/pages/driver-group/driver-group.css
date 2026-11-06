@@ -1,0 +1,98 @@
+.links {
+  display: flex;
+  gap: 16px;
+}
+
+.link-azul,
+.link-vermelho {
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.link-azul {
+  color: #0c66db;
+}
+
+.link-vermelho {
+  color: #e7000b;
+}
+
+.titulo-secao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.titulo-secao h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.cartao-aluno {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.foto {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.foto.iniciais {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #afd9f7;
+  background: #eff8fe;
+  color: #0a54b5;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.nome {
+  flex: 1;
+  font-size: 15px;
+  color: #0f172a;
+}
+
+.lixeira {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 12px;
+  background: #e7000b;
+  color: #ffffff;
+  font-size: 17px;
+  cursor: pointer;
+}
+
+.lixeira:hover {
+  background: #c10007;
+}
+
+.rodape-acao {
+  margin-top: auto;
+  padding-top: 16px;
+}
+
+.sub {
+  font-size: 13px;
+  color: #62748e;
+}

@@ -1,81 +1,30 @@
-<div class="screen">
-  <div class="topbar">
-    <div class="notif-wrapper sino-clicavel" role="button" tabindex="0" aria-label="Abrir notificações" (click)="notificacoes.abrirTela()" (keydown.enter)="notificacoes.abrirTela()">
-      <div class="bell-btn">
-        <i class="bi bi-bell"></i>
+<div class="pagina">
+  <app-trail-header [trilha]="['Motorista', 'Viagem']" [mostrarSino]="true" (voltarEvent)="irParaRotas()" />
+  <main class="conteudo">
+    @if (carregando()) {
+      <p class="aviso" role="status">Carregando rotas...</p>
+    } @else if (erroCarregar()) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar as rotas.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
       </div>
-      @if (notificacoes.naoLidas()) {
-        <span class="badge" [attr.aria-label]="notificacoes.naoLidas() + ' notificações não lidas'">{{ notificacoes.rotulo() }}</span>
-      }
-    </div>
+    } @else if (!rotas().length) {
+      <section class="vazio" animate.enter="entrar-fade">
+        <h2>Você ainda não tem rotas</h2>
+        <p>Crie uma rota para cada trajeto e monte com os seus alunos.</p>
+        <button type="button" class="btn btn-azul" (click)="irParaRotas()">Criar rota</button>
+      </section>
+    } @else {
+      <h1 class="titulo">Qual rota você vai fazer agora?</h1>
+      <ul class="lista">
+        @for (rota of rotas(); track rota.id; let i = $index) {
+          <li animate.enter="entrar-subindo" [style.--i]="i">
+            <app-route-card [nome]="rota.name" [paradas]="rota.stops" (abrir)="abrirRota(rota)" />
+          </li>
+        }
+      </ul>
+    }
+  </main>
 
-    <div class="user-info" (click)="irParaPerfil()">
-      <img [src]="usuarioLogado?.photoUrl || '/testee.jpg'" class="avatar" alt="Foto do motorista">
-      <span class="name">{{ usuarioLogado?.name || 'Gustavo Gomez' }}</span>
-    </div>
-
-    <span class="role">Motorista</span>
-  </div>
-
-  <!-- component -->
-  <div class="content">
-    <div class="rota-link" (click)="irParaRota()">
-      <div class="driver-card-wrapper">
-        <div class="status-top">
-          <span class="dot"></span>
-          <span class="status-text">Em rota</span>
-        </div>
-
-        <div class="rota-card">
-          <div class="mapa-preview">
-            <img
-              src="/mapa-placeholder.png"
-              alt="Mapa da rota"
-              class="mapa-img"
-            />
-          </div>
-
-          <div class="rota-footer">
-            <p class="rota-titulo">Indo para casa de Andreas Pereira</p>
-            <p class="rota-subtitulo">Você tem 3 passageiros</p>
-          </div>
-
-          <div class="metrics-card">
-            <div class="metrics-grid">
-              <div class="metric-box">
-                <i class="bi bi-people-fill"></i>
-                <span>3</span>
-              </div>
-
-              <div class="metric-box">
-                <i class="bi bi-geo-alt-fill"></i>
-                <span>6 km</span>
-              </div>
-
-              <div class="metric-box">
-                <i class="bi bi-clock-fill"></i>
-                <span>22 min</span>
-              </div>
-            </div>
-
-            <div class="chat-btn" (click)="irParaChat(); $event.stopPropagation()">
-              <i class="bi bi-chat-dots-fill"></i>
-              <!--  <span class="chat-badge"></span>... -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <app-footer tipoUsuario="motorista" abaAtiva="home"></app-footer>
+  <app-footer tipoUsuario="motorista" />
 </div>
-
-@if (mostrarPerfil) {
-  <app-profile-select
-    animate.leave="sair-perfil"
-    tipoUsuario="motorista"
-    [usuario]="usuarioLogado"
-    (fecharEvent)="fecharPerfil()"
-  />
-}

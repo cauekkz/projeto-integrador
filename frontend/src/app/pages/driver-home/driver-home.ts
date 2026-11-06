@@ -1,63 +1,53 @@
-import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
-import { NotificationService } from '../../services/notification.service';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { Footer } from '../../shared/footer/footer';
-import { ProfileSelect } from '../../components/profile-select/profile-select';
-import { AuthService } from '../../services/auth.service';
-import { UserMe } from '../../models/user.model';
+import { TrailHeader } from '../../shared/trail-header/trail-header';
+import { RouteCard } from '../../components/route/route-card/route-card';
+import { RouteService } from '../../services/route.service';
+import { routeWithStops } from '../../services/dto/route/route.dto';
 
+// aba do meio do motorista (/driver-routes): "Qual rota você vai fazer agora?" abre a viagem do dia da rota.
+// a lista pra montar as rotas e a home (/driver-home, pages/driver-routes)
 @Component({
   selector: 'app-driver-home',
   standalone: true,
-  imports: [Footer, ProfileSelect],
+  imports: [Footer, TrailHeader, RouteCard],
   templateUrl: './driver-home.html',
-  styleUrl: './driver-home.css',
+  styleUrls: ['../../shared/folha.css', './driver-home.css'],
 })
 export class DriverHome implements OnInit {
-  temRota = true;
-  mostrarPerfil = false;
-  usuarioLogado: UserMe | null = null;
+  private router = inject(Router);
+  private routeService = inject(RouteService);
 
-  // badge do sino: nao lidas de verdade (GET /api/notifications/unread-count + WebSocket)
-  protected notificacoes = inject(NotificationService);
-
-  constructor(
-    private router: Router,
-    private authService: AuthService,
-    private cdr: ChangeDetectorRef,
-    private route: ActivatedRoute,
-  ) {}
+  protected rotas = signal<routeWithStops[]>([]);
+  protected carregando = signal(true);
+  protected erroCarregar = signal(false);
 
   ngOnInit() {
-    this.notificacoes.iniciar();
-    // voltando de "codigo de conversa"/"vincular motorista" reabre o painel do perfil
-    this.mostrarPerfil = this.route.snapshot.queryParamMap.get('perfil') === 'aberto';
+    this.carregar();
+  }
 
-    this.authService.getMe().subscribe({
-      next: (user) => {
-        this.usuarioLogado = user;
-        this.cdr.detectChanges();
+  carregar() {
+    this.carregando.set(true);
+    this.erroCarregar.set(false);
+    this.routeService.getMyRoutes({ active: true, size: 50 }).subscribe({
+      next: (pagina) => {
+        this.rotas.set(pagina.content ?? []);
+        this.carregando.set(false);
       },
-      error: (err) => console.error('Erro ao buscar motorista:', err),
+      error: () => {
+        this.erroCarregar.set(true);
+        this.carregando.set(false);
+      },
     });
   }
 
-  irParaRota() {
-    this.router.navigate(['/driver-route']);
+  abrirRota(rota: routeWithStops) {
+    this.router.navigate(['/driver-route', rota.id]);
   }
 
-  irParaPerfil() {
-    this.mostrarPerfil = true;
-  }
-
-  irParaChat() {
-    this.router.navigate(['/chat'], { queryParams: { from: 'driver-home' } });
-  }
-
-  fecharPerfil() {
-    this.mostrarPerfil = false;
-    if (this.route.snapshot.queryParamMap.has('perfil')) {
-      this.router.navigate([], { queryParams: {}, replaceUrl: true });
-    }
+  // sem rotas (ou voltar): a home, onde ele cria e monta as rotas
+  irParaRotas() {
+    this.router.navigate(['/driver-home']);
   }
 }

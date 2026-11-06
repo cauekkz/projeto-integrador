@@ -1,0 +1,94 @@
+<div class="pagina">
+  @if (ehMotorista) {
+    <app-trail-header [trilha]="['Motorista', 'Histórico']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+  } @else {
+    <app-header titulo="Histórico de viagens" (voltarEvent)="voltar()" />
+  }
+
+  <div>
+    <button type="button" class="chip filtrar" [class.ativo]="filtroAtivo()" (click)="abrirFiltro()">Filtrar</button>
+  </div>
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <p class="aviso" role="status">Carregando histórico...</p>
+    } @else if (erroCarregar()) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar o histórico.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else if (!itens().length) {
+      <section class="vazio" animate.enter="entrar-fade">
+        <h2>Nenhuma viagem aqui</h2>
+        <p>As viagens aparecem depois que começam.</p>
+      </section>
+    } @else {
+      @for (item of itens(); track item.tripId + item.studentId; let i = $index) {
+        @let s = selo(item);
+        <article class="cartao" animate.enter="entrar-subindo" [style.--i]="i % 10">
+          <div class="topo">
+            <div>
+              <strong>{{ item.studentName }}</strong>
+              <small>{{ diaEMes(item.date) }} · {{ item.routeName }}</small>
+            </div>
+            <span [class]="'selo ' + s.classe">{{ s.texto }}</span>
+          </div>
+          <p class="detalhe">{{ detalhe(item) }}</p>
+          @if (item.occurrences > 0) {
+            <button type="button" class="ocorrencias" (click)="abrirOcorrencias(item)">
+              <span>{{ ocorrencias(item.occurrences) }}</span>
+              <i class="bi bi-chevron-right" aria-hidden="true"></i>
+            </button>
+          }
+        </article>
+      }
+      @if (carregandoMais()) {
+        <p class="aviso" role="status">Carregando mais...</p>
+      }
+    }
+    <div #fimDaLista class="fim" aria-hidden="true"></div>
+  </main>
+
+  <app-footer [tipoUsuario]="ehMotorista ? 'motorista' : 'responsavel'" />
+</div>
+
+<!-- Figma 1058:1466 (motorista) e 1058:1748 (responsável) -->
+@if (filtroAberto()) {
+  <div class="fundo" animate.enter="entrar-fade" (click)="fecharFiltro()">
+    <form class="folha" role="dialog" aria-modal="true" aria-labelledby="filtro-titulo" (click)="$event.stopPropagation()" (ngSubmit)="aplicarFiltro()">
+      <h2 id="filtro-titulo">Filtrar histórico</h2>
+
+      <label for="filtro-aluno">{{ ehMotorista ? 'Aluno' : 'Filho' }}</label>
+      <select id="filtro-aluno" name="aluno" [(ngModel)]="rascunho.studentId">
+        <option value="">{{ ehMotorista ? 'Todos os alunos' : 'Todos os filhos' }}</option>
+        @for (a of alunos(); track a.id) {
+          <option [value]="a.id">{{ a.nome }}</option>
+        }
+      </select>
+
+      @if (ehMotorista) {
+        <label for="filtro-rota">Rota</label>
+        <select id="filtro-rota" name="rota" [(ngModel)]="rascunho.routeId">
+          <option value="">Todas as rotas</option>
+          @for (r of rotas(); track r.id) {
+            <option [value]="r.id">{{ r.nome }}</option>
+          }
+        </select>
+      }
+
+      <div class="periodo">
+        <div>
+          <label for="filtro-de">De</label>
+          <input id="filtro-de" name="de" type="date" [(ngModel)]="rascunho.from" />
+        </div>
+        <div>
+          <label for="filtro-ate">Até</label>
+          <input id="filtro-ate" name="ate" type="date" [(ngModel)]="rascunho.to" />
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-azul">Aplicar filtros</button>
+      <button type="button" class="btn btn-contorno" (click)="limparFiltro()">Limpar</button>
+    </form>
+  </div>
+}

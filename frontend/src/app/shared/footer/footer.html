@@ -1,4 +1,16 @@
 <nav class="bottombar" aria-label="Navegação principal">
+  <!-- pilula azul que desliza ate a aba atual (esticando como liquido) -->
+  @if (posicao() !== null) {
+    @for (k of [chave()]; track k) {
+      <span
+        class="pilula"
+        [class.anda]="origem() !== null"
+        [class.direita]="origem() !== null && origem()! < posicao()!"
+        [style.--de]="origem() ?? posicao()"
+        [style.--para]="posicao()"
+        aria-hidden="true"></span>
+    }
+  }
   <button
     type="button"
     class="tab"
@@ -18,7 +30,7 @@
       <!-- icone de rota do Figma (public/rota.svg), pintado pela cor da aba -->
       <span class="icone-rota" aria-hidden="true"></span>
     } @else {
-      <i class="bi bi-truck-front-fill" aria-hidden="true"></i>
+      <i class="bi bi-truck" aria-hidden="true"></i>
     }
   </button>
 
@@ -28,6 +40,6 @@
     aria-label="Conversas"
     [class.active]="abaAtiva === 'config'"
     (click)="selecionarAba('config')">
-    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+    <i class="bi bi-chat-dots" aria-hidden="true"></i>
   </button>
 </nav>

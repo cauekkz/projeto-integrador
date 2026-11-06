@@ -304,4 +304,10 @@ export class ContractView implements OnInit {
       this.location.back();
     }
   }
+
+  // motorista abre o perfil do responsavel; responsavel abre o do motorista
+  abrirPerfil(c: { driverId: string; responsibleId: string }) {
+    if (this.ehMotorista) this.router.navigate(['/responsible-profile', c.responsibleId]);
+    else this.router.navigate(['/driver-profile', c.driverId]);
+  }
 }

@@ -28,7 +28,7 @@
         <span>Adicionar escola</span>
       </button>
 
-      <button class="menu-item" (click)="irPara('/driver-routes')">
+      <button class="menu-item" (click)="irPara('/driver-home')">
         <i class="bi bi-signpost-split"></i>
         <span>Minhas rotas</span>
       </button>
@@ -41,6 +41,11 @@
       <button class="menu-item" (click)="irPara('/driver-pix')">
         <i class="bi bi-qr-code"></i>
         <span>Chave Pix</span>
+      </button>
+
+      <button class="menu-item" (click)="irPara('/driver-groups')">
+        <i class="bi bi-people"></i>
+        <span>Grupos</span>
       </button>
     }
 
@@ -59,6 +64,11 @@
     <button class="menu-item" (click)="irPara('/payments')">
       <i class="bi bi-receipt"></i>
       <span>Parcelas</span>
+    </button>
+
+    <button class="menu-item" (click)="irPara('/trip-history')">
+      <i class="bi bi-clock-history"></i>
+      <span>Histórico de viagens</span>
     </button>
 
     <button class="menu-item danger" (click)="sairDaConta()">

@@ -34,6 +34,8 @@ export class ChatDetails implements OnInit, OnDestroy {
   chatId = '';
   mensagem = '';
   nomeContato = 'Contato';
+  // id do outro (perfil dele ao tocar no nome)
+  idContato: string | null = null;
   fotoContato = '/testee.jpg';
   origem = 'responsible-home';
   usuarioLogadoId = '';
@@ -114,10 +116,12 @@ export class ChatDetails implements OnInit, OnDestroy {
     ) as {
       nomeContato?: string;
       fotoContato?: string;
+      idContato?: string;
     } | undefined;
 
     this.nomeContato = state?.nomeContato || this.nomeContato;
     this.fotoContato = state?.fotoContato || this.fotoContato;
+    this.idContato = state?.idContato || null;
 
     if (!this.chatId) {
       return;
@@ -126,7 +130,8 @@ export class ChatDetails implements OnInit, OnDestroy {
     this.notificacoes.marcarConversaVista(this.chatId);
 
     // entrou sem passar pela lista (ou a foto ainda nao tinha carregado la): busca nome e foto do contato
-    if (!state?.nomeContato || this.fotoContato === '/testee.jpg') {
+    // sem o id do contato o toque no nome nao abre o perfil: busca tambem nesse caso
+    if (!state?.nomeContato || this.fotoContato === '/testee.jpg' || !this.idContato) {
       this.carregarNomeContato();
     }
 
@@ -202,6 +207,13 @@ export class ChatDetails implements OnInit, OnDestroy {
     this.chatService.markAsRead(this.chatId).subscribe({ error: () => {} });
   }
 
+  // responsavel abre o perfil do motorista; motorista abre o do responsavel
+  abrirPerfilContato() {
+    if (!this.idContato) return;
+    const souMotorista = this.authService.getRolesFromToken().includes('ROLE_DRIVER');
+    this.router.navigate([souMotorista ? '/responsible-profile' : '/driver-profile', this.idContato]);
+  }
+
   private carregarNomeContato() {
     this.chatService.getChats(0, 50).subscribe({
       next: (page) => {
@@ -209,6 +221,7 @@ export class ChatDetails implements OnInit, OnDestroy {
           (item) => item.id === this.chatId
         );
 
+        if (chat?.otherUserId) this.idContato = chat.otherUserId;
         if (chat?.otherUserName) {
           this.nomeContato = chat.otherUserName;
           this.cdr.markForCheck();

@@ -1,71 +1,92 @@
 /* pagina, botoes e folha vem de shared/folha.css; chip e campo de shared/rota.css */
 
+.pagina {
+  padding-top: 16px;
+}
+
+/* topo de sempre (sino, foto e nome, "Motorista") */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 3px;
+}
+
+.notif-wrapper {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.bell-btn {
+  width: 50px;
+  height: 50px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #1f2937;
+  border: 0.8px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ef4444;
+  color: #ffffff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 5px;
+}
+
+.user-info {
+  display: flex;
+  width: 180px;
+  height: 50px;
+  padding: 4px 12px 4px 4px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  border: 0.8px solid #e2e8f0;
+  background: #ffffff;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.role {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+
 .lista {
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 12px;
-}
-
-/* Figma "Cartão de rota" 1038:648 */
-.cartao {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  min-height: 80px;
-  padding: 20px;
-  border: 0.8px solid #e2e8f0;
-  border-radius: 14px;
-  background: #ffffff;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: var(--transicao-botao);
-}
-
-.cartao:hover {
-  background: #f8fafc;
-}
-
-.cartao .textos {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.cartao small {
-  font-size: 13px;
-  color: #62748e;
-}
-
-.cartao strong {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0f172a;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.alunos {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 16px;
-  font-weight: 700;
-  color: #475569;
-}
-
-.alunos i {
-  font-size: 18px;
-}
-
-.seta {
-  font-size: 16px;
-  color: #62748e;
 }
 
 .vazio {
