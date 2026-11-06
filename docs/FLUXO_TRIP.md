@@ -358,7 +358,7 @@ Cada ponto traz o endereço (`street`, `number`, `neighborhood`) e o nome das es
 | `PAYMENT` | o motorista confirma ou cancela uma parcela | o responsável do contrato | "Pagamento confirmado" / "Parcela cancelada" | `paymentId`, `contractId` |
 | `DRIVER_NOTICE` | o motorista avisa um grupo (`POST /api/driver/groups/{id}/notice`) | os pais dos alunos do grupo | "Aviso do motorista" / "Carlos avisou que não vai buscar Ana hoje. Motivo: ..." | `groupId`, `driverId`, `date`, `studentIds` |
 
-- "Pais" são **todos os responsáveis** do aluno, não só o principal. Quem o admin remove do aluno (ou sai sozinho) deixa de receber na hora e perde o acesso às viagens, à localização e ao histórico (`docs/FLUXO_FRONT.md`, seção 6.3.3).
+- "Pais" são **todos os responsáveis** do aluno, não só o principal. Quem o admin remove do aluno (ou sai sozinho) deixa de receber na hora e perde o acesso às viagens, à localização e ao histórico.
 - **Irmãos viram uma notificação só:** "A van está indo buscar Ana e Caio".
 - O `payload` serve pro app abrir a tela certa: com `tripId`, abre o acompanhamento; com `contractId`, o contrato.
 

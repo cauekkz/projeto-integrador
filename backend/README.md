@@ -3,7 +3,7 @@
 Guia para quem consome a API, principalmente o front. Para cada endpoint, mostra **o que mandar**, **o que volta** e **as regras**.
 
 Outros guias:
-- **[`docs/FLUXO_FRONT.md`](../docs/FLUXO_FRONT.md)**: como montar o front (telas, a ordem das chamadas, os WebSockets e a renovação do token);
+- **[`docs/FLUXO_FRONT.md`](../docs/FLUXO_FRONT.md)**: o que ainda falta no front e a situação da responsividade;
 - [`docs/FLUXO_ROTA.md`](../docs/FLUXO_ROTA.md): endereços, rota e pontos, do cadastro até a rota pronta (cada entidade, DTO e verificação);
 - [`docs/FLUXO_TRIP.md`](../docs/FLUXO_TRIP.md): execução da rota, faltas e notificações, com todas as entradas e saídas;
 - [`docs/FLUXO_CONTRATO.md`](../docs/FLUXO_CONTRATO.md): contrato passo a passo (com a assinatura);
@@ -212,7 +212,7 @@ Regras (no `add-student` e também no `move`, que muda o aluno de ponto):
 
 O caso comum é **um** embarque e **um** desembarque, sem dias.
 
-O que o front precisa mudar está em [`docs/FLUXO_FRONT.md`, seções 6.2.5 (rotas) e 6.3.2 (endereços do filho)](../docs/FLUXO_FRONT.md).
+O passo a passo da rota e dos endereços está em [`docs/FLUXO_ROTA.md`](../docs/FLUXO_ROTA.md).
 
 ### Ajustes
 | Endpoint | Corpo | O que faz |
@@ -512,7 +512,7 @@ Quem pode baixar:
   - a CNH tem que estar válida, ser **D ou E**, e o motorista ter **21 anos ou mais**: senão `422` com a mensagem;
   - o PDF da CNH não é guardado.
 - **Login** (`POST /api/auth/login`): CPF inexistente e senha errada dão o mesmo `401`; "Verifique seu e-mail" (`400`) só aparece com a senha certa. 5 senhas erradas no mesmo CPF (ou 30 no mesmo IP) bloqueiam por 15 minutos (`429`).
-- **Responsáveis do aluno:** `GET /api/student/{studentId}/responsibles` (qualquer responsável do aluno), `DELETE /api/student/{studentId}/responsibles/{responsibleId}` (o admin remove outro, ou a pessoa sai; o admin passa o admin antes) e `PUT /api/student/{studentId}/responsibles/{responsibleId}/admin` (o admin passa o admin). Quem tem contrato ou proposta em andamento com o aluno não sai (`409`). Detalhes em `docs/FLUXO_FRONT.md`, seção 6.3.3.
+- **Responsáveis do aluno:** `GET /api/student/{studentId}/responsibles` (qualquer responsável do aluno), `DELETE /api/student/{studentId}/responsibles/{responsibleId}` (o admin remove outro, ou a pessoa sai; o admin passa o admin antes) e `PUT /api/student/{studentId}/responsibles/{responsibleId}/admin` (o admin passa o admin). Quem tem contrato ou proposta em andamento com o aluno não sai (`409`).
 - **Termos:** quando sai uma versão nova, o resto da API responde `403` `TERMS_NOT_ACCEPTED` até a pessoa aceitar (`POST /api/terms/accept`).
 - **Papel do usuário:** cada usuário tem **um** papel (`ROLE_DRIVER`, `ROLE_RESPONSIBLE` ou `ROLE_ADMIN`), na coluna `users.role`. Ele vai no JWT, na claim `roles` (ex.: `["ROLE_DRIVER"]`), e no `GET /api/users/me`.
 - **Escola** (`POST /api/school/add-school`): se a escola (nome + rua) já existe, o motorista é **vinculado** a ela. `409` se já estiver vinculado.
