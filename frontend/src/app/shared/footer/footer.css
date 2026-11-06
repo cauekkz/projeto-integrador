@@ -68,3 +68,22 @@
   outline: 2px solid #0C66DB;
   outline-offset: 2px;
 }
+
+/* icone de rota do motorista (Figma "Rodapé/Motorista · Rotas"): o SVG vira mascara pra seguir a cor da aba */
+.icone-rota {
+  width: 28px;
+  height: 28px;
+  background-color: #0C66DB;
+  -webkit-mask: url('/rota.svg') center / contain no-repeat;
+  mask: url('/rota.svg') center / contain no-repeat;
+  transition: background-color var(--dur-media) ease, transform var(--dur-media) var(--ease-suave);
+}
+
+.tab.active .icone-rota {
+  transform: scale(1.08);
+}
+
+.tab.active .icone-rota,
+.tab:hover .icone-rota {
+  background-color: #ffffff;
+}

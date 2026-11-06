@@ -1,0 +1,128 @@
+<div class="tela-cheia" role="dialog" aria-modal="true" aria-labelledby="adicionar-titulo" animate.enter="entrar-fade">
+  <header class="cabecalho">
+    <button type="button" class="voltar" aria-label="Voltar" [disabled]="enviando()" (click)="voltar()">
+      <i class="bi bi-chevron-left" aria-hidden="true"></i>
+    </button>
+    <h1 id="adicionar-titulo">Adicionar aluno</h1>
+  </header>
+
+  <p class="passo">Passo {{ passo() }} de 3</p>
+
+  @switch (passo()) {
+    @case (1) {
+      <!-- Figma "1 escolher aluno" -->
+      <h2>Qual aluno?</h2>
+      <p class="sub">Só aparecem alunos com contrato ativo com você.</p>
+      @if (!alunos().length) {
+        <p class="aviso">Nenhum aluno com contrato ativo. O aluno entra aqui quando o contrato começa.</p>
+      }
+      <ul class="opcoes">
+        @for (a of alunos(); track a.studentId) {
+          <li>
+            <button type="button" class="opcao" [class.marcada]="aluno() === a" [attr.aria-pressed]="aluno() === a" (click)="escolherAluno(a)">
+              <span class="marca"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
+              <span class="textos">
+                <strong>{{ a.studentName }}</strong>
+                <small>{{ totalEnderecos(a) }}</small>
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+      <div class="acoes">
+        <button type="button" class="btn btn-azul" [disabled]="!aluno()" (click)="continuar()">Continuar</button>
+      </div>
+    }
+
+    @case (2) {
+      <!-- Figma "2 ação e local" -->
+      <h2>{{ aluno()?.studentName }}</h2>
+
+      <p class="rotulo">Ação</p>
+      <div class="chips">
+        <button type="button" class="chip" [class.ativo]="acao() === 'BOARDING'" (click)="acao.set('BOARDING')">Embarque</button>
+        <button type="button" class="chip" [class.ativo]="acao() === 'ALIGHTING'" (click)="acao.set('ALIGHTING')">Desembarque</button>
+      </div>
+
+      <p class="rotulo">Local</p>
+      <div class="chips">
+        <button type="button" class="chip" [class.ativo]="local() === 'HOME'" (click)="escolherLocal('HOME')">Casa</button>
+        <button type="button" class="chip" [class.ativo]="local() === 'OTHER'" (click)="escolherLocal('OTHER')">Outro lugar</button>
+        <button type="button" class="chip" [class.ativo]="local() === 'SCHOOL'" (click)="escolherLocal('SCHOOL')">Escola</button>
+      </div>
+
+      @if (local() === 'SCHOOL') {
+        <p class="ajuda">A escola é a do contrato do aluno.</p>
+      } @else {
+        <p class="rotulo">Endereço</p>
+        <ul class="opcoes">
+          @for (e of aluno()?.addresses ?? []; track e.id) {
+            <li>
+              <button type="button" class="opcao" [class.marcada]="endereco() === e" [attr.aria-pressed]="endereco() === e" (click)="endereco.set(e)">
+                <span class="marca"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
+                <span class="textos">
+                  <strong>{{ e.label }}</strong>
+                  <small>{{ linhaEndereco(e) }}</small>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      <p class="rotulo">Dias da semana</p>
+      <div class="chips">
+        @for (d of dias; track d.dia) {
+          <button type="button" class="chip" [class.ativo]="diasMarcados().includes(d.dia)" [attr.aria-pressed]="diasMarcados().includes(d.dia)" (click)="alternarDia(d.dia)">
+            {{ d.curto }}
+          </button>
+        }
+      </div>
+      <p class="ajuda">Sem dias marcados, vale para todos os dias.</p>
+
+      <div class="acoes">
+        <button type="button" class="btn btn-azul" [disabled]="local() !== 'SCHOOL' && !endereco()" (click)="continuar()">Continuar</button>
+      </div>
+    }
+
+    @case (3) {
+      <!-- Figma "3 ponto" -->
+      <h2>Em qual ponto?</h2>
+      <ul class="opcoes">
+        <li>
+          <button type="button" class="opcao" [class.marcada]="ponto() === null" [attr.aria-pressed]="ponto() === null" (click)="ponto.set(null)">
+            <span class="marca"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
+            <span class="textos">
+              <strong>Criar ponto novo</strong>
+              <small>Mesmo que já exista outro neste endereço</small>
+            </span>
+          </button>
+        </li>
+        @for (p of pontosNoLugar(); track p.id) {
+          <li>
+            <button type="button" class="opcao" [class.marcada]="ponto() === p" [attr.aria-pressed]="ponto() === p" (click)="ponto.set(p)">
+              <span class="marca"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
+              <span class="textos">
+                <strong>Ponto {{ p.orderIndex }} · {{ ruaENumero(p.address) }}</strong>
+                <small>Ponto que já existe neste endereço</small>
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+
+      @if (ponto() === null) {
+        <div class="campo">
+          <label for="posicao">Posição do ponto novo (opcional)</label>
+          <input id="posicao" name="posicao" type="number" min="1" inputmode="numeric" [(ngModel)]="posicao" placeholder="Automática" />
+        </div>
+      }
+
+      <div class="acoes">
+        <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="enviar()">
+          {{ enviando() ? 'Adicionando...' : 'Adicionar à rota' }}
+        </button>
+      </div>
+    }
+  }
+</div>

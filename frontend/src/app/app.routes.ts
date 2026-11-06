@@ -81,6 +81,27 @@ export const routes: Routes = [
     data: { rolesPermitted: ['ROLE_DRIVER'] },
   },
   {
+    // "Iniciar rota" do editor; a tela da viagem e refeita na etapa 8
+    path: 'driver-route/:routeId',
+    component: DriverRoute,
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
+  },
+  {
+    // "Minhas rotas": botao do meio do rodape do motorista e menu
+    path: 'driver-routes',
+    loadComponent: () => import('./pages/driver-routes/driver-routes').then((m) => m.DriverRoutes),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
+  },
+  {
+    // montar a rota: pontos, alunos, ordem, pendencias e van padrao
+    path: 'driver-routes/:routeId',
+    loadComponent: () => import('./pages/driver-route-editor/driver-route-editor').then((m) => m.DriverRouteEditor),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
+  },
+  {
     path: 'student-code',
     component: StudentCode,
     canActivate: [routeGuard, roleGuard],

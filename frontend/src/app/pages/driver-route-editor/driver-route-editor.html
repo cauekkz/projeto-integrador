@@ -1,0 +1,209 @@
+<div class="pagina">
+  <app-trail-header [trilha]="['Rotas', rota()?.name ?? 'Rota']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <p class="aviso" role="status">Carregando rota...</p>
+    } @else if (erroCarregar() === 'semAcesso') {
+      <div class="aviso" role="alert">
+        <p>Você não está mais nesta rota.</p>
+        <button type="button" class="link" (click)="voltar()">Voltar para as rotas</button>
+      </div>
+    } @else if (erroCarregar()) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar a rota.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else {
+      <!-- Figma "Van padrão" 1038:692 -->
+      <div class="van">
+        <i class="bi bi-truck-front-fill" aria-hidden="true"></i>
+        <div class="dados">
+          @if (rota()?.vehicle) {
+            <small>Van padrão</small>
+            <strong>{{ van() }}</strong>
+          } @else {
+            <strong>Nenhuma van escolhida</strong>
+          }
+        </div>
+        <button type="button" class="trocar" (click)="abrirVan()">Trocar</button>
+      </div>
+
+      @if (!pontos().length) {
+        <button type="button" class="btn btn-azul" (click)="abrirAdicionar()">Adicionar aluno</button>
+      }
+
+      <ol class="pontos">
+        @for (ponto of pontos(); track ponto.id; let i = $index) {
+          <li class="ponto" animate.enter="entrar-subindo" [style.--i]="i">
+            <!-- Figma "Cabeçalho do ponto" 1038:666 -->
+            <div class="cabecalho-ponto">
+              <span class="ordem">{{ ponto.orderIndex }}</span>
+              <div class="endereco">
+                <strong>{{ ruaENumero(ponto.address) }}</strong>
+                @if (complemento(ponto)) {
+                  <small>{{ complemento(ponto) }}</small>
+                }
+              </div>
+              <button type="button" class="mais" [attr.aria-label]="'Opções do ponto ' + ponto.orderIndex" (click)="abrirPonto(ponto)">
+                <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <!-- Figma "Aluno no ponto" 1038:665 -->
+            @for (aluno of ponto.students; track aluno.id) {
+              <div class="aluno">
+                <span class="acao" [class.desce]="aluno.action === 'ALIGHTING'">
+                  {{ aluno.action === 'BOARDING' ? 'Embarca' : 'Desce' }}
+                </span>
+                <div class="dados">
+                  <strong>{{ aluno.studentName }}</strong>
+                  <small>{{ detalhe(aluno, ponto) }}</small>
+                </div>
+                <button type="button" class="mais pequeno" [attr.aria-label]="'Ajustar ' + aluno.studentName" (click)="abrirAluno(aluno, ponto)">
+                  <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+                </button>
+              </div>
+            }
+          </li>
+        }
+      </ol>
+    }
+  </main>
+
+  @if (!carregando() && !erroCarregar() && pontos().length) {
+    <div class="barra-acoes">
+      @if (pronta()) {
+        <button type="button" class="btn btn-contorno" (click)="abrirAdicionar()">Adicionar aluno</button>
+        <button type="button" class="btn btn-azul" (click)="iniciar()">Iniciar rota</button>
+      } @else {
+        <button type="button" class="btn btn-azul" (click)="abrirAdicionar()">Adicionar aluno</button>
+      }
+    </div>
+  }
+
+  <app-footer tipoUsuario="motorista" />
+</div>
+
+@if (adicionando()) {
+  <app-add-student-to-route
+    [routeId]="routeId"
+    [pontos]="pontos()"
+    [alunos]="alunos()"
+    (fechar)="adicionando.set(false)"
+    (adicionado)="alunoAdicionado($event)" />
+}
+
+<!-- Figma "Motorista · Aluno no ponto · ajustar" -->
+@if (alunoAberto(); as aberto) {
+  <div class="fundo" animate.enter="entrar-fade" (click)="fecharAluno()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="aluno-titulo" (click)="$event.stopPropagation()">
+      <h2 id="aluno-titulo">{{ aberto.aluno.studentName }}</h2>
+      <p class="sub">{{ aberto.aluno.action === 'BOARDING' ? 'Embarca em' : 'Desce em' }} {{ ruaENumero(aberto.ponto.address) }}</p>
+
+      <p class="rotulo">Dias da semana</p>
+      <div class="chips">
+        @for (d of dias; track d.dia) {
+          <button type="button" class="chip" [class.ativo]="diasDoAluno().includes(d.dia)" [attr.aria-pressed]="diasDoAluno().includes(d.dia)" (click)="alternarDia(d.dia)">
+            {{ d.curto }}
+          </button>
+        }
+      </div>
+
+      <p class="rotulo">Mudar de ponto</p>
+      <ul class="opcoes">
+        @for (p of pontosParaMover(); track p.id) {
+          <li>
+            <button type="button" class="opcao" [class.marcada]="pontoDestino()?.id === p.id" [attr.aria-pressed]="pontoDestino()?.id === p.id" (click)="pontoDestino.set(p)">
+              <span class="marca"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
+              <span class="textos">
+                <strong>Ponto {{ p.orderIndex }} · {{ ruaENumero(p.address) }}</strong>
+                @if (p.id === aberto.ponto.id) {
+                  <small>Ponto atual</small>
+                }
+              </span>
+            </button>
+          </li>
+        }
+      </ul>
+
+      <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="salvarAluno()">
+        {{ enviando() ? 'Salvando...' : 'Salvar' }}
+      </button>
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="tirarAluno()">Tirar do ponto</button>
+    </div>
+  </div>
+}
+
+<!-- Figma "Motorista · Ponto · ordem e apagar" -->
+@if (pontoAberto(); as ponto) {
+  <div class="fundo" animate.enter="entrar-fade" (click)="fecharPonto()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="ponto-titulo" (click)="$event.stopPropagation()">
+      <h2 id="ponto-titulo">Ponto {{ ponto.orderIndex }}</h2>
+      <p class="sub">{{ ruaENumero(ponto.address) }}@if (ponto.address.neighborhood) { · {{ ponto.address.neighborhood }}}</p>
+
+      @if (posicoes().length > 1) {
+        <p class="rotulo">Trocar de posição com</p>
+        <div class="chips">
+          @for (n of posicoes(); track n) {
+            <button type="button" class="chip numero" [class.ativo]="novaPosicao() === n" [attr.aria-pressed]="novaPosicao() === n" (click)="novaPosicao.set(n)">{{ n }}</button>
+          }
+        </div>
+      }
+
+      @if (ponto.schools.length) {
+        <p class="rotulo">Escolas do ponto</p>
+        <ul class="escolas">
+          @for (escola of ponto.schools; track escola.id) {
+            <li>
+              <span>{{ nomeEscola(escola) }}</span>
+              <button type="button" class="tirar" [disabled]="enviando()" (click)="tirarEscola(escola)">Tirar</button>
+            </li>
+          }
+        </ul>
+      }
+
+      @if (posicoes().length > 1) {
+        <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="salvarPosicao()">
+          {{ enviando() ? 'Salvando...' : 'Salvar posição' }}
+        </button>
+      }
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="apagarPonto()">Apagar ponto</button>
+    </div>
+  </div>
+}
+
+<!-- Figma "Motorista · Van padrão · trocar" -->
+@if (trocandoVan()) {
+  <div class="fundo" animate.enter="entrar-fade" (click)="fecharVan()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="van-titulo" (click)="$event.stopPropagation()">
+      <h2 id="van-titulo">Van padrão</h2>
+      <p class="sub">Usada ao iniciar a viagem, se você não escolher outra.</p>
+
+      @if (carregandoVans()) {
+        <p class="aviso" role="status">Carregando vans...</p>
+      } @else if (!vans().length) {
+        <p class="aviso">Você ainda não tem vans. Adicione em "Minhas vans".</p>
+      } @else {
+        <ul class="opcoes">
+          @for (v of vans(); track v.id) {
+            <li>
+              <button type="button" class="opcao" [class.marcada]="vanEscolhida() === v.id" [attr.aria-pressed]="vanEscolhida() === v.id" (click)="vanEscolhida.set(v.id)">
+                <span class="marca"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
+                <span class="textos">
+                  <strong>{{ v.plate }}@if (v.model) { · {{ modelo(v) }}}</strong>
+                  <small>{{ detalheVan(v) }}</small>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+
+      <button type="button" class="btn btn-azul" [disabled]="enviando() || carregandoVans()" (click)="salvarVan()">
+        {{ enviando() ? 'Salvando...' : 'Salvar' }}
+      </button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharVan()">Cancelar</button>
+    </div>
+  </div>
+}

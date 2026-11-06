@@ -1,0 +1,227 @@
+/* pagina, botoes e folha vem de shared/folha.css; chip, opcao e rotulo de shared/rota.css */
+
+.conteudo {
+  gap: 8px;
+  /* espaco pra barra de botoes acima do rodape */
+  padding-bottom: 64px;
+}
+
+/* Figma "Van padrão" 1038:692 */
+.van {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.van > i {
+  font-size: 22px;
+  color: #0c66db;
+}
+
+.van .dados {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.van small {
+  font-size: 11px;
+  color: #62748e;
+}
+
+.van strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.trocar {
+  border: none;
+  background: transparent;
+  color: #0c66db;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.pontos {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ponto {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+/* Figma "Cabeçalho do ponto" 1038:666 */
+.cabecalho-ponto {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ordem {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  background: #0c66db;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.endereco,
+.aluno .dados {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.endereco strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.endereco small {
+  font-size: 12px;
+  color: #62748e;
+}
+
+.mais {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: -6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #475569;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.mais.pequeno {
+  font-size: 16px;
+}
+
+.mais:hover {
+  background: #f1f5f9;
+}
+
+/* Figma "Aluno no ponto" 1038:665 */
+.aluno {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.acao {
+  flex-shrink: 0;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.acao.desce {
+  background: #eff8fe;
+  color: #0a54b5;
+}
+
+.aluno strong {
+  font-size: 13px;
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.aluno small {
+  font-size: 11px;
+  color: #62748e;
+}
+
+/* "Adicionar aluno" / "Iniciar rota" logo acima do rodape */
+.barra-acoes {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(100px + env(safe-area-inset-bottom));
+  z-index: 90;
+  display: flex;
+  gap: 12px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 38px;
+}
+
+.barra-acoes .btn {
+  flex: 1;
+}
+
+.folha .sub {
+  font-size: 13px;
+  color: #62748e;
+}
+
+.chip.numero {
+  min-width: 34px;
+  padding: 0 10px;
+}
+
+.escolas {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.escolas li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.tirar {
+  border: none;
+  background: transparent;
+  color: #b91c1c;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.folha .aviso {
+  padding: 8px 0;
+}

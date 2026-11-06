@@ -34,6 +34,7 @@ export class Footer implements OnInit {
 
     // rotas do motorista
     const homeMotorista = ['/driver-home'];
+    // /driver-routes (lista e editor) e /driver-route (viagem)
     const meioMotorista = ['/driver-route'];
 
     const home = this.tipoUsuario === 'motorista' ? homeMotorista : homeResponsavel;
@@ -63,7 +64,8 @@ export class Footer implements OnInit {
   selecionarAba(aba: 'meio' | 'config') {
     if (aba === 'meio') {
       if (this.tipoUsuario === 'motorista') {
-        this.router.navigate(['/driver-route']);
+        // Figma "Rodapé/Motorista · Rotas": o meio abre as rotas
+        this.router.navigate(['/driver-routes']);
       } else {
         this.router.navigate(['/responsible-route']);
       }

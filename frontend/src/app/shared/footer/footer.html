@@ -11,10 +11,15 @@
   <button
     type="button"
     class="tab"
-    [attr.aria-label]="tipoUsuario === 'motorista' ? 'Rota' : 'Transporte'"
+    [attr.aria-label]="tipoUsuario === 'motorista' ? 'Rotas' : 'Transporte'"
     [class.active]="abaAtiva === 'meio'"
     (click)="selecionarAba('meio')">
-    <i class="bi bi-truck-front-fill" aria-hidden="true"></i>
+    @if (tipoUsuario === 'motorista') {
+      <!-- icone de rota do Figma (public/rota.svg), pintado pela cor da aba -->
+      <span class="icone-rota" aria-hidden="true"></span>
+    } @else {
+      <i class="bi bi-truck-front-fill" aria-hidden="true"></i>
+    }
   </button>
 
   <button
