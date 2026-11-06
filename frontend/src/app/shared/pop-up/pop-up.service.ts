@@ -70,7 +70,7 @@ export class PopUpService {
     message: string,
     type: 'error' | 'warning' | 'info' | 'success' = 'error',
     title?: string,
-    durationMs: number = 4500
+    durationMs: number = 3000
   ): string {
     const defaultTitle =
       title ||
