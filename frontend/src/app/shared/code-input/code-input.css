@@ -1,3 +1,9 @@
+:host {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
 .code-wrapper {
   display: flex;
   flex-direction: column;
@@ -5,7 +11,7 @@
   gap: 16px;
   padding: 24px 16px;
   box-sizing: border-box;
-
+  width: 100%;
 }
 
 .instrucao {
@@ -22,10 +28,16 @@
   gap: 6px;
   margin: 8px 0;
   flex-wrap: nowrap;
+  /* os quadradinhos encolhem pra caber em qualquer celular, sem rolagem de lado */
+  width: 100%;
+  justify-content: center;
 }
 
 .code-input {
-  width: 32px;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 32px;
+  padding: 0;
   height: 52px;
   border: none;
   border-bottom: 2px solid #cbd5e1;
@@ -114,7 +126,6 @@
 
 @media (max-width: 380px) {
   .code-input {
-    width: 28px;
     height: 46px;
     font-size: 1.2rem;
   }
