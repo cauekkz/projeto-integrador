@@ -7,6 +7,8 @@ public record RouteWithStopsResponse(
         UUID id,
         String name,
         String driverName,
+        // van padrao da rota; null = nenhuma escolhida
+        RouteVehicleResponse vehicle,
         List<RouteStopResponse> stops
 ) {
 }

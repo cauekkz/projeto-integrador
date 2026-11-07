@@ -16,8 +16,8 @@ import java.util.regex.Pattern;
 // O curso de condutor de escolar e a autorizacao do municipio nao estao na CNH: nao da pra conferir por aqui
 public final class CnhParser {
 
-    // CTB art. 138: condutor de escolar tem 21 anos ou mais e categoria D (a E inclui a D)
-    static final int MIN_AGE = 21;
+    // idade minima do motorista: 18 anos (regra do app). Categoria D (a E inclui a D)
+    static final int MIN_AGE = 18;
 
     public record CnhData(String cpf, String name, boolean nameTruncated, LocalDate birthDate, LocalDate expiryDate,
                           String category) {

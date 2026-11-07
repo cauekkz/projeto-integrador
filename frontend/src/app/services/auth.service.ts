@@ -244,6 +244,11 @@ export class AuthService {
     return this.http.delete<void>(`${this.apiUrl}/users/me`, { body: { password } });
   }
 
+  // tudo que o app guarda sobre o usuario (LGPD), em JSON; 429 se pedir de novo antes de 5 minutos
+  exportMyData() {
+    return this.http.get<unknown>(`${this.apiUrl}/users/me/export`);
+  }
+
   verifyCNH(data: { documentPDF: File }) {
     const formData = new FormData();
     formData.append('documentPdf', data.documentPDF);

@@ -1,0 +1,56 @@
+<div class="pagina">
+  <app-header titulo="Privacidade e dados" (voltarEvent)="voltar()" />
+
+  <main class="conteudo">
+    <nav class="lista" aria-label="Privacidade e dados">
+      <button type="button" class="item" (click)="abrirTermos()">
+        <span class="textos">
+          <strong>Termos de uso</strong>
+          <span>Leia a versão atual dos termos</span>
+        </span>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
+
+      <button
+        type="button"
+        class="item"
+        [class.desligado]="esperandoExportar()"
+        [disabled]="exportando() || esperandoExportar()"
+        (click)="exportar()"
+      >
+        <span class="textos">
+          <strong>Exportar meus dados</strong>
+          <span>
+            @if (exportando()) {
+              Preparando o arquivo...
+            } @else if (esperandoExportar()) {
+              Disponível de novo em 5 minutos
+            } @else {
+              Baixa um arquivo com tudo que o app guarda sobre você
+            }
+          </span>
+        </span>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
+
+      <button type="button" class="item perigo" (click)="abrirExcluir()">
+        <span class="textos">
+          <strong>Excluir minha conta</strong>
+          <span>Apaga seus dados pessoais e os arquivos enviados</span>
+        </span>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
+    </nav>
+  </main>
+
+  <!-- Figma "Excluir conta · erro 409": o pop-up traz a mensagem do backend e aqui fica o atalho -->
+  @if (bloqueio(); as motivo) {
+    <button type="button" class="btn btn-contorno" animate.enter="entrar-fade" (click)="verBloqueio()">
+      {{ motivo === 'parcelas' ? 'Ver parcelas' : 'Ver contratos' }}
+    </button>
+  }
+</div>
+
+@if (excluirAberto()) {
+  <app-delete-account (fecharEvent)="fecharExcluir()" (bloqueadoEvent)="bloqueado($event)" />
+}

@@ -5,6 +5,8 @@ import java.util.UUID;
 public record RouteResponse(
         UUID id,
         String name,
-        String driverName
+        String driverName,
+        // van padrao da rota; null = nenhuma escolhida
+        RouteVehicleResponse vehicle
 ) {
 }

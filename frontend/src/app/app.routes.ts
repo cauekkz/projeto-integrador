@@ -282,6 +282,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/terms/terms').then((m) => m.TermsPage),
     canActivate: [routeGuard],
   },
+  {
+    // "Privacidade e dados" do profile select: termos (leitura), exportar meus dados e excluir a conta
+    path: 'privacy',
+    loadComponent: () => import('./pages/privacy/privacy').then((m) => m.Privacy),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+  },
   // qualquer url que nao bate com nada acima cai na 404 (tem que ser a ultima)
   {
     path: '**',

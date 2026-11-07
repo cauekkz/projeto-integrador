@@ -65,7 +65,7 @@ public class DriverController {
         }                                                                                       
 
         // CPF e nome saem da CNH (nome longo fica como a CNH traz, cortado). A CNH precisa estar valida, ser D ou E e o motorista
-        // ter 21 anos ou mais (CTB art. 138)
+        // ter 18 anos ou mais
         CnhParser.CnhData cnh = documentOcrExtractionService.extractFromCnh(dto.getDocumentPdf());
         CnhParser.check(cnh, LocalDate.now(TripService.ZONE));
 

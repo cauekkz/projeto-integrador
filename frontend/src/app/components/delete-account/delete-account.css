@@ -1,0 +1,33 @@
+/* fundo, folha e botoes vem de shared/folha.css */
+:host {
+  display: contents;
+  background: none;
+}
+
+.senha {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+label {
+  margin-bottom: -4px;
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #d7dde5;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+input:focus {
+  outline: none;
+  border-color: #0c66db;
+}

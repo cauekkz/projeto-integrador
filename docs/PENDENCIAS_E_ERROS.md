@@ -34,7 +34,7 @@ Falta:
 - **CNH no cadastro** ([CnhParser](../backend/src/main/java/br/com/vanroute/backend/services/CnhParser.java)):
   - confere a assinatura ICP-Brasil;
   - lê do OCR o CPF (com dígito verificador), o nome, o nascimento e a validade (da zona de leitura de máquina, com dígito verificador) e a categoria;
-  - grava o nome e o CPF lidos da CNH (sem campo de nome no cadastro); exige que a CNH esteja válida, que seja categoria **D ou E** e que o motorista tenha **21 anos ou mais**.
+  - grava o nome e o CPF lidos da CNH (sem campo de nome no cadastro); exige que a CNH esteja válida, que seja categoria **D ou E** e que o motorista tenha **18 anos ou mais**.
 - **CRLV:** confere a assinatura e recusa licenciamento de mais de um ano atrás.
 - **Os PDFs não são guardados.**
 - **Falta (não está na CNH nem no CRLV):** curso de condutor de escolares, autorização do município para transporte escolar, vistoria semestral da van e seguro. Para isso é preciso voltar os tipos de documento do motorista e da van (`DocumentType`/`DocumentEntityType`, hoje comentados) e criar um fluxo de aprovação.

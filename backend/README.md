@@ -32,7 +32,7 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 | 403 | sem permissão (inclusive rota de outro perfil). Com `{"code":"TERMS_NOT_ACCEPTED","version":"2"}`: o usuário ainda não aceitou a versão atual dos termos (só ver/aceitar os termos, `/me`, sair, exportar e excluir a conta funcionam) |
 | 404 | não existe |
 | 409 | conflito (duplicado ou estado errado) |
-| 422 | documento (CNH, CRLV) não passou na validação: assinatura, nome diferente do da CNH, CNH vencida, categoria sem D/E, menos de 21 anos, licenciamento da van vencido |
+| 422 | documento (CNH, CRLV) não passou na validação: assinatura, nome diferente do da CNH, CNH vencida, categoria sem D/E, menos de 18 anos, licenciamento da van vencido |
 | 429 | muitas tentativas: código de e-mail, outro código antes de 1 minuto, ou login bloqueado (5 senhas erradas no CPF ou 30 no IP: 15 minutos) |
 | 500 | erro interno: a mensagem é sempre "Erro interno no servidor" (o detalhe fica só no log) |
 
@@ -136,7 +136,7 @@ Esse é o **único** jeito de criar ponto: não existe ponto sem aluno.
 ```
 → `201`:
 ```json
-{ "id": "uuid", "name": "Ida Manhã", "driverName": "Nome do motorista" }
+{ "id": "uuid", "name": "Ida Manhã", "driverName": "Nome do motorista", "vehicle": null }
 ```
 
 ### Endereços: quem cadastra o quê
@@ -230,8 +230,8 @@ Todos devolvem `{ stops, pending }` (seção "Resposta das alterações").
 | Endpoint | Quem | Retorno |
 |---|---|---|
 | `GET /api/route/{routeId}/stops` | dono da rota | pontos em ordem, com alunos e escolas |
-| `GET /api/route/get-all-routes-and-stops` | motorista | `[{ id, name, driverName, stops: [...] }]`, só as rotas dele |
-| `GET /api/route/{id}` | dono da rota | `{ id, name, driverName }` |
+| `GET /api/route/get-all-routes-and-stops` | motorista | `[{ id, name, driverName, vehicle, stops: [...] }]`, só as rotas dele. `vehicle` = van padrão `{ id, plate, model, color, capacity }` ou `null` |
+| `GET /api/route/{id}` | dono da rota | `{ id, name, driverName, vehicle }` (`vehicle` = van padrão ou `null`) |
 | `GET /api/route/{routeId}/pending` | dono da rota | `[{ studentId, studentName, missingBoarding: [...], missingAlighting: [...] }]`: dias em que o aluno aparece mas falta embarque ou desembarque. Lista vazia = rota completa |
 | `GET /api/student/{studentId}/routes` | responsável do aluno | `[{ id, name }]`: só o nome das rotas em que o filho está |
 | `GET /api/school/my-schools` | motorista | `[{ id, name, phone, email, address }]` |
@@ -509,7 +509,7 @@ Quem pode baixar:
 - **Cadastro de motorista** (`POST /api/driver/auth/signup`, multipart com a CNH digital em `documentPdf`):
   - confere a assinatura ICP-Brasil da CNH e lê por OCR o CPF, o nome, o nascimento, a validade e a categoria;
   - o nome sai da CNH, como o CPF (não existe campo `name`): fica sem acento, com as iniciais maiúsculas e, se for longo, cortado como a CNH traz (a linha do nome tem 30 caracteres);
-  - a CNH tem que estar válida, ser **D ou E**, e o motorista ter **21 anos ou mais**: senão `422` com a mensagem;
+  - a CNH tem que estar válida, ser **D ou E**, e o motorista ter **18 anos ou mais**: senão `422` com a mensagem;
   - o PDF da CNH não é guardado.
 - **Login** (`POST /api/auth/login`): CPF inexistente e senha errada dão o mesmo `401`; "Verifique seu e-mail" (`400`) só aparece com a senha certa. 5 senhas erradas no mesmo CPF (ou 30 no mesmo IP) bloqueiam por 15 minutos (`429`).
 - **Responsáveis do aluno:** `GET /api/student/{studentId}/responsibles` (qualquer responsável do aluno), `DELETE /api/student/{studentId}/responsibles/{responsibleId}` (o admin remove outro, ou a pessoa sai; o admin passa o admin antes) e `PUT /api/student/{studentId}/responsibles/{responsibleId}/admin` (o admin passa o admin). Quem tem contrato ou proposta em andamento com o aluno não sai (`409`).
