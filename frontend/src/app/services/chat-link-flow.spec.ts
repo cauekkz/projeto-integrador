@@ -6,9 +6,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ChatWebSocketService } from './chat.service';
 import { authInterceptor } from '../interceptor/auth.interceptor';
 import { PopUpService } from '../shared/pop-up';
-import { DriverLinkCode } from '../pages/driver-link-code/driver-link-code';
-import { DriverCode } from '../components/driver-code/driver-code';
-import { ChatDetails } from '../components/chat/chat-details/chat-details';
+import { DriverLinkCode } from '../pages/driver/driver-link-code/driver-link-code';
+import { DriverCode } from '../components/responsible/driver-code/driver-code';
+import { ChatDetails } from '../components/common/chat/chat-details/chat-details';
 
 const API = '/api';
 

@@ -70,13 +70,13 @@ Depois das correções (seção 4.1): **51 arquivos, 227 testes, todos passando*
 | Arquivo | O que confere |
 |---|---|
 | `shared/button/button.spec.ts` | O botão é `type="button"` por padrão e vira `submit` quando pedido (B1) |
-| `components/login-signup/login-form/login-form.spec.ts` | "Entrar" manda o login uma vez só; "Esqueceu sua senha?" não envia o formulário (B1) |
-| `components/login-signup/forgot-password/forgot-password.spec.ts` | Depois da resposta do e-mail, a tela passa sozinha para o código (B2) |
+| `components/common/login-signup/login-form/login-form.spec.ts` | "Entrar" manda o login uma vez só; "Esqueceu sua senha?" não envia o formulário (B1) |
+| `components/common/login-signup/forgot-password/forgot-password.spec.ts` | Depois da resposta do e-mail, a tela passa sozinha para o código (B2) |
 | `shared/pop-up/pop-up.service.spec.ts` | Lê a mensagem do JSON que chega como texto; o 429 vira "Aguarde" (B4) |
 | `shared/code-input/code-input.spec.ts` | Digitar por cima de uma caixa preenchida troca o número (M2) |
 | `shared/markdown-text/markdown-text.spec.ts` | Nenhum espaço entre o negrito e a pontuação (M3) |
 | `services/dto/driver/pix.dto.spec.ts` | Chave Pix com máscara (CPF, CNPJ, telefone); e-mail e aleatória ficam como vieram (M8) |
-| `pages/driver-groups/driver-groups.spec.ts` | Ajustado para o texto novo do botão "Avisar que não vou buscar hoje" (M10) |
+| `pages/driver/driver-groups/driver-groups.spec.ts` | Ajustado para o texto novo do botão "Avisar que não vou buscar hoje" (M10) |
 
 A cobertura não foi medida de novo depois das correções.
 
@@ -91,14 +91,14 @@ Partes com menos cobertura, que pedem testes novos:
 
 | Arquivo | Linhas cobertas |
 |---|---|
-| `pages/profile-info` | ~25% |
+| `pages/common/profile-info` | ~25% |
 | `shared/code-input` | ~28% |
-| `components/login-signup/email-code` | ~37% |
-| `components/chat/chat-list` | ~40% |
+| `components/common/login-signup/email-code` | ~37% |
+| `components/common/chat/chat-list` | ~40% |
 | `components/student/add-student` | ~51% |
 | `components/student/student-photo` | ~51% |
-| `pages/terms` | ~61% |
-| `components/login-signup/forgot-password` | sem teste próprio (veja o bug B2) |
+| `pages/common/terms` | ~61% |
+| `components/common/login-signup/forgot-password` | sem teste próprio (veja o bug B2) |
 
 ---
 
@@ -262,14 +262,14 @@ Legenda: ✅ funcionou · ⚠️ funcionou com problema · ❌ quebrado · ⛔ n
 - **Correção:** o `<button>` agora recebe `[type]` (padrão `"button"`). "Entrar" e "Enviar código" usam `type="submit"` e só o `(ngSubmit)`.
 
 **B2. "Esqueci a senha" trava em "Enviando..."** ✅ corrigido
-- **Onde:** `components/login-signup/forgot-password/forgot-password.ts`.
+- **Onde:** `components/common/login-signup/forgot-password/forgot-password.ts`.
 - **Causa:** o componente usa campos comuns (`enviando`, `etapa`), e o app roda sem zone.js. Quando a resposta chega, a tela não atualiza e o console mostra `NG0100 ExpressionChangedAfterItHasBeenChecked ('Enviando...' → 'Enviar')`.
 - **Efeito:** com resposta 200 ou 429, a tela nunca passa para o código, e não dá para recuperar a senha pelo login.
 - **Correção:** `markForCheck()` quando a resposta chega, no `forgot-password`, no `login-form` e no `profile-info`.
 - **Mesmo risco:** o `login-form` (`enviandoCodigo`, `etapaEmail`, `mostrarForgotPassword`) e o `profile-info` (`mensagem`, `salvando`) usam o mesmo padrão.
 
 **B3. Ícone de contrato no topo do chat não faz nada** ✅ corrigido
-- **Onde:** `components/chat/chat-details/chat-details.html:11`. O `<button class="contrato-btn">` não tem `(click)`.
+- **Onde:** `components/common/chat/chat-details/chat-details.html:11`. O `<button class="contrato-btn">` não tem `(click)`.
 - **Efeito:** o motorista só acha "Criar contrato" pelo clipe.
 - **Correção:** o ícone abre a lista de contratos (`/contracts`), que existe para os dois perfis. "Criar contrato" continua no clipe.
 
@@ -324,16 +324,16 @@ Mesmo ambiente de teste da seção 1, com a Ana (responsável, porta 4300) e o C
 
 | Correção | Arquivos |
 |---|---|
-| B1 | `shared/button/button.html`, `components/login-signup/login-form/login-form.html` |
-| B2 | `components/login-signup/forgot-password/forgot-password.ts`, `components/login-signup/login-form/login-form.ts`, `pages/profile-info/profile-info.ts` |
-| B3 | `components/chat/chat-details/chat-details.html` e `.ts` |
+| B1 | `shared/button/button.html`, `components/common/login-signup/login-form/login-form.html` |
+| B2 | `components/common/login-signup/forgot-password/forgot-password.ts`, `components/common/login-signup/login-form/login-form.ts`, `pages/common/profile-info/profile-info.ts` |
+| B3 | `components/common/chat/chat-details/chat-details.html` e `.ts` |
 | B4 | `shared/pop-up/pop-up.service.ts` |
 | M2 | `shared/code-input/code-input.ts` |
 | M3 | `shared/markdown-text/markdown-text.html` |
 | M4/M5 | `components/student/add-student/add-student.html` e `.css` |
-| M8 | `services/dto/driver/pix.dto.ts`, `pages/driver-pix/driver-pix.ts` e `.html`, `pages/payments/payments.ts` e `.html` |
-| M10 | `pages/driver-group/driver-group.html` |
-| M11 | `components/profile-select/profile-select.ts` e `.html` |
+| M8 | `services/dto/driver/pix.dto.ts`, `pages/driver/driver-pix/driver-pix.ts` e `.html`, `pages/common/payments/payments.ts` e `.html` |
+| M10 | `pages/driver/driver-group/driver-group.html` |
+| M11 | `components/common/profile-select/profile-select.ts` e `.html` |
 
 **Dados de teste que mudaram:** a senha da Ana foi trocada para a mesma `Senha@123`, foi criado o filho "Bia Teste Reteste", a chave Pix do Carlos virou CPF (antes era e-mail) e foi enviado um aviso para o grupo "Paulista manhã".
 

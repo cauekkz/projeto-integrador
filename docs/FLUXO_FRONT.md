@@ -89,7 +89,7 @@ O WebSocket da viagem (`trip.service.ts`) já trata isso; siga o mesmo modelo.
      "output": "maplibre"
    }
    ```
-2. Em `components/trip/trip-map/trip-map.ts`, em `colocarFundo`, antes do import do `@maplibre/maplibre-gl-leaflet`, acrescente:
+2. Em `components/common/trip/trip-map/trip-map.ts`, em `colocarFundo`, antes do import do `@maplibre/maplibre-gl-leaflet`, acrescente:
    ```ts
    const { setWorkerUrl } = await import('maplibre-gl');
    setWorkerUrl(new URL('/maplibre/maplibre-gl-worker.mjs', location.origin).href);
@@ -124,7 +124,7 @@ O WebSocket da viagem (`trip.service.ts`) já trata isso; siga o mesmo modelo.
 `/driver-code` e `/student-code` passavam da largura até 390 px e já foram corrigidas (`shared/code-input`).
 
 ### O que falta no celular
-- **`/driver-home` em 320 px:** passa 1 px. O `.user-info` tem `width: 180px` fixo em `pages/driver-routes/driver-routes.css`. Trocar por `flex: 1; min-width: 0; max-width: 180px`.
+- **`/driver-home` em 320 px:** passa 1 px. O `.user-info` tem `width: 180px` fixo em `pages/driver/driver-routes/driver-routes.css`. Trocar por `flex: 1; min-width: 0; max-width: 180px`.
 - **Aviso cobrindo a tela:** em celular pequeno, o pop-up cobre metade da tela durante os 3 s (ex.: "Sem chave Pix cadastrada" em `/driver-pix`, sobre os botões de tipo de chave). Esse aviso informativo pode virar texto fixo dentro da tela.
 - **Não verificado (exige aparelho físico):** teclado virtual cobrindo campo e botão, recorte da câmera (notch) e barra do navegador.
 
