@@ -5,7 +5,8 @@ import { TrailHeader } from '../../shared/trail-header/trail-header';
 import { Footer } from '../../shared/footer/footer';
 import { PopUpService } from '../../shared/pop-up';
 import { DriverService } from '../../services/driver.service';
-import { PIX_TIPOS, pixKey, PixKeyType, pixTipoLabel } from '../../services/dto/driver/pix.dto';
+import { formatarChavePix, formatarCnpj, PIX_TIPOS, pixKey, PixKeyType, pixTipoLabel } from '../../services/dto/driver/pix.dto';
+import { formatarCpf, limparMascara } from '../../shared/utils';
 
 // Figma "Etapa 3 · Motorista preparado": Chave Pix (sem chave, com chave, trocar, remover)
 // a chave e conferida e normalizada no backend: a tela mostra o que voltar
@@ -36,6 +37,7 @@ export class DriverPix implements OnInit {
   protected temChave = computed(() => !!this.chave()?.key);
   protected tipoAtual = computed(() => PIX_TIPOS.find((t) => t.value === this.tipo()) ?? PIX_TIPOS[0]);
   protected readonly tipoLabel = pixTipoLabel;
+  protected readonly chaveFormatada = formatarChavePix;
 
   ngOnInit() {
     this.carregar();
@@ -61,7 +63,8 @@ export class DriverPix implements OnInit {
   private abrirFormulario() {
     const atual = this.chave();
     this.tipo.set(atual?.type ?? 'CPF');
-    this.valor = atual?.key ?? '';
+    const chaveAtual = atual?.key ?? '';
+    this.valor = atual?.type === 'CPF' ? formatarCpf(chaveAtual) : atual?.type === 'CNPJ' ? formatarCnpj(chaveAtual) : chaveAtual;
     this.editando.set(true);
     if (!atual?.key) {
       this.popUpService.show(
@@ -86,9 +89,21 @@ export class DriverPix implements OnInit {
     this.valor = '';
   }
 
+  // CPF e CNPJ ganham mascara enquanto digita (os outros tipos ficam como digitados)
+  digitarChave(texto: string) {
+    const tipo = this.tipo();
+    const formatado = tipo === 'CPF' ? formatarCpf(texto) : tipo === 'CNPJ' ? formatarCnpj(texto) : texto;
+    this.valor = formatado;
+    const campo = document.getElementById('chave') as HTMLInputElement | null;
+    if (campo && campo.value !== formatado) campo.value = formatado;
+  }
+
   salvar() {
     if (this.enviando()) return;
-    const chave = this.valor.trim();
+    const tipo = this.tipo();
+    const digitado = this.valor.trim();
+    // CPF/CNPJ vao so com os numeros
+    const chave = tipo === 'CPF' || tipo === 'CNPJ' ? limparMascara(digitado) : digitado;
     if (!chave) {
       this.popUpService.show('Informe a chave Pix', 'warning', 'Campos Incompletos');
       return;

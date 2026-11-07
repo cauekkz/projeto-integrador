@@ -8,7 +8,7 @@
       <img [src]="fotoContato" class="contato-avatar" alt="">
       <span class="contato-nome">{{ nomeContato }}</span>
     </button>
-    <button class="contrato-btn">
+    <button class="contrato-btn" type="button" aria-label="Ver contratos" (click)="abrirContratos()">
       <i class="bi bi-file-earmark-text"></i>
     </button>
   </div>

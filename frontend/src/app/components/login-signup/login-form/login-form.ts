@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
@@ -46,6 +46,9 @@ export class LoginForm {
   emailInvalido = false;
   enviandoCodigo = false;
 
+  // o app roda sem zone.js: a resposta do backend nao redesenha a tela sozinha
+  private cdr = inject(ChangeDetectorRef);
+
   verification(value: string): boolean {
     return value.trim() === '';
   }
@@ -90,6 +93,7 @@ export class LoginForm {
         error: (err: unknown) => {
           if (err instanceof HttpErrorResponse && err.status === 400 && String(err.error?.message ?? err.error ?? '').includes(EMAIL_NAO_VERIFICADO)) {
             this.etapaEmail = 'email';
+            this.cdr.markForCheck();
           }
         },
       });
@@ -105,8 +109,12 @@ export class LoginForm {
       next: () => {
         this.enviandoCodigo = false;
         this.etapaEmail = 'codigo';
+        this.cdr.markForCheck();
       },
-      error: () => (this.enviandoCodigo = false),
+      error: () => {
+        this.enviandoCodigo = false;
+        this.cdr.markForCheck();
+      },
     });
   }
 

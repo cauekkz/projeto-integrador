@@ -74,6 +74,7 @@ export class ProfileInfo implements OnInit {
         };
         this.enteredEmail = this.usuario.email;
         this.enteredPhone = this.usuario.phone;
+        this.cdr.markForCheck();
         if (this.tipoUsuario === 'responsavel' && me.id) this.carregarSituacao(me.id);
       },
       error: (err) => console.error(err),
@@ -147,10 +148,12 @@ export class ProfileInfo implements OnInit {
     this.authService.sendCodeToUpdateUser().subscribe({
       next: () => {
         this.mensagem = 'Código de verificação enviado para o seu e-mail.';
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error(err);
         this.mensagem = 'Não foi possível enviar o código de verificação.';
+        this.cdr.markForCheck();
       },
     });
   }
@@ -158,6 +161,7 @@ export class ProfileInfo implements OnInit {
   salvar() {
     if (!this.enteredCode.trim()) {
       this.mensagem = 'Solicite e informe o código de verificação antes de salvar.';
+      this.cdr.markForCheck();
       return;
     }
 
@@ -180,11 +184,13 @@ export class ProfileInfo implements OnInit {
           this.enteredCode = '';
           this.salvando = false;
           this.mensagem = 'Dados atualizados com sucesso.';
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error(err);
           this.salvando = false;
           this.mensagem = 'Não foi possível atualizar os dados.';
+          this.cdr.markForCheck();
         },
       });
   }
@@ -195,10 +201,12 @@ export class ProfileInfo implements OnInit {
     this.authService.sendForgotPasswordCode(this.usuario.email).subscribe({
       next: () => {
         this.mensagem = 'Código para trocar a senha enviado para o seu e-mail.';
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error(err);
         this.mensagem = 'Não foi possível enviar o código de verificação.';
+        this.cdr.markForCheck();
       },
     });
   }
@@ -206,14 +214,17 @@ export class ProfileInfo implements OnInit {
   alterarSenha() {
     if (!this.enteredPasswordCode.trim() || !this.enteredPassword || !this.enteredConfirmPassword) {
       this.mensagem = 'Informe a nova senha, a confirmação e o código de verificação.';
+      this.cdr.markForCheck();
       return;
     }
     if (!SENHA_FORTE.test(this.enteredPassword)) {
       this.mensagem = 'A senha precisa de 8 ou mais caracteres, com letra maiúscula, minúscula, número e símbolo.';
+      this.cdr.markForCheck();
       return;
     }
     if (this.enteredPassword !== this.enteredConfirmPassword) {
       this.mensagem = 'As senhas não são iguais.';
+      this.cdr.markForCheck();
       return;
     }
 
@@ -238,6 +249,7 @@ export class ProfileInfo implements OnInit {
           console.error(err);
           this.salvando = false;
           this.mensagem = 'Não foi possível atualizar a senha.';
+          this.cdr.markForCheck();
         },
       });
   }

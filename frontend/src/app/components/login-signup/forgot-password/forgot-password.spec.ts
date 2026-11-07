@@ -77,4 +77,14 @@ describe('ForgotPassword', () => {
 
     http.expectNone(`${API}/auth/forgot-password`);
   });
+
+  it('depois da resposta do e-mail a tela passa sozinha para o código (app sem zone.js)', async () => {
+    fixture.autoDetectChanges();
+    component.enteredEmail = 'ana@example.com';
+    component.enviarEmail();
+    http.expectOne(`${API}/auth/forgot-password/send-code?email=ana%40example.com`).flush('ok');
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('app-code-input')).toBeTruthy();
+    expect(fixture.nativeElement.textContent).not.toContain('Enviando...');
+  });
 });

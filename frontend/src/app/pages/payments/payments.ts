@@ -10,7 +10,7 @@ import { PaymentService } from '../../services/payment.service';
 import { ContractService } from '../../services/contract.service';
 import { ChatWebSocketService } from '../../services/chat.service';
 import { METODOS, PaymentMethod, paymentResponse, PaymentStatus } from '../../services/dto/payment/payment.dto';
-import { pixTipoLabel } from '../../services/dto/driver/pix.dto';
+import { formatarChavePix, pixTipoLabel } from '../../services/dto/driver/pix.dto';
 import { diaMes, valorEmReais } from '../../services/dto/contract/contract.dto';
 
 type Aba = 'todas' | PaymentStatus;
@@ -64,6 +64,7 @@ export class Payments implements OnInit {
   protected readonly metodos = METODOS;
   protected readonly valor = valorEmReais;
   protected readonly tipoPix = pixTipoLabel;
+  protected readonly chavePix = formatarChavePix;
 
   protected ehMotorista = false;
   protected contractId: string | null = null;

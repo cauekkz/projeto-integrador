@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
@@ -9,17 +9,40 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './profile-select.html',
   styleUrl: './profile-select.css',
 })
-export class ProfileSelect {
+export class ProfileSelect implements OnInit {
   @Input() tipoUsuario = '';
   @Input() usuario: any = null;
   @Output() fecharEvent = new EventEmitter<void>();
+
+  private cdr = inject(ChangeDetectorRef);
 
   constructor(
     private router: Router,
     private authService: AuthService,
   ) {}
 
+  // aberto direto pela rota /profile-select (sem a tela de tras passar o usuario): busca os dados
+  ngOnInit() {
+    if (!this.tipoUsuario) {
+      this.tipoUsuario = this.authService.getRolesFromToken().includes('ROLE_DRIVER') ? 'motorista' : 'responsavel';
+    }
+    if (!this.usuario) {
+      this.authService.getMe().subscribe({
+        next: (me) => {
+          this.usuario = me;
+          this.cdr.markForCheck();
+        },
+        error: () => {},
+      });
+    }
+  }
+
   fechar() {
+    // pela rota ninguem escuta o fechar: volta pra home
+    if (!this.fecharEvent.observed) {
+      this.router.navigate([this.authService.getHomeRoute() ?? '/']);
+      return;
+    }
     this.fecharEvent.emit();
   }
 

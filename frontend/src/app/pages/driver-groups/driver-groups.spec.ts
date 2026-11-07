@@ -93,7 +93,7 @@ describe('Grupos e histórico', () => {
 
     botao(fixture, 'Voltar', '.folha')!.click();
     fixture.detectChanges();
-    botao(fixture, 'Avisar o grupo')!.click();
+    botao(fixture, 'Avisar que não vou buscar hoje')!.click();
     fixture.detectChanges();
     botao(fixture, 'Enviar aviso')!.click();
     http.expectOne({ method: 'POST', url: '/api/driver/groups/g-1/notice' }).flush({ notifiedResponsibles: 3 });

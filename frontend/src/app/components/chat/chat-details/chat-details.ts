@@ -163,6 +163,11 @@ export class ChatDetails implements OnInit, OnDestroy {
     this.router.navigate(['/driver-contract', this.chatId]);
   }
 
+  // icone do topo: contratos do usuario (criar contrato continua no clipe, so pro motorista)
+  abrirContratos(): void {
+    this.router.navigate(['/contracts']);
+  }
+
   // Fecha o menu e abre o seletor de arquivos
   enviarMidia(input: HTMLInputElement): void {
     this.showAttachmentMenu = false;

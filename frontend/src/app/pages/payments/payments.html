@@ -60,7 +60,7 @@
                 @if (p.driverPixKey) {
                   <div class="pix">
                     <span>Chave Pix · {{ tipoPix(p.driverPixKeyType) }}</span>
-                    <strong>{{ p.driverPixKey }}</strong>
+                    <strong>{{ chavePix(p.driverPixKeyType, p.driverPixKey) }}</strong>
                   </div>
                 } @else {
                   <p class="sem-pix">O motorista ainda não cadastrou a chave Pix.</p>

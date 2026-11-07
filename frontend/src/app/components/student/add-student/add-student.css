@@ -273,10 +273,9 @@
   background: #0052a3;
 }
 
+/* no fim do formulario (nao fica preso por cima dos campos ao rolar) */
 .bottom-actions {
   margin-top: auto;
-  position: sticky;
-  bottom: 0;
   background-color: white;
   padding: 16px 0;
   display: flex;

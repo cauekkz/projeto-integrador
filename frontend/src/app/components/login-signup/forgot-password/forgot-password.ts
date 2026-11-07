@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CodeInput } from '../../../shared/code-input/code-input';
 import { Header } from '../../../shared/header/header';
@@ -36,6 +36,9 @@ export class ForgotPassword {
   passwordsDontMatch = false;
   enviando = false;
 
+  // o app roda sem zone.js: a resposta do backend nao redesenha a tela sozinha
+  private cdr = inject(ChangeDetectorRef);
+
   constructor(
     private authService: AuthService,
     private popUpService: PopUpService,
@@ -59,9 +62,11 @@ export class ForgotPassword {
       next: () => {
         this.enviando = false;
         this.etapa = 2;
+        this.cdr.markForCheck();
       },
       error: () => {
         this.enviando = false;
+        this.cdr.markForCheck();
       },
     });
   }
@@ -92,12 +97,14 @@ export class ForgotPassword {
       .subscribe({
         next: () => {
           this.enviando = false;
+          this.cdr.markForCheck();
           this.popUpService.show('Senha alterada! Entre com a nova senha.', 'success', 'Tudo certo');
           this.voltarEvent.emit();
         },
         error: () => {
           // o popup global mostra a mensagem do backend (ex.: codigo incorreto ou expirado)
           this.enviando = false;
+          this.cdr.markForCheck();
         },
       });
   }
