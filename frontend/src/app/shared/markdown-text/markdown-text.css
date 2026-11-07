@@ -1,0 +1,60 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #475569;
+}
+
+.titulo {
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: #0f172a;
+}
+
+.secao {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.paragrafo,
+.item {
+  margin: 0;
+}
+
+/* lista com bolinha propria: o texto quebra alinhado depois dela */
+.item {
+  position: relative;
+  padding-left: 16px;
+}
+
+.item::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 0.65em;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #0c66db;
+}
+
+.item.sub {
+  margin-left: 16px;
+}
+
+.item.sub::before {
+  background: transparent;
+  border: 1px solid #0c66db;
+  width: 4px;
+  height: 4px;
+}
+
+strong {
+  font-weight: 600;
+  color: #0f172a;
+}

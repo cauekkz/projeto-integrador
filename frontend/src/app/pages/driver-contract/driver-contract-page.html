@@ -12,8 +12,16 @@
 
     <div class="trilha">
       <ol class="migalhas">
-        <li>Motorista<i class="bi bi-chevron-right" aria-hidden="true"></i></li>
-        <li>{{ draft.renovacao() ? 'Renovar' : 'Montar contrato' }}<i class="bi bi-chevron-right atual" aria-hidden="true"></i></li>
+        <li>
+          <button type="button" class="migalha-link" [disabled]="enviando()" (click)="irParaInicio()">Motorista</button>
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        </li>
+        <li>
+          <button type="button" class="migalha-link" [disabled]="enviando() || indiceEtapa() === 0" (click)="irParaPrimeiraEtapa()">
+            {{ draft.renovacao() ? 'Renovar' : 'Montar contrato' }}
+          </button>
+          <i class="bi bi-chevron-right atual" aria-hidden="true"></i>
+        </li>
         <li class="atual" aria-current="step">{{ etapaLabel() }}</li>
       </ol>
       <div

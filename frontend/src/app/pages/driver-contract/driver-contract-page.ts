@@ -167,6 +167,19 @@ export class DriverContractPage implements OnInit {
     else this.enviar();
   }
 
+  // trilha: "Motorista" volta pra home (o rascunho fica guardado no draft) e "Montar contrato" volta pra 1a etapa
+  irParaInicio() {
+    if (this.enviando()) return;
+    this.router.navigate(['/driver-home']);
+  }
+
+  irParaPrimeiraEtapa() {
+    if (this.enviando()) return;
+    this.draft.mostrarErros.set(false);
+    this.erroEnvio.set('');
+    this.draft.etapa.set('aluno');
+  }
+
   voltar() {
     if (this.enviando()) return;
 

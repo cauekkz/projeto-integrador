@@ -61,6 +61,24 @@
   margin: 0 clamp(4px, 2vw, 8px);
 }
 
+/* item da trilha que volta pra pagina dele */
+.migalha-link {
+  padding: 2px 4px;
+  margin: -2px -4px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: var(--transicao-botao);
+}
+
+.migalha-link:hover {
+  color: #0c66db;
+  background: #eff6ff;
+}
+
 /* o ultimo item encolhe com reticencias em vez de quebrar a linha */
 .migalhas .atual {
   display: block;

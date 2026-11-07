@@ -6,6 +6,7 @@ import { TermsService, Terms } from '../../services/terms.service';
 import { AuthService } from '../../services/auth.service';
 import { PopUpService } from '../../shared/pop-up';
 import { DeleteAccount } from '../../components/delete-account/delete-account';
+import { MarkdownText } from '../../shared/markdown-text/markdown-text';
 
 // dois modos:
 // - reaceite: termos mudaram depois do cadastro, o backend responde 403 TERMS_NOT_ACCEPTED e o interceptor traz pra ca
@@ -14,7 +15,7 @@ import { DeleteAccount } from '../../components/delete-account/delete-account';
 @Component({
   selector: 'app-terms',
   standalone: true,
-  imports: [Header, DeleteAccount],
+  imports: [Header, DeleteAccount, MarkdownText],
   templateUrl: './terms.html',
   styleUrls: ['../../shared/folha.css', './terms.css'],
 })

@@ -15,7 +15,9 @@
   } @else {
     <main class="conteudo">
       @if (termos(); as t) {
-        <div class="texto" [class.cheio]="leitura">{{ t.content }}</div>
+        <div class="texto" [class.cheio]="leitura">
+          <app-markdown-text [conteudo]="t.content" />
+        </div>
       } @else {
         <p class="aviso" role="status">Carregando os termos...</p>
       }

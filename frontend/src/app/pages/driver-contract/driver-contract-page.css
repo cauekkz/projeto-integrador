@@ -82,6 +82,28 @@
   text-overflow: ellipsis;
 }
 
+/* itens da trilha que levam pra pagina deles (igual ao trail-header) */
+.migalha-link {
+  padding: 2px 4px;
+  margin: -2px -4px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: var(--transicao-botao);
+}
+
+.migalha-link:hover:not(:disabled) {
+  color: #0c66db;
+  background: #eff6ff;
+}
+
+.migalha-link:disabled {
+  cursor: default;
+}
+
 .migalhas i {
   font-size: 0.7rem;
   margin: 0 clamp(4px, 2vw, 10px);

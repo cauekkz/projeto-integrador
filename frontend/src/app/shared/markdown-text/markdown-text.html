@@ -1,0 +1,40 @@
+@for (bloco of blocos(); track $index) {
+  @switch (bloco.tipo) {
+    @case ('h1') {
+      <h2 class="titulo">
+        @for (t of bloco.trechos; track $index) {
+          {{ t.texto }}
+        }
+      </h2>
+    }
+    @case ('h2') {
+      <h3 class="secao">
+        @for (t of bloco.trechos; track $index) {
+          {{ t.texto }}
+        }
+      </h3>
+    }
+    @case ('li') {
+      <p class="item" [class.sub]="bloco.nivel === 1">
+        @for (t of bloco.trechos; track $index) {
+          @if (t.negrito) {
+            <strong>{{ t.texto }}</strong>
+          } @else {
+            {{ t.texto }}
+          }
+        }
+      </p>
+    }
+    @default {
+      <p class="paragrafo">
+        @for (t of bloco.trechos; track $index) {
+          @if (t.negrito) {
+            <strong>{{ t.texto }}</strong>
+          } @else {
+            {{ t.texto }}
+          }
+        }
+      </p>
+    }
+  }
+}

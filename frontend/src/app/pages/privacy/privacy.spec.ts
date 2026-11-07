@@ -116,10 +116,13 @@ describe('Privacidade e termos', () => {
     configurar({ leitura: '1' });
     const fixture = TestBed.createComponent(TermsPage);
     fixture.detectChanges();
-    http.expectOne('/api/terms').flush({ version: '3', content: 'Termos de Uso e Política de Privacidade' });
+    http.expectOne('/api/terms').flush({ version: '3', content: '# Termos de Uso e Política de Privacidade\n\n## 1. O que é\nO app **não recebe dinheiro**.' });
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Termos de Uso e Política de Privacidade');
+    expect(fixture.nativeElement.querySelector('.texto h2')?.textContent).toContain('Termos de Uso e Política de Privacidade');
+    expect(fixture.nativeElement.querySelector('.texto h3')?.textContent).toContain('1. O que é');
+    expect(fixture.nativeElement.querySelector('.texto strong')?.textContent).toBe('não recebe dinheiro');
+    expect(fixture.nativeElement.textContent).not.toContain('**');
     expect(botao(fixture, 'Aceito')).toBeUndefined();
     expect(popUp.show).not.toHaveBeenCalled();
   });
