@@ -6,7 +6,7 @@
     <h1 id="adicionar-titulo">Adicionar aluno</h1>
   </header>
 
-  <p class="passo">Passo {{ passo() }} de 3</p>
+  <p class="passo">Passo {{ passo() }} de {{ temEtapa4() ? 4 : 3 }}</p>
 
   @switch (passo()) {
     @case (1) {
@@ -40,8 +40,8 @@
 
       <p class="rotulo">Ação</p>
       <div class="chips">
-        <button type="button" class="chip" [class.ativo]="acao() === 'BOARDING'" (click)="acao.set('BOARDING')">Embarque</button>
-        <button type="button" class="chip" [class.ativo]="acao() === 'ALIGHTING'" (click)="acao.set('ALIGHTING')">Desembarque</button>
+        <button type="button" class="chip" [class.ativo]="acao() === 'BOARDING'" (click)="escolherAcao('BOARDING')">Embarque</button>
+        <button type="button" class="chip" [class.ativo]="acao() === 'ALIGHTING'" (click)="escolherAcao('ALIGHTING')">Desembarque</button>
       </div>
 
       <p class="rotulo">Local</p>
@@ -52,7 +52,7 @@
       </div>
 
       @if (local() === 'SCHOOL') {
-        <p class="ajuda">A escola é a do contrato do aluno.</p>
+        <p class="ajuda">A escola é a do contrato do aluno{{ escolaDoAluno() ? ': ' + escolaDoAluno()!.nome : '' }}.</p>
       } @else {
         <p class="rotulo">Endereço</p>
         <ul class="opcoes">
@@ -119,8 +119,33 @@
       }
 
       <div class="acoes">
+        @if (temEtapa4()) {
+          <button type="button" class="btn btn-azul" (click)="continuar()">Continuar</button>
+        } @else {
+          <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="enviar()">
+            {{ enviando() ? 'Adicionando...' : 'Adicionar à rota' }}
+          </button>
+        }
+      </div>
+    }
+
+    @case (4) {
+      <!-- so no desembarque na escola: os outros alunos da mesma escola descem no mesmo ponto -->
+      <h2>Quem mais desce em {{ escolaDoAluno()?.nome ?? 'nesta escola' }}?</h2>
+      <p class="sub">Alunos da mesma escola que ainda não descem nesta rota. Já vêm marcados: desmarque quem não vai.</p>
+      <ul class="opcoes">
+        @for (a of mesmaEscola(); track a.studentId) {
+          <li>
+            <button type="button" class="opcao" [class.marcada]="juntos().has(a.studentId)" [attr.aria-pressed]="juntos().has(a.studentId)" (click)="alternarJunto(a.studentId)">
+              <span class="marca"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
+              <span class="textos"><strong>{{ a.studentName }}</strong></span>
+            </button>
+          </li>
+        }
+      </ul>
+      <div class="acoes">
         <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="enviar()">
-          {{ enviando() ? 'Adicionando...' : 'Adicionar à rota' }}
+          {{ enviando() ? 'Adicionando...' : totalNoEnvio() > 1 ? 'Adicionar ' + totalNoEnvio() + ' alunos' : 'Adicionar só ' + (aluno()?.studentName ?? '') }}
         </button>
       </div>
     }

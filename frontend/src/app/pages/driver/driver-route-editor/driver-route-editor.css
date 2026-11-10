@@ -183,6 +183,19 @@
   flex: 1;
 }
 
+/* com desembarque: ele em cima, na largura toda; os outros embaixo */
+.barra-acoes.com-desembarque {
+  flex-wrap: wrap;
+}
+
+.barra-acoes .desembarque {
+  flex-basis: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 .folha .sub {
   font-size: 13px;
   color: #62748e;

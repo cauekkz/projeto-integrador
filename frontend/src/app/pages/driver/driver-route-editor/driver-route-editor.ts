@@ -1,7 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Observable, catchError, forkJoin, of } from 'rxjs';
+import { Observable, catchError, concatMap, forkJoin, from, of, tap, toArray } from 'rxjs';
+import { ContractService } from '../../../services/contract.service';
 import { TrailHeader } from '../../../shared/trail-header/trail-header';
 import { Footer } from '../../../shared/footer/footer';
 import { PopUpService } from '../../../shared/pop-up';
@@ -42,6 +43,7 @@ export class DriverRouteEditor implements OnInit {
   private vehicleService = inject(VehicleService);
   private popUpService = inject(PopUpService);
   private confirmacao = inject(ConfirmacaoService);
+  private contractService = inject(ContractService);
   private activatedRoute = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -62,6 +64,21 @@ export class DriverRouteEditor implements OnInit {
   protected enviando = signal(false);
 
   protected pronta = computed(() => this.pontos().length > 0 && this.pendencias().length === 0);
+
+  // "Adicionar desembarque": quem embarca e ainda nao desce, agrupado pela escola do contrato
+  private escolaDoAluno = signal<Record<string, string>>({});
+  protected desembarcando = signal(false);
+  protected marcadosDesembarque = signal<Set<string>>(new Set());
+  protected gruposDesembarque = computed(() => {
+    const grupos = new Map<string, { escolaId: string; nome: string; alunos: routePending[] }>();
+    for (const p of this.pendencias()) {
+      const escolaId = this.escolaDoAluno()[p.studentId];
+      if (!p.missingAlighting.length || !escolaId) continue;
+      if (!grupos.has(escolaId)) grupos.set(escolaId, { escolaId, nome: this.escolas.get(escolaId) ?? 'Escola', alunos: [] });
+      grupos.get(escolaId)!.alunos.push(p);
+    }
+    return [...grupos.values()];
+  });
 
   // "Adicionar aluno" (3 passos em tela cheia)
   protected adicionando = signal(false);
@@ -105,12 +122,83 @@ export class DriverRouteEditor implements OnInit {
         this.escolas = new Map((escolas ?? []).map((e) => [e.id, e.name]));
         this.carregando.set(false);
         this.avisarSituacao();
+        this.carregarEscolasDosAlunos();
       },
       error: (erro: HttpErrorResponse) => {
         this.erroCarregar.set(erro?.status === 403 || erro?.status === 404 ? 'semAcesso' : 'erro');
         this.carregando.set(false);
       },
     });
+  }
+
+  // escola de cada aluno: vem do contrato ativo
+  private carregarEscolasDosAlunos() {
+    this.contractService
+      .getMyContracts({ status: 'ACTIVE', size: 200 })
+      .pipe(catchError(() => of(null)))
+      .subscribe((pagina) => {
+        const mapa: Record<string, string> = {};
+        for (const c of pagina?.content ?? []) {
+          mapa[c.studentId] = c.schoolId;
+          if (!this.escolas.has(c.schoolId)) this.escolas.set(c.schoolId, c.schoolName);
+        }
+        this.escolaDoAluno.set(mapa);
+      });
+  }
+
+  abrirDesembarque() {
+    this.marcadosDesembarque.set(new Set(this.gruposDesembarque().flatMap((g) => g.alunos.map((a) => a.studentId))));
+    this.desembarcando.set(true);
+  }
+
+  fecharDesembarque() {
+    if (!this.enviando()) this.desembarcando.set(false);
+  }
+
+  alternarDesembarque(studentId: string) {
+    this.marcadosDesembarque.update((s) => {
+      const novo = new Set(s);
+      if (novo.has(studentId)) novo.delete(studentId);
+      else novo.add(studentId);
+      return novo;
+    });
+  }
+
+  // cada um desce na escola do contrato: usa o ponto dela se ja existe; se nao, o primeiro cria e os outros entram nele.
+  // os dias sao os que faltam desembarque (pendencia do backend). um pedido por aluno, um depois do outro
+  adicionarDesembarques() {
+    const marcados = this.marcadosDesembarque();
+    const tarefas = this.gruposDesembarque().flatMap((g) => g.alunos.filter((a) => marcados.has(a.studentId)).map((a) => ({ escolaId: g.escolaId, a })));
+    if (!tarefas.length || this.enviando()) return;
+    this.enviando.set(true);
+    let ultima: routeEdit | null = null;
+    let falhas = 0;
+    from(tarefas)
+      .pipe(
+        concatMap(({ escolaId, a }) => {
+          const ponto = this.pontos().find((p) => p.schools.some((s) => s.schoolId === escolaId));
+          const base = { action: 'ALIGHTING' as const, locationType: 'SCHOOL' as const, weekdays: a.missingAlighting };
+          const pedido = ponto ? { ...base, routeStopId: ponto.id } : { ...base, newStop: true };
+          return this.routeService.addStudent(this.routeId, a.studentId, pedido).pipe(
+            // ja redesenha: o proximo da mesma escola acha o ponto novo
+            tap((edicao) => {
+              ultima = edicao;
+              this.pontos.set(edicao.stops ?? []);
+            }),
+            catchError(() => {
+              falhas++;
+              return of(null);
+            }),
+          );
+        }),
+        toArray(),
+      )
+      .subscribe(() => {
+        this.enviando.set(false);
+        this.desembarcando.set(false);
+        if (ultima) this.aplicar(ultima);
+        if (falhas) this.popUpService.show(`${tarefas.length - falhas} desembarques adicionados. ${falhas} não entraram.`, 'warning', 'Alguns não entraram');
+      });
   }
 
   private semErro<T>(pedido: Observable<T>, padrao: T): Observable<T> {

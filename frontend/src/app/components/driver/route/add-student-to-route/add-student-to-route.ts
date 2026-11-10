@@ -1,6 +1,9 @@
-import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, input, output, signal } from '@angular/core';
+import { catchError, concatMap, from, of, toArray } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RouteService } from '../../../../services/route.service';
+import { ContractService } from '../../../../services/contract.service';
+import { PopUpService } from '../../../../shared/pop-up';
 import {
   DIAS_DA_SEMANA,
   StopAction,
@@ -17,7 +20,8 @@ import {
 type Local = StopLocationType;
 
 // Figma "Motorista · Adicionar aluno" 1 a 3: aluno -> acao, local, endereco e dias -> ponto (novo ou que ja existe)
-// cada envio poe UMA acao do aluno (embarque e desembarque sao duas vezes)
+// cada envio poe UMA acao do aluno (embarque e desembarque sao duas vezes).
+// desembarque na escola: da pra levar junto os outros alunos da mesma escola (a escola vem do contrato ativo)
 @Component({
   selector: 'app-add-student-to-route',
   standalone: true,
@@ -25,8 +29,10 @@ type Local = StopLocationType;
   templateUrl: './add-student-to-route.html',
   styleUrls: ['../../../../shared/folha.css', '../../../../shared/rota.css', './add-student-to-route.css'],
 })
-export class AddStudentToRoute {
+export class AddStudentToRoute implements OnInit {
   private routeService = inject(RouteService);
+  private contractService = inject(ContractService);
+  private popUpService = inject(PopUpService);
 
   readonly routeId = input.required<string>();
   readonly pontos = input<routeStop[]>([]);
@@ -38,7 +44,7 @@ export class AddStudentToRoute {
   protected readonly dias = DIAS_DA_SEMANA;
   protected readonly ruaENumero = ruaENumero;
 
-  protected passo = signal<1 | 2 | 3>(1);
+  protected passo = signal<1 | 2 | 3 | 4>(1);
   protected aluno = signal<stopOptionStudent | null>(null);
   protected acao = signal<StopAction>('BOARDING');
   protected local = signal<Local>('HOME');
@@ -48,6 +54,67 @@ export class AddStudentToRoute {
   protected ponto = signal<routeStop | null>(null);
   protected posicao: number | null = null;
   protected enviando = signal(false);
+
+  // escola de cada aluno, pelos contratos ativos do motorista (studentId -> escola)
+  private escolas = signal<Record<string, { id: string; nome: string }>>({});
+  // desembarque na escola: outros alunos da mesma escola marcados pra ir juntos
+  protected juntos = signal<Set<string>>(new Set());
+
+  protected emLote = computed(() => this.acao() === 'ALIGHTING' && this.local() === 'SCHOOL');
+  protected escolaDoAluno = computed(() => {
+    const aluno = this.aluno();
+    return aluno ? (this.escolas()[aluno.studentId] ?? null) : null;
+  });
+  // da mesma escola e ainda sem desembarque na escola nesta rota
+  protected mesmaEscola = computed(() => {
+    const aluno = this.aluno();
+    const escola = this.escolaDoAluno();
+    if (!aluno || !escola || !this.emLote()) return [];
+    const jaDescem = new Set(
+      this.pontos().flatMap((p) => p.students.filter((a) => a.action === 'ALIGHTING' && a.locationType === 'SCHOOL').map((a) => a.studentId)),
+    );
+    return this.alunos().filter(
+      (a) => a.studentId !== aluno.studentId && this.escolas()[a.studentId]?.id === escola.id && !jaDescem.has(a.studentId),
+    );
+  });
+  // etapa 4 so no desembarque na escola, quando tem outros da mesma escola pra levar junto
+  protected temEtapa4 = computed(() => this.emLote() && this.mesmaEscola().length > 0);
+  // quantos vao no envio (o aluno escolhido + os marcados)
+  protected totalNoEnvio = computed(() => {
+    if (!this.emLote()) return 1;
+    const marcaveis = new Set(this.mesmaEscola().map((a) => a.studentId));
+    return 1 + [...this.juntos()].filter((id) => marcaveis.has(id)).length;
+  });
+
+  ngOnInit() {
+    this.contractService
+      .getMyContracts({ status: 'ACTIVE', size: 200 })
+      .pipe(catchError(() => of(null)))
+      .subscribe((pagina) => {
+        const mapa: Record<string, { id: string; nome: string }> = {};
+        for (const c of pagina?.content ?? []) mapa[c.studentId] = { id: c.schoolId, nome: c.schoolName };
+        this.escolas.set(mapa);
+      });
+  }
+
+  alternarJunto(studentId: string) {
+    this.juntos.update((s) => {
+      const novo = new Set(s);
+      if (novo.has(studentId)) novo.delete(studentId);
+      else novo.add(studentId);
+      return novo;
+    });
+  }
+
+  // marca todos da mesma escola (o padrao quando chega no desembarque na escola)
+  private marcarTodosDaEscola() {
+    this.juntos.set(new Set(this.mesmaEscola().map((a) => a.studentId)));
+  }
+
+  escolherAcao(acao: StopAction) {
+    this.acao.set(acao);
+    this.marcarTodosDaEscola();
+  }
 
   // passo 3: pontos que ja existem no lugar escolhido (escola: os pontos com escola; o backend confere se e a do contrato)
   protected pontosNoLugar = computed(() => {
@@ -75,6 +142,7 @@ export class AddStudentToRoute {
     this.local.set(local);
     if (local === 'SCHOOL') {
       this.endereco.set(null);
+      this.marcarTodosDaEscola();
       return;
     }
     // "Casa" comeca no endereco "Casa"; "Outro lugar", no primeiro que nao e a casa
@@ -102,6 +170,11 @@ export class AddStudentToRoute {
       this.ponto.set(null);
       this.posicao = null;
       this.passo.set(3);
+      return;
+    }
+    if (this.passo() === 3 && this.temEtapa4()) {
+      this.marcarTodosDaEscola();
+      this.passo.set(4);
     }
   }
 
@@ -111,7 +184,7 @@ export class AddStudentToRoute {
       this.fechar.emit();
       return;
     }
-    this.passo.set(this.passo() === 3 ? 2 : 1);
+    this.passo.set(this.passo() === 4 ? 3 : this.passo() === 3 ? 2 : 1);
   }
 
   enviar() {
@@ -133,14 +206,59 @@ export class AddStudentToRoute {
       if (this.posicao !== null && String(this.posicao) !== '' && posicao >= 1) pedido.orderIndex = Math.floor(posicao);
     }
 
+    const outros = this.emLote() ? this.mesmaEscola().filter((a) => this.juntos().has(a.studentId)) : [];
     this.enviando.set(true);
     // 400 (ordem, ponto errado), 403 e 409 vao pro popup global com o texto do backend (Figma "erro 400 ordem")
     this.routeService.addStudent(this.routeId(), aluno.studentId, pedido).subscribe({
       next: (edicao) => {
-        this.enviando.set(false);
-        this.adicionado.emit(edicao);
+        if (!outros.length) {
+          this.enviando.set(false);
+          this.adicionado.emit(edicao);
+          return;
+        }
+        this.enviarJuntos(edicao, outros, ponto);
       },
       error: () => this.enviando.set(false),
     });
+  }
+
+  // os outros da mesma escola vao pro mesmo ponto da escola, um pedido por aluno (o backend recebe um por vez)
+  private enviarJuntos(primeira: routeEdit, outros: stopOptionStudent[], ponto: routeStop | null) {
+    // ponto novo: e o que apareceu na resposta e nao existia antes
+    const antes = new Set(this.pontos().map((p) => p.id));
+    const destino = ponto ?? primeira.stops.find((p) => !antes.has(p.id) && p.schools.length > 0) ?? null;
+    if (!destino) {
+      this.enviando.set(false);
+      this.adicionado.emit(primeira);
+      return;
+    }
+    const pedido: addStudentRequest = {
+      action: 'ALIGHTING',
+      locationType: 'SCHOOL',
+      weekdays: this.diasMarcados(),
+      routeStopId: destino.id,
+    };
+    let ultima = primeira;
+    from(outros)
+      .pipe(
+        concatMap((a) =>
+          this.routeService.addStudent(this.routeId(), a.studentId, pedido).pipe(
+            catchError(() => of(null)),
+          ),
+        ),
+        toArray(),
+      )
+      .subscribe((respostas) => {
+        for (const r of respostas) if (r) ultima = r;
+        const certos = 1 + respostas.filter(Boolean).length;
+        const falhas = respostas.length - (certos - 1);
+        this.enviando.set(false);
+        this.popUpService.show(
+          falhas ? `${certos} adicionados. ${falhas} não entraram (o motivo aparece no aviso de cada um).` : `${certos} alunos descem neste ponto da escola.`,
+          falhas ? 'warning' : 'success',
+          falhas ? 'Alguns alunos não entraram' : 'Alunos adicionados',
+        );
+        this.adicionado.emit(ultima);
+      });
   }
 }

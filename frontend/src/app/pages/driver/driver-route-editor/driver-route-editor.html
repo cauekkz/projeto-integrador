@@ -72,12 +72,17 @@
   </main>
 
   @if (!carregando() && !erroCarregar() && pontos().length) {
-    <div class="barra-acoes">
+    <div class="barra-acoes" [class.com-desembarque]="gruposDesembarque().length">
+      @if (gruposDesembarque().length) {
+        <button type="button" class="btn btn-azul desembarque" (click)="abrirDesembarque()">
+          <i class="bi bi-building" aria-hidden="true"></i> Adicionar desembarque
+        </button>
+      }
       @if (pronta()) {
         <button type="button" class="btn btn-contorno" (click)="abrirAdicionar()">Adicionar aluno</button>
         <button type="button" class="btn btn-azul" (click)="iniciar()">Iniciar rota</button>
       } @else {
-        <button type="button" class="btn btn-azul" (click)="abrirAdicionar()">Adicionar aluno</button>
+        <button type="button" class="btn" [class.btn-azul]="!gruposDesembarque().length" [class.btn-contorno]="gruposDesembarque().length" (click)="abrirAdicionar()">Adicionar aluno</button>
       }
     </div>
   }
@@ -92,6 +97,36 @@
     [alunos]="alunos()"
     (fechar)="adicionando.set(false)"
     (adicionado)="alunoAdicionado($event)" />
+}
+
+<!-- desembarque de todos: cada um na escola do contrato, ja marcados -->
+@if (desembarcando()) {
+  <div class="fundo" animate.enter="entrar-fade" (click)="fecharDesembarque()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="desembarque-titulo" (click)="$event.stopPropagation()">
+      <h2 id="desembarque-titulo">Adicionar desembarque</h2>
+      <p class="sub">Quem embarca nesta rota e ainda não desce. Cada um desce na escola do contrato, nos dias que faltam.</p>
+      @for (g of gruposDesembarque(); track g.escolaId) {
+        <p class="rotulo">{{ g.nome }}</p>
+        <ul class="opcoes">
+          @for (a of g.alunos; track a.studentId) {
+            <li>
+              <button type="button" class="opcao" [class.marcada]="marcadosDesembarque().has(a.studentId)" [attr.aria-pressed]="marcadosDesembarque().has(a.studentId)" (click)="alternarDesembarque(a.studentId)">
+                <span class="marca"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
+                <span class="textos">
+                  <strong>{{ a.studentName }}</strong>
+                  <small>{{ resumoDias(a.missingAlighting) }}</small>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+      <button type="button" class="btn btn-azul" [disabled]="enviando() || !marcadosDesembarque().size" (click)="adicionarDesembarques()">
+        {{ enviando() ? 'Adicionando...' : marcadosDesembarque().size === 1 ? 'Adicionar 1 desembarque' : 'Adicionar ' + marcadosDesembarque().size + ' desembarques' }}
+      </button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharDesembarque()">Voltar</button>
+    </div>
+  </div>
 }
 
 <!-- Figma "Motorista · Aluno no ponto · ajustar" -->
