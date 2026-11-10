@@ -1,5 +1,6 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, effect, input, viewChild } from '@angular/core';
 import * as L from 'leaflet';
+import { GlisseVidro } from '../../../../shared/glisse-vidro/glisse-vidro';
 
 export interface PontoNoMapa {
   id: string;
@@ -47,9 +48,11 @@ function temWebGL(): boolean {
 @Component({
   selector: 'app-trip-map',
   standalone: true,
+  imports: [GlisseVidro],
   template: `
     <div #mapa class="mapa" role="img" aria-label="Mapa da viagem"></div>
     <button type="button" class="localizar" [attr.aria-label]="van() ? 'Centralizar no motorista' : 'Ver a rota inteira'" [attr.title]="van() ? 'Centralizar no motorista' : 'Ver a rota inteira'" (click)="focar()">
+      <app-glisse-vidro />
       <i class="bi bi-crosshair" aria-hidden="true"></i>
     </button>
   `,

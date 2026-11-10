@@ -1,4 +1,4 @@
-<div class="pagina">
+<div class="pagina" [class.sem-rodape]="estado() === 'antes' || estado() === 'aberta'">
   <app-trail-header [trilha]="['Motorista', 'Viagem']" [mostrarSino]="true" (voltarEvent)="voltar()" />
 
   <main class="conteudo">
@@ -35,7 +35,10 @@
           }
         </div>
         <div class="acoes-fim">
-          <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="iniciar()">
+          <button type="button" class="btn btn-azul iniciar" [disabled]="enviando()" (click)="iniciar()">
+            @if (!enviando()) {
+              <i class="bi bi-play-fill" aria-hidden="true"></i>
+            }
             {{ enviando() ? 'Iniciando...' : 'Iniciar rota' }}
           </button>
         </div>
@@ -52,7 +55,28 @@
 
       <!-- Figma "/driver-route/:id · finalizada hoje" -->
       @case ('finalizada') {
-        <app-route-card [nome]="rota()?.name ?? ''" [paradas]="paradas()" [clicavel]="false" />
+        <!-- a seta abre os passageiros da viagem de hoje -->
+        <app-route-card
+          [nome]="rota()?.name ?? ''"
+          [paradas]="paradas()"
+          [aberto]="passageirosAbertos()"
+          (abrir)="passageirosAbertos.set(!passageirosAbertos())" />
+        @if (passageirosAbertos()) {
+          <section class="passageiros" animate.enter="entrar-fade" aria-labelledby="passageiros-titulo">
+            <h2 id="passageiros-titulo">Passageiros de hoje</h2>
+            @if (passageirosDeHoje().length) {
+              <ul class="alunos">
+                @for (aluno of passageirosDeHoje(); track aluno.studentId) {
+                  <li class="aluno">
+                    <ng-container *ngTemplateOutlet="cabecaAluno; context: { $implicit: aluno, detalhe: detalheFinal(aluno) }" />
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="aviso">Nenhum passageiro nesta viagem.</p>
+            }
+          </section>
+        }
       }
 
       @case ('viagem') {
@@ -64,6 +88,7 @@
               <span class="pilula">Próximo ponto em {{ minutos() }} min</span>
             }
             <button type="button" class="redondo expandir" aria-label="Expandir mapa" (click)="mapaExpandido.set(true)">
+              <app-glisse-vidro />
               <i class="bi bi-arrows-angle-expand" aria-hidden="true"></i>
             </button>
           }
@@ -200,6 +225,7 @@
   </div>
   <div class="botoes-mapa">
     <button type="button" class="redondo recolher" aria-label="Recolher mapa" (click)="mapaExpandido.set(false)">
+      <app-glisse-vidro />
       <i class="bi bi-arrows-angle-contract" aria-hidden="true"></i>
     </button>
   </div>

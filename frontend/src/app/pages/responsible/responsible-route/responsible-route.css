@@ -35,11 +35,22 @@
   height: 40px;
   border: none;
   border-radius: 50%;
-  background: #ffffff;
+  /* branco translucido: o vidro da Glisse (app-glisse-vidro) desfoca o mapa atras */
+  background: rgba(255, 255, 255, 0.55);
   color: #0f172a;
   font-size: 16px;
   box-shadow: 0 2px 8px rgba(15, 23, 41, 0.2);
   cursor: pointer;
+}
+
+.recolher app-glisse-vidro {
+  --lg-glass: transparent;
+  --glisse-vidro-sombra: none;
+}
+
+.recolher > i {
+  position: relative;
+  z-index: 1;
 }
 
 .cartao {

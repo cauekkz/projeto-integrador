@@ -7,7 +7,7 @@ import { routeStop } from '../../../../services/dto/route/route.dto';
   selector: 'app-route-card',
   standalone: true,
   template: `
-    <button type="button" class="cartao" [disabled]="!clicavel()" (click)="abrir.emit()">
+    <button type="button" class="cartao" [disabled]="!clicavel()" [attr.aria-expanded]="aberto() ?? null" (click)="abrir.emit()">
       <span class="textos">
         <small>{{ pontos() }}</small>
         <strong>{{ nome() }}</strong>
@@ -16,7 +16,7 @@ import { routeStop } from '../../../../services/dto/route/route.dto';
         {{ alunos() }}
         <i class="bi bi-people" aria-hidden="true"></i>
       </span>
-      <i class="bi bi-chevron-down seta" aria-hidden="true"></i>
+      <i class="bi bi-chevron-down seta" [class.virada]="aberto()" aria-hidden="true"></i>
     </button>
   `,
   styleUrl: './route-card.css',
@@ -25,6 +25,8 @@ export class RouteCard {
   readonly nome = input.required<string>();
   readonly paradas = input<routeStop[]>([]);
   readonly clicavel = input(true);
+  // quando o cartao abre algo embaixo (passageiros): a seta vira pra cima. null = nao abre nada
+  readonly aberto = input<boolean | null>(null);
   readonly abrir = output<void>();
 
   // "3 pontos" / "1 ponto"

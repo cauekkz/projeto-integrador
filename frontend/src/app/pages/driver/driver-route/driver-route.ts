@@ -33,6 +33,7 @@ import {
   viagemAtiva,
 } from '../../../services/dto/trip/trip.dto';
 import { formatarCrlv } from '../driver-vehicles/driver-vehicles';
+import { GlisseVidro } from '../../../shared/glisse-vidro/glisse-vidro';
 import { UserMe } from '../../../models/user.model';
 import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
@@ -45,7 +46,7 @@ const INTERVALO_GPS_MS = 3000;
 @Component({
   selector: 'app-driver-route',
   standalone: true,
-  imports: [TrailHeader, Footer, StatusTopbar, RouteCard, TripMap, ProfileSelect, FormsModule, NgTemplateOutlet],
+  imports: [TrailHeader, Footer, StatusTopbar, RouteCard, TripMap, ProfileSelect, FormsModule, NgTemplateOutlet, GlisseVidro],
   templateUrl: './driver-route.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-route.css'],
 })
@@ -114,17 +115,22 @@ export class DriverRoute implements OnInit {
     const atual = this.pontoAtual();
     return this.pontos().filter((p) => !p.done && (!atual || p.orderIndex > atual.orderIndex));
   });
+  protected alunosDaViagem = computed(() => this.cadaAlunoUmaVez(this.pontos()));
+
   // cada aluno uma vez (ele aparece no ponto de embarque e no de descida)
-  protected alunosDaViagem = computed(() => {
+  private cadaAlunoUmaVez(pontos: { students: tripStudent[] }[]): tripStudent[] {
     const vistos = new Map<string, tripStudent>();
-    for (const ponto of this.pontos()) {
+    for (const ponto of pontos) {
       for (const aluno of ponto.students) {
         // o de descida tem a tarefa final ("Descer na escola")
         if (!vistos.has(aluno.studentId) || aluno.action === 'ALIGHTING') vistos.set(aluno.studentId, aluno);
       }
     }
     return [...vistos.values()];
-  });
+  }
+  // viagem feita hoje: os passageiros (cada um uma vez) e se a lista esta aberta (seta do cartao da rota)
+  protected passageirosDeHoje = signal<tripStudent[]>([]);
+  protected passageirosAbertos = signal(false);
   protected embarcados = computed(() => this.alunosDaViagem().filter((a) => a.status === 'BOARDED'));
   protected minutos = computed(() => minutosAte(this.viagem()?.etaSeconds));
   protected van = computed(() => {
@@ -173,7 +179,7 @@ export class DriverRoute implements OnInit {
           this.carregarVans();
           this.avisarTelaAberta();
         } else if (hoje.status === 'FINISHED') {
-          this.mostrarFinalizada();
+          this.mostrarFinalizada(hoje.stops);
         } else if (viagemAtiva(hoje.status) && this.activatedRoute.snapshot.queryParamMap.has('continuar')) {
           // veio do botao do meio do rodape: abre direto o mapa da viagem
           this.abrirViagem(hoje.id);
@@ -209,7 +215,11 @@ export class DriverRoute implements OnInit {
     this.popUpService.show('O navegador não manda a localização com a aba fechada ou a tela apagada.', 'info', 'Deixe esta tela aberta');
   }
 
-  private mostrarFinalizada() {
+  // pontos = os da viagem de hoje (GET today); sem eles, os do ultimo trip-update da viagem que acabou de terminar
+  private mostrarFinalizada(pontos: { students: tripStudent[] }[] = this.pontos()) {
+    this.passageirosDeHoje.set(this.cadaAlunoUmaVez(pontos));
+    this.passageirosAbertos.set(false);
+    this.carregarFotos({ stops: pontos });
     this.estado.set('finalizada');
     this.popUpService.show('Esta rota já foi feita hoje e não pode ser iniciada de novo.', 'success', 'Rota de hoje finalizada');
   }
@@ -377,6 +387,7 @@ export class DriverRoute implements OnInit {
   // "Entregue às 07:32" depois da entrega; senao a tarefa ("Buscar em casa")
   detalheFinal(aluno: tripStudent): string {
     if (aluno.status === 'DELIVERED' && aluno.deliveredAt) return `Entregue às ${horaDe(aluno.deliveredAt)}`;
+    if (aluno.status === 'ABSENT') return 'Não foi hoje';
     return tarefaDoAluno(aluno);
   }
 
@@ -418,7 +429,7 @@ export class DriverRoute implements OnInit {
       .join('');
   }
 
-  private carregarFotos(atualizacao: tripUpdate) {
+  private carregarFotos(atualizacao: { stops?: { students: tripStudent[] }[] | null }) {
     const conhecidas = this.fotos();
     const chaves = new Set<string>();
     for (const ponto of atualizacao.stops ?? []) {

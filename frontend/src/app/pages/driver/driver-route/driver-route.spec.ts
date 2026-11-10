@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { Subject } from 'rxjs';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { PopUpService } from '../../../shared/pop-up';
@@ -85,6 +85,53 @@ describe('Viagem do motorista', () => {
     expect(texto).toContain('Motorista');
   });
 
+  it('escolher a viagem: cartão de partida com trajeto, alunos de hoje, van e o botão certo', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 10, 12, 8, 0)); // quinta-feira
+    try {
+      configurar();
+      const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      const fixture = TestBed.createComponent(DriverHome);
+      fixture.detectChanges();
+      const endereco = (bairro: string) => ({ id: bairro, street: 'Rua ' + bairro, zipCode: '', city: 'SP', neighborhood: bairro, number: 1, state: 'SP', latitude: null, longitude: null });
+      const aluno = (id: string, dias: string[]) => ({ id: 'ss-' + id + dias[0], studentId: id, studentName: id, stopId: 'p', locationType: 'HOME', action: 'BOARDING', weekdays: dias });
+      const ida = {
+        ...ROTA,
+        stops: [
+          { id: 'p1', orderIndex: 1, address: endereco('Jardim Apurá'), students: [aluno('lucas', ['THURSDAY']), aluno('ana', ['MONDAY'])], schools: [] },
+          { id: 'p2', orderIndex: 2, address: endereco('Eldorado'), students: [aluno('bia', ['THURSDAY', 'FRIDAY'])], schools: [] },
+          { id: 'p3', orderIndex: 3, address: endereco('Centro'), students: [aluno('lucas', ['THURSDAY'])], schools: [] },
+        ],
+      };
+      const volta = { id: 'r-2', name: 'Volta', driverName: 'G', vehicle: null, stops: [{ id: 'p9', orderIndex: 1, address: endereco('Centro'), students: [], schools: [] }] };
+      http.expectOne((r) => r.url === '/api/route/get-all-routes-and-stops').flush({ content: [ida, volta], last: true });
+      http.expectOne('/api/trip/route/r-1/today').flush({ id: 't-1', status: 'IN_PROGRESS' });
+      http.expectOne('/api/trip/route/r-2/today').flush({}, { status: 404, statusText: 'Not Found' });
+      fixture.detectChanges();
+
+      const [cartaoIda, cartaoVolta] = fixture.nativeElement.querySelectorAll('.partida') as NodeListOf<HTMLElement>;
+      expect(fixture.nativeElement.textContent).toContain('Quinta, 12 de novembro');
+      // lucas e bia vao na quinta (lucas conta uma vez); ana so na segunda
+      expect(cartaoIda.textContent).toContain('2 alunos hoje');
+      expect(cartaoIda.textContent).toContain('3 pontos');
+      expect(cartaoIda.querySelector('.trajeto')?.getAttribute('aria-label')).toBe('De Jardim Apurá até Centro');
+      expect(cartaoIda.textContent).toContain('ABC1D23 · SPRINTER');
+      expect(cartaoIda.textContent).toContain('Em andamento');
+      expect(cartaoVolta.textContent).toContain('Nenhum aluno hoje');
+      expect(cartaoVolta.textContent).not.toContain('Em andamento');
+
+      // com viagem aberta: continua direto no mapa; sem: abre a tela de iniciar
+      (cartaoIda.querySelector('button') as HTMLElement).click();
+      expect(navegar).toHaveBeenCalledWith(['/driver-route', 'r-1'], { queryParams: { continuar: 1 } });
+      expect(cartaoIda.querySelector('button')?.textContent).toContain('Continuar viagem');
+      (cartaoVolta.querySelector('button') as HTMLElement).click();
+      expect(navegar).toHaveBeenCalledWith(['/driver-route', 'r-2']);
+      expect(cartaoVolta.querySelector('button')?.textContent).toContain('Iniciar viagem');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   describe('/driver-route/:routeId', () => {
     let socket: { atualizacoes: Subject<tripUpdate>; fechou: Subject<number>; enviarPosicao: ReturnType<typeof vi.fn>; fechar: ReturnType<typeof vi.fn> };
 
@@ -131,6 +178,38 @@ describe('Viagem do motorista', () => {
       expect(req.request.params.has('restart')).toBe(false);
       req.flush({ id: 't-1', status: 'STARTED' });
       expect(TestBed.inject(TripService).conectar).toHaveBeenCalledWith('t-1');
+    });
+
+    it('feita hoje: a seta do cartão mostra os passageiros, cada um uma vez, com o resultado', () => {
+      const endereco = { id: 'e', street: 'Rua A', zipCode: '', city: 'SP', neighborhood: null, number: 1, state: 'SP', latitude: null, longitude: null };
+      const fixture = criar({
+        id: 't-1',
+        status: 'FINISHED',
+        stops: [
+          { routeStopId: 'p1', orderIndex: 1, address: endereco, schoolIds: [], schoolNames: [], done: true,
+            students: [{ ...LUCAS, action: 'BOARDING', status: 'DELIVERED' }, { ...ANA, action: 'BOARDING', status: 'ABSENT' }] },
+          { routeStopId: 'p2', orderIndex: 2, address: endereco, schoolIds: [], schoolNames: [], done: true,
+            students: [{ ...LUCAS, action: 'ALIGHTING', status: 'DELIVERED', deliveredAt: '2026-11-10T10:32:00Z' }] },
+        ],
+      });
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).not.toContain('Passageiros de hoje');
+
+      const cartao = fixture.nativeElement.querySelector('app-route-card button') as HTMLButtonElement;
+      expect(cartao.disabled).toBe(false);
+      cartao.click();
+      fixture.detectChanges();
+      expect(cartao.getAttribute('aria-expanded')).toBe('true');
+      const alunos = fixture.nativeElement.querySelectorAll('.passageiros .aluno') as NodeListOf<HTMLElement>;
+      expect(alunos.length).toBe(2);
+      expect(alunos[0].textContent).toContain('Lucas Pereira');
+      expect(alunos[0].textContent).toContain('Entregue às');
+      expect(alunos[1].textContent).toContain('Ana Martins');
+      expect(alunos[1].textContent).toContain('Não foi hoje');
+
+      cartao.click();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).not.toContain('Passageiros de hoje');
     });
 
     it('localização negada não chama o backend', async () => {

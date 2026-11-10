@@ -4,10 +4,21 @@
   padding-top: 16px;
 }
 
+.cabeca {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .titulo {
   font-size: 18px;
   font-weight: 600;
   color: #0f172a;
+}
+
+.data {
+  font-size: 13px;
+  color: #62748e;
 }
 
 .lista {
@@ -15,6 +26,164 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* cartao de partida (diferente do cartao de rota da home) */
+.partida {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.partida.aberta {
+  border-color: #bfdbfe;
+  background: #f5f9ff;
+}
+
+.linha-nome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.linha-nome h2 {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 17px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.selo-aberta {
+  background: #dbeafe;
+  color: #0c66db;
+}
+
+.selo-aberta .ponto {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: piscar 1.6s ease-in-out infinite;
+}
+
+.selo-feita {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* trajeto: primeiro ponto --o--o--> ultimo ponto */
+.trajeto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #314158;
+}
+
+.lugar {
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.trilho {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  height: 10px;
+}
+
+/* a linha, com a ponta de seta no fim */
+.trilho::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 4px;
+  top: 50%;
+  border-top: 2px dashed #94a3b8;
+}
+
+.trilho::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  border: 5px solid transparent;
+  border-left-color: #94a3b8;
+  border-right: 0;
+  transform: translateY(-50%);
+}
+
+.parada {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border: 2px solid #94a3b8;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  font-size: 13px;
+  color: #475569;
+}
+
+.dados span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dados .sem-alunos {
+  color: #94a3b8;
+}
+
+.partida .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+}
+
+.partida .btn i {
+  font-size: 18px;
+}
+
+@keyframes piscar {
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selo-aberta .ponto {
+    animation: none;
+  }
 }
 
 .vazio {

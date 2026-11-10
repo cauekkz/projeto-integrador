@@ -16,6 +16,24 @@
   color: #0f172a;
 }
 
+/* iniciar / viagem aberta nao tem rodape: sem a folga de 120px dele, os botoes descem pro fim da tela */
+.pagina.sem-rodape {
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+
+/* viagem feita hoje: passageiros abertos pela seta do cartao */
+.passageiros {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.passageiros h2 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
 /* botoes no fim da tela (Iniciar, Continuar, Finalizar) */
 .acoes-fim {
   display: flex;
@@ -23,6 +41,22 @@
   gap: 12px;
   margin-top: auto;
   padding: 16px 25px 0;
+}
+
+/* "Iniciar rota": a acao da tela, maior e mais facil de tocar */
+.btn.iniciar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 58px;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.btn.iniciar i {
+  font-size: 1.5rem;
 }
 
 /* ---------- mapa ---------- */
@@ -60,6 +94,7 @@
 }
 
 .redondo {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,11 +102,22 @@
   height: 40px;
   border: none;
   border-radius: 50%;
-  background: #ffffff;
+  /* branco translucido: o vidro da Glisse (app-glisse-vidro) desfoca o mapa atras */
+  background: rgba(255, 255, 255, 0.55);
   color: #0f172a;
   font-size: 16px;
   box-shadow: 0 2px 8px rgba(15, 23, 41, 0.2);
   cursor: pointer;
+}
+
+.redondo app-glisse-vidro {
+  --lg-glass: transparent;
+  --glisse-vidro-sombra: none;
+}
+
+.redondo > i {
+  position: relative;
+  z-index: 1;
 }
 
 .expandir {

@@ -15,11 +15,53 @@
         <button type="button" class="btn btn-azul" (click)="irParaRotas()">Criar rota</button>
       </section>
     } @else {
-      <h1 class="titulo">Qual rota você vai fazer agora?</h1>
+      <header class="cabeca">
+        <h1 class="titulo">Qual rota você vai fazer agora?</h1>
+        <p class="data">{{ data }}</p>
+      </header>
       <ul class="lista">
         @for (rota of rotas(); track rota.id; let i = $index) {
-          <li animate.enter="entrar-subindo" [style.--i]="i">
-            <app-route-card [nome]="rota.name" [paradas]="rota.stops" (abrir)="abrirRota(rota)" />
+          @let s = situacao(rota);
+          <!-- cartao de partida: trajeto, alunos de hoje, van e o botao da viagem -->
+          <li class="partida" [class.aberta]="s === 'aberta'" [class.feita]="s === 'feita'" animate.enter="entrar-subindo" [style.--i]="i">
+            <div class="linha-nome">
+              <h2>{{ rota.name }}</h2>
+              @if (s === 'aberta') {
+                <span class="selo selo-aberta"><span class="ponto" aria-hidden="true"></span>Em andamento</span>
+              } @else if (s === 'feita') {
+                <span class="selo selo-feita"><i class="bi bi-check2" aria-hidden="true"></i>Feita hoje</span>
+              }
+            </div>
+
+            @if (trajeto(rota); as t) {
+              <p class="trajeto" [attr.aria-label]="'De ' + t.de + ' até ' + t.ate">
+                <span class="lugar">{{ t.de }}</span>
+                <span class="trilho" aria-hidden="true">
+                  @for (n of t.meio; track n) {
+                    <span class="parada"></span>
+                  }
+                </span>
+                <span class="lugar fim">{{ t.ate }}</span>
+              </p>
+            }
+
+            <p class="dados">
+              <span [class.sem-alunos]="!alunosHoje(rota)"><i class="bi bi-people" aria-hidden="true"></i>{{ textoAlunos(rota) }}</span>
+              <span><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ textoPontos(rota) }}</span>
+              @if (van(rota); as v) {
+                <span><i class="bi bi-truck" aria-hidden="true"></i>{{ v }}</span>
+              }
+            </p>
+
+            <button type="button" class="btn" [class.btn-azul]="s !== 'feita'" [class.btn-contorno]="s === 'feita'" (click)="abrirRota(rota)">
+              @if (s === 'aberta') {
+                <i class="bi bi-arrow-right-circle" aria-hidden="true"></i>Continuar viagem
+              } @else if (s === 'feita') {
+                Ver viagem de hoje
+              } @else {
+                <i class="bi bi-play-fill" aria-hidden="true"></i>Iniciar viagem
+              }
+            </button>
           </li>
         }
       </ul>

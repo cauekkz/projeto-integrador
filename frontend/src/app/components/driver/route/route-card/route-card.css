@@ -64,4 +64,9 @@ strong {
 .seta {
   font-size: 16px;
   color: #62748e;
+  transition: transform var(--dur-media, 0.25s) ease;
+}
+
+.seta.virada {
+  transform: rotate(180deg);
 }

@@ -29,10 +29,11 @@ export function textoDaVanDaViagem(viagem: studentTripToday): string {
 
 // Figma "Responsável · /responsible-route/:id": FOLLOWING, ON_BOARD, STATUS (e DONE/encerrada, sem tela no Figma)
 import { Footer } from '../../../shared/footer/footer';
+import { GlisseVidro } from '../../../shared/glisse-vidro/glisse-vidro';
 @Component({
   selector: 'app-responsible-route',
   standalone: true,
-  imports: [StatusTopbar, TripMap, ProfileSelect, Footer],
+  imports: [StatusTopbar, TripMap, ProfileSelect, Footer, GlisseVidro],
   templateUrl: './responsible-route.html',
   styleUrl: './responsible-route.css',
 })
