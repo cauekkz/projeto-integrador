@@ -3,7 +3,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando perfil...</p>
+      <app-esqueleto tipo="perfil" [quantos]="2" texto="Carregando perfil..." />
     } @else if (perfil(); as p) {
       <section class="quem" animate.enter="entrar-fade">
         @if (foto()) {

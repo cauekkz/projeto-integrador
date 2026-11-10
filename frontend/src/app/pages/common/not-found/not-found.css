@@ -10,12 +10,12 @@
 }
 
 .codigo {
-  font-size: 4rem;
-  font-weight: 700;
+  font-size: 64px;
+  font-weight: 600;
 }
 
 .mensagem {
-  font-size: 1.25rem;
+  font-size: 20px;
   font-weight: 600;
 }
 

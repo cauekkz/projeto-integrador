@@ -2,23 +2,23 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 0.9rem;
+  font-size: 14px;
   line-height: 1.55;
-  color: #475569;
+  color: var(--texto-2);
 }
 
 .titulo {
-  font-size: 1.05rem;
+  font-size: 16px;
   font-weight: 600;
   line-height: 1.35;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .secao {
-  margin-top: 10px;
-  font-size: 0.95rem;
+  margin-top: 12px;
+  font-size: 16px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .paragrafo,
@@ -40,7 +40,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #0c66db;
+  background: var(--azul);
 }
 
 .item.sub {
@@ -49,12 +49,12 @@
 
 .item.sub::before {
   background: transparent;
-  border: 1px solid #0c66db;
+  border: 1px solid var(--azul);
   width: 4px;
   height: 4px;
 }
 
 strong {
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }

@@ -43,9 +43,10 @@
 
   <main class="content">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando...</p>
+      <app-esqueleto tipo="lista" [quantos]="3" texto="Carregando..." />
     } @else if (!filhos().length) {
       <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-person-plus" aria-hidden="true"></i>
         <h2>Adicione seu filho</h2>
         <p>Com ele cadastrado, você acompanha a van e avisa as faltas por aqui.</p>
         <button type="button" class="btn btn-azul" (click)="abrirFluxoDependente()">Adicionar filho</button>
@@ -85,6 +86,7 @@
                   <span class="linha">{{ viagem.routeName }}</span>
                   <span [class]="'selo ' + selo(viagem.boardingStatus).classe">{{ selo(viagem.boardingStatus).texto }}</span>
                 </div>
+                <app-trajeto [status]="viagem.boardingStatus" />
               }
               @if (viagemParaAcompanhar(filho) || viagensSemEmbarque(filho).length) {
                 <div class="botoes">

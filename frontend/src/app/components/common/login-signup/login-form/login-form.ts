@@ -121,7 +121,7 @@ export class LoginForm {
   // e-mail confirmado: entra direto com o CPF e a senha que ja estao digitados
   emailVerificado() {
     this.etapaEmail = 'nenhuma';
-    this.popUpService.show('E-mail confirmado!', 'success', 'Tudo certo');
+    this.popUpService.show('E-mail confirmado', 'success', 'Tudo certo');
     this.login();
   }
 }

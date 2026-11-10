@@ -9,18 +9,18 @@
 .chip {
   padding: 8px 12px;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #ffffff;
-  color: #334155;
+  color: var(--texto-2);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: 14px;
   cursor: pointer;
 }
 
 .chip.ativo {
   border-color: #93c5fd;
   background: #eff8fe;
-  color: #0a54b5;
+  color: var(--azul-escuro);
 }
 
 .lista {
@@ -47,27 +47,14 @@
 }
 
 .topo strong {
-  font-size: 0.95rem;
+  font-size: 16px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
-
-.selo {
-  flex-shrink: 0;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.selo.pendente { background: #fffbeb; color: #b45309; }
-.selo.atrasada { background: #fef2f2; color: #b91c1c; }
-.selo.paga { background: #ecfdf5; color: #047857; }
-.selo.dispensada { background: #f1f5f9; color: #475569; }
 
 .parte {
-  font-size: 0.82rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--texto-3);
 }
 
 .valor-linha {
@@ -78,18 +65,18 @@
 }
 
 .valor {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--texto);
 }
 
 .data {
-  font-size: 0.82rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--texto-3);
 }
 
 .data.atrasada {
-  color: #b91c1c;
+  color: var(--vermelho-texto);
   font-weight: 600;
 }
 
@@ -98,23 +85,23 @@
   flex-direction: column;
   gap: 2px;
   padding: 8px 12px;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #f8fafc;
 }
 
 .pix span {
-  font-size: 0.75rem;
-  color: #64748b;
+  font-size: 12px;
+  color: var(--texto-3);
 }
 
 .pix strong {
-  font-size: 0.9rem;
-  color: #0f172a;
+  font-size: 14px;
+  color: var(--texto);
   overflow-wrap: anywhere;
 }
 
 .sem-pix {
-  font-size: 0.82rem;
+  font-size: 13px;
   color: #b45309;
 }
 
@@ -128,32 +115,7 @@
 }
 
 .btn-contorno.azul {
-  color: #0c66db;
-}
-
-.vazio {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 48px 16px;
-  text-align: center;
-}
-
-.vazio i {
-  font-size: 2.4rem;
-  color: #94a3b8;
-}
-
-.vazio h2 {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.vazio p {
-  font-size: 0.9rem;
-  color: #64748b;
+  color: var(--azul);
 }
 
 .fim-lista {
@@ -161,14 +123,14 @@
   padding: 12px 0;
   text-align: center;
   font-size: 13px;
-  color: #64748b;
+  color: var(--texto-3);
 }
 
 /* folhas: metodo do recebimento e filtro */
 .rotulo,
 .folha label {
-  font-size: 0.85rem;
-  color: #334155;
+  font-size: 14px;
+  color: var(--texto-2);
 }
 
 .metodos {
@@ -182,41 +144,41 @@
   align-items: center;
   gap: 12px;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   background: #ffffff;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 16px;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--texto);
   cursor: pointer;
 }
 
 .metodo i {
-  font-size: 1.2rem;
+  font-size: 20px;
   color: #94a3b8;
 }
 
 .metodo.ativo {
-  border-color: #0c66db;
+  border-color: var(--azul);
   background: #eff8fe;
 }
 
 .metodo.ativo i {
-  color: #0c66db;
+  color: var(--azul);
 }
 
 .folha select,
 .folha input {
   width: 100%;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   background: #ffffff;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 14px;
 }
 
 .periodo {
@@ -228,5 +190,5 @@
 .periodo div {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }

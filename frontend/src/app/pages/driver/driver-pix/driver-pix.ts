@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -13,7 +14,7 @@ import { formatarCpf, limparMascara } from '../../../shared/utils';
 @Component({
   selector: 'app-driver-pix',
   standalone: true,
-  imports: [TrailHeader, Footer, FormsModule],
+  imports: [Esqueleto, TrailHeader, Footer, FormsModule],
   templateUrl: './driver-pix.html',
   styleUrls: ['../../../shared/folha.css', './driver-pix.css'],
 })

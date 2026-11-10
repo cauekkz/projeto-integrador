@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -40,7 +41,7 @@ const RELACOES = ['LEGAL', 'FINANCIAL', 'WITHDRAWAL'] as const;
 @Component({
   selector: 'app-student-detail',
   standalone: true,
-  imports: [FormsModule, Header, Footer, StudentPhoto, CepMaskDirective, CepBuscaDirective],
+  imports: [Esqueleto, FormsModule, Header, Footer, StudentPhoto, CepMaskDirective, CepBuscaDirective],
   templateUrl: './student-detail.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './student-detail.css'],
 })

@@ -19,8 +19,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  color: #1f2937;
+  font-size: 20px;
+  color: var(--texto);
   border: 0.8px solid #e2e8f0;
   background: #ffffff;
   cursor: pointer;
@@ -31,12 +31,12 @@
   position: absolute;
   top: -2px;
   right: -2px;
-  background: #ef4444;
+  background: var(--vermelho);
   color: #ffffff;
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   border-radius: 999px;
-  padding: 2px 6px;
+  padding: 2px 8px;
   min-width: 12px;
   text-align: center;
 }
@@ -65,9 +65,9 @@
 }
 
 .name {
-  font-size: 0.9rem;
+  font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--texto);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -76,8 +76,8 @@
 .role {
   flex-shrink: 0;
   margin-left: 8px;
-  font-size: 0.9rem;
-  color: #64748b;
+  font-size: 14px;
+  color: var(--texto-3);
   font-weight: 500;
 }
 
@@ -92,7 +92,7 @@
 .chat-user-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
 }
 
@@ -117,8 +117,8 @@
 }
 
 .doc-button i {
-  font-size: 1.1rem;
-  color: #334155;
+  font-size: 18px;
+  color: var(--texto-2);
 }
 
 .header-geral {
@@ -139,22 +139,22 @@
 }
 
 .back-button i {
-  font-size: 2rem;
-  color: #1f2937;
+  font-size: 32px;
+  color: var(--texto);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .back-button:hover i {
-    color: #1565d8;
+    color: var(--azul);
   }
 }
 
 h1 {
   flex: 1;
   text-align: right;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--texto);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;

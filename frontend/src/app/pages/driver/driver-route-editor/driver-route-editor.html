@@ -3,7 +3,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando rota...</p>
+      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando rota..." />
     } @else if (erroCarregar() === 'semAcesso') {
       <div class="aviso" role="alert">
         <p>Você não está mais nesta rota.</p>
@@ -216,7 +216,7 @@
       <p class="sub">Usada ao iniciar a viagem, se você não escolher outra.</p>
 
       @if (carregandoVans()) {
-        <p class="aviso" role="status">Carregando vans...</p>
+        <app-esqueleto tipo="lista" [quantos]="2" texto="Carregando vans..." />
       } @else if (!vans().length) {
         <p class="aviso">Você ainda não tem vans. Adicione em "Minhas vans".</p>
       } @else {

@@ -7,7 +7,7 @@
   </div>
 
   @if (carregando()) {
-    <p class="aviso" role="status">Carregando escolas...</p>
+    <app-esqueleto tipo="lista" [quantos]="2" texto="Carregando escolas..." />
   } @else if (erroCarregar()) {
     <div class="aviso erro" role="alert">
       {{ erroCarregar() }}

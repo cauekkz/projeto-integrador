@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -33,7 +34,7 @@ import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.serv
 @Component({
   selector: 'app-driver-route-editor',
   standalone: true,
-  imports: [TrailHeader, Footer, AddStudentToRoute],
+  imports: [Esqueleto, TrailHeader, Footer, AddStudentToRoute],
   templateUrl: './driver-route-editor.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-route-editor.css'],
 })

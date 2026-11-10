@@ -19,7 +19,7 @@
   z-index: 600;
   max-width: 400px;
   margin: 0 auto;
-  padding: 0 19px;
+  padding: 0 20px;
 }
 
 .recolher {
@@ -38,7 +38,7 @@
   border-radius: 50%;
   /* branco translucido: o vidro da Glisse (app-glisse-vidro) desfoca o mapa atras */
   background: rgba(255, 255, 255, 0.55);
-  color: #0f172a;
+  color: var(--texto);
   font-size: 16px;
   box-shadow: 0 2px 8px rgba(15, 23, 41, 0.2);
   cursor: pointer;
@@ -66,7 +66,7 @@
   max-width: 402px;
   margin: 0 auto;
   /* espaco embaixo pro rodape flutuante (68px + 16px de margem) */
-  padding: 6px 20px calc(96px + env(safe-area-inset-bottom));
+  padding: 8px 20px calc(96px + env(safe-area-inset-bottom));
   border-radius: 24px 24px 0 0;
   background: #ffffff;
   box-shadow: 0 -4px 20px rgba(15, 23, 41, 0.08);
@@ -83,8 +83,8 @@
   border: none;
   border-radius: 13px;
   background: #f1f5f9;
-  color: #45556c;
-  font-size: 15px;
+  color: var(--texto-2);
+  font-size: 16px;
   cursor: pointer;
   margin-bottom: 4px;
 }
@@ -119,28 +119,28 @@ app-footer {
   margin: 0;
   padding: 16px 0;
   font-size: 14px;
-  color: #64748b;
+  color: var(--texto-3);
   text-align: center;
 }
 
 .quem {
   margin: 0;
   font-size: 13px;
-  color: #45556c;
+  color: var(--texto-2);
 }
 
 .cartao h1 {
   margin: 0;
-  font-size: 22px;
-  font-weight: 700;
-  color: #0f172a;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--texto);
 }
 
 .linha-titulo {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
 }
 
 .previsao {
@@ -151,19 +151,19 @@ app-footer {
 
 .previsao small {
   font-size: 13px;
-  color: #45556c;
+  color: var(--texto-2);
 }
 
 .previsao strong {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .sub {
   margin: 0;
   font-size: 13px;
-  color: #45556c;
+  color: var(--texto-2);
 }
 
 .motorista {
@@ -171,7 +171,7 @@ app-footer {
   align-items: center;
   gap: 12px;
   margin-top: 12px;
-  padding-top: 14px;
+  padding-top: 16px;
   border-top: 1px solid #e2e8f0;
 }
 
@@ -179,7 +179,7 @@ app-footer {
   flex-shrink: 0;
   width: 40px;
   height: 40px;
-  border-radius: 20px;
+  border-radius: 24px;
   object-fit: cover;
 }
 
@@ -189,7 +189,7 @@ app-footer {
   justify-content: center;
   border: 1px solid #afd9f7;
   background: #eff8fe;
-  color: #0a54b5;
+  color: var(--azul-escuro);
   font-size: 14px;
   font-weight: 600;
 }
@@ -205,12 +205,12 @@ app-footer {
 .dados strong {
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .dados small {
   font-size: 12px;
-  color: #45556c;
+  color: var(--texto-2);
 }
 
 .chat {
@@ -223,7 +223,7 @@ app-footer {
   border: none;
   border-radius: 50%;
   background: #eff8fe;
-  color: #0c66db;
+  color: var(--azul);
   font-size: 18px;
   cursor: pointer;
 }

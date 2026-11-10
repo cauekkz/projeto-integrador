@@ -19,7 +19,7 @@
 .user-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
 }
 
@@ -63,7 +63,7 @@
 
 .notification i {
   font-size: 20px;
-  color: #64748b;
+  color: var(--texto-3);
 }
 
 .badge {
@@ -75,11 +75,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0 5px;
+  padding: 0 4px;
   background: #ef1111;
   color: #ffffff;
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   border-radius: 999px;
   box-sizing: border-box;
 }
@@ -89,15 +89,15 @@
   height: 50px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 14px 4px 5px;
+  gap: 12px;
+  padding: 4px 16px 4px 4px;
   border-radius: 999px;
   border: 0.8px solid #e2e8f0;
   background: #ffffff;
   box-sizing: border-box;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  color: #334155;
+  color: var(--texto-2);
   cursor: pointer;
   transition: var(--transicao-botao);
   overflow: hidden;
@@ -127,7 +127,7 @@
 .role-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
   flex-shrink: 0;
 }
@@ -144,9 +144,9 @@
 }
 
 .role {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  color: #475569;
+  color: var(--texto-2);
   white-space: nowrap;
 }
 
@@ -156,7 +156,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px 13px calc(110px + env(safe-area-inset-bottom));
+  padding: 16px 12px calc(112px + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 
@@ -173,8 +173,8 @@
 .cartao {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 14px;
+  gap: 12px;
+  padding: 16px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #ffffff;
@@ -183,20 +183,20 @@
 .quem {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .quem strong {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .foto {
   flex-shrink: 0;
   width: 36px;
   height: 36px;
-  border-radius: 18px;
+  border-radius: 14px;
   object-fit: cover;
 }
 
@@ -206,7 +206,7 @@
   justify-content: center;
   border: 1px solid #afd9f7;
   background: #eff8fe;
-  color: #0a54b5;
+  color: var(--azul-escuro);
   font-size: 13px;
   font-weight: 600;
 }
@@ -214,7 +214,7 @@
 .linha {
   margin: 0;
   font-size: 14px;
-  color: #45556c;
+  color: var(--texto-2);
 }
 
 .falta {
@@ -227,23 +227,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
 }
 
 /* Figma "Selo" */
-.selo {
-  flex-shrink: 0;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.selo.aguardando { background: #fffbeb; color: #b45309; }
-.selo.embarcou { background: #eff8fe; color: #0a54b5; }
-.selo.entregue { background: #ecfdf5; color: #047857; }
-.selo.ausente { background: #f1f5f9; color: #475569; }
-
 .botoes {
   display: flex;
   gap: 8px;
@@ -255,38 +242,20 @@
   font-size: 14px;
 }
 
-.vazio {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: auto 18px;
-}
-
-.vazio h2 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.vazio p {
-  font-size: 14px;
-  color: #475569;
-}
-
 .folha .sub {
   font-size: 13px;
-  color: #62748e;
+  color: var(--texto-3);
 }
 
 .campo input[type='date'] {
   width: 100%;
   min-height: 43px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   font: inherit;
   font-size: 14px;
-  color: #0f172a;
+  color: var(--texto);
   box-sizing: border-box;
 }
 
@@ -307,12 +276,12 @@
 
 @media (max-width: 500px) {
   .topbar {
-    padding: 10px 12px;
+    padding: 12px 12px;
   }
 
   .user-info {
     width: 100vw;
-    gap: 6px;
+    gap: 8px;
   }
 
   .avatar {
@@ -330,7 +299,7 @@
     height: 46px;
     font-size: 13px;
     gap: 8px;
-    padding-right: 10px;
+    padding-right: 12px;
   }
 
   .user-name img {
@@ -339,7 +308,7 @@
   }
 
   .role-info {
-    gap: 6px;
+    gap: 8px;
   }
 
   .avatar1 {
@@ -360,8 +329,8 @@
   .rota-footer {
     width: calc(100% - 16px);
     height: 177px;
-    margin: -10px auto 8px;
-    padding: 42px 20px 0;
+    margin: -12px auto 8px;
+    padding: 44px 20px 0;
   }
 
   .van-card {
@@ -376,7 +345,7 @@
     right: -6px;
     min-width: 20px;
     height: 20px;
-    font-size: 9px;
+    font-size: 11px;
   }
 }
 
@@ -395,7 +364,7 @@
 .dependentes-pilha {
   width: auto;
   min-width: 50px;
-  padding: 0 6px;
+  padding: 0 8px;
 }
 
 .dep-foto {
@@ -423,13 +392,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #1565d8;
+  background: var(--azul);
   color: #ffffff;
-  font-size: 0.7rem;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .dep-mais {
   background: #e2e8f0;
-  color: #334155;
+  color: var(--texto-2);
 }

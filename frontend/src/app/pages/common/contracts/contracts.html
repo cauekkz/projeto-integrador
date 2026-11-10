@@ -18,14 +18,17 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando contratos...</p>
+      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando contratos..." />
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar os contratos.</p>
         <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
       </div>
     } @else if (!contratos().length) {
-      <p class="aviso" animate.enter="entrar-fade">Nenhum contrato por aqui.</p>
+      <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+        <h2>Nenhum contrato por aqui</h2>
+      </section>
     } @else {
       <ul class="grade">
         @for (c of contratos(); track c.contractId; let i = $index) {

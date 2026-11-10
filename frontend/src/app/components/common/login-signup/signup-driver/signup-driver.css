@@ -16,14 +16,14 @@
 .header h1 {
   flex: 1;
   text-align: center;
-  font-size: 2rem;
-  font-weight: 700;
+  font-size: 32px;
+  font-weight: 600;
 }
 
 .back-button {
   border: none;
   background: transparent;
-  font-size: 2rem;
+  font-size: 32px;
   cursor: pointer;
 }
 
@@ -67,8 +67,8 @@
 .checkbox-container {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 
@@ -76,13 +76,13 @@
 .error-message {
   margin-top: 4px;
   margin-bottom: 12px;
-  color: #e61212;
-  font-size: 0.85rem;
+  color: var(--vermelho);
+  font-size: 14px;
 }
 
 @media (max-width: 480px) {
   .form-container {
-    padding: 24px 14px;
+    padding: 24px 16px;
   }
 
   .form {
@@ -93,7 +93,7 @@
 
 
   .header h1 {
-    font-size: 1.7rem;
+    font-size: 28px;
   }
 
   .row {

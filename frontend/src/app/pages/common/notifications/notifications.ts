@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Location } from '@angular/common';
@@ -55,7 +56,7 @@ const TIPOS_VIAGEM = ['TRIP_STARTED', 'VAN_ON_THE_WAY', 'STUDENT_BOARDED', 'STUD
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [Footer],
+  imports: [Esqueleto, Footer],
   templateUrl: './notifications.html',
   styleUrl: './notifications.css',
 })

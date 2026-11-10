@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, forkJoin, map, of } from 'rxjs';
@@ -19,7 +20,7 @@ type Situacao = 'livre' | 'aberta' | 'feita';
 @Component({
   selector: 'app-driver-home',
   standalone: true,
-  imports: [Footer, TrailHeader],
+  imports: [Esqueleto, Footer, TrailHeader],
   templateUrl: './driver-home.html',
   styleUrls: ['../../../shared/folha.css', './driver-home.css'],
 })

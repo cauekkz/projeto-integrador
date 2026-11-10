@@ -4,13 +4,13 @@
   gap: 12px;
   width: 100%;
   min-height: 60px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #ffffff;
   font: inherit;
   text-align: left;
-  color: #62748e;
+  color: var(--texto-3);
   cursor: pointer;
 }
 
@@ -28,31 +28,14 @@
 }
 
 .textos strong {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .textos small {
   font-size: 12px;
-  color: #62748e;
+  color: var(--texto-3);
 }
 
 /* "Você ainda não tem grupos" */
-.vazio {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 140px;
-}
-
-.vazio h2 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.vazio p {
-  font-size: 14px;
-  color: #45556c;
-}

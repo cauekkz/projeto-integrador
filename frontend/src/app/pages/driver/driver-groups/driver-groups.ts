@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -12,7 +13,7 @@ import { driverGroup } from '../../../services/dto/group/group.dto';
 @Component({
   selector: 'app-driver-groups',
   standalone: true,
-  imports: [FormsModule, TrailHeader, Footer],
+  imports: [Esqueleto, FormsModule, TrailHeader, Footer],
   templateUrl: './driver-groups.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-groups.css'],
 })

@@ -1,19 +1,19 @@
 /* pagina, botoes e folha vem de shared/folha.css; chip, campo e rotulo de shared/rota.css */
 
 .conteudo {
-  gap: 10px;
+  gap: 12px;
 }
 
 .campo select {
   width: 100%;
-  min-height: 43px;
-  padding: 0 14px;
+  min-height: 44px;
+  padding: 0 16px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #ffffff;
   font: inherit;
   font-size: 14px;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 /* iniciar / viagem aberta nao tem rodape: sem a folga de 120px dele, os botoes descem pro fim da tela */
@@ -29,9 +29,9 @@
 }
 
 .passageiros h2 {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 /* botoes no fim da tela (Iniciar, Continuar, Finalizar) */
@@ -40,7 +40,7 @@
   flex-direction: column;
   gap: 12px;
   margin-top: auto;
-  padding: 16px 25px 0;
+  padding: 16px 24px 0;
 }
 
 /* "Iniciar rota": a acao da tela, maior e mais facil de tocar */
@@ -50,13 +50,13 @@
   justify-content: center;
   gap: 8px;
   min-height: 58px;
-  border-radius: 16px;
-  font-size: 1.1rem;
+  border-radius: 14px;
+  font-size: 18px;
   font-weight: 600;
 }
 
 .btn.iniciar i {
-  font-size: 1.5rem;
+  font-size: 24px;
 }
 
 /* ---------- mapa ---------- */
@@ -85,9 +85,9 @@
   top: 12px;
   left: 12px;
   z-index: 500;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 12px;
-  background: #0c66db;
+  background: var(--azul);
   color: #ffffff;
   font-size: 14px;
   font-weight: 600;
@@ -104,7 +104,7 @@
   border-radius: 50%;
   /* branco translucido: o vidro da Glisse (app-glisse-vidro) desfoca o mapa atras */
   background: rgba(255, 255, 255, 0.55);
-  color: #0f172a;
+  color: var(--texto);
   font-size: 16px;
   box-shadow: 0 2px 8px rgba(15, 23, 41, 0.2);
   cursor: pointer;
@@ -136,7 +136,7 @@
   z-index: 60;
   max-width: 400px;
   margin: 0 auto;
-  padding: 0 19px;
+  padding: 0 20px;
 }
 
 .botoes-mapa {
@@ -167,7 +167,7 @@
 .cabecalho-ponto {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .ordem {
@@ -178,7 +178,7 @@
   width: 28px;
   height: 28px;
   border-radius: 14px;
-  background: #0c66db;
+  background: var(--azul);
   color: #ffffff;
   font-size: 13px;
   font-weight: 600;
@@ -203,27 +203,27 @@
 .dados strong {
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .endereco small,
 .dados small {
   font-size: 12px;
-  color: #62748e;
+  color: var(--texto-3);
 }
 
 .alunos {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .aluno {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 12px 14px;
+  gap: 12px;
+  padding: 12px 16px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #ffffff;
@@ -232,14 +232,14 @@
 .cabeca {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .foto {
   flex-shrink: 0;
   width: 36px;
   height: 36px;
-  border-radius: 18px;
+  border-radius: 14px;
   object-fit: cover;
 }
 
@@ -249,25 +249,12 @@
   justify-content: center;
   border: 1px solid #afd9f7;
   background: #eff8fe;
-  color: #0a54b5;
+  color: var(--azul-escuro);
   font-size: 13px;
   font-weight: 600;
 }
 
 /* Figma "Selo" */
-.selo {
-  flex-shrink: 0;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.selo.aguardando { background: #fffbeb; color: #b45309; }
-.selo.embarcou { background: #eff8fe; color: #0a54b5; }
-.selo.entregue { background: #ecfdf5; color: #047857; }
-.selo.ausente { background: #f1f5f9; color: #475569; }
-
 .botoes {
   display: flex;
   gap: 8px;
@@ -275,8 +262,8 @@
 
 .botoes .btn {
   flex: 1;
-  min-height: 36px;
-  font-size: 13px;
+  min-height: 48px;
+  font-size: 16px;
 }
 
 /* ---------- listas fechadas ---------- */
@@ -291,9 +278,9 @@
 .topo-lista {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  padding: 14px 16px;
+  padding: 16px 16px;
   border: none;
   background: transparent;
   font: inherit;
@@ -305,18 +292,18 @@
   flex: 1;
   font-size: 14px;
   font-weight: 500;
-  color: #314158;
+  color: var(--texto-2);
 }
 
 .topo-lista strong {
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .topo-lista i {
   font-size: 14px;
-  color: #62748e;
+  color: var(--texto-3);
   transition: transform var(--dur-media, 0.25s) ease,
     scale 160ms var(--ease-out, ease-out);
 }
@@ -329,24 +316,24 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 0 16px 14px;
+  gap: 12px;
+  padding: 0 16px 16px;
 }
 
 .itens li {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .vazio-lista {
   font-size: 13px;
-  color: #62748e;
+  color: var(--texto-3);
 }
 
 .folha .sub {
   font-size: 13px;
-  color: #62748e;
+  color: var(--texto-3);
 }
 
 /* botao "ver a rota inteira" do mapa expandido: acima do recolher */
@@ -363,4 +350,5 @@
 
 .acoes-viagem .btn {
   flex: 1;
+  min-height: 52px;
 }

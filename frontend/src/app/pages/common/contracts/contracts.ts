@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, DestroyRef, ElementRef, OnInit, inject, signal, viewChild, effect } from '@angular/core';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -42,7 +43,7 @@ const TAMANHO_PAGINA = 20;
 @Component({
   selector: 'app-contracts',
   standalone: true,
-  imports: [TrailHeader, Footer],
+  imports: [Esqueleto, TrailHeader, Footer],
   templateUrl: './contracts.html',
   styleUrl: './contracts.css',
 })

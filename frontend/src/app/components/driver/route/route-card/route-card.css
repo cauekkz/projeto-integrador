@@ -38,13 +38,13 @@
 
 small {
   font-size: 13px;
-  color: #62748e;
+  color: var(--texto-3);
 }
 
 strong {
   font-size: 16px;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 600;
+  color: var(--texto);
   /* o nome identifica a rota: ate 2 linhas, e o resto vai no title */
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -57,10 +57,10 @@ strong {
 .alunos {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 16px;
-  font-weight: 700;
-  color: #475569;
+  font-weight: 600;
+  color: var(--texto-2);
 }
 
 .alunos i {
@@ -69,7 +69,7 @@ strong {
 
 .seta {
   font-size: 16px;
-  color: #62748e;
+  color: var(--texto-3);
   transition: transform var(--dur-media, 0.25s) ease,
     scale 160ms var(--ease-out, ease-out);
 }

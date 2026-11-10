@@ -12,22 +12,22 @@
 
 label {
   margin-bottom: -4px;
-  font-size: 0.85rem;
-  color: #334155;
+  font-size: 14px;
+  color: var(--texto-2);
 }
 
 input {
   width: 100%;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 1px solid #d7dde5;
   border-radius: 12px;
   font: inherit;
-  font-size: 0.95rem;
-  color: #0f172a;
+  font-size: 16px;
+  color: var(--texto);
 }
 
 input:focus {
   outline: none;
-  border-color: #0c66db;
+  border-color: var(--azul);
 }

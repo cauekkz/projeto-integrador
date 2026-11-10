@@ -11,15 +11,15 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #f8fafc;
 }
 
 .van > i {
-  font-size: 22px;
-  color: #0c66db;
+  font-size: 24px;
+  color: var(--azul);
 }
 
 .van .dados {
@@ -31,19 +31,19 @@
 
 .van small {
   font-size: 11px;
-  color: #62748e;
+  color: var(--texto-3);
 }
 
 .van strong {
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .trocar {
   border: none;
   background: transparent;
-  color: #0c66db;
+  color: var(--azul);
   font: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -60,8 +60,8 @@
 .ponto {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
+  gap: 8px;
+  padding: 12px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #ffffff;
@@ -71,7 +71,7 @@
 .cabecalho-ponto {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .ordem {
@@ -82,7 +82,7 @@
   width: 28px;
   height: 28px;
   border-radius: 14px;
-  background: #0c66db;
+  background: var(--azul);
   color: #ffffff;
   font-size: 13px;
   font-weight: 600;
@@ -99,12 +99,12 @@
 .endereco strong {
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .endereco small {
   font-size: 12px;
-  color: #62748e;
+  color: var(--texto-3);
 }
 
 .mais {
@@ -114,11 +114,11 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  margin-right: -6px;
+  margin-right: -8px;
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: #475569;
+  color: var(--texto-2);
   font-size: 18px;
   cursor: pointer;
 }
@@ -143,8 +143,8 @@
 
 .acao {
   flex-shrink: 0;
-  padding: 3px 6px;
-  border-radius: 6px;
+  padding: 4px 8px;
+  border-radius: 8px;
   background: #ecfdf5;
   color: #047857;
   font-size: 11px;
@@ -153,18 +153,18 @@
 
 .acao.desce {
   background: #eff8fe;
-  color: #0a54b5;
+  color: var(--azul-escuro);
 }
 
 .aluno strong {
   font-size: 13px;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .aluno small {
   font-size: 11px;
-  color: #62748e;
+  color: var(--texto-3);
 }
 
 /* "Adicionar aluno" / "Iniciar rota" logo acima do rodape */
@@ -178,7 +178,7 @@
   gap: 12px;
   max-width: 480px;
   margin: 0 auto;
-  padding: 0 38px;
+  padding: 0 40px;
 }
 
 .barra-acoes .btn {
@@ -200,12 +200,12 @@
 
 .folha .sub {
   font-size: 13px;
-  color: #62748e;
+  color: var(--texto-3);
 }
 
 .chip.numero {
   min-width: 34px;
-  padding: 0 10px;
+  padding: 0 12px;
 }
 
 .escolas {
@@ -220,17 +220,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   font-size: 14px;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .tirar {
   border: none;
   background: transparent;
-  color: #b91c1c;
+  color: var(--vermelho-texto);
   font: inherit;
   font-size: 13px;
   font-weight: 500;

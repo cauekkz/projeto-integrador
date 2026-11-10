@@ -23,61 +23,25 @@
 }
 
 .icone {
-  font-size: 1.3rem;
-  color: #0c66db;
+  font-size: 20px;
+  color: var(--azul);
 }
 
 .placa {
   flex: 1;
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #0f172a;
-}
-
-.selo {
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 600;
+  color: var(--texto);
 }
-
-.selo.ativa { background: #ecfdf5; color: #047857; }
-.selo.inativa { background: #f1f5f9; color: #475569; }
-.selo.manutencao { background: #fffbeb; color: #b45309; }
 
 .resumo {
-  font-size: 0.9rem;
-  color: #334155;
+  font-size: 14px;
+  color: var(--texto-2);
 }
 
 .detalhes {
-  font-size: 0.8rem;
-  color: #64748b;
-}
-
-.vazio {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 48px 16px;
-  text-align: center;
-}
-
-.vazio i {
-  font-size: 2.4rem;
-  color: #94a3b8;
-}
-
-.vazio h2 {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.vazio p {
-  font-size: 0.9rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--texto-3);
 }
 
 /* "Adicionar van": tela inteira por cima da lista */
@@ -104,9 +68,9 @@
 }
 
 .cabecalho h1 {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--texto);
 }
 
 .voltar {
@@ -114,8 +78,8 @@
   left: 0;
   border: none;
   background: none;
-  font-size: 1.6rem;
-  color: #0f172a;
+  font-size: 24px;
+  color: var(--texto);
   cursor: pointer;
 }
 
@@ -126,21 +90,21 @@
   gap: 12px;
   padding: 28px 16px;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  border-radius: 14px;
   background: #ffffff;
   font: inherit;
-  color: #0f172a;
+  color: var(--texto);
   cursor: pointer;
   overflow-wrap: anywhere;
 }
 
 .upload i {
-  font-size: 3rem;
+  font-size: 48px;
 }
 
 .ajuda {
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--texto-3);
 }
 
 .enviar {

@@ -31,15 +31,15 @@
 }
 .instrucao {
   text-align: center;
-  color: #64748b;
-  font-size: 0.95rem;
+  color: var(--texto-3);
+  font-size: 16px;
   max-width: 260px;
 }
 
 .email {
-  font-weight: 700;
-  color: #1f2937;
-  font-size: 1rem;
+  font-weight: 600;
+  color: var(--texto);
+  font-size: 16px;
 }
 
 .inputs {
@@ -55,36 +55,35 @@
   border-bottom: 2px solid #cbd5e1;
   border-radius: 0;
   text-align: center;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--texto);
   outline: none;
   background: transparent;
 }
 
 .code-input:focus {
-  border-bottom-color: #1565d8;
+  border-bottom-color: var(--azul);
 }
 
 .nao-encontrou {
   color: #94a3b8;
-  font-size: 0.85rem;
+  font-size: 14px;
   text-align: center;
 }
 
 .nao-encontrou em {
-  font-style: italic;
-  color: #64748b;
+  color: var(--texto-3);
 }
 
 .btn-reenviar {
   margin-top: 8px;
   background: transparent;
-  border: 1px solid #1565d8;
-  color: #1565d8;
+  border: 1px solid var(--azul);
+  color: var(--azul);
   border-radius: 14px;
   padding: 12px 32px;
-  font-size: 0.95rem;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -100,12 +99,12 @@
   height: 56px;
   border: none;
   border-radius: 14px;
-  background: #1565d8;
+  background: var(--azul);
   color: white;
-  font-size: 1rem;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
+  box-shadow: none;
   position: fixed;
   bottom: 24px;
   left: 24px;

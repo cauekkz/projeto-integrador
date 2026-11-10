@@ -11,7 +11,7 @@
   max-width: 480px;
   margin: 0 auto;
   /* espaco pro footer flutuante */
-  padding: 24px 13px 120px;
+  padding: 24px 12px 120px;
   gap: 16px;
 }
 
@@ -36,7 +36,7 @@
   border-bottom: 2px solid #cbd5e1;
   border-radius: 10px 10px 0 0;
   background: transparent;
-  color: #64748b;
+  color: var(--texto-3);
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
@@ -46,9 +46,9 @@
 }
 
 .aba.ativa {
-  border-bottom-color: #0c66db;
+  border-bottom-color: var(--azul);
   background: #d5dfeb;
-  color: #0a54b5;
+  color: var(--azul-escuro);
   font-weight: 600;
 }
 
@@ -84,41 +84,8 @@
   gap: 4px;
 }
 
-.selo {
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 13px;
-}
-
-.selo.pendente {
-  background: #fffbeb;
-  color: #b45309;
-}
-
-.selo.agendado {
-  background: #eff8fe;
-  color: #0a54b5;
-}
-
-.selo.ativo {
-  background: #ecfdf5;
-  color: #047857;
-}
-
-.selo.inativo {
-  background: #f1f5f9;
-  color: #475569;
-}
-
-.selo.cancelado {
-  background: #fef2f2;
-  color: #b91c1c;
-}
-
 .periodicidade {
-  padding: 3px 6px;
+  padding: 4px 8px;
   border-radius: 12px;
   background: #225303;
   color: #ffffff;
@@ -130,19 +97,19 @@
 .resumo {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 0 6px 4px;
+  gap: 8px;
+  padding: 0 8px 4px;
 }
 
 .resumo h2 {
   font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .parte {
   font-size: 11px;
-  color: #62748e;
+  color: var(--texto-3);
   overflow-wrap: anywhere;
 }
 
@@ -155,7 +122,7 @@
 .aluno {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
 }
 
@@ -169,7 +136,7 @@
   border: 1px solid #afd9f7;
   border-radius: 50%;
   background: #eff8fe;
-  color: #0a54b5;
+  color: var(--azul-escuro);
   font-size: 11px;
   font-weight: 600;
 }
@@ -191,13 +158,13 @@
 .aluno strong {
   font-size: 12px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
   overflow-wrap: anywhere;
 }
 
 .aluno span {
   font-size: 11px;
-  color: #62748e;
+  color: var(--texto-3);
   overflow-wrap: anywhere;
 }
 
@@ -206,12 +173,12 @@
 }
 
 .linha.info {
-  color: #0a54b5;
+  color: var(--azul-escuro);
   font-weight: 500;
 }
 
 .linha.alerta {
-  color: #b91c1c;
+  color: var(--vermelho-texto);
   font-weight: 600;
 }
 
@@ -219,7 +186,7 @@
   height: 28px;
   border: none;
   border-radius: 12px;
-  background: #0c66db;
+  background: var(--azul);
   color: #ffffff;
   font-size: 11px;
   font-weight: 500;
@@ -229,7 +196,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .btn-ver:hover {
-    background: #0a54b5;
+    background: var(--azul-escuro);
   }
 }
 
@@ -238,25 +205,25 @@
   padding: 12px 0;
   text-align: center;
   font-size: 13px;
-  color: #64748b;
+  color: var(--texto-3);
 }
 
 .aviso {
   text-align: center;
-  font-size: 0.9rem;
-  color: #64748b;
+  font-size: 14px;
+  color: var(--texto-3);
   padding: 24px 8px;
 }
 
 .aviso.erro {
-  color: #b91c1c;
+  color: var(--vermelho-texto);
 }
 
 .link {
   margin-top: 8px;
   border: none;
   background: transparent;
-  color: #0c66db;
+  color: var(--azul);
   font-weight: 600;
   cursor: pointer;
 }

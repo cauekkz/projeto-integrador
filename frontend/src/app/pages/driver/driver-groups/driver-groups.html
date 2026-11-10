@@ -3,7 +3,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando grupos...</p>
+      <app-esqueleto tipo="lista" [quantos]="3" texto="Carregando grupos..." />
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar os grupos.</p>
@@ -11,6 +11,7 @@
       </div>
     } @else if (!grupos().length) {
       <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-people" aria-hidden="true"></i>
         <h2>Você ainda não tem grupos</h2>
         <p>Junte alunos em um grupo para avisar todos os responsáveis de uma vez.</p>
         <button type="button" class="btn btn-azul" (click)="abrirNovo()">Novo grupo</button>

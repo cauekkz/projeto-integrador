@@ -4,7 +4,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   padding: 0 12px;
 }
 
@@ -17,8 +17,8 @@ fieldset {
 legend,
 label {
   margin-bottom: 8px;
-  font-size: 0.85rem;
-  color: #334155;
+  font-size: 14px;
+  color: var(--texto-2);
 }
 
 .tipos {
@@ -30,32 +30,32 @@ label {
 .tipo {
   padding: 8px 12px;
   border: 1px solid #e2e8f0;
-  border-radius: 10px;
+  border-radius: 12px;
   background: #ffffff;
-  color: #334155;
+  color: var(--texto-2);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: 14px;
   cursor: pointer;
 }
 
 .tipo.ativo {
   border-color: #93c5fd;
   background: #eff8fe;
-  color: #0a54b5;
+  color: var(--azul-escuro);
 }
 
 input {
   width: 100%;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 16px;
 }
 
 input:focus {
-  outline: 2px solid #0c66db;
+  outline: 2px solid var(--azul);
   outline-offset: -1px;
 }
 
@@ -64,28 +64,28 @@ input:focus {
   flex-direction: column;
   gap: 4px;
   margin: 0 12px;
-  padding: 14px 16px;
+  padding: 16px 16px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   background: #f8fafc;
 }
 
 .chave span {
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--texto-3);
 }
 
 .chave strong {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
   overflow-wrap: anywhere;
 }
 
 .info {
   margin: 0 12px;
-  font-size: 0.85rem;
-  color: #64748b;
+  font-size: 14px;
+  color: var(--texto-3);
 }
 
 /* botoes no fim da tela, acima do footer */

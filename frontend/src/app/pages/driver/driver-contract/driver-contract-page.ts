@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -27,7 +28,7 @@ const ETAPAS: { id: EtapaContrato; label: string }[] = [
 @Component({
   selector: 'app-driver-contract-page',
   standalone: true,
-  imports: [Button, ContractStudentData, ContractDetails, ContractReview, ContractAttachment],
+  imports: [Esqueleto, Button, ContractStudentData, ContractDetails, ContractReview, ContractAttachment],
   templateUrl: './driver-contract-page.html',
   styleUrls: ['../../../components/driver/driver-contract/contract-form.css', './driver-contract-page.css'],
 })

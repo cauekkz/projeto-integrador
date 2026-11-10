@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../../shared/esqueleto/esqueleto';
 import { ChangeDetectorRef, Component, HostListener, Input, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
@@ -10,7 +11,7 @@ import { StorageService } from '../../../../services/storage.service';
 @Component({
   selector: 'app-chat-list',
   standalone: true,
-  imports: [Header, Footer],
+  imports: [Esqueleto, Header, Footer],
   templateUrl: './chat-list.html',
   styleUrl: './chat-list.css',
 })

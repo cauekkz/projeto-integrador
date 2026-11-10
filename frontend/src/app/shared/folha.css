@@ -11,7 +11,7 @@
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  padding: 24px 13px 120px;
+  padding: 24px 12px 120px;
   gap: 16px;
 }
 
@@ -27,7 +27,7 @@
   min-height: 44px;
   border-radius: 12px;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 16px;
   font-weight: 500;
   cursor: pointer;
   transition: var(--transicao-botao);
@@ -38,34 +38,34 @@
   cursor: default;
 }
 
-.btn-azul { border: none; background: #0c66db; color: #ffffff; }
+.btn-azul { border: none; background: var(--azul); color: #ffffff; }
 @media (hover: hover) and (pointer: fine) {
-  .btn-azul:hover:not(:disabled) { background: #0a54b5; }
+  .btn-azul:hover:not(:disabled) { background: var(--azul-escuro); }
 }
-.btn-vermelho { border: none; background: #dc2626; color: #ffffff; }
+.btn-vermelho { border: none; background: var(--vermelho); color: #ffffff; }
 @media (hover: hover) and (pointer: fine) {
-  .btn-vermelho:hover:not(:disabled) { background: #b91c1c; }
+  .btn-vermelho:hover:not(:disabled) { background: var(--vermelho-texto); }
 }
-.btn-perigo { border: 1px solid #fecaca; background: #ffffff; color: #b91c1c; }
+.btn-perigo { border: 1px solid #fecaca; background: #ffffff; color: var(--vermelho-texto); }
 @media (hover: hover) and (pointer: fine) {
   .btn-perigo:hover:not(:disabled) { background: #fef2f2; }
 }
-.btn-contorno { border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; }
+.btn-contorno { border: 1px solid #cbd5e1; background: #ffffff; color: var(--texto); }
 
 .aviso {
   text-align: center;
-  font-size: 0.9rem;
-  color: #64748b;
+  font-size: 14px;
+  color: var(--texto-3);
   padding: 24px 8px;
 }
 
-.aviso.erro { color: #b91c1c; }
+.aviso.erro { color: var(--vermelho-texto); }
 
 .link {
   margin-top: 8px;
   border: none;
   background: transparent;
-  color: #0c66db;
+  color: var(--azul);
   font-weight: 600;
   cursor: pointer;
 }
@@ -91,21 +91,21 @@
   gap: 12px;
   width: 100%;
   max-width: 480px;
-  padding: 20px 22px 28px;
+  padding: 20px 24px 28px;
   border-radius: 24px 24px 0 0;
   background: #ffffff;
   animation: folha-subir 320ms var(--ease-folha, cubic-bezier(0.32, 0.72, 0, 1)) both;
 }
 
 .folha h2 {
-  font-size: 1.1rem;
+  font-size: 18px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .folha p {
-  font-size: 0.9rem;
-  color: #475569;
+  font-size: 14px;
+  color: var(--texto-2);
 }
 
 @keyframes folha-subir {

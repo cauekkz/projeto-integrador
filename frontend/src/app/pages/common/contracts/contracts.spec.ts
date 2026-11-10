@@ -103,7 +103,7 @@ describe('Contracts (/contracts paginado, uma aba por status)', () => {
     req.flush(pagina([]));
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Nenhum contrato por aqui.');
+    expect(fixture.nativeElement.textContent).toContain('Nenhum contrato por aqui');
   });
 
   it('carrega a próxima página enquanto não for a última', () => {

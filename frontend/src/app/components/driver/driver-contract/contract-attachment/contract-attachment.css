@@ -20,7 +20,7 @@
   padding: 32px 16px 8px;
   cursor: pointer;
   font-family: inherit;
-  color: #111827;
+  color: var(--texto);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -30,7 +30,7 @@
 }
 
 .anexo-vazio.invalida {
-  border-color: #dc2626;
+  border-color: var(--vermelho);
 }
 
 .anexo-vazio:disabled {
@@ -39,19 +39,19 @@
 }
 
 .icone-adicionar {
-  font-size: 3.6rem;
+  font-size: 64px;
   line-height: 1;
   color: #111111;
   margin-bottom: 8px;
 }
 
 .anexo-titulo {
-  font-size: 1rem;
+  font-size: 16px;
   text-align: center;
 }
 
 .anexo-opcional {
-  font-size: 1rem;
+  font-size: 16px;
   color: #c4c4c4;
 }
 
@@ -64,8 +64,8 @@
 }
 
 .icone-pdf {
-  font-size: 2.2rem;
-  color: #dc2626;
+  font-size: 32px;
+  color: var(--vermelho);
   flex-shrink: 0;
 }
 
@@ -78,17 +78,17 @@
 }
 
 .anexo-nome {
-  font-size: 0.9rem;
+  font-size: 14px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .anexo-tamanho {
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--texto-3);
 }
 
 .anexo-acoes {
@@ -101,8 +101,8 @@
 .acao {
   border: none;
   background: transparent;
-  color: #0066cc;
-  font-size: 0.85rem;
+  color: var(--azul);
+  font-size: 14px;
   font-weight: 600;
   padding: 8px;
   border-radius: 8px;
@@ -121,11 +121,11 @@
 }
 
 .acao-remover {
-  color: #dc2626;
-  font-size: 1rem;
+  color: var(--vermelho);
+  font-size: 16px;
 }
 
 .erro {
-  font-size: 0.8rem;
-  color: #dc2626;
+  font-size: 13px;
+  color: var(--vermelho);
 }

@@ -3,18 +3,20 @@
 
   <div class="lista">
     @if (carregandoInicial) {
-      <p class="estado-lista" role="status" aria-live="polite">Carregando conversas...</p>
+      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando conversas..." />
     } @else if (erroAoCarregar) {
       <div class="estado-lista" role="alert">
         <p>Não foi possível carregar suas conversas.</p>
         <button type="button" class="btn-estado" (click)="tentarNovamente()">Tentar novamente</button>
       </div>
     } @else if (conversas.length === 0) {
-      <div class="estado-lista">
+      <div class="vazio">
+        <i class="bi bi-chat-dots" aria-hidden="true"></i>
+        <h2>Nenhuma conversa ainda</h2>
         @if (origem === 'driver-home') {
-          <p>Nenhuma conversa ainda. Compartilhe seu código de conversa (no seu perfil) com um responsável.</p>
+          <p>Compartilhe seu código de conversa (no seu perfil) com um responsável.</p>
         } @else {
-          <p>Nenhuma conversa ainda. Vincule um motorista com o código dele para começar.</p>
+          <p>Vincule um motorista com o código dele para começar.</p>
           <button type="button" class="btn-estado" (click)="irParaVincularMotorista()">Vincular motorista</button>
         }
       </div>

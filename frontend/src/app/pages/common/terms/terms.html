@@ -19,7 +19,7 @@
           <app-markdown-text [conteudo]="t.content" />
         </div>
       } @else {
-        <p class="aviso" role="status">Carregando os termos...</p>
+        <app-esqueleto tipo="texto" [quantos]="4" texto="Carregando os termos..." />
       }
     </main>
 

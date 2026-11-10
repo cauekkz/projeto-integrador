@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -41,7 +42,7 @@ export const MOTIVO_MAXIMO = 500;
 @Component({
   selector: 'app-contract-view',
   standalone: true,
-  imports: [TrailHeader, FormsModule],
+  imports: [Esqueleto, TrailHeader, FormsModule],
   templateUrl: './contract-view.html',
   styleUrl: './contract-view.css',
 })

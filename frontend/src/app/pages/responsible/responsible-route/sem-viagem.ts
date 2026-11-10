@@ -42,12 +42,12 @@ import { Footer } from '../../../shared/footer/footer';
     .vazio h1 {
       font-size: 20px;
       font-weight: 600;
-      color: #0f172a;
+      color: var(--texto);
     }
 
     .vazio p {
       font-size: 14px;
-      color: #62748e;
+      color: var(--texto-3);
     }
   `,
 })

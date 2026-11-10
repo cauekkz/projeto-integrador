@@ -20,9 +20,9 @@ app-glisse-tab-bar {
   --lg-tab-height: 60px;
   --lg-tab-width: calc((100cqw - 2 * var(--lg-tab-inset)) / 3);
   /* cores do VanRoute */
-  --lg-foreground: #45556c;
-  --lg-muted: #45556c;
-  --lg-tab-selected: #0c66db;
+  --lg-foreground: var(--texto-2);
+  --lg-muted: var(--texto-2);
+  --lg-tab-selected: var(--azul);
   --lg-selection: rgba(12, 102, 219, 0.15);
   --lg-glass: rgba(29, 95, 161, 0.1);
   --lg-lens: rgba(12, 102, 219, 0.06);
@@ -47,7 +47,7 @@ app-glisse-tab-bar {
 }
 
 .glisse-tab-bar .lg-tab-icon .bi {
-  font-size: 26px;
+  font-size: 28px;
   line-height: 1;
 }
 

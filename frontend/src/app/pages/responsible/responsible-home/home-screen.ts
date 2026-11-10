@@ -1,3 +1,5 @@
+import { Trajeto } from '../../../shared/trajeto/trajeto';
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { catchError, forkJoin, of, switchMap } from 'rxjs';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -48,7 +50,7 @@ interface FolhaFalta {
 @Component({
   selector: 'app-responsible-home',
   standalone: true,
-  imports: [Footer, ProfileSelect, FormsModule],
+  imports: [Trajeto, Esqueleto, Footer, ProfileSelect, FormsModule],
   templateUrl: './home-screen.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './home-screen.css'],
 })

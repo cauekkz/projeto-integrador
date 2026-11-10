@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -16,7 +17,7 @@ import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.serv
 @Component({
   selector: 'app-terms',
   standalone: true,
-  imports: [Header, DeleteAccount, MarkdownText],
+  imports: [Esqueleto, Header, DeleteAccount, MarkdownText],
   templateUrl: './terms.html',
   styleUrls: ['../../../shared/folha.css', './terms.css'],
 })

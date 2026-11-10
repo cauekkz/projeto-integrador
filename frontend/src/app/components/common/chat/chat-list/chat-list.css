@@ -9,14 +9,14 @@
   display: flex;
   flex-direction: column;
   padding: 8px 0;
-  padding-bottom: 90px;
+  padding-bottom: 92px;
 }
 
 .conversa-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 20px;
+  padding: 16px 20px;
   cursor: pointer;
   border-bottom: 1px solid #f1f5f9;
   transition: background-color var(--dur-rapida) ease,
@@ -46,21 +46,21 @@
 }
 
 .conversa-nome {
-  font-size: 0.95rem;
+  font-size: 16px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--texto);
 }
 
 .conversa-msg {
-  font-size: 0.82rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--texto-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .conversa-hora {
-  font-size: 0.75rem;
+  font-size: 12px;
   color: #94a3b8;
   flex-shrink: 0;
 }
@@ -71,22 +71,22 @@
   align-items: center;
   gap: 12px;
   padding: 48px 16px;
-  color: #64748b;
-  font-size: 0.9rem;
+  color: var(--texto-3);
+  font-size: 14px;
   text-align: center;
   line-height: 1.4;
 }
 
 .btn-estado {
   border: none;
-  background: #1565d8;
+  background: var(--azul);
   color: white;
-  font-size: 0.9rem;
+  font-size: 14px;
   font-weight: 600;
-  padding: 10px 18px;
-  border-radius: 10px;
+  padding: 12px 20px;
+  border-radius: 12px;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -100,7 +100,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 6px;
+  gap: 8px;
   flex-shrink: 0;
 }
 
@@ -108,11 +108,11 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #0c66db;
+  background: var(--azul);
 }
 
 .conversa-nome.nao-lida,
 .conversa-msg.nao-lida {
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: 600;
+  color: var(--texto);
 }

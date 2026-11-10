@@ -18,8 +18,8 @@
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: #0f172a;
-  font-size: 1.4rem;
+  color: var(--texto);
+  font-size: 24px;
   cursor: pointer;
 }
 
@@ -35,9 +35,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 10px 10px 14px;
+  padding: 12px 12px 12px 16px;
   border: 1px solid #e5e7eb;
-  border-radius: 16px;
+  border-radius: 14px;
 }
 
 .migalhas {
@@ -48,7 +48,7 @@
   align-items: center;
   list-style: none;
   font-size: clamp(0.75rem, 3.4vw, 0.85rem);
-  color: #64748b;
+  color: var(--texto-3);
 }
 
 .migalhas li {
@@ -59,7 +59,7 @@
 }
 
 .migalhas i {
-  font-size: 0.7rem;
+  font-size: 11px;
   margin: 0 clamp(4px, 2vw, 8px);
 }
 
@@ -68,7 +68,7 @@
   padding: 2px 4px;
   margin: -2px -4px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -78,7 +78,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .migalha-link:hover {
-    color: #0c66db;
+    color: var(--azul);
     background: #eff6ff;
   }
 }
@@ -97,14 +97,14 @@
 .usuario {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-shrink: 0;
-  padding: 3px 10px 3px 3px;
+  padding: 4px 12px 4px 4px;
   border: 1px solid #e5e7eb;
   border-radius: 999px;
-  font-size: 0.85rem;
+  font-size: 14px;
   font-weight: 500;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .usuario img {
@@ -127,8 +127,8 @@
   border-radius: 999px;
   background: #ef1111;
   color: #ffffff;
-  font-size: 0.6rem;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
 }
 
 .sino {
@@ -142,6 +142,6 @@
   border: 1px solid #e5e7eb;
   border-radius: 50%;
   background: #ffffff;
-  color: #0f172a;
+  color: var(--texto);
   cursor: pointer;
 }

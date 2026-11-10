@@ -30,7 +30,7 @@
 .perfil-topo {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   padding-bottom: 20px;
   border-bottom: 1px solid #f1f5f9;
   margin-bottom: 8px;
@@ -44,14 +44,14 @@
 }
 
 .perfil-nome {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
 }
 
 .perfil-email {
-  font-size: 0.82rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--texto-3);
 }
 
 .menu-lista {
@@ -62,21 +62,21 @@
 .menu-item {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
   padding: 16px 4px;
   border: none;
   background: white;
-  font-size: 0.95rem;
+  font-size: 16px;
   font-weight: 500;
-  color: #1f2937;
+  color: var(--texto);
   cursor: pointer;
   border-bottom: 1px solid #f1f5f9;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
 }
 
 .menu-item i {
-  font-size: 1.1rem;
-  color: #64748b;
+  font-size: 18px;
+  color: var(--texto-3);
   width: 22px;
 }
 
@@ -87,12 +87,12 @@
 }
 
 .menu-item.danger {
-  color: #e61212;
+  color: var(--vermelho);
   border-bottom: none;
 }
 
 .menu-item.danger i {
-  color: #e61212;
+  color: var(--vermelho);
 }
 
 /* ---------- abrir / fechar ---------- */

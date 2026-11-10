@@ -16,7 +16,7 @@
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 14px 16px;
+  padding: 16px 16px;
   border: none;
   border-bottom: 1px solid #e2e8f0;
   background: #ffffff;
@@ -48,14 +48,14 @@
 }
 
 .textos strong {
-  font-size: 0.95rem;
+  font-size: 16px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .textos span {
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--texto-3);
 }
 
 .item i {
@@ -63,7 +63,7 @@
 }
 
 .item.perigo strong {
-  color: #b91c1c;
+  color: var(--vermelho-texto);
 }
 
 .item.desligado strong,

@@ -22,15 +22,15 @@
 }
 
 .recusa h2 {
-  font-size: 1.3rem;
+  font-size: 20px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .recusa p {
-  font-size: 0.9rem;
+  font-size: 14px;
   line-height: 1.5;
-  color: #475569;
+  color: var(--texto-2);
 }
 
 .acoes {

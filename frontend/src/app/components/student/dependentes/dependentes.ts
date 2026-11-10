@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -13,7 +14,7 @@ import { fotosQuebradas } from '../../../shared/iniciais/iniciais';
 @Component({
   selector: 'app-dependentes',
   standalone: true,
-  imports: [CommonModule, Header, Button, FormsModule, Footer],
+  imports: [Esqueleto, CommonModule, Header, Button, FormsModule, Footer],
   templateUrl: './dependentes.html',
   styleUrl: './dependentes.css',
 })

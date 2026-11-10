@@ -42,8 +42,6 @@ export class GlisseTabBar {
   readonly falhou = output<void>();
 
   private barra = signal<TabBarMontada | null>(null);
-  // aba mostrada: ja vai pra aba tocada antes da navegacao confirmar
-  private mostrado = signal<string | null>(null);
 
   constructor() {
     const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
@@ -90,20 +88,15 @@ export class GlisseTabBar {
       }, 1000);
     });
 
-    // a tela trocou de aba (navegacao): acompanha
-    effect(() => this.mostrado.set(this.valor()));
-
     effect(() => {
       const barra = this.barra();
       if (!barra) return;
       barra.render({
         abas: this.abas(),
-        valor: this.mostrado(),
+        // a selecao so anda quando a tela nova aparece (o valor vem da navegacao), nao no toque
+        valor: this.valor(),
         ariaLabel: this.ariaLabel(),
-        aoEscolher: (v) => {
-          this.mostrado.set(v);
-          this.escolheu.emit(v);
-        },
+        aoEscolher: (v) => this.escolheu.emit(v),
       });
     });
   }

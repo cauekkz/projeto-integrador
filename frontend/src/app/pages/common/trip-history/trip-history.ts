@@ -1,3 +1,5 @@
+import { Trajeto } from '../../../shared/trajeto/trajeto';
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, DestroyRef, ElementRef, OnInit, afterNextRender, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
@@ -28,7 +30,7 @@ const VAZIO: Filtro = { studentId: '', routeId: '', from: '', to: '' };
 @Component({
   selector: 'app-trip-history',
   standalone: true,
-  imports: [FormsModule, TrailHeader, Header, Footer],
+  imports: [Trajeto, Esqueleto, FormsModule, TrailHeader, Header, Footer],
   templateUrl: './trip-history.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './trip-history.css'],
 })

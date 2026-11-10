@@ -6,11 +6,11 @@
 }
 
 .ajuda {
-  font-size: 0.8rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--texto-3);
 }
 
 .ajuda a {
-  color: #0066cc;
+  color: var(--azul);
   font-weight: 600;
 }

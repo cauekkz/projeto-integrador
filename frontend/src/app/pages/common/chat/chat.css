@@ -9,14 +9,14 @@
   display: flex;
   flex-direction: column;
   padding: 8px 0;
-  padding-bottom: 90px;
+  padding-bottom: 92px;
 }
 
 .conversa-item {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 14px 20px;
+  padding: 16px 20px;
   cursor: pointer;
   border-bottom: 1px solid #f1f5f9;
 }
@@ -44,21 +44,21 @@
 }
 
 .conversa-nome {
-  font-size: 0.95rem;
+  font-size: 16px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--texto);
 }
 
 .conversa-msg {
-  font-size: 0.82rem;
-  color: #64748b;
+  font-size: 13px;
+  color: var(--texto-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .conversa-hora {
-  font-size: 0.75rem;
+  font-size: 12px;
   color: #94a3b8;
   flex-shrink: 0;
 }

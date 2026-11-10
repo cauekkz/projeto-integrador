@@ -98,7 +98,7 @@ export class ForgotPassword {
         next: () => {
           this.enviando = false;
           this.cdr.markForCheck();
-          this.popUpService.show('Senha alterada! Entre com a nova senha.', 'success', 'Tudo certo');
+          this.popUpService.show('Senha alterada. Entre com a nova senha.', 'success', 'Tudo certo');
           this.voltarEvent.emit();
         },
         error: () => {

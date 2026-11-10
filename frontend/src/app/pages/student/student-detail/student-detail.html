@@ -3,7 +3,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando...</p>
+      <app-esqueleto tipo="perfil" [quantos]="2" texto="Carregando..." />
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar os dados.</p>
@@ -63,7 +63,7 @@
                 <small>{{ rotuloRelacao[pessoa.relationType] || pessoa.relationType }}</small>
               </div>
               @if (pessoa.admin) {
-                <span class="selo-admin">Admin</span>
+                <span class="selo selo-admin">Admin</span>
               }
             </div>
             @if (souAdmin() && !souEu(pessoa)) {
@@ -197,7 +197,7 @@
       @if (codigoConvite(); as codigo) {
         <p class="sub">Passe o código para a pessoa usar em "Vincular dependente". Ele vale 15 minutos.</p>
         <p class="codigo">{{ codigo }}</p>
-        <button type="button" class="btn btn-azul" (click)="copiarCodigo()">{{ copiado() ? 'Copiado!' : 'Copiar código' }}</button>
+        <button type="button" class="btn btn-azul" (click)="copiarCodigo()">{{ copiado() ? 'Copiado' : 'Copiar código' }}</button>
         <button type="button" class="btn btn-contorno" (click)="fecharConvite()">Fechar</button>
       } @else {
         <p class="sub">Qual vai ser o papel da pessoa com {{ primeiroNome() }}?</p>

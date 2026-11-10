@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -27,7 +28,7 @@ function formularioVazio() {
 @Component({
   selector: 'app-driver-schools',
   standalone: true,
-  imports: [FormsModule, CepMaskDirective, CepBuscaDirective, PhoneMaskDirective],
+  imports: [Esqueleto, FormsModule, CepMaskDirective, CepBuscaDirective, PhoneMaskDirective],
   templateUrl: './driver-schools.html',
   styleUrl: './driver-schools.css',
 })

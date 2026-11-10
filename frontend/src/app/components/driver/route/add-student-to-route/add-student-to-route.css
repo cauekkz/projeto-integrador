@@ -2,7 +2,7 @@
 
 .sub {
   font-size: 13px;
-  color: #475569;
+  color: var(--texto-2);
 }
 
 .rotulo {

@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, DestroyRef, ElementRef, OnInit, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -18,7 +19,7 @@ const TAMANHO_PAGINA = 10;
 @Component({
   selector: 'app-driver-routes',
   standalone: true,
-  imports: [Footer, FormsModule, RouteCard, ProfileSelect],
+  imports: [Esqueleto, Footer, FormsModule, RouteCard, ProfileSelect],
   templateUrl: './driver-routes.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-routes.css'],
 })

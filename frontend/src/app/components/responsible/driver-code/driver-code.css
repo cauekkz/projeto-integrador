@@ -19,15 +19,15 @@
 }
 
 h1 {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--texto);
   text-align: center;
 }
 
 .description {
-  font-size: 0.9rem;
-  color: #64748b;
+  font-size: 14px;
+  color: var(--texto-3);
   text-align: center;
   max-width: 280px;
 }
@@ -40,8 +40,8 @@ h1 {
   padding: 12px 16px;
   border-radius: 12px;
   background: #fef2f2;
-  color: #b91c1c;
-  font-size: 0.9rem;
+  color: var(--vermelho-texto);
+  font-size: 14px;
 }
 
 .sucesso {
@@ -52,7 +52,7 @@ h1 {
 }
 
 .sucesso i {
-  font-size: 3rem;
+  font-size: 48px;
   color: #16a34a;
 }
 

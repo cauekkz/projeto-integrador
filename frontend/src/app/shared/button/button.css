@@ -33,10 +33,10 @@
   height: 56px;
   border: none;
   border-radius: 14px;
-  font-size: 1rem;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   transition: var(--transicao-botao);
   display: flex;
   align-items: center;
@@ -51,7 +51,7 @@
 }
 
 .btn-primary {
-  background-color: #0066cc;
+  background-color: var(--azul);
   color: #ffffff;
 }
 
@@ -63,8 +63,8 @@
 
 .btn-secondary {
   background-color: transparent;
-  border: #0066cc 1.4px solid;
-  color:#0066cc ;
+  border: var(--azul) 1.4px solid;
+  color:var(--azul) ;
 }
 
 @media (hover: hover) and (pointer: fine) {

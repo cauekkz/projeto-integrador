@@ -5,11 +5,15 @@
 
   <div class="lista-dependentes">
     @if (carregando()) {
-      <p class="estado-vazio">Carregando...</p>
+      <app-esqueleto tipo="lista" [quantos]="2" texto="Carregando..." />
     }
 
     @if (!carregando() && dependentes().length === 0) {
-      <p class="estado-vazio">Nenhum dependente cadastrado ainda.</p>
+      <section class="vazio">
+        <i class="bi bi-people" aria-hidden="true"></i>
+        <h2>Nenhum dependente ainda</h2>
+        <p>Cadastre seu filho para acompanhar a van e os contratos.</p>
+      </section>
     }
 
     @for (dep of dependentes(); track dep.id) {

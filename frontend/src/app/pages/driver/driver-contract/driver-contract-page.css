@@ -10,7 +10,7 @@
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  padding: 24px 13px 8px;
+  padding: 24px 12px 8px;
   gap: 36px;
 }
 
@@ -19,10 +19,10 @@
 .progresso {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 18px 14px 14px 6px;
+  gap: 8px;
+  padding: 20px 16px 16px 8px;
   border: 1px solid #e5e7eb;
-  border-radius: 16px;
+  border-radius: 14px;
 }
 
 .voltar {
@@ -35,7 +35,7 @@
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: #64748b;
+  color: var(--texto-3);
   cursor: pointer;
 }
 
@@ -55,7 +55,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 /* trilha sempre numa linha: a etapa atual encolhe com reticencias em vez de quebrar */
@@ -66,7 +66,7 @@
   min-width: 0;
   list-style: none;
   font-size: clamp(0.75rem, 3.4vw, 0.85rem);
-  color: #64748b;
+  color: var(--texto-3);
 }
 
 .migalhas li {
@@ -89,7 +89,7 @@
   padding: 2px 4px;
   margin: -2px -4px;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -99,7 +99,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .migalha-link:hover:not(:disabled) {
-    color: #0c66db;
+    color: var(--azul);
     background: #eff6ff;
   }
 }
@@ -109,8 +109,8 @@
 }
 
 .migalhas i {
-  font-size: 0.7rem;
-  margin: 0 clamp(4px, 2vw, 10px);
+  font-size: 11px;
+  margin: 0 clamp(4px, 2vw, 12px);
 }
 
 /* tela bem estreita: some o "Motorista" pra sobrar espaco pra etapa */
@@ -150,13 +150,13 @@
 
 .aviso {
   text-align: center;
-  font-size: 0.9rem;
-  color: #64748b;
+  font-size: 14px;
+  color: var(--texto-3);
   padding: 24px 8px;
 }
 
 .aviso.erro {
-  color: #b91c1c;
+  color: var(--vermelho-texto);
   padding: 8px;
 }
 
@@ -165,10 +165,10 @@
 }
 
 .tentar-novamente {
-  border: 1px solid #0066cc;
+  border: 1px solid var(--azul);
   background: transparent;
-  color: #0066cc;
-  border-radius: 10px;
+  color: var(--azul);
+  border-radius: 12px;
   padding: 8px 16px;
   font-weight: 600;
   cursor: pointer;

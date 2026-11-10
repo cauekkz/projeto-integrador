@@ -5,7 +5,7 @@
 
   <main class="conteudo">
     @if (carregando() && !c) {
-      <p class="aviso" role="status">Carregando contrato...</p>
+      <app-esqueleto tipo="perfil" [quantos]="2" texto="Carregando contrato..." />
     } @else if (erroCarregar() || !c) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar o contrato.</p>

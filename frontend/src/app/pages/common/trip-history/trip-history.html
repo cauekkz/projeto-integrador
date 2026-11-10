@@ -11,7 +11,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando histórico...</p>
+      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando histórico..." />
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar o histórico.</p>
@@ -19,6 +19,7 @@
       </div>
     } @else if (!itens().length) {
       <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-clock-history" aria-hidden="true"></i>
         <h2>Nenhuma viagem aqui</h2>
         <p>As viagens aparecem depois que começam.</p>
       </section>
@@ -33,6 +34,7 @@
             </div>
             <span [class]="'selo ' + s.classe">{{ s.texto }}</span>
           </div>
+          <app-trajeto [status]="item.boardingStatus" [encerrada]="item.tripStatus === 'FINISHED' || item.tripStatus === 'CANCELED'" />
           <p class="detalhe">{{ detalhe(item) }}</p>
           @if (item.occurrences > 0) {
             <button type="button" class="ocorrencias" (click)="abrirOcorrencias(item)">

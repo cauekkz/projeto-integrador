@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { ContractService } from '../../../../services/contract.service';
@@ -16,6 +17,7 @@ export type DecisaoContrato = ContractStatus | 'WITHDRAWN';
 // o responsavel decide (aceitar/negar) e o motorista pode retirar enquanto estiver pendente
 @Component({
   selector: 'app-contract-proposal-card',
+  imports: [Esqueleto],
   standalone: true,
   templateUrl: './contract-proposal-card.html',
   styleUrl: './contract-proposal-card.css',

@@ -3,7 +3,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando chave Pix...</p>
+      <app-esqueleto tipo="texto" [quantos]="1" texto="Carregando chave Pix..." />
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar a chave Pix.</p>

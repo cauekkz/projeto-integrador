@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Header } from '../../../shared/header/header';
@@ -7,7 +8,7 @@ import { ChatWebSocketService } from '../../../services/chat.service';
 @Component({
   selector: 'app-driver-link-code',
   standalone: true,
-  imports: [Header, Button],
+  imports: [Esqueleto, Header, Button],
   templateUrl: './driver-link-code.html',
   styleUrl: './driver-link-code.css',
 })

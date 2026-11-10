@@ -5,10 +5,10 @@
 .barra {
   display: flex;
   align-items: center;
-  gap: 23px;
+  gap: 24px;
   min-height: 87px;
   padding: 0 16px;
-  border-radius: 33px;
+  border-radius: 999px;
   background: rgba(160, 160, 160, 0.35);
 }
 
@@ -42,7 +42,7 @@
 }
 
 .barra.flutuante .sino {
-  color: #314158;
+  color: var(--texto-2);
 }
 
 .foto {
@@ -85,7 +85,7 @@
 }
 
 .status.ativo {
-  color: #0c66db;
+  color: var(--azul);
 }
 
 .sino {
@@ -99,7 +99,7 @@
   border: none;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.55);
-  color: #0f172a;
+  color: var(--texto);
   font-size: 16px;
   cursor: pointer;
 }
@@ -110,12 +110,12 @@
   right: -6px;
   min-width: 18px;
   height: 18px;
-  padding: 0 3px;
-  border-radius: 9px;
-  background: #e7000b;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--vermelho);
   color: #ffffff;
-  font-size: 8px;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   line-height: 18px;
   text-align: center;
 }

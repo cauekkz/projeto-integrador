@@ -16,8 +16,8 @@
 
 .instrucao {
   text-align: center;
-  color: #64748b;
-  font-size: 0.95rem;
+  color: var(--texto-3);
+  font-size: 16px;
   max-width: 280px;
 
 }
@@ -25,7 +25,7 @@
 .inputs {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   margin: 8px 0;
   flex-wrap: nowrap;
   /* os quadradinhos encolhem pra caber em qualquer celular, sem rolagem de lado */
@@ -42,15 +42,15 @@
   border: none;
   border-bottom: 2px solid #cbd5e1;
   text-align: center;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--texto);
   outline: none;
   background: transparent;
 }
 
 .code-input:focus {
-  border-bottom-color: #1565d8;
+  border-bottom-color: var(--azul);
 }
 
 @keyframes slideUp {
@@ -63,16 +63,16 @@
 }
 
 .separador {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #1565d8;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--azul);
   user-select: none;
   flex-shrink: 0;
 }
 
 .error-message {
-  color: #e61212;
-  font-size: 0.85rem;
+  color: var(--vermelho);
+  font-size: 14px;
   margin: 0;
 }
 
@@ -96,23 +96,23 @@
   width: 100%;
   height: 56px;
   border-radius: 14px;
-  font-size: 1rem;
+  font-size: 16px;
   cursor: pointer;
   box-sizing: border-box;
 }
 
 .btn-verificar {
   border: none;
-  background: #1565d8;
+  background: var(--azul);
   color: white;
   font-weight: 600;
-  box-shadow: 0 4px 12px rgba(21, 101, 216, 0.25);
+  box-shadow: none;
 }
 
 .btn-reenviar {
-  border: 1px solid #1565d8;
+  border: 1px solid var(--azul);
   background: white;
-  color: #1565d8;
+  color: var(--azul);
   font-weight: 500;
 }
 
@@ -131,7 +131,7 @@
 @media (max-width: 380px) {
   .code-input {
     height: 46px;
-    font-size: 1.2rem;
+    font-size: 20px;
   }
 
   .inputs {

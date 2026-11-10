@@ -20,15 +20,15 @@
 }
 
 h1 {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--texto);
   text-align: center;
 }
 
 .description {
-  font-size: 0.9rem;
-  color: #64748b;
+  font-size: 14px;
+  color: var(--texto-3);
   text-align: center;
   line-height: 1.4;
   margin-bottom: 8px;
@@ -37,17 +37,17 @@ h1 {
 .code-box {
   display: flex;
   justify-content: center;
-  border: 1px dashed #1565d8;
+  border: 1px dashed var(--azul);
   border-radius: 12px;
   padding: 20px;
   background: #eff6ff;
 }
 
 .codigo {
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 600;
   letter-spacing: 0.12em;
-  color: #1565d8;
+  color: var(--azul);
   font-variant-numeric: tabular-nums;
 }
 
@@ -55,8 +55,8 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  color: #64748b;
+  gap: 12px;
+  color: var(--texto-3);
   padding: 24px 0;
 }
 
@@ -64,7 +64,7 @@ h1 {
   width: 20px;
   height: 20px;
   border: 2px solid #cbd5e1;
-  border-top-color: #1565d8;
+  border-top-color: var(--azul);
   border-radius: 50%;
   animation: girar 0.8s linear infinite;
 
@@ -78,7 +78,7 @@ h1 {
 
 .feedback {
   min-height: 1.2em;
-  font-size: 0.85rem;
+  font-size: 14px;
   color: #16a34a;
   text-align: center;
 }
@@ -90,8 +90,8 @@ h1 {
   padding: 12px 16px;
   border-radius: 12px;
   background: #fef2f2;
-  color: #b91c1c;
-  font-size: 0.9rem;
+  color: var(--vermelho-texto);
+  font-size: 14px;
 }
 
 /* botoes fixos embaixo, igual ao code-input; posicao="top" no app-button da 16px entre eles */

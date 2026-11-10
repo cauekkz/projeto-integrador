@@ -7,11 +7,11 @@
   bottom: calc(16px + env(safe-area-inset-bottom));
   z-index: 100;
   display: flex;
-  gap: 6px;
+  gap: 8px;
   max-width: 400px;
   height: 68px;
   margin: 0 auto;
-  border-radius: 98px;
+  border-radius: 999px;
   background: rgba(29, 95, 161, 0.1);
   -webkit-backdrop-filter: blur(18px) saturate(180%);
   backdrop-filter: blur(18px) saturate(180%);
@@ -39,9 +39,9 @@
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 65px;
+  border-radius: 999px;
   background: transparent;
-  color: #45556c;
+  color: var(--texto-2);
   cursor: pointer;
   transition:
     background-color var(--dur-media) ease,
@@ -63,7 +63,7 @@
 
 /* aba atual: o icone fica azul; o fundo e a pilula que desliza */
 .tab.active {
-  color: #0c66db;
+  color: var(--azul);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -73,7 +73,7 @@
 }
 
 .tab i {
-  font-size: 26px;
+  font-size: 28px;
 }
 
 /* chegou na aba: o icone cresce de leve */
@@ -106,7 +106,7 @@
   bottom: 0;
   left: calc(var(--para) * var(--passo));
   right: calc((2 - var(--para)) * var(--passo));
-  border-radius: 65px;
+  border-radius: 999px;
   background: rgba(12, 102, 219, 0.15);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
   pointer-events: none;

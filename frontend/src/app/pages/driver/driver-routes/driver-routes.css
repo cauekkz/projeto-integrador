@@ -10,7 +10,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 0 3px;
+  padding: 0 4px;
 }
 
 .notif-wrapper {
@@ -28,8 +28,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
-  color: #1f2937;
+  font-size: 18px;
+  color: var(--texto);
   border: 0.8px solid #e2e8f0;
   background: #ffffff;
 }
@@ -38,12 +38,12 @@
   position: absolute;
   top: -4px;
   right: -4px;
-  background: #ef4444;
+  background: var(--vermelho);
   color: #ffffff;
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   border-radius: 999px;
-  padding: 2px 5px;
+  padding: 2px 4px;
 }
 
 .user-info {
@@ -68,17 +68,17 @@
 }
 
 .name {
-  font-size: 0.9rem;
+  font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--texto);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .role {
-  font-size: 0.9rem;
-  color: #64748b;
+  font-size: 14px;
+  color: var(--texto-3);
 }
 
 
@@ -89,27 +89,9 @@
   gap: 12px;
 }
 
-.vazio {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: auto 18px;
-}
-
-.vazio h2 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.vazio p {
-  font-size: 14px;
-  color: #475569;
-}
-
 .folha .sub {
   font-size: 13px;
-  color: #62748e;
+  color: var(--texto-3);
 }
 
 .fim-da-lista {

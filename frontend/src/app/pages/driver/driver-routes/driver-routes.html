@@ -21,7 +21,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando rotas...</p>
+      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando rotas..." />
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar as rotas.</p>
@@ -30,6 +30,7 @@
     } @else if (!rotas().length && ativas()) {
       <!-- Figma "Motorista · /driver-routes · sem rotas" -->
       <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-signpost-split" aria-hidden="true"></i>
         <h2>Você ainda não tem rotas</h2>
         <p>Crie uma rota para cada trajeto. A ida e a volta são rotas diferentes.</p>
         <button type="button" class="btn btn-azul" (click)="abrirNova()">Nova rota</button>
@@ -43,7 +44,10 @@
       <button type="button" class="btn btn-azul" (click)="abrirNova()">Nova rota</button>
 
       @if (!rotas().length) {
-        <p class="aviso">Nenhuma rota por aqui.</p>
+        <section class="vazio">
+          <i class="bi bi-signpost-split" aria-hidden="true"></i>
+          <h2>Nenhuma rota por aqui</h2>
+        </section>
       }
 
       <ul class="lista">

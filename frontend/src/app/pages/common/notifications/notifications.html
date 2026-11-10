@@ -25,10 +25,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <div class="estado" role="status">
-        <span class="spinner" aria-hidden="true"></span>
-        Carregando notificações...
-      </div>
+      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando notificações..." />
     } @else if (erro()) {
       <div class="estado">
         <i class="bi bi-wifi-off" aria-hidden="true"></i>
@@ -67,15 +64,15 @@
             </button>
           }
         } @else {
-          <div class="estado entrar-fade">
+          <div class="vazio entrar-fade">
             <i class="bi bi-bell-slash" aria-hidden="true"></i>
-            <p>
+            <h2>
               @switch (abaAtiva()) {
-                @case ('mensagens') { Nenhuma mensagem nova por aqui. }
-                @case ('avisos') { Nenhum aviso por enquanto. }
-                @default { Você não tem notificações. }
+                @case ('mensagens') { Nenhuma mensagem nova }
+                @case ('avisos') { Nenhum aviso por enquanto }
+                @default { Você não tem notificações }
               }
-            </p>
+            </h2>
           </div>
         }
       }

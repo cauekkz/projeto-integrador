@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
@@ -17,7 +18,7 @@ const ESTRELAS = [1, 2, 3, 4, 5];
 @Component({
   selector: 'app-driver-profile',
   standalone: true,
-  imports: [FormsModule, Header],
+  imports: [Esqueleto, FormsModule, Header],
   templateUrl: './driver-profile.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', '../../../shared/perfil.css', './driver-profile.css'],
 })

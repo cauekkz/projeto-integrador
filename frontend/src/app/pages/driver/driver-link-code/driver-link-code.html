@@ -9,10 +9,7 @@
     </p>
 
     @if (carregando()) {
-      <div class="estado" role="status" aria-live="polite">
-        <span class="spinner" aria-hidden="true"></span>
-        <span>Carregando seu código...</span>
-      </div>
+      <app-esqueleto tipo="texto" [quantos]="1" texto="Carregando seu código..." />
     } @else if (codigo()) {
       <div class="code-box">
         <span class="codigo" [attr.aria-label]="'Código ' + codigo().split('').join(' ')">
@@ -39,7 +36,7 @@
   <div class="botoes">
     @if (!carregando() && codigo()) {
       <app-button
-        [texto]="copiado() ? 'Código copiado!' : 'Copiar código'"
+        [texto]="copiado() ? 'Código copiado' : 'Copiar código'"
         tipo="primary"
         posicao="top"
         (clickEvent)="copiarCodigo()">

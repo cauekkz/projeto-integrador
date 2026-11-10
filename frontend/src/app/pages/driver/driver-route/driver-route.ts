@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -47,7 +48,7 @@ const INTERVALO_GPS_MS = 3000;
 @Component({
   selector: 'app-driver-route',
   standalone: true,
-  imports: [TrailHeader, Footer, StatusTopbar, RouteCard, TripMap, ProfileSelect, FormsModule, NgTemplateOutlet, GlisseVidro],
+  imports: [Esqueleto, TrailHeader, Footer, StatusTopbar, RouteCard, TripMap, ProfileSelect, FormsModule, NgTemplateOutlet, GlisseVidro],
   templateUrl: './driver-route.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-route.css'],
 })

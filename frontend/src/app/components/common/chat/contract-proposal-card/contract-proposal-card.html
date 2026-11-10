@@ -14,7 +14,7 @@
   <hr class="divisor">
 
   @if (carregando() && !c) {
-    <p class="aviso" role="status">Carregando contrato...</p>
+    <app-esqueleto tipo="texto" [quantos]="1" texto="Carregando contrato..." />
   } @else if (erroCarregar() || !c) {
     <p class="aviso erro" role="alert">
       Não foi possível carregar o contrato.

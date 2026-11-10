@@ -43,12 +43,12 @@ import { TIPOS_DE_OCORRENCIA, diaEMes } from '../../../services/dto/trip/trip.dt
   `,
   styleUrls: ['../../../shared/folha.css'],
   styles: `
-    .subtitulo { font-size: 13px; color: #62748e; }
+    .subtitulo { font-size: 13px; color: var(--texto-3); }
     .cartao { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 14px; }
     .topo { display: flex; justify-content: space-between; align-items: center; }
-    .topo strong { font-size: 14px; font-weight: 600; color: #0f172a; }
-    .cartao p { font-size: 13px; color: #314158; }
-    .cartao small { font-size: 12px; color: #62748e; }
+    .topo strong { font-size: 14px; font-weight: 600; color: var(--texto); }
+    .cartao p { font-size: 13px; color: var(--texto-2); }
+    .cartao small { font-size: 12px; color: var(--texto-3); }
   `,
 })
 export class TripOccurrences implements OnInit {

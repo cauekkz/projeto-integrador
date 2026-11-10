@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { TrailHeader } from '../../../shared/trail-header/trail-header';
@@ -30,7 +31,7 @@ export function formatarCrlv(texto: string | null | undefined): string {
 @Component({
   selector: 'app-driver-vehicles',
   standalone: true,
-  imports: [TrailHeader, Footer],
+  imports: [Esqueleto, TrailHeader, Footer],
   templateUrl: './driver-vehicles.html',
   styleUrls: ['../../../shared/folha.css', './driver-vehicles.css'],
 })

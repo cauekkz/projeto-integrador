@@ -8,13 +8,13 @@
     <form (ngSubmit)="login()">
 
       @if (tipoUsuario === 'motorista') {
-        <h2>Olá, que bom que você voltou!</h2>
+        <h2>Entrar como motorista</h2>
         <label>CPF do motorista</label>
         <input type="text" placeholder="000.000.000-00" name="cpf" [(ngModel)]="enteredCPF" appCpfMask required />
       }
 
       @if (tipoUsuario === 'responsavel') {
-        <h2>Olá, que bom que você voltou!</h2>
+        <h2>Entrar como responsável</h2>
         <label>CPF do responsável</label>
         <input type="text" placeholder="000.000.000-00" name="cpf" [(ngModel)]="enteredCPF" appCpfMask required />
       }

@@ -39,7 +39,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando dados do contrato...</p>
+      <app-esqueleto tipo="texto" [quantos]="3" texto="Carregando dados do contrato..." />
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>{{ erroCarregar() }}</p>

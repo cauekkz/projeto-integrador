@@ -3,7 +3,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando grupo...</p>
+      <app-esqueleto tipo="perfil" [quantos]="1" texto="Carregando grupo..." />
     } @else {
       <div class="links">
         <button type="button" class="link-azul" (click)="abrir('renomear')">Renomear</button>
@@ -81,7 +81,7 @@
         <h2 id="folha-titulo">Adicionar aluno</h2>
         <p class="sub">Só aparecem os alunos com contrato ativo com você.</p>
         @if (candidatos() === null) {
-          <p class="ajuda">Carregando alunos...</p>
+          <app-esqueleto tipo="lista" [quantos]="2" texto="Carregando alunos..." />
         } @else if (!candidatos()!.length) {
           <p class="ajuda">Todos os alunos com contrato ativo já estão no grupo.</p>
         } @else {

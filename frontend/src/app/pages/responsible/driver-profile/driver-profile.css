@@ -2,13 +2,13 @@
 .nota-geral {
   flex-direction: row;
   align-items: center;
-  gap: 14px;
+  gap: 16px;
 }
 
 .media {
-  font-size: 34px !important;
-  font-weight: 700 !important;
-  color: #0f172a;
+  font-size: 32px !important;
+  font-weight: 600 !important;
+  color: var(--texto);
 }
 
 .estrelas {
@@ -19,7 +19,7 @@
 }
 
 .estrelas.grandes {
-  font-size: 19px;
+  font-size: 20px;
 }
 
 .estrelas .cheia {
@@ -36,8 +36,8 @@
 
 .lista li {
   padding: 12px 0;
-  font-size: 15px;
-  color: #0f172a;
+  font-size: 16px;
+  color: var(--texto);
 }
 
 .lista li + li {
@@ -57,18 +57,18 @@
 }
 
 .placa {
-  padding: 6px 10px;
+  padding: 8px 12px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
   letter-spacing: 0.5px;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .avaliacao p {
   font-size: 13px;
-  color: #45556c;
+  color: var(--texto-2);
 }
 
 .avaliacao small {
@@ -119,5 +119,5 @@
 .tela-cheia .acoes {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }

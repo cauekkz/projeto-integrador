@@ -13,12 +13,12 @@
 .titulo {
   font-size: 18px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
 .data {
   font-size: 13px;
-  color: #62748e;
+  color: var(--texto-3);
 }
 
 .lista {
@@ -63,108 +63,87 @@
   line-clamp: 2;
   overflow: hidden;
   overflow-wrap: anywhere;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--texto);
 }
 
-.selo {
-  display: inline-flex;
+/* trajeto: igual a linha do app (shared/trajeto). ponta ● - - o - - o - - ● ponta, nomes embaixo */
+.trajeto {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.linha {
+  display: flex;
   align-items: center;
-  gap: 5px;
+  height: 16px;
+}
+
+.ponta {
+  width: 10px;
+  height: 10px;
   flex-shrink: 0;
-  padding: 3px 9px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 600;
+  border: 2px solid #94a3b8;
+  border-radius: 50%;
+  background: #ffffff;
 }
 
-.selo-aberta {
-  background: #dbeafe;
-  color: #0c66db;
+.trilho {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  height: 2px;
+  margin: 0 4px;
+  background: repeating-linear-gradient(90deg, #cbd5e1 0 6px, transparent 6px 10px);
 }
 
-.selo-aberta .ponto {
+.parada {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: currentColor;
-  animation: piscar 1.6s ease-in-out infinite;
+  background: #94a3b8;
 }
 
-.selo-feita {
-  background: #f1f5f9;
-  color: #475569;
-}
+/* viagem feita hoje: o caminho todo fica azul */
+.feita .trilho { background: var(--azul); }
+.feita .ponta { border-color: var(--azul); background: var(--azul); }
+.feita .parada { background: var(--azul); box-shadow: 0 0 0 2px #ffffff; }
 
-/* trajeto: primeiro ponto --o--o--> ultimo ponto */
-.trajeto {
+.lugares {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 16px;
   font-size: 13px;
-  color: #314158;
+  color: var(--texto-2);
 }
 
 .lugar {
-  max-width: 40%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 500;
 }
 
-.trilho {
-  position: relative;
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-evenly;
-  height: 10px;
-}
-
-/* a linha, com a ponta de seta no fim */
-.trilho::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 4px;
-  top: 50%;
-  border-top: 2px dashed #94a3b8;
-}
-
-.trilho::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 50%;
-  border: 5px solid transparent;
-  border-left-color: #94a3b8;
-  border-right: 0;
-  transform: translateY(-50%);
-}
-
-.parada {
-  position: relative;
-  width: 8px;
-  height: 8px;
-  border: 2px solid #94a3b8;
-  border-radius: 50%;
-  background: #ffffff;
+.lugar.fim {
+  text-align: right;
 }
 
 .dados {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 14px;
+  gap: 8px 16px;
   font-size: 13px;
-  color: #475569;
+  color: var(--texto-2);
 }
 
 .dados span {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
 }
 
 .dados .sem-alunos {
@@ -175,7 +154,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   min-height: 44px;
 }
 
@@ -193,20 +172,3 @@
   }
 }
 
-.vazio {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: auto 18px;
-}
-
-.vazio h2 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.vazio p {
-  font-size: 14px;
-  color: #475569;
-}

@@ -21,7 +21,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando parcelas...</p>
+      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando parcelas..." />
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar as parcelas.</p>

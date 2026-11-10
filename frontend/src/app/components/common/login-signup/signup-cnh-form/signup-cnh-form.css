@@ -16,16 +16,16 @@
 .header h1 {
   flex: 1;
   text-align: center;
-  font-size: 2rem;
-  font-weight: 700;
-  color: #1f2937;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--texto);
   margin-right: 15%;
 }
 
 .back-button {
   background: transparent;
   border: none;
-  font-size: 2rem;
+  font-size: 32px;
   cursor: pointer;
 }
 
@@ -33,7 +33,7 @@
   width: 100%;
   max-width: 600px;
   margin: 60px auto 40px;
-  border-radius: 18px;
+  border-radius: 14px;
   background: white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   cursor: pointer;
@@ -48,19 +48,19 @@
 }
 
 .upload-icon {
-  font-size: 4rem;
-  margin-bottom: 10px;
+  font-size: 64px;
+  margin-bottom: 12px;
 }
 
 .upload-content p {
-  font-size: 1.2rem;
+  font-size: 20px;
 }
 
 .divider {
   display: flex;
   align-items: center;
-  margin-bottom: 25px;
-  color: #64748b;
+  margin-bottom: 24px;
+  color: var(--texto-3);
 }
 
 .divider::before,
@@ -72,7 +72,7 @@
 }
 
 .divider span {
-  padding: 0 10px;
+  padding: 0 12px;
 }
 
 .form {
@@ -89,8 +89,8 @@
 
 .field label {
   margin-bottom: 8px;
-  color: #334155;
-  font-size: 0.95rem;
+  color: var(--texto-2);
+  font-size: 16px;
 }
 
 .field input,
@@ -99,7 +99,7 @@
   border: 1px solid #d6dce5;
   border-radius: 14px;
   padding: 0 16px;
-  font-size: 1rem;
+  font-size: 16px;
   outline: none;
 }
 
@@ -126,15 +126,15 @@
 
 @media (max-width: 480px) {
   .cnh-container {
-    padding: 24px 14px;
+    padding: 24px 16px;
   }
 
   .header h1 {
-    font-size: 1.8rem;
+    font-size: 28px;
   }
 
   .upload-card {
-    margin-top: 50px;
+    margin-top: 52px;
   }
 
   .upload-content {
@@ -142,7 +142,7 @@
   }
 
   .upload-icon {
-    font-size: 3rem;
+    font-size: 48px;
   }
 
   .double-field {

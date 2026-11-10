@@ -242,7 +242,7 @@ export class ProfileInfo implements OnInit {
           // o backend derruba as sessoes ao trocar a senha: entra de novo com a senha nova
           this.salvando = false;
           this.authService.logout();
-          this.popUpService.show('Senha alterada! Entre novamente com a nova senha.', 'success', 'Tudo certo');
+          this.popUpService.show('Senha alterada. Entre novamente com a nova senha.', 'success', 'Tudo certo');
           this.router.navigate(['/']);
         },
         error: (err) => {

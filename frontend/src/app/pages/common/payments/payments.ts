@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, DestroyRef, ElementRef, OnInit, effect, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -44,7 +45,7 @@ interface Opcao {
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [TrailHeader, Footer, FormsModule],
+  imports: [Esqueleto, TrailHeader, Footer, FormsModule],
   templateUrl: './payments.html',
   styleUrls: ['../../../shared/folha.css', './payments.css'],
 })

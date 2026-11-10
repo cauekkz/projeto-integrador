@@ -3,7 +3,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando vans...</p>
+      <app-esqueleto tipo="lista" [quantos]="2" texto="Carregando vans..." />
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar as vans.</p>

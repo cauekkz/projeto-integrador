@@ -2,7 +2,7 @@
   <app-trail-header [trilha]="['Motorista', 'Viagem']" [mostrarSino]="true" (voltarEvent)="irParaRotas()" />
   <main class="conteudo">
     @if (carregando()) {
-      <p class="aviso" role="status">Carregando rotas...</p>
+      <app-esqueleto tipo="lista" [quantos]="3" texto="Carregando rotas..." />
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar as rotas.</p>
@@ -10,6 +10,7 @@
       </div>
     } @else if (!rotas().length) {
       <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-signpost-split" aria-hidden="true"></i>
         <h2>Você ainda não tem rotas</h2>
         <p>Crie uma rota para cada trajeto e monte com os seus alunos.</p>
         <button type="button" class="btn btn-azul" (click)="irParaRotas()">Criar rota</button>
@@ -34,15 +35,22 @@
             </div>
 
             @if (trajeto(rota); as t) {
-              <p class="trajeto" [attr.aria-label]="'De ' + t.de + ' até ' + t.ate">
-                <span class="lugar" [title]="t.de">{{ t.de }}</span>
-                <span class="trilho" aria-hidden="true">
-                  @for (n of t.meio; track n) {
-                    <span class="parada"></span>
-                  }
+              <!-- mesma linha de trajeto do app (shared/trajeto): pontas, paradas no meio, nomes embaixo -->
+              <div class="trajeto" [class.feita]="s === 'feita'" role="img" [attr.aria-label]="'De ' + t.de + ' até ' + t.ate">
+                <span class="linha" aria-hidden="true">
+                  <span class="ponta"></span>
+                  <span class="trilho">
+                    @for (n of t.meio; track n) {
+                      <span class="parada"></span>
+                    }
+                  </span>
+                  <span class="ponta"></span>
                 </span>
-                <span class="lugar fim" [title]="t.ate">{{ t.ate }}</span>
-              </p>
+                <span class="lugares" aria-hidden="true">
+                  <span class="lugar" [title]="t.de">{{ t.de }}</span>
+                  <span class="lugar fim" [title]="t.ate">{{ t.ate }}</span>
+                </span>
+              </div>
             }
 
             <p class="dados">

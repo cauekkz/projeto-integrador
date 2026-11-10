@@ -1,3 +1,4 @@
+import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -20,7 +21,7 @@ type Folha = 'renomear' | 'apagar' | 'avisar' | 'adicionar' | { tirar: Membro };
 @Component({
   selector: 'app-driver-group',
   standalone: true,
-  imports: [FormsModule, TrailHeader, Footer],
+  imports: [Esqueleto, FormsModule, TrailHeader, Footer],
   templateUrl: './driver-group.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-group.css'],
 })
