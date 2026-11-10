@@ -30,8 +30,10 @@
   border-bottom: none;
 }
 
-.item:hover:not(:disabled) {
-  background: #f8fafc;
+@media (hover: hover) and (pointer: fine) {
+  .item:hover:not(:disabled) {
+    background: #f8fafc;
+  }
 }
 
 .item:disabled {

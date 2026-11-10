@@ -95,8 +95,10 @@
   color: #ffffff;
 }
 
-.btn-azul:hover:not(:disabled) {
-  background: #0052a3;
+@media (hover: hover) and (pointer: fine) {
+  .btn-azul:hover:not(:disabled) {
+    background: #0052a3;
+  }
 }
 
 .btn-decisao {
@@ -105,8 +107,10 @@
   color: #111827;
 }
 
-.btn-decisao:hover:not(:disabled) {
-  background: #fcfcc0;
+@media (hover: hover) and (pointer: fine) {
+  .btn-decisao:hover:not(:disabled) {
+    background: #fcfcc0;
+  }
 }
 
 .btn-negar {
@@ -115,8 +119,10 @@
   color: #ffffff;
 }
 
-.btn-negar:hover:not(:disabled) {
-  background: #dc0000;
+@media (hover: hover) and (pointer: fine) {
+  .btn-negar:hover:not(:disabled) {
+    background: #dc0000;
+  }
 }
 
 /* resultado da decisao: pilula larga ACEITO / NEGADO */
@@ -254,8 +260,10 @@
   color: #b91c1c;
 }
 
-.btn-retirar:hover:not(:disabled) {
-  background: #fef2f2;
+@media (hover: hover) and (pointer: fine) {
+  .btn-retirar:hover:not(:disabled) {
+    background: #fef2f2;
+  }
 }
 
 .btn-voltar {
@@ -283,7 +291,7 @@
   padding: 20px 22px 28px;
   border-radius: 24px 24px 0 0;
   background: #ffffff;
-  animation: folha-subir var(--dur-media, 0.25s) ease both;
+  animation: folha-subir 320ms var(--ease-folha, cubic-bezier(0.32, 0.72, 0, 1)) both;
 }
 
 .folha h2 {

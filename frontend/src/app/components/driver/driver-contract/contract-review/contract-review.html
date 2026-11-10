@@ -24,8 +24,8 @@
         [attr.aria-label]="'Ocultar dados do aluno'"
         (click)="alternar()"
       >
-        @if (responsavel?.fotoUrl) {
-          <img class="avatar grande" [src]="responsavel?.fotoUrl" alt="">
+        @if (responsavel?.fotoUrl && !fotos.falhou(responsavel?.fotoUrl)) {
+          <img class="avatar grande" [src]="responsavel?.fotoUrl" alt="" (error)="fotos.marcar(responsavel?.fotoUrl)">
         } @else {
           <span class="avatar grande avatar-iniciais" aria-hidden="true">{{ iniciais(responsavel?.nome) }}</span>
         }

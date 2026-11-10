@@ -59,7 +59,7 @@
 }
 
 .code-input.animate {
-  animation: slideUp 0.15s ease-out;
+  animation: slideUp 200ms var(--ease-out, ease-out);
 }
 
 .separador {
@@ -116,12 +116,16 @@
   font-weight: 500;
 }
 
-.btn-verificar:hover:not(:disabled) {
-  background: #0052a3;
+@media (hover: hover) and (pointer: fine) {
+  .btn-verificar:hover:not(:disabled) {
+    background: #0052a3;
+  }
 }
 
-.btn-reenviar:hover:not(:disabled) {
-  background: #eff6ff;
+@media (hover: hover) and (pointer: fine) {
+  .btn-reenviar:hover:not(:disabled) {
+    background: #eff6ff;
+  }
 }
 
 @media (max-width: 380px) {

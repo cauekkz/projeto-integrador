@@ -150,7 +150,7 @@
 </div>
 
 @if (cancelamentoAberto()) {
-  <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="sair-fade" (click)="fecharCancelamento()">
+  <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharCancelamento()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="cancelar-titulo" (click)="$event.stopPropagation()">
       <h2 id="cancelar-titulo">Cancelar contrato</h2>
       <label for="motivo">Motivo (obrigatório)</label>

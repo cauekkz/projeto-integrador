@@ -103,9 +103,11 @@
   overflow: hidden;
 }
 
-.user-name:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
+@media (hover: hover) and (pointer: fine) {
+  .user-name:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
 }
 
 .user-name img {

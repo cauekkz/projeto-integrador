@@ -29,7 +29,7 @@
         tabindex="0"
         (click)="abrirConversa(conversa)"
         (keydown.enter)="abrirConversa(conversa)">
-        <img [src]="conversa.foto" class="conversa-avatar" alt="">
+        <img [src]="conversa.foto" class="conversa-avatar" alt="" (error)="conversa.foto = '/testee.jpg'">
         <div class="conversa-info">
           <span class="conversa-nome" [class.nao-lida]="conversa.naoLida">{{ conversa.nome }}</span>
           <span class="conversa-msg" [class.nao-lida]="conversa.naoLida">{{ conversa.ultimaMensagem }}</span>

@@ -26,7 +26,8 @@
   position: absolute;
   right: 16px;
   bottom: calc(var(--altura-cartao) + 12px + env(safe-area-inset-bottom));
-  transition: bottom var(--dur-media, 0.25s) ease;
+  transition: bottom var(--dur-media, 0.25s) ease,
+    scale 160ms var(--ease-out, ease-out);
   z-index: 600;
   display: flex;
   align-items: center;
@@ -88,8 +89,10 @@
   margin-bottom: 4px;
 }
 
-.seta:hover {
-  background: #e2e8f0;
+@media (hover: hover) and (pointer: fine) {
+  .seta:hover {
+    background: #e2e8f0;
+  }
 }
 
 /* recolhido: so o resumo (quem e o titulo) */

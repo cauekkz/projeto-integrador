@@ -10,6 +10,7 @@ import { ProfileService } from '../../../services/profile.service';
 import { StorageService } from '../../../services/storage.service';
 import { responsibleProfile } from '../../../services/dto/profile/profile.dto';
 import { ResponsibleSituation } from '../../../components/common/responsible-situation/responsible-situation';
+import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 
 // Figma "Motorista · /responsible-profile/:id" (1057:1059 em dia, 1057:1100 com atraso, 1057:1136 erro 403)
 @Component({
@@ -65,12 +66,7 @@ export class ResponsibleProfile implements OnInit {
     this.location.back();
   }
 
-  iniciais(nome: string | undefined): string {
-    return (nome ?? '')
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0].toUpperCase())
-      .join('');
+  iniciais(nome: string | null | undefined): string {
+    return iniciaisDe(nome);
   }
 }

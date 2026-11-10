@@ -14,8 +14,8 @@
 
     @for (dep of dependentes(); track dep.id) {
       <button type="button" class="dependente-card dependente-linha" (click)="abrirDependente(dep)">
-        @if (dep.photoUrl) {
-          <img class="dependente-avatar" [src]="dep.photoUrl" alt="" />
+        @if (dep.photoUrl && !fotos.falhou(dep.photoUrl)) {
+          <img class="dependente-avatar" [src]="dep.photoUrl" alt="" (error)="fotos.marcar(dep.photoUrl)" />
         } @else {
           <span class="dependente-avatar dependente-iniciais" aria-hidden="true">{{ iniciais(dep.name) }}</span>
         }

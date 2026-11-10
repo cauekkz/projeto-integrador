@@ -51,11 +51,18 @@
   gap: 8px;
 }
 
+.linha-nome {
+  align-items: flex-start;
+}
+
 .linha-nome h2 {
   min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
   font-size: 17px;
   font-weight: 600;
   color: #0f172a;

@@ -38,8 +38,10 @@
   cursor: pointer;
 }
 
-.btn-voltar:hover {
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  .btn-voltar:hover {
+    background: #f1f5f9;
+  }
 }
 
 .btn-ler-todas {
@@ -52,8 +54,10 @@
   cursor: pointer;
 }
 
-.btn-ler-todas:hover:not(:disabled) {
-  color: #0052a3;
+@media (hover: hover) and (pointer: fine) {
+  .btn-ler-todas:hover:not(:disabled) {
+    color: #0052a3;
+  }
 }
 
 .btn-ler-todas:disabled {
@@ -83,8 +87,10 @@
   transition: var(--transicao-botao);
 }
 
-.aba:not(.ativa):hover {
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  .aba:not(.ativa):hover {
+    background: #f1f5f9;
+  }
 }
 
 .aba.ativa {
@@ -124,7 +130,8 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background-color var(--dur-rapida) ease, transform var(--dur-rapida) ease;
+  transition: background-color var(--dur-rapida) ease, transform var(--dur-rapida) ease,
+    scale 160ms var(--ease-out, ease-out);
 }
 
 .item:active {
@@ -218,7 +225,7 @@
   align-items: center;
   gap: 10px;
   padding: 48px 16px;
-  color: #64748b;
+  color: #475569;
   font-size: 0.9rem;
   text-align: center;
 }
@@ -265,9 +272,11 @@
   margin-top: 12px;
 }
 
-.btn-tentar:hover,
-.btn-mais:hover:not(:disabled) {
-  background: #eff6ff;
+@media (hover: hover) and (pointer: fine) {
+  .btn-tentar:hover,
+  .btn-mais:hover:not(:disabled) {
+    background: #eff6ff;
+  }
 }
 
 .btn-mais:disabled {

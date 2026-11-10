@@ -25,7 +25,7 @@
           <!-- cartao de partida: trajeto, alunos de hoje, van e o botao da viagem -->
           <li class="partida" [class.aberta]="s === 'aberta'" [class.feita]="s === 'feita'" animate.enter="entrar-subindo" [style.--i]="i">
             <div class="linha-nome">
-              <h2>{{ rota.name }}</h2>
+              <h2 [title]="rota.name">{{ rota.name }}</h2>
               @if (s === 'aberta') {
                 <span class="selo selo-aberta"><span class="ponto" aria-hidden="true"></span>Em andamento</span>
               } @else if (s === 'feita') {
@@ -35,13 +35,13 @@
 
             @if (trajeto(rota); as t) {
               <p class="trajeto" [attr.aria-label]="'De ' + t.de + ' até ' + t.ate">
-                <span class="lugar">{{ t.de }}</span>
+                <span class="lugar" [title]="t.de">{{ t.de }}</span>
                 <span class="trilho" aria-hidden="true">
                   @for (n of t.meio; track n) {
                     <span class="parada"></span>
                   }
                 </span>
-                <span class="lugar fim">{{ t.ate }}</span>
+                <span class="lugar fim" [title]="t.ate">{{ t.ate }}</span>
               </p>
             }
 

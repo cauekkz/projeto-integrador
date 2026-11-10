@@ -19,11 +19,14 @@
   padding: 14px 20px;
   cursor: pointer;
   border-bottom: 1px solid #f1f5f9;
-  transition: background-color var(--dur-rapida) ease;
+  transition: background-color var(--dur-rapida) ease,
+    scale 160ms var(--ease-out, ease-out);
 }
 
-.conversa-item:hover {
-  background: #f8fafc;
+@media (hover: hover) and (pointer: fine) {
+  .conversa-item:hover {
+    background: #f8fafc;
+  }
 }
 
 .conversa-avatar {
@@ -86,8 +89,10 @@
   font-family: 'Inter', sans-serif;
 }
 
-.btn-estado:hover {
-  background: #0052a3;
+@media (hover: hover) and (pointer: fine) {
+  .btn-estado:hover {
+    background: #0052a3;
+  }
 }
 
 /* mensagem nova: so um ponto, sem numero */

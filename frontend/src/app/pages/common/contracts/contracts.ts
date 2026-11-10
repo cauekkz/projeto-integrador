@@ -13,6 +13,7 @@ import {
   isoParaData,
   periodicidadeLabel,
 } from '../../../services/dto/contract/contract.dto';
+import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 
 type Aba = 'todos' | ContractStatus;
 
@@ -164,13 +165,8 @@ export class Contracts implements OnInit {
   }
 
   // sem foto (ou motorista, que ainda nao tem a lista de alunos aqui): iniciais
-  iniciais(nome: string): string {
-    return (nome ?? '')
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((parte) => parte[0].toUpperCase())
-      .join('');
+  iniciais(nome: string | null | undefined): string {
+    return iniciaisDe(nome);
   }
 
   visualizar(contrato: contractSummaryResponse) {

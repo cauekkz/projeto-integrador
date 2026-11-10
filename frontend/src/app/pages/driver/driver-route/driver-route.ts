@@ -36,6 +36,7 @@ import { formatarCrlv } from '../driver-vehicles/driver-vehicles';
 import { GlisseVidro } from '../../../shared/glisse-vidro/glisse-vidro';
 import { UserMe } from '../../../models/user.model';
 import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
+import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 
 type Estado = 'carregando' | 'erro' | 'semAcesso' | 'antes' | 'aberta' | 'finalizada' | 'viagem';
 
@@ -420,13 +421,8 @@ export class DriverRoute implements OnInit {
     });
   }
 
-  iniciais(nome: string): string {
-    return nome
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0].toUpperCase())
-      .join('');
+  iniciais(nome: string | null | undefined): string {
+    return iniciaisDe(nome);
   }
 
   private carregarFotos(atualizacao: { stops?: { students: tripStudent[] }[] | null }) {

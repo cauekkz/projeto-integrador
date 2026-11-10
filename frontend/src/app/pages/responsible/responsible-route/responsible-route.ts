@@ -30,6 +30,7 @@ export function textoDaVanDaViagem(viagem: studentTripToday): string {
 // Figma "Responsável · /responsible-route/:id": FOLLOWING, ON_BOARD, STATUS (e DONE/encerrada, sem tela no Figma)
 import { Footer } from '../../../shared/footer/footer';
 import { GlisseVidro } from '../../../shared/glisse-vidro/glisse-vidro';
+import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 @Component({
   selector: 'app-responsible-route',
   standalone: true,
@@ -230,14 +231,7 @@ export class ResponsibleRoute implements OnInit {
   }
 
   iniciais(nome: string | null | undefined): string {
-    return (
-      (nome ?? '')
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((p) => p[0].toUpperCase())
-        .join('') || '?'
-    );
+    return iniciaisDe(nome);
   }
 
   // conversa com o motorista (GET /api/chats pelo otherUserId)

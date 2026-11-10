@@ -35,11 +35,16 @@ export class Footer implements OnInit {
   private studentService = inject(StudentService);
   private procurandoViagem = false;
 
-  // motorista: rodape com a TabBar da Glisse. Se o React nao carregar, volta pro rodape antigo
+  // rodape com a TabBar da Glisse (motorista e responsavel). Se o React nao carregar, volta pro rodape antigo
   protected glisseFalhou = signal(false);
   protected readonly abasMotorista: AbaGlisse[] = [
     { value: 'home', label: 'Início', iconClass: 'bi bi-house-door-fill' },
     { value: 'meio', label: 'Rotas', iconClass: 'icone-rota' },
+    { value: 'config', label: 'Conversas', iconClass: 'bi bi-chat-dots' },
+  ];
+  protected readonly abasResponsavel: AbaGlisse[] = [
+    { value: 'home', label: 'Início', iconClass: 'bi bi-house-door-fill' },
+    { value: 'meio', label: 'Transporte', iconClass: 'bi bi-truck' },
     { value: 'config', label: 'Conversas', iconClass: 'bi bi-chat-dots' },
   ];
 

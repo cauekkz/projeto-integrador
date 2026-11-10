@@ -1,9 +1,9 @@
-@if (tipoUsuario === 'motorista' && !glisseFalhou()) {
-  <!-- motorista: TabBar da Glisse (Liquid Glass) -->
+@if (!glisseFalhou()) {
+  <!-- motorista e responsavel: TabBar da Glisse (Liquid Glass) -->
   <nav class="bottombar com-glisse" aria-label="Navegação principal">
     <app-glisse-tab-bar
       ariaLabel="Navegação principal"
-      [abas]="abasMotorista"
+      [abas]="tipoUsuario === 'motorista' ? abasMotorista : abasResponsavel"
       [valor]="abaAtiva || null"
       (escolheu)="escolheuGlisse($event)"
       (falhou)="glisseFalhou.set(true)" />

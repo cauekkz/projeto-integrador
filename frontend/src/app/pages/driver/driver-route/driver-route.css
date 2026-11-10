@@ -317,7 +317,8 @@
 .topo-lista i {
   font-size: 14px;
   color: #62748e;
-  transition: transform var(--dur-media, 0.25s) ease;
+  transition: transform var(--dur-media, 0.25s) ease,
+    scale 160ms var(--ease-out, ease-out);
 }
 
 .topo-lista i.aberta {

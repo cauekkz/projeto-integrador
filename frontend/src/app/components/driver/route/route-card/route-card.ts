@@ -10,7 +10,7 @@ import { routeStop } from '../../../../services/dto/route/route.dto';
     <button type="button" class="cartao" [disabled]="!clicavel()" [attr.aria-expanded]="aberto() ?? null" (click)="abrir.emit()">
       <span class="textos">
         <small>{{ pontos() }}</small>
-        <strong>{{ nome() }}</strong>
+        <strong [title]="nome()">{{ nome() }}</strong>
       </span>
       <span class="alunos" [attr.aria-label]="alunos() + ' alunos'">
         {{ alunos() }}

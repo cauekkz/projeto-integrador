@@ -22,6 +22,7 @@ import {
   valorEmReais,
 } from '../../../services/dto/contract/contract.dto';
 import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
+import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 
 // mesmos selos da lista /contracts (Figma 1036:698)
 const STATUS: Record<ContractStatus, { texto: string; classe: string }> = {
@@ -176,13 +177,8 @@ export class ContractView implements OnInit {
     });
   }
 
-  iniciais(nome: string | undefined): string {
-    return (nome ?? '')
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((parte) => parte[0].toUpperCase())
-      .join('');
+  iniciais(nome: string | null | undefined): string {
+    return iniciaisDe(nome);
   }
 
   vinculo(relationType: string): string {

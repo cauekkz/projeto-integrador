@@ -41,13 +41,14 @@
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color var(--dur-media) ease, color var(--dur-media) ease;
+  transition: background-color var(--dur-media) ease, color var(--dur-media) ease,
+    scale 160ms var(--ease-out, ease-out);
 }
 
 .aba.ativa {
   border-bottom-color: #0c66db;
   background: #d5dfeb;
-  color: #0c66db;
+  color: #0a54b5;
   font-weight: 600;
 }
 
@@ -226,8 +227,10 @@
   transition: var(--transicao-botao);
 }
 
-.btn-ver:hover {
-  background: #0a54b5;
+@media (hover: hover) and (pointer: fine) {
+  .btn-ver:hover {
+    background: #0a54b5;
+  }
 }
 
 .fim-lista {

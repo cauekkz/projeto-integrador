@@ -24,7 +24,7 @@
 
 .btn {
   width: 100%;
-  min-height: 40px;
+  min-height: 44px;
   border-radius: 12px;
   font: inherit;
   font-size: 0.95rem;
@@ -39,11 +39,17 @@
 }
 
 .btn-azul { border: none; background: #0c66db; color: #ffffff; }
-.btn-azul:hover:not(:disabled) { background: #0a54b5; }
+@media (hover: hover) and (pointer: fine) {
+  .btn-azul:hover:not(:disabled) { background: #0a54b5; }
+}
 .btn-vermelho { border: none; background: #dc2626; color: #ffffff; }
-.btn-vermelho:hover:not(:disabled) { background: #b91c1c; }
+@media (hover: hover) and (pointer: fine) {
+  .btn-vermelho:hover:not(:disabled) { background: #b91c1c; }
+}
 .btn-perigo { border: 1px solid #fecaca; background: #ffffff; color: #b91c1c; }
-.btn-perigo:hover:not(:disabled) { background: #fef2f2; }
+@media (hover: hover) and (pointer: fine) {
+  .btn-perigo:hover:not(:disabled) { background: #fef2f2; }
+}
 .btn-contorno { border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; }
 
 .aviso {
@@ -72,6 +78,11 @@
   align-items: flex-end;
   justify-content: center;
   background: rgba(15, 23, 42, 0.35);
+  animation: fundo-entrar 200ms ease both;
+}
+
+@keyframes fundo-entrar {
+  from { background-color: rgba(15, 23, 42, 0); }
 }
 
 .folha {
@@ -83,7 +94,7 @@
   padding: 20px 22px 28px;
   border-radius: 24px 24px 0 0;
   background: #ffffff;
-  animation: folha-subir var(--dur-media, 0.25s) ease both;
+  animation: folha-subir 320ms var(--ease-folha, cubic-bezier(0.32, 0.72, 0, 1)) both;
 }
 
 .folha h2 {

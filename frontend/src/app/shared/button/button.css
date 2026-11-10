@@ -55,8 +55,10 @@
   color: #ffffff;
 }
 
-.btn-primary:hover:not(:disabled) {
-  background-color: #0052a3;
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover:not(:disabled) {
+    background-color: #0052a3;
+  }
 }
 
 .btn-secondary {
@@ -65,8 +67,10 @@
   color:#0066cc ;
 }
 
-.btn-secondary:hover:not(:disabled) {
-  background-color: #eff6ff;
+@media (hover: hover) and (pointer: fine) {
+  .btn-secondary:hover:not(:disabled) {
+    background-color: #eff6ff;
+  }
 }
 
 .btn-danger {
@@ -75,6 +79,8 @@
   color: red;
 }
 
-.btn-danger:hover:not(:disabled) {
-  background-color: #fef2f2;
+@media (hover: hover) and (pointer: fine) {
+  .btn-danger:hover:not(:disabled) {
+    background-color: #fef2f2;
+  }
 }

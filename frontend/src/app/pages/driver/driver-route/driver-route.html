@@ -234,7 +234,7 @@
 
 <!-- Figma "Recomeçar · confirmar" -->
 @if (confirmandoRecomeco()) {
-  <div class="fundo confirmacao" animate.enter="entrar-fade" (click)="fecharRecomeco()">
+  <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharRecomeco()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="recomecar-titulo" (click)="$event.stopPropagation()">
       <h2 id="recomecar-titulo">Recomeçar do zero?</h2>
       <p class="sub">Todos os alunos voltam para aguardando e os responsáveis são avisados de que a rota foi reiniciada.</p>
@@ -248,7 +248,7 @@
 
 <!-- confirmar "Encerrar rota" antes de atender todos -->
 @if (confirmandoEncerrar()) {
-  <div class="fundo confirmacao" animate.enter="entrar-fade" (click)="fecharEncerrar()">
+  <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharEncerrar()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="encerrar-titulo" (click)="$event.stopPropagation()">
       <h2 id="encerrar-titulo">Encerrar a rota agora?</h2>
       <p class="sub">A viagem de hoje termina e não pode ser iniciada de novo. Quem ainda não foi atendido fica como está.</p>
@@ -262,7 +262,7 @@
 
 <!-- Figma "Registrar ocorrência" -->
 @if (registrando()) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharOcorrencia()">
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharOcorrencia()">
     <form class="folha" role="dialog" aria-modal="true" aria-labelledby="ocorrencia-titulo" (click)="$event.stopPropagation()" (ngSubmit)="registrar()">
       <h2 id="ocorrencia-titulo">Registrar ocorrência</h2>
       <p class="sub">Os responsáveis de todos os alunos da viagem são avisados.</p>

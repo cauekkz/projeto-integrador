@@ -1,4 +1,4 @@
-<div class="fundo confirmacao" animate.enter="entrar-fade" (click)="fechar()">
+<div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fechar()">
   <div class="folha" role="dialog" aria-modal="true" aria-labelledby="excluir-titulo" (click)="$event.stopPropagation()">
     @if (passo() === 'aviso') {
       <h2 id="excluir-titulo">Excluir sua conta?</h2>

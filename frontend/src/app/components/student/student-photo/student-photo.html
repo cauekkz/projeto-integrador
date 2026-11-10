@@ -1,6 +1,6 @@
 <div class="foto-aluno">
-  @if (photoUrl) {
-    <img class="foto" [src]="photoUrl" [alt]="'Foto de ' + nome" />
+  @if (photoUrl && !fotos.falhou(photoUrl)) {
+    <img class="foto" [src]="photoUrl" [alt]="'Foto de ' + nome" (error)="fotos.marcar(photoUrl)" />
   } @else {
     <span class="foto iniciais" aria-hidden="true">{{ iniciais }}</span>
   }

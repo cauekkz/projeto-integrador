@@ -59,12 +59,15 @@
     transition:
         transform var(--dur-rapida) ease,
         border-color var(--dur-rapida) ease,
-        box-shadow var(--dur-media) ease;
+        box-shadow var(--dur-media) ease,
+    scale 160ms var(--ease-out, ease-out);
 }
 
-.photo-avatar:hover {
-    border-color: #1565d8;
-    box-shadow: 0 0 0 6px rgba(21, 101, 216, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  .photo-avatar:hover {
+      border-color: #1565d8;
+      box-shadow: 0 0 0 6px rgba(21, 101, 216, 0.1);
+  }
 }
 
 .photo-avatar:active {
@@ -148,11 +151,14 @@
     font-weight: 500;
     cursor: pointer;
     animation: fade-entrar var(--dur-media) ease both;
-    transition: background-color var(--dur-rapida) ease;
+    transition: background-color var(--dur-rapida) ease,
+    scale 160ms var(--ease-out, ease-out);
 }
 
-.photo-remover:hover {
-    background: #fef2f2;
+@media (hover: hover) and (pointer: fine) {
+  .photo-remover:hover {
+      background: #fef2f2;
+  }
 }
 
 .form {
@@ -269,8 +275,10 @@
   cursor: pointer;
 }
 
-.btn-copy:hover {
-  background: #0052a3;
+@media (hover: hover) and (pointer: fine) {
+  .btn-copy:hover {
+    background: #0052a3;
+  }
 }
 
 /* no fim do formulario (nao fica preso por cima dos campos ao rolar) */

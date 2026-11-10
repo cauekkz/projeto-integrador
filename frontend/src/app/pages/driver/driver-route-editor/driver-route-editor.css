@@ -127,8 +127,10 @@
   font-size: 16px;
 }
 
-.mais:hover {
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  .mais:hover {
+    background: #f1f5f9;
+  }
 }
 
 /* Figma "Aluno no ponto" 1038:665 */

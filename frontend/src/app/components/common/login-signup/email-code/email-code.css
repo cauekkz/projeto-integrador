@@ -89,8 +89,10 @@
   cursor: pointer;
 }
 
-.btn-reenviar:hover {
-  background: #eff6ff;
+@media (hover: hover) and (pointer: fine) {
+  .btn-reenviar:hover {
+    background: #eff6ff;
+  }
 }
 
 .btn-verificar {
@@ -111,8 +113,10 @@
   width: calc(100% - 48px);
 }
 
-.btn-verificar:hover:not(:disabled) {
-  background: #0052a3;
+@media (hover: hover) and (pointer: fine) {
+  .btn-verificar:hover:not(:disabled) {
+    background: #0052a3;
+  }
 }
 
 
@@ -122,5 +126,5 @@
 }
 
 .code-input.animate {
-  animation: slideUp 0.15s ease-out;
+  animation: slideUp 200ms var(--ease-out, ease-out);
 }

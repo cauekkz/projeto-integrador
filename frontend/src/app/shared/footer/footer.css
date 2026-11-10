@@ -46,7 +46,8 @@
   transition:
     background-color var(--dur-media) ease,
     color var(--dur-media) ease,
-    transform var(--dur-rapida) ease;
+    transform var(--dur-rapida) ease,
+    scale 160ms var(--ease-out, ease-out);
 }
 
 /* toque: afunda de leve */
@@ -54,8 +55,10 @@
   transform: scale(0.94);
 }
 
-.tab:hover {
-  background: rgba(12, 102, 219, 0.07);
+@media (hover: hover) and (pointer: fine) {
+  .tab:hover {
+    background: rgba(12, 102, 219, 0.07);
+  }
 }
 
 /* aba atual: o icone fica azul; o fundo e a pilula que desliza */
@@ -63,8 +66,10 @@
   color: #0c66db;
 }
 
-.tab.active:hover {
-  background: transparent;
+@media (hover: hover) and (pointer: fine) {
+  .tab.active:hover {
+    background: transparent;
+  }
 }
 
 .tab i {
@@ -74,7 +79,7 @@
 /* chegou na aba: o icone cresce de leve */
 .tab.active i,
 .tab.active .icone-rota {
-  animation: chegou 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: chegou 320ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) both;
 }
 
 @keyframes chegou {
@@ -110,7 +115,7 @@
 /* desliza de --de ate --para: a borda da frente chega antes e a de tras acompanha,
    entao a pilula estica de leve no caminho e assenta ao chegar */
 .pilula.anda {
-  animation: pilula-esquerda 650ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: pilula-esquerda 420ms cubic-bezier(0.77, 0, 0.175, 1) both;
 }
 
 .pilula.anda.direita {

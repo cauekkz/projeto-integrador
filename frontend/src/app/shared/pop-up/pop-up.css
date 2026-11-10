@@ -21,7 +21,8 @@
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
   font-family: 'Inter', sans-serif;
   animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  transition: all 0.3s ease;
+  transition: opacity 200ms ease, transform 200ms var(--ease-out),
+    scale 160ms var(--ease-out, ease-out);
   border: 1.5px solid transparent;
   position: relative;
 }
@@ -169,12 +170,15 @@
   border-radius: 6px;
   line-height: 1;
   flex-shrink: 0;
-  transition: opacity 0.2s, background-color 0.2s;
+  transition: opacity 0.2s, background-color 0.2s,
+    scale 160ms var(--ease-out, ease-out);
 }
 
-.popup-close:hover {
-  opacity: 1;
-  background-color: rgba(0, 0, 0, 0.06);
+@media (hover: hover) and (pointer: fine) {
+  .popup-close:hover {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.06);
+  }
 }
 
 @media (max-width: 480px) {

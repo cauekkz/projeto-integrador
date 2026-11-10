@@ -39,8 +39,10 @@
   cursor: pointer;
 }
 
-.voltar:hover:not(:disabled) {
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  .voltar:hover:not(:disabled) {
+    background: #f1f5f9;
+  }
 }
 
 .voltar:disabled {
@@ -95,9 +97,11 @@
   transition: var(--transicao-botao);
 }
 
-.migalha-link:hover:not(:disabled) {
-  color: #0c66db;
-  background: #eff6ff;
+@media (hover: hover) and (pointer: fine) {
+  .migalha-link:hover:not(:disabled) {
+    color: #0c66db;
+    background: #eff6ff;
+  }
 }
 
 .migalha-link:disabled {
@@ -130,7 +134,9 @@
 .barra-preenchida {
   height: 100%;
   background: #1d6fe0;
-  transition: width 0.3s ease;
+  transform-origin: left;
+  transition: transform 300ms var(--ease-out, ease-out),
+    scale 160ms var(--ease-out, ease-out);
 }
 
 /* ---------- conteudo ---------- */

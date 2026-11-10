@@ -35,8 +35,10 @@
   color: #1f2937;
 }
 
-.back-button:hover i {
-  color: #1565d8;
+@media (hover: hover) and (pointer: fine) {
+  .back-button:hover i {
+    color: #1565d8;
+  }
 }
 
 .contato-avatar {
@@ -130,11 +132,14 @@
   border-radius: 12px;
   background: #ffffff;
   text-decoration: none;
-  transition: box-shadow var(--dur-media) var(--ease-suave);
+  transition: box-shadow var(--dur-media) var(--ease-suave),
+    scale 160ms var(--ease-out, ease-out);
 }
 
-.anexo-pdf:hover {
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+@media (hover: hover) and (pointer: fine) {
+  .anexo-pdf:hover {
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+  }
 }
 
 /* so a primeira pagina aparece: o clique vai pro link do card, nao pro leitor do iframe */
@@ -178,11 +183,14 @@
   border-radius: 12px;
   background: #ffffff;
   text-decoration: none;
-  transition: background-color var(--dur-media) var(--ease-suave);
+  transition: background-color var(--dur-media) var(--ease-suave),
+    scale 160ms var(--ease-out, ease-out);
 }
 
-.anexo-arquivo:hover {
-  background: #eff6ff;
+@media (hover: hover) and (pointer: fine) {
+  .anexo-arquivo:hover {
+    background: #eff6ff;
+  }
 }
 
 .anexo-arquivo .bi-file-earmark-fill {
@@ -274,9 +282,11 @@
   color: #0f172a;
 }
 
-.contrato-btn:hover,
-.btn-icon:hover {
-  color: #1565d8;
+@media (hover: hover) and (pointer: fine) {
+  .contrato-btn:hover,
+  .btn-icon:hover {
+    color: #1565d8;
+  }
 }
 
 .btn-enviar {
@@ -296,8 +306,10 @@
   box-shadow: 0 4px 12px rgba(12, 102, 219, 0.3);
 }
 
-.btn-enviar:hover:not(:disabled) {
-  background: #0a54b5;
+@media (hover: hover) and (pointer: fine) {
+  .btn-enviar:hover:not(:disabled) {
+    background: #0a54b5;
+  }
 }
 
 .btn-enviar:active:not(:disabled) {
@@ -385,21 +397,29 @@
 }
 
 /* Efeito ao passar o mouse */
-.attachment-option:hover {
-  background: #f8fafc;
+@media (hover: hover) and (pointer: fine) {
+  .attachment-option:hover {
+    background: #f8fafc;
+  }
 }
 
-.attachment-option:first-child:hover {
-  border-radius: 24px 24px 0 0;
+@media (hover: hover) and (pointer: fine) {
+  .attachment-option:first-child:hover {
+    border-radius: 24px 24px 0 0;
+  }
 }
 
-.attachment-option:last-child:hover {
-  border-radius: 0 0 24px 24px;
+@media (hover: hover) and (pointer: fine) {
+  .attachment-option:last-child:hover {
+    border-radius: 0 0 24px 24px;
+  }
 }
 
 /* Responsável só vê "Enviar mídia" */
-.attachment-option:only-child:hover {
-  border-radius: 24px;
+@media (hover: hover) and (pointer: fine) {
+  .attachment-option:only-child:hover {
+    border-radius: 24px;
+  }
 }
 
 /* Mensagens do sistema (contrato aceito/recusado) */

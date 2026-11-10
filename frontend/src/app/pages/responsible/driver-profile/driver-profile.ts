@@ -9,6 +9,7 @@ import { PopUpService } from '../../../shared/pop-up';
 import { ProfileService } from '../../../services/profile.service';
 import { StorageService } from '../../../services/storage.service';
 import { dataBr, driverProfile, notaBr, ratingResponse } from '../../../services/dto/profile/profile.dto';
+import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 
 const ESTRELAS = [1, 2, 3, 4, 5];
 
@@ -79,13 +80,8 @@ export class DriverProfile implements OnInit {
     this.location.back();
   }
 
-  iniciais(nome: string | undefined): string {
-    return (nome ?? '')
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0].toUpperCase())
-      .join('');
+  iniciais(nome: string | null | undefined): string {
+    return iniciaisDe(nome);
   }
 
   // estrela cheia ate a nota (media arredondada)

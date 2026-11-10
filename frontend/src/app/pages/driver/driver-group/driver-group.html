@@ -47,7 +47,7 @@
 
 @if (folha(); as f) {
   <!-- apagar o grupo e tirar aluno sao confirmacoes: pop-up no meio; o resto e folha de baixo -->
-  <div class="fundo" [class.confirmacao]="f === 'apagar' || !!tirando()" animate.enter="entrar-fade" (click)="fechar()">
+  <div class="fundo" [class.confirmacao]="f === 'apagar' || !!tirando()" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fechar()">
     @if (f === 'renomear') {
       <form class="folha" role="dialog" aria-modal="true" aria-labelledby="folha-titulo" (click)="$event.stopPropagation()" (ngSubmit)="renomear()">
         <h2 id="folha-titulo">Renomear grupo</h2>

@@ -101,7 +101,7 @@
 
 <!-- desembarque de todos: cada um na escola do contrato, ja marcados -->
 @if (desembarcando()) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharDesembarque()">
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharDesembarque()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="desembarque-titulo" (click)="$event.stopPropagation()">
       <h2 id="desembarque-titulo">Adicionar desembarque</h2>
       <p class="sub">Quem embarca nesta rota e ainda não desce. Cada um desce na escola do contrato, nos dias que faltam.</p>
@@ -131,7 +131,7 @@
 
 <!-- Figma "Motorista · Aluno no ponto · ajustar" -->
 @if (alunoAberto(); as aberto) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharAluno()">
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharAluno()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="aluno-titulo" (click)="$event.stopPropagation()">
       <h2 id="aluno-titulo">{{ aberto.aluno.studentName }}</h2>
       <p class="sub">{{ aberto.aluno.action === 'BOARDING' ? 'Embarca em' : 'Desce em' }} {{ ruaENumero(aberto.ponto.address) }}</p>
@@ -172,7 +172,7 @@
 
 <!-- Figma "Motorista · Ponto · ordem e apagar" -->
 @if (pontoAberto(); as ponto) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharPonto()">
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharPonto()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="ponto-titulo" (click)="$event.stopPropagation()">
       <h2 id="ponto-titulo">Ponto {{ ponto.orderIndex }}</h2>
       <p class="sub">{{ ruaENumero(ponto.address) }}@if (ponto.address.neighborhood) { · {{ ponto.address.neighborhood }}}</p>
@@ -210,7 +210,7 @@
 
 <!-- Figma "Motorista · Van padrão · trocar" -->
 @if (trocandoVan()) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharVan()">
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharVan()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="van-titulo" (click)="$event.stopPropagation()">
       <h2 id="van-titulo">Van padrão</h2>
       <p class="sub">Usada ao iniciar a viagem, se você não escolher outra.</p>

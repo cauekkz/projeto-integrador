@@ -23,8 +23,10 @@
   cursor: pointer;
 }
 
-.voltar:hover {
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  .voltar:hover {
+    background: #f1f5f9;
+  }
 }
 
 .caixa {
@@ -74,9 +76,11 @@
   transition: var(--transicao-botao);
 }
 
-.migalha-link:hover {
-  color: #0c66db;
-  background: #eff6ff;
+@media (hover: hover) and (pointer: fine) {
+  .migalha-link:hover {
+    color: #0c66db;
+    background: #eff6ff;
+  }
 }
 
 /* o ultimo item encolhe com reticencias em vez de quebrar a linha */

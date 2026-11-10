@@ -22,6 +22,7 @@ import {
   viagemAtiva,
 } from '../../../services/dto/trip/trip.dto';
 import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
+import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 
 // notificacoes que mudam o card do filho (a viagem saiu, embarcou, chegou...): busca de novo, sem polling
 const TIPOS_QUE_ATUALIZAM = ['TRIP_STARTED', 'VAN_ON_THE_WAY', 'STUDENT_BOARDED', 'STUDENT_DELIVERED', 'STUDENT_ABSENT'];
@@ -150,15 +151,8 @@ export class HomeScreen implements OnInit {
     return nome.split(' ')[0] || nome;
   }
 
-  iniciais(nome: string | undefined): string {
-    return (
-      (nome ?? '')
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((parte) => parte[0].toUpperCase())
-        .join('') || '?'
-    );
+  iniciais(nome: string | null | undefined): string {
+    return iniciaisDe(nome);
   }
 
   selo(status: BoardingStatus) {

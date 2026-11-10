@@ -6,6 +6,7 @@ import {
   PERIODICITY_OPTIONS,
 } from '../../../services/dto/contract/contract.dto';
 import { schoolResponse } from '../../../services/dto/school/school.dto';
+import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 
 export type EtapaContrato = 'aluno' | 'contrato' | 'midia';
 
@@ -160,11 +161,7 @@ export class ContractDraftService {
 
 // aluno nao tem foto na API: o avatar mostra as iniciais
 export function iniciais(nome: string | null | undefined): string {
-  const partes = (nome ?? '').trim().split(/\s+/).filter(Boolean);
-  if (!partes.length) return '?';
-  const primeira = partes[0][0];
-  const ultima = partes.length > 1 ? partes[partes.length - 1][0] : '';
-  return (primeira + ultima).toUpperCase();
+  return iniciaisDe(nome);
 }
 
 export function formatarReais(centavos: number): string {

@@ -8,7 +8,7 @@
   <div class="caixa">
     <ol class="migalhas">
       @for (item of trilha(); track $index; let ultimo = $last) {
-        <li [class.atual]="ultimo" [attr.aria-current]="ultimo ? 'page' : null">
+        <li [class.atual]="ultimo" [attr.aria-current]="ultimo ? 'page' : null" [attr.title]="ultimo ? item : null">
           @if (!ultimo && destino($index, item); as url) {
             <button type="button" class="migalha-link" (click)="irPara(url)">{{ item }}</button>
           } @else {

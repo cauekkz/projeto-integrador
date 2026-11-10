@@ -166,7 +166,7 @@
 
 <!-- Figma 1057:945 -->
 @if (confirmandoApagar()) {
-  <div class="fundo confirmacao" animate.enter="entrar-fade" (click)="fecharApagar()">
+  <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharApagar()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="apagar-titulo" (click)="$event.stopPropagation()">
       <h2 id="apagar-titulo">Apagar sua avaliação?</h2>
       <p class="sub">Sua nota e seu comentário saem do perfil do motorista.</p>

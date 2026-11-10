@@ -132,7 +132,7 @@
 
 <!-- confirmações: tirar endereço, remover, passar o admin, sair -->
 @if (confirmacao(); as c) {
-  <div class="fundo confirmacao" animate.enter="entrar-fade" (click)="fecharConfirmacao()">
+  <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharConfirmacao()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="confirmar-titulo" (click)="$event.stopPropagation()">
       @switch (c.tipo) {
         @case ('tirar-endereco') {
@@ -163,7 +163,7 @@
 
 <!-- Figma 1039:1491 "Avisar falta" -->
 @if (avisandoFalta()) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharFalta()">
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharFalta()">
     <form class="folha" role="dialog" aria-modal="true" aria-labelledby="falta-titulo" (click)="$event.stopPropagation()" (ngSubmit)="avisarFalta()">
       <h2 id="falta-titulo">Avisar falta</h2>
       <p class="sub">{{ primeiroNome() }} não vai nessa rota nesse dia. O motorista é avisado na conversa.</p>
@@ -191,7 +191,7 @@
 
 <!-- convidar outro responsável: código de 15 min -->
 @if (convidando()) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharConvite()">
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharConvite()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="convite-titulo" (click)="$event.stopPropagation()">
       <h2 id="convite-titulo">Convidar responsável</h2>
       @if (codigoConvite(); as codigo) {

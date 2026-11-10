@@ -12,7 +12,7 @@
 
       <div class="user-name" (click)="mostrarPerfil.set(true)">
         <img [src]="usuarioLogado()?.photoUrl || '/testee.jpg'" alt="Foto do usuário" />
-        <span>{{ usuarioLogado()?.name || '' }}</span>
+        <span [title]="usuarioLogado()?.name || ''">{{ usuarioLogado()?.name || '' }}</span>
       </div>
     </div>
 
@@ -108,7 +108,7 @@
 
 <!-- folha "Não vai hoje" / "Não vai outro dia" -->
 @if (folha(); as f) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharFalta()">
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharFalta()">
     <form class="folha" role="dialog" aria-modal="true" aria-labelledby="falta-titulo" (click)="$event.stopPropagation()" (ngSubmit)="avisarFalta()">
       <h2 id="falta-titulo">{{ f.hoje ? primeiroNome(f.filho.name) + ' não vai hoje?' : 'Em que dia ' + primeiroNome(f.filho.name) + ' não vai?' }}</h2>
       <p class="sub">O motorista é avisado no chat.</p>

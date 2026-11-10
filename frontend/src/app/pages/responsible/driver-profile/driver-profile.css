@@ -104,7 +104,8 @@
   font-size: 40px;
   line-height: 1;
   cursor: pointer;
-  transition: transform 0.15s ease, color 0.15s ease;
+  transition: transform 0.15s ease, color 0.15s ease,
+    scale 160ms var(--ease-out, ease-out);
 }
 
 .escolher-nota button.cheia {

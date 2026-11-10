@@ -2,6 +2,7 @@ import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { StudentService } from '../../../services/student.service';
 import { PopUpService } from '../../../shared/pop-up';
 import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
+import { iniciaisDe, fotosQuebradas } from '../../../shared/iniciais/iniciais';
 
 // mesmo limite do backend para a foto do aluno
 const FOTO_TAMANHO_MAXIMO = 10 * 1024 * 1024;
@@ -15,6 +16,8 @@ const FOTO_TAMANHO_MAXIMO = 10 * 1024 * 1024;
   styleUrl: './student-photo.css',
 })
 export class StudentPhoto {
+  // foto que nao carrega (link expirado) volta pras iniciais
+  protected fotos = fotosQuebradas();
   @Input({ required: true }) studentId = '';
   @Input() nome = '';
   @Input() photoUrl: string | null = null;
@@ -32,12 +35,7 @@ export class StudentPhoto {
   enviando = false;
 
   get iniciais(): string {
-    return (this.nome ?? '')
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((parte) => parte[0].toUpperCase())
-      .join('');
+    return iniciaisDe(this.nome);
   }
 
   async selecionar(event: Event) {

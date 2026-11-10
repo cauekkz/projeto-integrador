@@ -83,8 +83,10 @@
   cursor: pointer;
 }
 
-.lixeira:hover {
-  background: #c10007;
+@media (hover: hover) and (pointer: fine) {
+  .lixeira:hover {
+    background: #c10007;
+  }
 }
 
 .rodape-acao {

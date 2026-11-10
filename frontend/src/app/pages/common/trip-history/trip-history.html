@@ -54,7 +54,7 @@
 
 <!-- Figma 1058:1466 (motorista) e 1058:1748 (responsável) -->
 @if (filtroAberto()) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharFiltro()">
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharFiltro()">
     <form class="folha" role="dialog" aria-modal="true" aria-labelledby="filtro-titulo" (click)="$event.stopPropagation()" (ngSubmit)="aplicarFiltro()">
       <h2 id="filtro-titulo">Filtrar histórico</h2>
 

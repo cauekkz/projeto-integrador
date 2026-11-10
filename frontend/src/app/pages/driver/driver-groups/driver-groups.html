@@ -34,7 +34,7 @@
 
 <!-- Figma 1058:751 "Novo grupo" -->
 @if (criando()) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharNovo()">
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharNovo()">
     <form class="folha" role="dialog" aria-modal="true" aria-labelledby="novo-titulo" (click)="$event.stopPropagation()" (ngSubmit)="criar()">
       <h2 id="novo-titulo">Novo grupo</h2>
       <div class="campo">

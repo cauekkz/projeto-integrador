@@ -80,8 +80,10 @@
   width: 22px;
 }
 
-.menu-item:hover {
-  background: #f8fafc;
+@media (hover: hover) and (pointer: fine) {
+  .menu-item:hover {
+    background: #f8fafc;
+  }
 }
 
 .menu-item.danger {
@@ -101,7 +103,7 @@
 }
 
 .sheet-entrar {
-  animation: sheet-subir var(--dur-media) var(--ease-suave) both;
+  animation: sheet-subir 320ms var(--ease-folha, cubic-bezier(0.32, 0.72, 0, 1)) both;
 }
 
 :host(.sair-perfil) {
@@ -109,7 +111,7 @@
 }
 
 :host(.sair-perfil) .sheet {
-  animation: sheet-descer 200ms ease both;
+  animation: sheet-descer 200ms var(--ease-out) both;
 }
 
 @keyframes sheet-subir {

@@ -105,7 +105,8 @@
   color: #1f2937;
   outline: none;
   background: #ffffff;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    scale 160ms var(--ease-out, ease-out);
 }
 
 .field input:focus {
@@ -129,8 +130,10 @@
   cursor: pointer;
 }
 
-.btn-adicionar:hover {
-  background: #f5f9ff;
+@media (hover: hover) and (pointer: fine) {
+  .btn-adicionar:hover {
+    background: #f5f9ff;
+  }
 }
 
 .btn-primary,
@@ -156,13 +159,17 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.btn-primary:disabled,
-.btn-primary:hover:not(:disabled) {
-  background: #0052a3;
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:disabled,
+  .btn-primary:hover:not(:disabled) {
+    background: #0052a3;
+  }
 }
 
-.btn-secondary:hover:not(:disabled) {
-  background: #eff6ff;
+@media (hover: hover) and (pointer: fine) {
+  .btn-secondary:hover:not(:disabled) {
+    background: #eff6ff;
+  }
 }
 
 .btn-secondary:disabled {

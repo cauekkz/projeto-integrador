@@ -7,6 +7,8 @@ import { StudentService } from '../../../services/student.service';
 import { Router } from '@angular/router';
 import { forkJoin, switchMap, map } from 'rxjs';
 import { Footer } from '../../../shared/footer/footer';
+import { iniciaisDe } from '../../../shared/iniciais/iniciais';
+import { fotosQuebradas } from '../../../shared/iniciais/iniciais';
 
 @Component({
   selector: 'app-dependentes',
@@ -16,6 +18,8 @@ import { Footer } from '../../../shared/footer/footer';
   styleUrl: './dependentes.css',
 })
 export class Dependentes implements OnInit {
+  // foto que nao carrega (link expirado) volta pras iniciais
+  protected fotos = fotosQuebradas();
   dependentes = signal<any[]>([]);
   carregando = signal(true);
   filtroRelationType = '';
@@ -53,13 +57,8 @@ export class Dependentes implements OnInit {
   }
 
 
-  iniciais(nome: string | undefined): string {
-    return (nome ?? '')
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((parte) => parte[0].toUpperCase())
-      .join('');
+  iniciais(nome: string | null | undefined): string {
+    return iniciaisDe(nome);
   }
 
   // Figma 1054:635: o cartao abre o filho em detalhe

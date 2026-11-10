@@ -9,6 +9,7 @@ import { GroupService } from '../../../services/group.service';
 import { ContractService } from '../../../services/contract.service';
 import { StudentService } from '../../../services/student.service';
 import { driverGroup } from '../../../services/dto/group/group.dto';
+import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 
 type Membro = driverGroup['students'][number] & { photoUrl: string | null };
 
@@ -85,13 +86,8 @@ export class DriverGroup implements OnInit {
     this.router.navigate(['/driver-groups']);
   }
 
-  iniciais(nome: string): string {
-    return nome
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0].toUpperCase())
-      .join('');
+  iniciais(nome: string | null | undefined): string {
+    return iniciaisDe(nome);
   }
 
   abrir(folha: Folha) {

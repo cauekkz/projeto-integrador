@@ -20,7 +20,7 @@
 
 .estado-vazio {
   text-align: center;
-  color: #94a3b8;
+  color: #64748b;
   margin-top: 24px;
 }
 
@@ -34,8 +34,10 @@
   color: #62748e;
 }
 
-.dependente-card:hover {
-  background: #f8fafc;
+@media (hover: hover) and (pointer: fine) {
+  .dependente-card:hover {
+    background: #f8fafc;
+  }
 }
 
 .dependente-linha {

@@ -18,8 +18,10 @@
   transition: var(--transicao-botao);
 }
 
-.cartao:hover:not(:disabled) {
-  background: #f8fafc;
+@media (hover: hover) and (pointer: fine) {
+  .cartao:hover:not(:disabled) {
+    background: #f8fafc;
+  }
 }
 
 .cartao:disabled {
@@ -43,9 +45,13 @@ strong {
   font-size: 16px;
   font-weight: 700;
   color: #0f172a;
+  /* o nome identifica a rota: ate 2 linhas, e o resto vai no title */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .alunos {
@@ -64,7 +70,8 @@ strong {
 .seta {
   font-size: 16px;
   color: #62748e;
-  transition: transform var(--dur-media, 0.25s) ease;
+  transition: transform var(--dur-media, 0.25s) ease,
+    scale 160ms var(--ease-out, ease-out);
 }
 
 .seta.virada {

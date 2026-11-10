@@ -93,28 +93,35 @@
   border-radius: 0;
 }
 
-.caixa select:hover:not(:disabled),
-.caixa select:focus,
-.caixa select:disabled {
-  background-color: transparent;
-  box-shadow: none;
+@media (hover: hover) and (pointer: fine) {
+  .caixa select:hover:not(:disabled),
+  .caixa select:focus,
+  .caixa select:disabled {
+    background-color: transparent;
+    box-shadow: none;
+  }
 }
 
 .caixa {
   transition:
     border-color var(--dur-rapida) ease,
     box-shadow var(--dur-rapida) ease,
-    background-color var(--dur-rapida) ease;
+    background-color var(--dur-rapida) ease,
+    scale 160ms var(--ease-out, ease-out);
 }
 
-.caixa:has(select:not(:disabled)):not(:focus-within, .invalida):hover {
-  border-color: #b9c6d6;
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  .caixa:has(select:not(:disabled)):not(:focus-within, .invalida):hover {
+    border-color: #b9c6d6;
+    background: #f1f5f9;
+  }
 }
 
-.caixa:has(select:not(:disabled)):hover .seta,
-.caixa:has(select:focus-visible) .seta {
-  color: #0066cc;
+@media (hover: hover) and (pointer: fine) {
+  .caixa:has(select:not(:disabled)):hover .seta,
+  .caixa:has(select:focus-visible) .seta {
+    color: #0066cc;
+  }
 }
 
 .caixa:has(select:disabled) {
@@ -130,7 +137,8 @@
 }
 
 .caixa .seta {
-  transition: rotate var(--dur-media) var(--ease-suave);
+  transition: rotate var(--dur-media) var(--ease-suave),
+    scale 160ms var(--ease-out, ease-out);
 }
 
 /* select customizavel: a seta da caixa ja existe, some a do select; e gira enquanto a lista esta aberta */
@@ -222,8 +230,10 @@
   text-align: left;
 }
 
-.expansivel:hover {
-  background: #eceef1;
+@media (hover: hover) and (pointer: fine) {
+  .expansivel:hover {
+    background: #eceef1;
+  }
 }
 
 .expansivel i {

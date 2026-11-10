@@ -8,7 +8,7 @@ import { ConfirmacaoService } from './confirmacao.service';
   standalone: true,
   template: `
     @if (servico.aberta(); as c) {
-      <div class="fundo confirmacao" animate.enter="entrar-fade" (click)="c.responder(false)">
+      <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="c.responder(false)">
         <div class="folha" role="alertdialog" aria-modal="true" aria-labelledby="confirmacao-titulo" [attr.aria-describedby]="c.texto ? 'confirmacao-texto' : null" (click)="$event.stopPropagation()">
           <h2 id="confirmacao-titulo">{{ c.titulo }}</h2>
           @if (c.texto) {

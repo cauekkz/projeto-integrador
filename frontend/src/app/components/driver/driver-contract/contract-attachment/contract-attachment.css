@@ -23,8 +23,10 @@
   color: #111827;
 }
 
-.anexo-vazio:hover:not(:disabled) {
-  border-color: #c7d2e0;
+@media (hover: hover) and (pointer: fine) {
+  .anexo-vazio:hover:not(:disabled) {
+    border-color: #c7d2e0;
+  }
 }
 
 .anexo-vazio.invalida {
@@ -107,8 +109,10 @@
   cursor: pointer;
 }
 
-.acao:hover:not(:disabled) {
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  .acao:hover:not(:disabled) {
+    background: #f1f5f9;
+  }
 }
 
 .acao:disabled {

@@ -32,7 +32,7 @@
         aria-valuemin="1"
         aria-valuemax="3"
       >
-        <div class="barra-preenchida" [style.width.%]="progresso()"></div>
+        <div class="barra-preenchida" [style.transform]="'scaleX(' + progresso() / 100 + ')'"></div>
       </div>
     </div>
   </nav>
