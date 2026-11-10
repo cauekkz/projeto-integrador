@@ -1,0 +1,83 @@
+/* TabBar da Glisse no rodape do VanRoute (Figma 1072:5168), sempre no tema claro
+   (data-theme="light" so na barra). CSS global (o HTML e do React), mas tudo preso dentro de .glisse-tab-bar */
+app-glisse-tab-bar {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+
+.glisse-tab-bar {
+  /* as abas dividem a largura da barra: 100cqw = largura deste elemento */
+  container-type: inline-size;
+  width: 100%;
+  height: 100%;
+}
+
+/* [data-icons] repetido so pra ganhar das regras da propria Glisse */
+.glisse-tab-bar .lg-tab-bar[data-icons] {
+  --lg-tab-inset: 4px;
+  --lg-tab-height: 60px;
+  --lg-tab-width: calc((100cqw - 2 * var(--lg-tab-inset)) / 3);
+  /* cores do VanRoute */
+  --lg-foreground: #45556c;
+  --lg-muted: #45556c;
+  --lg-tab-selected: #0c66db;
+  --lg-selection: rgba(12, 102, 219, 0.15);
+  --lg-glass: rgba(29, 95, 161, 0.1);
+  --lg-lens: rgba(12, 102, 219, 0.06);
+  --lg-ring: rgba(12, 102, 219, 0.5);
+  /* ajustes do vidro (os controles "Glass" do site da Glisse) */
+  --lg-glass-bend: 0.04; /* bend */
+  --lg-glass-dispersion: 0.9; /* dispersion */
+  --lg-blur: 6.5px; /* frost */
+  --lg-rim-shine: 0.48; /* rim */
+  display: flex;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+}
+
+/* vidro da barra: mesma sombra e brilho do rodape antigo */
+.glisse-tab-bar .lg-tab-bar-glass.lg-glass {
+  box-shadow:
+    0 6px 18px rgba(15, 23, 41, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.glisse-tab-bar .lg-tab-icon .bi {
+  font-size: 26px;
+  line-height: 1;
+}
+
+/* icone de rota do motorista (public/rota.svg): o SVG vira mascara pra seguir a cor da aba */
+.glisse-tab-bar .icone-rota {
+  display: block;
+  width: 32px;
+  height: 32px;
+  background-color: currentColor;
+  -webkit-mask: url('/rota.svg') center / contain no-repeat;
+  mask: url('/rota.svg') center / contain no-repeat;
+}
+
+/* o rodape e so de icones: o nome da aba fica so pro leitor de tela */
+.glisse-tab-bar .glisse-escondido {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* o rodape tem view-transition-name (footer.css) pra ficar parado na troca de telas, mas no Chrome isso
+   isola o fundo: o vidro da Glisse la dentro nao enxerga o mapa e nao desfoca nada.
+   entao o nome so fica durante a troca de tela (:active-view-transition); parado, o desfoque funciona */
+nav.bottombar.com-glisse {
+  view-transition-name: none;
+}
+
+:root:active-view-transition nav.bottombar.com-glisse {
+  view-transition-name: rodape;
+}

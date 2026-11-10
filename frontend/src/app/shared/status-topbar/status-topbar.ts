@@ -1,13 +1,19 @@
-import { Component, OnInit, inject, input, output } from '@angular/core';
+import { Component, OnInit, inject, input, output, signal } from '@angular/core';
 import { NotificationService } from '../../services/notification.service';
+import { GlisseVidro } from '../glisse-vidro/glisse-vidro';
 
 // Figma "HeaderAvatarAndType" (1051:689): foto, status no meio ("Sem percurso" amarelo / "Em percurso" azul) e o sino.
 // usado na home do motorista e por cima do mapa expandido
 @Component({
   selector: 'app-status-topbar',
   standalone: true,
+  imports: [GlisseVidro],
   template: `
-    <header class="barra" [class.flutuante]="flutuante()">
+    <header class="barra" [class.flutuante]="flutuante()" [class.com-glisse]="flutuante() && !glisseFalhou()">
+      <!-- por cima do mapa: o fundo e o vidro da Glisse -->
+      @if (flutuante() && !glisseFalhou()) {
+        <app-glisse-vidro (falhou)="glisseFalhou.set(true)" />
+      }
       <button type="button" class="foto" aria-label="Abrir perfil" (click)="perfil.emit()">
         <img [src]="foto() || '/testee.jpg'" alt="" />
       </button>
@@ -35,6 +41,8 @@ export class StatusTopbar implements OnInit {
   readonly perfil = output<void>();
 
   protected notificacoes = inject(NotificationService);
+  // se o React da Glisse nao carregar, volta pro vidro antigo (status-topbar.css)
+  protected glisseFalhou = signal(false);
 
   ngOnInit() {
     this.notificacoes.iniciar();

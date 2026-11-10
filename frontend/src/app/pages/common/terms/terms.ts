@@ -7,6 +7,7 @@ import { AuthService } from '../../../services/auth.service';
 import { PopUpService } from '../../../shared/pop-up';
 import { DeleteAccount } from '../../../components/common/delete-account/delete-account';
 import { MarkdownText } from '../../../shared/markdown-text/markdown-text';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 // dois modos:
 // - reaceite: termos mudaram depois do cadastro, o backend responde 403 TERMS_NOT_ACCEPTED e o interceptor traz pra ca
@@ -23,6 +24,7 @@ export class TermsPage implements OnInit {
   private termsService = inject(TermsService);
   private authService = inject(AuthService);
   private popUpService = inject(PopUpService);
+  private confirmacao = inject(ConfirmacaoService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private location = inject(Location);
@@ -90,7 +92,8 @@ export class TermsPage implements OnInit {
     else this.sair();
   }
 
-  sair() {
+  async sair() {
+    if (!(await this.confirmacao.perguntar({ titulo: 'Sair da conta?', acao: 'Sair da conta' }))) return;
     this.authService.logout();
     this.router.navigate(['/']);
   }

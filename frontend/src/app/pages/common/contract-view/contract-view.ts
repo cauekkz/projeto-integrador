@@ -21,6 +21,7 @@ import {
   periodicidadeLabel,
   valorEmReais,
 } from '../../../services/dto/contract/contract.dto';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 // mesmos selos da lista /contracts (Figma 1036:698)
 const STATUS: Record<ContractStatus, { texto: string; classe: string }> = {
@@ -52,6 +53,7 @@ export class ContractView implements OnInit {
   private authService = inject(AuthService);
   private chatService = inject(ChatWebSocketService);
   private popUpService = inject(PopUpService);
+  private confirmacao = inject(ConfirmacaoService);
   private draft = inject(ContractDraftService);
 
   protected contractId = '';
@@ -237,8 +239,14 @@ export class ContractView implements OnInit {
     });
   }
 
-  aceitarCancelamento() {
+  async aceitarCancelamento() {
     if (this.enviando()) return;
+    const sim = await this.confirmacao.perguntar({
+      titulo: 'Aceitar o cancelamento?',
+      texto: 'O contrato é cancelado agora e isso não tem volta.',
+      acao: 'Aceitar e cancelar',
+    });
+    if (!sim || this.enviando()) return;
     this.enviando.set(true);
     this.contractService.acceptCancellation(this.contractId).subscribe({
       next: () => {
@@ -250,8 +258,15 @@ export class ContractView implements OnInit {
     });
   }
 
-  desistirCancelamento() {
+  async desistirCancelamento() {
     if (this.enviando()) return;
+    const sim = await this.confirmacao.perguntar({
+      titulo: 'Desistir do cancelamento?',
+      texto: 'Seu pedido de cancelamento é retirado e o contrato continua valendo.',
+      acao: 'Desistir do cancelamento',
+      tom: 'azul',
+    });
+    if (!sim || this.enviando()) return;
     this.enviando.set(true);
     this.contractService.withdrawCancellation(this.contractId).subscribe({
       next: () => {

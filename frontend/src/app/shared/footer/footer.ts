@@ -6,6 +6,7 @@ import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
+import { AbaGlisse, GlisseTabBar } from '../glisse-tab-bar/glisse-tab-bar';
 
 type Aba = 'home' | 'meio' | 'config' | '';
 const POSICAO: Record<Exclude<Aba, ''>, number> = { home: 0, meio: 1, config: 2 };
@@ -16,7 +17,7 @@ let ultimaPosicao: number | null = null;
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, GlisseTabBar],
   templateUrl: './footer.html',
   styleUrl: './footer.css',
 })
@@ -33,6 +34,19 @@ export class Footer implements OnInit {
   private tripService = inject(TripService);
   private studentService = inject(StudentService);
   private procurandoViagem = false;
+
+  // motorista: rodape com a TabBar da Glisse. Se o React nao carregar, volta pro rodape antigo
+  protected glisseFalhou = signal(false);
+  protected readonly abasMotorista: AbaGlisse[] = [
+    { value: 'home', label: 'Início', iconClass: 'bi bi-house-door-fill' },
+    { value: 'meio', label: 'Rotas', iconClass: 'icone-rota' },
+    { value: 'config', label: 'Conversas', iconClass: 'bi bi-chat-dots' },
+  ];
+
+  protected escolheuGlisse(valor: string) {
+    if (valor === 'home') this.clicarHome();
+    else if (valor === 'meio' || valor === 'config') this.selecionarAba(valor);
+  }
 
   constructor(private router: Router) {}
 

@@ -8,6 +8,7 @@ import { DriverRoutes } from './driver-routes';
 import { DriverRouteEditor } from '../driver-route-editor/driver-route-editor';
 import { Footer } from '../../../shared/footer/footer';
 import { resumoDias, textoPendencia } from '../../../services/dto/route/route.dto';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 const ENDERECO_ANA = {
   id: 'end-ana', street: 'Av. Paulista', zipCode: '01310-100', city: 'São Paulo',
@@ -259,10 +260,10 @@ describe('Rotas do motorista', () => {
       req.flush({ stops: [PONTO_CASA, PONTO_ESCOLA], pending: [] });
     });
 
-    it('ajustar aluno: muda os dias e tira do ponto', () => {
+    it('ajustar aluno: muda os dias e tira do ponto', async () => {
       const fixture = criar([PONTO_CASA, PONTO_ESCOLA], []);
       const comp = fixture.componentInstance as unknown as {
-        abrirAluno(a: object, p: object): void; alternarDia(d: string): void; salvarAluno(): void; tirarAluno(): void;
+        abrirAluno(a: object, p: object): void; alternarDia(d: string): void; salvarAluno(): void; tirarAluno(): Promise<void>;
       };
       comp.abrirAluno(PONTO_CASA.students[0], PONTO_CASA);
       comp.alternarDia('FRIDAY');
@@ -272,7 +273,9 @@ describe('Rotas do motorista', () => {
       req.flush({ stops: [PONTO_CASA, PONTO_ESCOLA], pending: [] });
 
       comp.abrirAluno(PONTO_CASA.students[0], PONTO_CASA);
-      comp.tirarAluno();
+      const pergunta = vi.spyOn(TestBed.inject(ConfirmacaoService), 'perguntar').mockResolvedValue(true);
+      await comp.tirarAluno();
+      expect(pergunta).toHaveBeenCalledWith(expect.objectContaining({ acao: 'Tirar do ponto' }));
       http.expectOne((r) => r.method === 'DELETE' && r.url === '/api/route/student-stop/ss-1')
         .flush({ stops: [PONTO_ESCOLA], pending: [] });
     });
@@ -303,7 +306,7 @@ describe('Rotas do motorista', () => {
     });
   });
 
-  it('o meio do rodapé do motorista: viagem aberta ou escolher a rota', () => {
+  it('o meio do rodapé do motorista: viagem aberta ou escolher a rota', async () => {
     configurar();
     const fixture = TestBed.createComponent(Footer);
     fixture.componentInstance.tipoUsuario = 'motorista';
@@ -319,6 +322,7 @@ describe('Rotas do motorista', () => {
     http.expectOne((r) => r.url === '/api/route/get-all-routes-and-stops').flush({ content: [{ id: 'r-1', name: 'Ida', stops: [] }], last: true });
     http.expectOne('/api/trip/route/r-1/today').flush({ id: 't-1', status: 'IN_PROGRESS' });
     expect(navegar).toHaveBeenCalledWith(['/driver-route', 'r-1'], { queryParams: { continuar: 1 } });
-    expect(fixture.nativeElement.querySelector('.icone-rota')).not.toBeNull();
+    // o rodape do motorista e a TabBar da Glisse: o React carrega depois, entao espera ela aparecer
+    await vi.waitFor(() => expect(fixture.nativeElement.querySelector('.glisse-tab-bar .icone-rota')).not.toBeNull(), { timeout: 8000 });
   });
 });

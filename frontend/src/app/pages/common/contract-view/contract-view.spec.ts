@@ -6,6 +6,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { PopUpService } from '../../../shared/pop-up';
 import { ContractDraftService } from '../../driver/driver-contract/contract-draft.service';
 import { ContractView } from './contract-view';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 function fakeToken(payload: object) {
   const base64 = (obj: object) => btoa(JSON.stringify(obj)).replace(/=+$/, '');
@@ -185,7 +186,7 @@ describe('ContractView (detalhe do contrato)', () => {
     http.expectOne('/api/contract/c-1').flush({ ...CONTRATO, status: 'CANCELED' });
   });
 
-  it('pedido da outra parte: aviso com o motivo e "Aceitar e cancelar agora"', () => {
+  it('pedido da outra parte: aviso com o motivo e "Aceitar e cancelar agora"', async () => {
     const fixture = criar(true, { ...CONTRATO, cancellations: [PEDIDO] });
     const texto: string = fixture.nativeElement.textContent;
     expect(popUp.show).toHaveBeenCalledWith(
@@ -197,18 +198,22 @@ describe('ContractView (detalhe do contrato)', () => {
     expect(texto).toContain('Aceitar e cancelar agora');
     expect(texto).not.toContain('Cancelar contrato');
 
-    (fixture.componentInstance as any).aceitarCancelamento();
+    const pergunta = vi.spyOn(TestBed.inject(ConfirmacaoService), 'perguntar').mockResolvedValue(true);
+    await (fixture.componentInstance as any).aceitarCancelamento();
+    expect(pergunta).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Aceitar o cancelamento?' }));
     const req = http.expectOne('/api/contract/c-1/cancellation/accept');
     expect(req.request.method).toBe('PUT');
     req.flush({ ...PEDIDO, status: 'ACCEPTED' });
     http.expectOne('/api/contract/c-1').flush({ ...CONTRATO, status: 'CANCELED' });
   });
 
-  it('pedido meu: "Desistir do cancelamento" manda DELETE', () => {
+  it('pedido meu: "Desistir do cancelamento" manda DELETE', async () => {
     const fixture = criar(false, { ...CONTRATO, cancellations: [PEDIDO] });
     expect(fixture.nativeElement.textContent).toContain('Desistir do cancelamento');
 
-    (fixture.componentInstance as any).desistirCancelamento();
+    const pergunta = vi.spyOn(TestBed.inject(ConfirmacaoService), 'perguntar').mockResolvedValue(true);
+    await (fixture.componentInstance as any).desistirCancelamento();
+    expect(pergunta).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Desistir do cancelamento?' }));
     const req = http.expectOne('/api/contract/c-1/cancellation');
     expect(req.request.method).toBe('DELETE');
     req.flush({ ...PEDIDO, status: 'WITHDRAWN' });

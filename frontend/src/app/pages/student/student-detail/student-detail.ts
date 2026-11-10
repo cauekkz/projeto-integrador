@@ -18,6 +18,7 @@ import {
 } from '../../../services/dto/student/student.dto';
 import { dataLocal, diaEMes, studentAbsence, studentRoute } from '../../../services/dto/trip/trip.dto';
 import { RELATION_LABEL } from '../../../services/dto/contract/contract.dto';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 // endereco de outro filho que pode ser reaproveitado (addressId)
 interface EnderecoDaFamilia {
@@ -49,6 +50,7 @@ export class StudentDetail implements OnInit {
   private studentService = inject(StudentService);
   private authService = inject(AuthService);
   private popUpService = inject(PopUpService);
+  private perguntas = inject(ConfirmacaoService);
 
   protected readonly relacoes = RELACOES;
   protected readonly rotuloRelacao = RELATION_LABEL;
@@ -268,8 +270,15 @@ export class StudentDetail implements OnInit {
     });
   }
 
-  eleVaiSim(falta: studentAbsence) {
+  async eleVaiSim(falta: studentAbsence) {
     if (this.desfazendo()) return;
+    const sim = await this.perguntas.perguntar({
+      titulo: `Desfazer a falta de ${this.primeiroNome()}?`,
+      texto: 'A falta avisada é cancelada.',
+      acao: `${this.primeiroNome()} vai sim`,
+      tom: 'azul',
+    });
+    if (!sim || this.desfazendo()) return;
     this.desfazendo.set(falta.id);
     this.studentService.cancelAbsence(this.studentId, falta.id).subscribe({
       next: () => {

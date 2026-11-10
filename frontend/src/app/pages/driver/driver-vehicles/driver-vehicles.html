@@ -67,7 +67,7 @@
 
 <!-- Figma "Motorista · Parar de usar van" -->
 @if (parar(); as van) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharParar()">
+  <div class="fundo confirmacao" animate.enter="entrar-fade" (click)="fecharParar()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="parar-titulo" (click)="$event.stopPropagation()">
       <h2 id="parar-titulo">Parar de usar esta van?</h2>
       <p>A van {{ van.plate }} sai da sua lista de vans.</p>

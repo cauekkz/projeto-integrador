@@ -26,6 +26,7 @@ import {
   studentStop,
   textoPendencia,
 } from '../../../services/dto/route/route.dto';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 // Figma "Rotas · Motorista": editor da rota (vazia, com pendencia, pronta), folhas do aluno, do ponto e da van
 @Component({
@@ -40,6 +41,7 @@ export class DriverRouteEditor implements OnInit {
   private schoolService = inject(SchoolService);
   private vehicleService = inject(VehicleService);
   private popUpService = inject(PopUpService);
+  private confirmacao = inject(ConfirmacaoService);
   private activatedRoute = inject(ActivatedRoute);
   private router = inject(Router);
 
@@ -255,9 +257,14 @@ export class DriverRouteEditor implements OnInit {
     }
   }
 
-  tirarAluno() {
+  async tirarAluno() {
     const aberto = this.alunoAberto();
     if (!aberto || this.enviando()) return;
+    const sim = await this.confirmacao.perguntar({
+      titulo: `Tirar ${aberto.aluno.studentName} do ponto?`,
+      acao: 'Tirar do ponto',
+    });
+    if (!sim || this.enviando()) return;
     this.enviando.set(true);
     this.routeService.removeStudentStop(aberto.aluno.id).subscribe({
       next: (edicao) => this.concluir(edicao, () => this.alunoAberto.set(null)),
@@ -295,8 +302,13 @@ export class DriverRouteEditor implements OnInit {
     });
   }
 
-  tirarEscola(escola: schoolStop) {
+  async tirarEscola(escola: schoolStop) {
     if (this.enviando()) return;
+    const sim = await this.confirmacao.perguntar({
+      titulo: `Tirar ${this.nomeEscola(escola)} do ponto?`,
+      acao: 'Tirar escola',
+    });
+    if (!sim || this.enviando()) return;
     this.enviando.set(true);
     // 409 se algum aluno da escola ainda embarca ou desce aqui (popup global)
     this.routeService.removeSchoolStop(escola.id).subscribe({
@@ -309,7 +321,7 @@ export class DriverRouteEditor implements OnInit {
     });
   }
 
-  apagarPonto() {
+  async apagarPonto() {
     const ponto = this.pontoAberto();
     if (!ponto || this.enviando()) return;
     // Figma "Ponto · ordem e apagar": o backend da 409 com aluno ou escola, entao avisa antes
@@ -317,6 +329,8 @@ export class DriverRouteEditor implements OnInit {
       this.popUpService.show('Tire antes os alunos e as escolas dele.', 'warning', 'Para apagar este ponto');
       return;
     }
+    const sim = await this.confirmacao.perguntar({ titulo: `Apagar o ponto ${ponto.orderIndex}?`, acao: 'Apagar ponto' });
+    if (!sim || this.enviando()) return;
     this.enviando.set(true);
     this.routeService.removeStop(ponto.id).subscribe({
       next: (edicao) => this.concluir(edicao, () => this.pontoAberto.set(null)),

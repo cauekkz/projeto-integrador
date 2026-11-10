@@ -23,6 +23,21 @@
   animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   transition: all 0.3s ease;
   border: 1.5px solid transparent;
+  position: relative;
+}
+
+/* vidro da Glisse atras do conteudo (app-glisse-vidro): a cor de cada tipo fica no cartao, translucida,
+   e o vidro desfoca ela junto com a tela; frost alto pra borrar bem o fundo */
+.popup-card app-glisse-vidro {
+  --lg-glass: transparent;
+  --lg-blur: 16px; /* frost */
+  --glisse-vidro-sombra: none;
+  border-radius: 12.5px; /* 14px do cartao menos a borda */
+}
+
+.popup-card > :not(app-glisse-vidro) {
+  position: relative;
+  z-index: 1;
 }
 
 @keyframes slideInRight {
@@ -49,7 +64,7 @@
 }
 
 .popup-card.error {
-  background-color: #fef2f2;
+  background-color: rgb(254 242 242 / 0.78);
   border-color: #fecaca;
   color: #991b1b;
 }
@@ -59,7 +74,7 @@
 }
 
 .popup-card.warning {
-  background-color: #fffbeb;
+  background-color: rgb(255 251 235 / 0.78);
   border-color: #fde68a;
   color: #92400e;
 }
@@ -69,7 +84,7 @@
 }
 
 .popup-card.success {
-  background-color: #f0fdf4;
+  background-color: rgb(240 253 244 / 0.78);
   border-color: #bbf7d0;
   color: #166534;
 }
@@ -79,7 +94,7 @@
 }
 
 .popup-card.info {
-  background-color: #eff6ff;
+  background-color: rgb(239 246 255 / 0.78);
   border-color: #bfdbfe;
   color: #1e40af;
 }

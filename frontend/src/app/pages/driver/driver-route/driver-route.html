@@ -101,9 +101,6 @@
                   <small>{{ tarefa(ponto.students[0]) }}</small>
                 }
               </div>
-              <button type="button" class="mais" aria-label="Navegar até o ponto" (click)="pontoAberto.set(ponto)">
-                <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
-              </button>
             </div>
 
             <ul class="alunos">
@@ -196,15 +193,12 @@
   </div>
 </ng-template>
 
-<!-- Figma "Em viagem · mapa expandido": barra de status, abrir no app de mapa, recolher e o rodape -->
+<!-- Figma "Em viagem · mapa expandido": barra de status, recolher e o rodape -->
 @if (estado() === 'viagem' && mapaExpandido()) {
   <div class="sobre-mapa" animate.enter="entrar-fade">
     <app-status-topbar [foto]="usuario()?.photoUrl" [emPercurso]="true" [flutuante]="true" (perfil)="mostrarPerfil.set(true)" />
   </div>
   <div class="botoes-mapa">
-    <button type="button" class="redondo grande" aria-label="Abrir no app de mapa" (click)="abrirNavegacao()">
-      <i class="bi bi-box-arrow-up-right" aria-hidden="true"></i>
-    </button>
     <button type="button" class="redondo recolher" aria-label="Recolher mapa" (click)="mapaExpandido.set(false)">
       <i class="bi bi-arrows-angle-contract" aria-hidden="true"></i>
     </button>
@@ -214,7 +208,7 @@
 
 <!-- Figma "Recomeçar · confirmar" -->
 @if (confirmandoRecomeco()) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharRecomeco()">
+  <div class="fundo confirmacao" animate.enter="entrar-fade" (click)="fecharRecomeco()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="recomecar-titulo" (click)="$event.stopPropagation()">
       <h2 id="recomecar-titulo">Recomeçar do zero?</h2>
       <p class="sub">Todos os alunos voltam para aguardando e os responsáveis são avisados de que a rota foi reiniciada.</p>
@@ -228,7 +222,7 @@
 
 <!-- confirmar "Encerrar rota" antes de atender todos -->
 @if (confirmandoEncerrar()) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharEncerrar()">
+  <div class="fundo confirmacao" animate.enter="entrar-fade" (click)="fecharEncerrar()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="encerrar-titulo" (click)="$event.stopPropagation()">
       <h2 id="encerrar-titulo">Encerrar a rota agora?</h2>
       <p class="sub">A viagem de hoje termina e não pode ser iniciada de novo. Quem ainda não foi atendido fica como está.</p>
@@ -259,19 +253,6 @@
       <button type="submit" class="btn btn-azul" [disabled]="enviando()">{{ enviando() ? 'Registrando...' : 'Registrar' }}</button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharOcorrencia()">Voltar</button>
     </form>
-  </div>
-}
-
-<!-- tres pontinhos do ponto: navegar ate ele -->
-@if (pontoAberto(); as ponto) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="pontoAberto.set(null)">
-    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="navegar-titulo" (click)="$event.stopPropagation()">
-      <h2 id="navegar-titulo">Ponto {{ ponto.orderIndex }}</h2>
-      <p class="sub">{{ nomeDoPonto(ponto) }}</p>
-      <a class="btn btn-azul link-botao" [href]="linkGoogle(ponto)" target="_blank" rel="noopener">Abrir no Google Maps</a>
-      <a class="btn btn-contorno link-botao" [href]="linkWaze(ponto)" target="_blank" rel="noopener">Abrir no Waze</a>
-      <button type="button" class="btn btn-contorno" (click)="pontoAberto.set(null)">Voltar</button>
-    </div>
   </div>
 }
 

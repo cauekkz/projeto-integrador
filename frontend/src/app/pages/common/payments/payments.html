@@ -94,7 +94,7 @@
 
 <!-- Figma "Motorista · Recebi · método" -->
 @if (recebendo(); as p) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharRecebi()">
+  <div class="fundo confirmacao" animate.enter="entrar-fade" (click)="fecharRecebi()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="recebi-titulo" (click)="$event.stopPropagation()">
       <h2 id="recebi-titulo">Recebi este pagamento?</h2>
       <p>{{ p.studentName }} · {{ valor(p.value) }}. Confira no banco antes: a baixa não tem volta.</p>
@@ -124,7 +124,7 @@
 
 <!-- Figma "Motorista · Dispensar parcela" -->
 @if (dispensando(); as p) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharDispensar()">
+  <div class="fundo confirmacao" animate.enter="entrar-fade" (click)="fecharDispensar()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="dispensar-titulo" (click)="$event.stopPropagation()">
       <h2 id="dispensar-titulo">Dispensar esta parcela?</h2>
       <p>{{ p.studentName }} · {{ valor(p.value) }}. O responsável é avisado e isso não tem volta.</p>

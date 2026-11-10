@@ -69,7 +69,7 @@
 
 <!-- Figma "Motorista · /driver-pix · remover" -->
 @if (removerAberto()) {
-  <div class="fundo" animate.enter="entrar-fade" (click)="fecharRemover()">
+  <div class="fundo confirmacao" animate.enter="entrar-fade" (click)="fecharRemover()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="remover-titulo" (click)="$event.stopPropagation()">
       <h2 id="remover-titulo">Remover a chave Pix?</h2>
       <p>Os responsáveis vão ver que você ainda não cadastrou uma chave.</p>

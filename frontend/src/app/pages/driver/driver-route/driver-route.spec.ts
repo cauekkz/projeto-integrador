@@ -9,6 +9,7 @@ import { TripService } from '../../../services/trip.service';
 import { DriverRoute } from './driver-route';
 import { DriverHome } from '../driver-home/driver-home';
 import { horaDe, minutosAte, tarefaDoAluno, tripUpdate } from '../../../services/dto/trip/trip.dto';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 const ROTA = { id: 'r-1', name: 'Ida manhã', driverName: 'G', vehicle: { id: 'v-1', plate: 'ABC1D23', model: 'SPRINTER', color: 'PRATA', capacity: 15 } };
 const VAN = { id: 'v-1', plate: 'ABC1D23', model: 'SPRINTER', color: 'PRATA', capacity: 15, status: 'ACTIVE' };
@@ -122,7 +123,9 @@ describe('Viagem do motorista', () => {
       expect(fixture.nativeElement.textContent).toContain('ABC1D23 · Sprinter');
 
       gps(true);
+      const pergunta = vi.spyOn(TestBed.inject(ConfirmacaoService), 'perguntar').mockResolvedValue(true);
       await fixture.componentInstance.iniciar();
+      expect(pergunta).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Iniciar a rota?' }));
       const req = http.expectOne('/api/trip/start/r-1');
       expect(req.request.body).toEqual({ latitude: -23.5, longitude: -46.6, vehicleId: 'v-1' });
       expect(req.request.params.has('restart')).toBe(false);
@@ -134,6 +137,7 @@ describe('Viagem do motorista', () => {
       const fixture = criar(null);
       http.expectOne('/api/vehicle/my-vehicles').flush([VAN]);
       gps(false);
+      vi.spyOn(TestBed.inject(ConfirmacaoService), 'perguntar').mockResolvedValue(true);
       await fixture.componentInstance.iniciar();
       expect(popUp.show).toHaveBeenCalledWith('Permita o uso da localização para iniciar a rota.', 'error', 'Sem acesso à localização');
       http.expectNone('/api/trip/start/r-1');
@@ -145,7 +149,10 @@ describe('Viagem do motorista', () => {
       expect(fixture.nativeElement.textContent).toContain('Recomeçar do zero');
 
       gps(true);
+      const pergunta = vi.spyOn(TestBed.inject(ConfirmacaoService), 'perguntar').mockResolvedValue(true);
       await fixture.componentInstance.iniciar(true);
+      // recomecar ja passou pela confirmacao "Recomeçar do zero?": nao pergunta de novo
+      expect(pergunta).not.toHaveBeenCalled();
       const req = http.expectOne((r) => r.url === '/api/trip/start/r-1');
       expect(req.request.params.get('restart')).toBe('true');
       req.flush({ id: 't-2', status: 'STARTED' });

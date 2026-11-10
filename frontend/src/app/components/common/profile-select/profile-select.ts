@@ -1,6 +1,7 @@
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 @Component({
   selector: 'app-profile-select',
@@ -15,6 +16,7 @@ export class ProfileSelect implements OnInit {
   @Output() fecharEvent = new EventEmitter<void>();
 
   private cdr = inject(ChangeDetectorRef);
+  private confirmacao = inject(ConfirmacaoService);
 
   constructor(
     private router: Router,
@@ -79,7 +81,8 @@ export class ProfileSelect implements OnInit {
     this.router.navigate(['/contracts']);
   }
 
-  sairDaConta() {
+  async sairDaConta() {
+    if (!(await this.confirmacao.perguntar({ titulo: 'Sair da conta?', acao: 'Sair da conta' }))) return;
     this.authService.logout();
     this.router.navigate(['/']);
   }

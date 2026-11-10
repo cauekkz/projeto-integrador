@@ -28,13 +28,13 @@ import {
   minutosAte,
   nomeDoPonto,
   tarefaDoAluno,
-  tripLiveStop,
   tripStudent,
   tripUpdate,
   viagemAtiva,
 } from '../../../services/dto/trip/trip.dto';
 import { formatarCrlv } from '../driver-vehicles/driver-vehicles';
 import { UserMe } from '../../../models/user.model';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 type Estado = 'carregando' | 'erro' | 'semAcesso' | 'antes' | 'aberta' | 'finalizada' | 'viagem';
 
@@ -59,6 +59,7 @@ export class DriverRoute implements OnInit {
   private authService = inject(AuthService);
   private notificacoes = inject(NotificationService);
   private popUpService = inject(PopUpService);
+  private confirmacao = inject(ConfirmacaoService);
   private destroyRef = inject(DestroyRef);
 
   protected readonly tiposOcorrencia = TIPOS_DE_OCORRENCIA;
@@ -88,7 +89,6 @@ export class DriverRoute implements OnInit {
   protected confirmandoEncerrar = signal(false);
   protected mapaExpandido = signal(false);
   protected mostrarPerfil = signal(false);
-  protected pontoAberto = signal<tripLiveStop | null>(null);
   protected registrando = signal(false);
   protected tipoOcorrencia = signal<OccurrenceType>('TRAFFIC');
   protected descricao = '';
@@ -218,6 +218,17 @@ export class DriverRoute implements OnInit {
 
   async iniciar(recomecar = false) {
     if (this.enviando()) return;
+    // recomecar ja passou pela confirmacao "Recomeçar do zero?"
+    if (
+      !recomecar &&
+      !(await this.confirmacao.perguntar({
+        titulo: 'Iniciar a rota?',
+        texto: 'A viagem de hoje começa e os responsáveis passam a acompanhar a van no mapa.',
+        acao: 'Iniciar rota',
+        tom: 'azul',
+      }))
+    )
+      return;
     this.enviando.set(true);
     const posicao = await this.pegarPosicao();
     if (!posicao) {
@@ -420,31 +431,6 @@ export class DriverRoute implements OnInit {
         error: () => {},
       });
     }
-  }
-
-  // ---------- ponto: navegar ----------
-
-  linkGoogle(ponto: tripLiveStop): string {
-    return `https://www.google.com/maps/dir/?api=1&destination=${ponto.latitude},${ponto.longitude}&travelmode=driving`;
-  }
-
-  linkWaze(ponto: tripLiveStop): string {
-    return `https://waze.com/ul?ll=${ponto.latitude},${ponto.longitude}&navigate=yes`;
-  }
-
-  // mapa expandido: abre o Google Maps com os pontos que faltam, em ordem
-  abrirNavegacao() {
-    const faltam = this.pontos().filter((p) => !p.done && p.latitude != null && p.longitude != null);
-    if (!faltam.length) return;
-    const destino = faltam[faltam.length - 1];
-    const paradas = faltam
-      .slice(0, -1)
-      .map((p) => `${p.latitude},${p.longitude}`)
-      .join('|');
-    const url =
-      `https://www.google.com/maps/dir/?api=1&destination=${destino.latitude},${destino.longitude}&travelmode=driving` +
-      (paradas ? `&waypoints=${encodeURIComponent(paradas)}` : '');
-    window.open(url, '_blank', 'noopener');
   }
 
   // ---------- ocorrência ----------

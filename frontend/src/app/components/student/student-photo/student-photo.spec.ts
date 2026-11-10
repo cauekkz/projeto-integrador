@@ -5,6 +5,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { StudentPhoto } from './student-photo';
 import { StudentService } from '../../../services/student.service';
 import { PopUpService } from '../../../shared/pop-up';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 describe('Foto do aluno (photoKey do backend)', () => {
   let http: HttpTestingController;
@@ -117,12 +118,14 @@ describe('Foto do aluno (photoKey do backend)', () => {
       expect(el.textContent).toContain('Remover foto');
     });
 
-    it('remover avisa a tela com foto nula', () => {
+    it('remover avisa a tela com foto nula', async () => {
       const fixture = criar(true, '/foto.png');
       const emitido: unknown[] = [];
       fixture.componentInstance.fotoMudou.subscribe((v) => emitido.push(v));
 
-      fixture.componentInstance.remover();
+      const pergunta = vi.spyOn(TestBed.inject(ConfirmacaoService), 'perguntar').mockResolvedValue(true);
+      await fixture.componentInstance.remover();
+      expect(pergunta).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Remover a foto?' }));
       http.expectOne('/api/student/s-1/photo').flush(null, { status: 204, statusText: 'No Content' });
 
       expect(emitido).toEqual([{ photoKey: null, photoUrl: null }]);

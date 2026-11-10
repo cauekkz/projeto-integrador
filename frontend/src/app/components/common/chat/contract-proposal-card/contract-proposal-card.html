@@ -61,9 +61,9 @@
   </div>
 }
 
-<!-- Figma "Motorista · Chat · confirmar retirada": folha de baixo -->
+<!-- Figma "Motorista · Chat · confirmar retirada": pop-up de confirmacao -->
 @if (retiradaAberta()) {
-  <div class="fundo" animate.enter="entrar-fade" animate.leave="sair-fade" (click)="fecharRetirada()">
+  <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="sair-fade" (click)="fecharRetirada()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="retirar-titulo" (click)="$event.stopPropagation()">
       <h2 id="retirar-titulo">Retirar proposta?</h2>
       <p>O contrato é cancelado e o responsável é avisado. Isso não tem volta.</p>

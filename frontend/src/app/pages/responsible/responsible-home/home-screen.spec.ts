@@ -10,6 +10,7 @@ import { HomeScreen } from './home-screen';
 import { Footer } from '../../../shared/footer/footer';
 import { ResponsibleRoute, textoDaVanDaViagem } from '../responsible-route/responsible-route';
 import { dataLocal, studentTripToday, tripUpdate } from '../../../services/dto/trip/trip.dto';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 const LUCAS = { id: 'lucas', name: 'Lucas Pereira', photoKey: null };
 
@@ -103,10 +104,13 @@ describe('Viagem do responsável', () => {
       expect(botao(fixture, 'Não vai hoje')).toBeUndefined();
     });
 
-    it('falta avisada: desfazer com 409', () => {
+    it('falta avisada: desfazer com 409', async () => {
       const fixture = criar([], [{ id: 'a-1', studentId: 'lucas', routeId: 'r-1', routeName: 'Ida manhã', date: dataLocal() }]);
       expect(fixture.nativeElement.textContent).toContain('Falta avisada · Ida manhã · hoje');
+      const pergunta = vi.spyOn(TestBed.inject(ConfirmacaoService), 'perguntar').mockResolvedValue(true);
       botao(fixture, 'Lucas vai sim')!.click();
+      await new Promise((r) => setTimeout(r)); // espera a resposta do pop-up de confirmacao
+      expect(pergunta).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Desfazer a falta de Lucas?' }));
       http.expectOne('/api/student/lucas/absences/a-1').flush(
         { message: 'A viagem já começou: a falta não pode mais ser desfeita' },
         { status: 409, statusText: 'Conflict' },

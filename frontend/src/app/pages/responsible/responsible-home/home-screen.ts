@@ -21,6 +21,7 @@ import {
   studentTripToday,
   viagemAtiva,
 } from '../../../services/dto/trip/trip.dto';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 // notificacoes que mudam o card do filho (a viagem saiu, embarcou, chegou...): busca de novo, sem polling
 const TIPOS_QUE_ATUALIZAM = ['TRIP_STARTED', 'VAN_ON_THE_WAY', 'STUDENT_BOARDED', 'STUDENT_DELIVERED', 'STUDENT_ABSENT'];
@@ -56,6 +57,7 @@ export class HomeScreen implements OnInit {
   private authService = inject(AuthService);
   private studentService = inject(StudentService);
   private popUpService = inject(PopUpService);
+  private confirmacao = inject(ConfirmacaoService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
@@ -252,8 +254,16 @@ export class HomeScreen implements OnInit {
   }
 
   // Figma "Ele vai sim · erro 409": a viagem ja começou
-  eleVaiSim(filho: CartaoFilho, falta: studentAbsence) {
+  async eleVaiSim(filho: CartaoFilho, falta: studentAbsence) {
     if (this.desfazendo()) return;
+    const nome = filho.name.split(' ')[0];
+    const sim = await this.confirmacao.perguntar({
+      titulo: `Desfazer a falta de ${nome}?`,
+      texto: `A falta avisada em ${falta.routeName} é cancelada.`,
+      acao: `${nome} vai sim`,
+      tom: 'azul',
+    });
+    if (!sim || this.desfazendo()) return;
     this.desfazendo.set(falta.id);
     this.studentService.cancelAbsence(filho.id, falta.id).subscribe({
       next: () => {

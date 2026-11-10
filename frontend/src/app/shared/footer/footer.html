@@ -1,3 +1,14 @@
+@if (tipoUsuario === 'motorista' && !glisseFalhou()) {
+  <!-- motorista: TabBar da Glisse (Liquid Glass) -->
+  <nav class="bottombar com-glisse" aria-label="Navegação principal">
+    <app-glisse-tab-bar
+      ariaLabel="Navegação principal"
+      [abas]="abasMotorista"
+      [valor]="abaAtiva || null"
+      (escolheu)="escolheuGlisse($event)"
+      (falhou)="glisseFalhou.set(true)" />
+  </nav>
+} @else {
 <nav class="bottombar" aria-label="Navegação principal">
   <!-- pilula azul que desliza ate a aba atual (esticando como liquido) -->
   @if (posicao() !== null) {
@@ -43,3 +54,4 @@
     <i class="bi bi-chat-dots" aria-hidden="true"></i>
   </button>
 </nav>
+}

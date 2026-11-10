@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { StudentService } from '../../../services/student.service';
 import { PopUpService } from '../../../shared/pop-up';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 // mesmo limite do backend para a foto do aluno
 const FOTO_TAMANHO_MAXIMO = 10 * 1024 * 1024;
@@ -26,6 +27,7 @@ export class StudentPhoto {
 
   private studentService = inject(StudentService);
   private popUpService = inject(PopUpService);
+  private confirmacao = inject(ConfirmacaoService);
 
   enviando = false;
 
@@ -67,7 +69,9 @@ export class StudentPhoto {
     }
   }
 
-  remover() {
+  async remover() {
+    if (this.enviando) return;
+    if (!(await this.confirmacao.perguntar({ titulo: 'Remover a foto?', texto: 'A foto do aluno é apagada.', acao: 'Remover foto' }))) return;
     if (this.enviando) return;
     this.enviando = true;
     this.studentService.removeStudentPhoto(this.studentId).subscribe({

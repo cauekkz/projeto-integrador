@@ -20,6 +20,20 @@
   box-shadow: 0 6px 18px rgba(15, 23, 41, 0.12);
 }
 
+/* com a Glisse o fundo e o vidro dela (glisse-vidro.css); aqui so tira o antigo e poe o conteudo por cima */
+.barra.com-glisse {
+  position: relative;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.barra.com-glisse > :not(app-glisse-vidro) {
+  position: relative;
+  z-index: 1;
+}
+
 .barra.flutuante .status,
 .barra.flutuante .sino {
   background: rgba(255, 255, 255, 0.55);

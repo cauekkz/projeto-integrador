@@ -6,6 +6,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { PopUpService } from '../../../shared/pop-up';
 import { AuthService } from '../../../services/auth.service';
 import { StudentDetail } from './student-detail';
+import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
 const LUCAS = { id: 'lucas', name: 'Lucas Pereira', photoKey: null };
 const MARINA = { id: 'marina', name: 'Marina Pereira', photoKey: null };
@@ -109,7 +110,7 @@ describe('Filho em detalhe (/student/:id)', () => {
     expect(navegar).toHaveBeenCalledWith(['/dependentes']);
   });
 
-  it('rotas, avisar falta (409) e "vai sim"', () => {
+  it('rotas, avisar falta (409) e "vai sim"', async () => {
     const fixture = criar({
       responsaveis: [EU_ADMIN],
       rotas: [{ id: 'r-1', name: 'Ida manhã' }, { id: 'r-2', name: 'Volta tarde' }],
@@ -129,7 +130,10 @@ describe('Filho em detalhe (/student/:id)', () => {
 
     botao(fixture, 'Cancelar')!.click();
     fixture.detectChanges();
+    const pergunta = vi.spyOn(TestBed.inject(ConfirmacaoService), 'perguntar').mockResolvedValue(true);
     botao(fixture, 'Lucas vai sim')!.click();
+    await new Promise((r) => setTimeout(r)); // espera a resposta do pop-up de confirmacao
+    expect(pergunta).toHaveBeenCalledWith(expect.objectContaining({ titulo: 'Desfazer a falta de Lucas?' }));
     http.expectOne({ method: 'DELETE', url: '/api/student/lucas/absences/f-1' }).flush(null, { status: 204, statusText: 'No Content' });
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).not.toContain('Faltas avisadas');

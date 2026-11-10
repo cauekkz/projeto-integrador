@@ -49,7 +49,7 @@ function temWebGL(): boolean {
   standalone: true,
   template: `
     <div #mapa class="mapa" role="img" aria-label="Mapa da viagem"></div>
-    <button type="button" class="localizar" aria-label="Ver a rota inteira" title="Ver a rota inteira" (click)="enquadrarTudo()">
+    <button type="button" class="localizar" [attr.aria-label]="van() ? 'Centralizar no motorista' : 'Ver a rota inteira'" [attr.title]="van() ? 'Centralizar no motorista' : 'Ver a rota inteira'" (click)="focar()">
       <i class="bi bi-crosshair" aria-hidden="true"></i>
     </button>
   `,
@@ -144,8 +144,20 @@ export class TripMap implements AfterViewInit, OnDestroy {
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(mapa);
   }
 
-  // botao "ver a rota inteira": a van, a linha e os pontos cabendo na tela
-  enquadrarTudo() {
+  // botao de foco: vai ate o motorista (a van). Sem posicao da van ainda, mostra a rota inteira
+  focar() {
+    const mapa = this.mapa;
+    if (!mapa) return;
+    const van = this.van();
+    if (van) {
+      mapa.flyTo([van.latitude, van.longitude], 17, { duration: 0.6 });
+      return;
+    }
+    this.enquadrarTudo();
+  }
+
+  // a linha e os pontos cabendo na tela
+  private enquadrarTudo() {
     const mapa = this.mapa;
     if (!mapa) return;
     const van = this.van();

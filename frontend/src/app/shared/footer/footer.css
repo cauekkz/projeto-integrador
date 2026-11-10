@@ -23,6 +23,9 @@
   view-transition-name: rodape;
 }
 
+/* motorista: o vidro e da Glisse (glisse-tab-bar.css) */
+.bottombar.com-glisse{background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+
 /* as abas ficam por cima da pilula */
 .tab {
   position: relative;
