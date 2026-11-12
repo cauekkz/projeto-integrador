@@ -308,6 +308,8 @@ describe('Rotas do motorista', () => {
 
   it('o meio do rodapé do motorista: viagem aberta ou escolher a rota', async () => {
     configurar();
+    // o rodape so aparece nas telas das abas: monta como se estivesse no Inicio do motorista
+    vi.spyOn(TestBed.inject(Router), 'url', 'get').mockReturnValue('/driver-home');
     const fixture = TestBed.createComponent(Footer);
     fixture.componentInstance.tipoUsuario = 'motorista';
     fixture.detectChanges();

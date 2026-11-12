@@ -137,12 +137,6 @@
         }
       </div>
 
-      @if (situacao(); as s) {
-        <div class="situacao-geral">
-          <app-responsible-situation [perfil]="s" modo="proprio" />
-        </div>
-      }
-
       <div class="btn-area">
         @if (!modoEdicao) {
           <button class="btn-primary" (click)="editar()">Editar</button>

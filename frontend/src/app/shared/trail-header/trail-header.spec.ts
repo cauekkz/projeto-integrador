@@ -39,7 +39,7 @@ describe('Trilha do topo', () => {
     expect(links.length).toBe(2);
     links[0].click();
     links[1].click();
-    expect(navegar).toHaveBeenCalledWith('/responsible-home');
+    expect(navegar).toHaveBeenCalledWith('/responsible-route');
     expect(navegar).toHaveBeenCalledWith('/driver-groups');
   });
 

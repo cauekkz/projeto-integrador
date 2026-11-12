@@ -1,5 +1,5 @@
 import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
-import { Component, DestroyRef, ElementRef, OnInit, effect, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, Input, OnInit, effect, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -50,6 +50,10 @@ interface Opcao {
   styleUrls: ['../../../shared/folha.css', './payments.css'],
 })
 export class Payments implements OnInit {
+  // dentro da pasta do filho (/contracts/aluno/:id): so as parcelas dele, sem cabecalho nem rodape
+  @Input() alunoId: string | null = null;
+  @Input() embutido = false;
+
   private paymentService = inject(PaymentService);
   private contractService = inject(ContractService);
   private chatService = inject(ChatWebSocketService);
@@ -111,13 +115,20 @@ export class Payments implements OnInit {
 
   ngOnInit() {
     this.ehMotorista = this.authService.getRolesFromToken().includes('ROLE_DRIVER');
-    this.contractId = this.route.snapshot.queryParamMap.get('contractId');
+    this.contractId = this.embutido ? null : this.route.snapshot.queryParamMap.get('contractId');
+    if (this.alunoId) this.filtro = this.rascunho = { studentId: this.alunoId, pessoaId: '', from: '', to: '' };
     // ?status=OVERDUE (do perfil) abre direto a aba "Atrasadas"
     const status = this.route.snapshot.queryParamMap.get('status');
     const aba = ABAS.find((a) => a.id === status);
     if (aba) this.abaAtiva.set(aba.id);
     this.carregar();
     if (!this.contractId) this.carregarOpcoes();
+  }
+
+  // chip meio cortado na borda da fileira: rola ate ele aparecer inteiro
+  mostrarChip(evento: Event) {
+    const chip = evento.currentTarget as HTMLElement | null;
+    chip?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
   }
 
   trocarAba(aba: Aba) {
@@ -246,13 +257,15 @@ export class Payments implements OnInit {
       return;
     }
     this.filtro = { ...this.rascunho };
-    this.filtroAtivo.set(Object.values(this.filtro).some(Boolean));
+    // na pasta o filho e fixo: nao conta como filtro
+    const { studentId, ...resto } = this.filtro;
+    this.filtroAtivo.set(Object.values(resto).some(Boolean) || (!!studentId && !this.alunoId));
     this.filtroAberto.set(false);
     this.carregar();
   }
 
   limparFiltro() {
-    this.rascunho = { studentId: '', pessoaId: '', from: '', to: '' };
+    this.rascunho = { studentId: this.alunoId ?? '', pessoaId: '', from: '', to: '' };
     this.aplicarFiltro();
   }
 

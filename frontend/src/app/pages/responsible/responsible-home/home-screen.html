@@ -1,45 +1,5 @@
 <div class="screen">
-  <div class="topbar">
-    <div class="user-info">
-      <div class="notif-wrapper sino-clicavel" role="button" tabindex="0" aria-label="Abrir notificações" (click)="notificacoes.abrirTela()" (keydown.enter)="notificacoes.abrirTela()">
-        <div class="avatar notification">
-          <i class="bi bi-bell"></i>
-        </div>
-        @if (notificacoes.naoLidas()) {
-          <span class="badge" [attr.aria-label]="notificacoes.naoLidas() + ' notificações não lidas'">{{ notificacoes.rotulo() }}</span>
-        }
-      </div>
-
-      <div class="user-name" (click)="mostrarPerfil.set(true)">
-        <img [src]="usuarioLogado()?.photoUrl || '/testee.jpg'" alt="Foto do usuário" />
-        <span [title]="usuarioLogado()?.name || ''">{{ usuarioLogado()?.name || '' }}</span>
-      </div>
-    </div>
-
-    <div class="role-info" (click)="abrirFluxoDependente()">
-      @if (filhos().length === 0) {
-        <div class="avatar avatar1">
-          <img src="/addStudent.svg" alt="Adicionar estudante" />
-        </div>
-      } @else {
-        <!-- com dependentes: as fotos deles empilhadas no lugar do icone de adicionar -->
-        <div class="avatar avatar1 dependentes-pilha" [attr.aria-label]="rotuloDependentes()">
-          @for (dep of filhos().slice(0, 3); track dep.id) {
-            @if (dep.photoUrl) {
-              <img class="dep-foto" [src]="dep.photoUrl" alt="" />
-            } @else {
-              <span class="dep-foto dep-iniciais" aria-hidden="true">{{ iniciais(dep.name) }}</span>
-            }
-          }
-          @if (filhos().length > 3) {
-            <span class="dep-foto dep-mais" aria-hidden="true">+{{ filhos().length - 3 }}</span>
-          }
-        </div>
-      }
-      <!-- o rotulo diz de quem e a tela (responsavel), nao o nome do filho -->
-      <span class="role">Responsável</span>
-    </div>
-  </div>
+  <app-topo-responsavel [usuario]="usuarioLogado()" [filhos]="filhos()" (perfil)="mostrarPerfil.set(true)" />
 
   <main class="content">
     @if (carregando()) {

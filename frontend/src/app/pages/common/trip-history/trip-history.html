@@ -5,7 +5,25 @@
     <app-header titulo="Histórico de viagens" (voltarEvent)="voltar()" />
   }
 
-  <div>
+  <div class="barra">
+    @if (ehMotorista) {
+      <!-- pesquisa nas viagens ja carregadas: aluno, rota ou dia (as proximas paginas tambem passam por ela) -->
+      <label class="busca">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        <input
+          type="search"
+          placeholder="Pesquisar aluno, rota ou dia"
+          aria-label="Pesquisar no histórico"
+          enterkeyhint="search"
+          [value]="busca()"
+          (input)="pesquisar($any($event.target).value)" />
+        @if (busca()) {
+          <button type="button" class="limpar" aria-label="Limpar pesquisa" (click)="pesquisar('')">
+            <i class="bi bi-x-circle-fill" aria-hidden="true"></i>
+          </button>
+        }
+      </label>
+    }
     <button type="button" class="chip filtrar" [class.ativo]="filtroAtivo()" (click)="abrirFiltro()">Filtrar</button>
   </div>
 
@@ -23,8 +41,18 @@
         <h2>Nenhuma viagem aqui</h2>
         <p>As viagens aparecem depois que começam.</p>
       </section>
+    } @else if (!visiveis().length) {
+      <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-search" aria-hidden="true"></i>
+        @if (temMais()) {
+          <h2>Procurando "{{ busca() }}"...</h2>
+        } @else {
+          <h2>Nada encontrado</h2>
+          <p>Nenhuma viagem com "{{ busca() }}".</p>
+        }
+      </section>
     } @else {
-      @for (item of itens(); track item.tripId + item.studentId; let i = $index) {
+      @for (item of visiveis(); track item.tripId + item.studentId; let i = $index) {
         @let s = selo(item);
         <article class="cartao" animate.enter="entrar-subindo" [style.--i]="i % 10">
           <div class="topo">

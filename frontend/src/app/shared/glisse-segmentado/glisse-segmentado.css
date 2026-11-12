@@ -1,0 +1,43 @@
+/* SegmentedControl da Glisse no VanRoute, sempre no tema claro (data-theme="light" so no controle).
+   CSS global (o HTML e do React), mas tudo preso dentro de .glisse-segmentado */
+app-glisse-segmentado {
+  display: block;
+  width: 100%;
+}
+
+.glisse-segmentado {
+  /* os segmentos dividem a largura: 100cqw = largura deste elemento */
+  container-type: inline-size;
+  width: 100%;
+}
+
+/* .lg-segmented repetido so pra ganhar das regras da propria Glisse */
+.glisse-segmentado .lg-segmented.lg-segmented {
+  /* do tamanho do dedo (o padrao da Glisse e 32px, pequeno pro celular) */
+  --lg-tab-height: 40px;
+  --lg-tab-width: calc(100cqw / var(--lg-tabs, 2));
+  --lg-thumb-inset: 3px;
+  /* cores do VanRoute: trilho cinza bem leve, polegar branco, texto escuro */
+  --lg-segment-label: var(--texto);
+  --lg-segment-track: rgba(15, 23, 42, 0.06);
+  --lg-segment-thumb: #ffffff;
+  --lg-segment-lens: rgba(12, 102, 219, 0.08);
+  --lg-ring: rgba(12, 102, 219, 0.5);
+  display: flex;
+  width: 100%;
+}
+
+.glisse-segmentado .lg-segmented :is(.lg-tab, .lg-tab-copy) {
+  font-size: 15px;
+}
+
+.glisse-segmentado .lg-segmented :is(.lg-tab, .lg-tab-copy)[data-selected] {
+  font-weight: 600;
+}
+
+/* polegar com uma sombra curta, como o do iOS */
+.glisse-segmentado .lg-segmented-thumb {
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.1),
+    0 3px 8px rgba(15, 23, 42, 0.08);
+}

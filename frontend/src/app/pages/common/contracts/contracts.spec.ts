@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Contracts } from './contracts';
 import { AuthService } from '../../../services/auth.service';
@@ -53,11 +53,58 @@ describe('Contracts (/contracts paginado, uma aba por status)', () => {
     TestBed.resetTestingModule();
   });
 
+  // a lista paginada (abas por status) e a de dentro da pasta; fora dela a tela mostra as pastas
   function abrir() {
     const fixture = TestBed.createComponent(Contracts);
+    fixture.componentInstance.embutido = true;
     fixture.detectChanges();
     return fixture;
   }
+
+  it('motorista: uma pasta por responsável, que abre as pastas dos dependentes dele', () => {
+    const fixture = TestBed.createComponent(Contracts);
+    fixture.detectChanges();
+    http.expectOne((r) => r.url === '/api/contract/my-contracts').flush(
+      pagina([
+        contrato({ contractId: 'c-1', responsibleId: 'r-1', responsibleName: 'Andreas Pereira', studentId: 's-1', overduePayments: 1 }),
+        contrato({ contractId: 'c-2', responsibleId: 'r-1', responsibleName: 'Andreas Pereira', studentId: 's-2', studentName: 'Ana Pereira' }),
+        contrato({ contractId: 'c-3', responsibleId: 'r-2', responsibleName: 'Bruna Lima', studentId: 's-3', status: 'CANCELED' }),
+      ]),
+    );
+    fixture.detectChanges();
+    const nomes = [...fixture.nativeElement.querySelectorAll('.pasta-nome')].map((e: Element) => e.textContent?.trim());
+    expect(nomes).toEqual(['Andreas Pereira', 'Bruna Lima']);
+    expect(fixture.nativeElement.textContent).toContain('Responsáveis');
+    expect(fixture.nativeElement.textContent).toContain('1 parcela atrasada');
+
+    const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    vi.useFakeTimers();
+    try {
+      fixture.nativeElement.querySelector('.pasta').click();
+      vi.advanceTimersByTime(400);
+      expect(navegar).toHaveBeenCalledWith(['/contracts/responsavel', 'r-1'], { queryParams: { nome: 'Andreas Pereira' } });
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('motorista dentro do responsável: uma pasta por dependente só dele', () => {
+    const rota = TestBed.inject(ActivatedRoute);
+    vi.spyOn(rota.snapshot.paramMap, 'get').mockImplementation((k) => (k === 'responsibleId' ? 'r-1' : null));
+    const fixture = TestBed.createComponent(Contracts);
+    fixture.detectChanges();
+    http.expectOne((r) => r.url === '/api/contract/my-contracts').flush(
+      pagina([
+        contrato({ contractId: 'c-1', responsibleId: 'r-1', studentId: 's-1', studentName: 'Lucas Pereira' }),
+        contrato({ contractId: 'c-2', responsibleId: 'r-1', studentId: 's-2', studentName: 'Ana Pereira' }),
+        contrato({ contractId: 'c-3', responsibleId: 'r-2', studentId: 's-3', studentName: 'Caio Lima' }),
+      ]),
+    );
+    fixture.detectChanges();
+    const nomes = [...fixture.nativeElement.querySelectorAll('.pasta-nome')].map((e: Element) => e.textContent?.trim());
+    expect(nomes).toEqual(['Ana Pereira', 'Lucas Pereira']);
+    expect(fixture.nativeElement.textContent).toContain('Dependentes');
+  });
 
   it('lê o content da página e mostra os avisos do cartão', () => {
     const fixture = abrir();
@@ -119,5 +166,65 @@ describe('Contracts (/contracts paginado, uma aba por status)', () => {
     http.expectNone((r) => r.url === '/api/contract/my-contracts');
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelectorAll('.card').length).toBe(2);
+  });
+
+  describe('responsável: uma pasta por filho', () => {
+    beforeEach(() => {
+      const auth = TestBed.inject(AuthService);
+      vi.spyOn(auth, 'getRolesFromToken').mockReturnValue(['ROLE_RESPONSIBLE']);
+      vi.spyOn(auth, 'getUserIdFromToken').mockReturnValue('r-1');
+    });
+
+    it('agrupa os contratos por filho, ativo primeiro, e a pasta abre os contratos dele', () => {
+      const fixture = TestBed.createComponent(Contracts);
+      fixture.detectChanges();
+      const req = http.expectOne((r) => r.url === '/api/contract/my-contracts');
+      expect(req.request.params.get('size')).toBe('100');
+      req.flush(
+        pagina([
+          contrato({ contractId: 'c-1', studentId: 's-2', studentName: 'Ana Martins', status: 'CANCELED' }),
+          contrato({ contractId: 'c-2', studentId: 's-1', studentName: 'Lucas Pereira', status: 'ACTIVE', overduePayments: 2 }),
+          contrato({ contractId: 'c-3', studentId: 's-1', studentName: 'Lucas Pereira', status: 'INACTIVE' }),
+          contrato({ contractId: 'c-4', studentId: 's-3', studentName: 'Bia Souza', status: 'PENDING' }),
+        ]),
+      );
+      fixture.detectChanges();
+
+      const nomes = [...fixture.nativeElement.querySelectorAll('.pasta-nome')].map((e: Element) => e.textContent?.trim());
+      expect(nomes).toEqual(['Lucas Pereira', 'Ana Martins', 'Bia Souza']);
+      const texto = fixture.nativeElement.textContent as string;
+      expect(texto).toContain('2 parcelas atrasadas');
+      expect(texto).toContain('Contrato pendente');
+      expect(texto).toContain('Sem contrato ativo');
+      // fora da pasta nao tem a lista de cartoes
+      expect(fixture.nativeElement.querySelector('.card')).toBeNull();
+
+      const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      vi.useFakeTimers();
+      try {
+        fixture.nativeElement.querySelector('.pasta').click();
+        fixture.detectChanges();
+        // primeiro a pasta abre (folhas saindo), depois a tela troca
+        expect(fixture.nativeElement.querySelector('.pasta').classList).toContain('abrindo');
+        expect(navegar).not.toHaveBeenCalled();
+        vi.advanceTimersByTime(400);
+        expect(navegar).toHaveBeenCalledWith(['/contracts/aluno', 's-1'], { queryParams: { nome: 'Lucas Pereira' } });
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('dentro da pasta lista só os contratos do filho, por status', () => {
+      const fixture = TestBed.createComponent(Contracts);
+      fixture.componentInstance.alunoId = 's-1';
+      fixture.componentInstance.embutido = true;
+      fixture.detectChanges();
+      const req = http.expectOne((r) => r.url === '/api/contract/my-contracts');
+      expect(req.request.params.get('studentId')).toBe('s-1');
+      req.flush(pagina([contrato()]));
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelectorAll('.card').length).toBe(1);
+      expect(fixture.nativeElement.querySelector('.abas')).not.toBeNull();
+    });
   });
 });

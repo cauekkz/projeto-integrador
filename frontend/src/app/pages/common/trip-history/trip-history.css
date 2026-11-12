@@ -1,5 +1,57 @@
 .filtrar {
   width: auto;
+  flex-shrink: 0;
+}
+
+/* pesquisa + "Filtrar" na mesma linha */
+.barra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.busca {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--texto-3);
+}
+
+.busca:focus-within {
+  border-color: var(--azul);
+}
+
+.busca input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font: inherit;
+  /* 16px: o iPhone nao da zoom ao tocar no campo */
+  font-size: 16px;
+  color: var(--texto);
+}
+
+.busca input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.limpar {
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: var(--texto-3);
+  cursor: pointer;
 }
 
 .cartao {

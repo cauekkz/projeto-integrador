@@ -139,7 +139,8 @@ export class AuthService {
   getHomeRoute(): string | null {
     const roles = this.getRolesFromToken();
     if (roles.includes('ROLE_DRIVER')) return '/driver-home';
-    if (roles.includes('ROLE_RESPONSIBLE') || roles.includes('ROLE_ADMIN')) return '/responsible-home';
+    // responsavel: a home e o acompanhamento (procura a viagem em andamento e abre o mapa)
+    if (roles.includes('ROLE_RESPONSIBLE') || roles.includes('ROLE_ADMIN')) return '/responsible-route';
     return null;
   }
 

@@ -1,12 +1,33 @@
 /* pagina, botoes e folha de baixo vem de shared/folha.css */
 
+/* dentro da pasta do filho: a pagina de fora ja tem o cabecalho e o espaco */
+.pagina.embutido {
+  min-height: 0;
+  padding: 0;
+}
+
+/* abas + "Filtrar" numa linha so, rolando de lado (sem barra de rolagem) */
 .abas {
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  /* o chip encosta na borda da tela ao rolar, sem cortar a sombra/borda */
+  margin: 0 -12px;
+  padding: 0 12px;
+  scroll-padding: 0 12px;
+}
+
+.abas::-webkit-scrollbar {
+  display: none;
 }
 
 .chip {
+  flex-shrink: 0;
+  white-space: nowrap;
+  scroll-snap-align: start;
   padding: 8px 12px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;

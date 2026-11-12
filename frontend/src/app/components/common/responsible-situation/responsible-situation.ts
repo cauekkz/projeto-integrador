@@ -22,6 +22,8 @@ export class ResponsibleSituation {
   @Input({ required: true }) perfil!: responsibleProfile;
   // motorista: so as parcelas e os filhos com ele; proprio: de todos os contratos
   @Input() modo: 'motorista' | 'proprio' = 'motorista';
+  // tela de Contratos do responsavel: os filhos viram pastas, entao a lista sai daqui
+  @Input() mostrarContratos = true;
 
   private router = inject(Router);
   protected readonly relacao = RELATION_LABEL;

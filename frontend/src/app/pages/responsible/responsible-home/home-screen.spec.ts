@@ -209,7 +209,7 @@ describe('Viagem do responsável', () => {
       expect(navegar).toHaveBeenCalledWith(['/responsible-route', 't-2'], { queryParams: { aluno: 'lucas' }, replaceUrl: true });
     });
   });
-  it('o meio do rodapé do responsável abre a viagem rodando ou avisa que não tem', () => {
+  it('a casinha do responsável abre a viagem rodando ou avisa que não tem; o meio abre os filhos', () => {
     configurar();
     const fixture = TestBed.createComponent(Footer);
     fixture.componentInstance.tipoUsuario = 'responsavel';
@@ -217,11 +217,14 @@ describe('Viagem do responsável', () => {
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
 
     fixture.componentInstance.selecionarAba('meio');
+    expect(navegar).toHaveBeenCalledWith(['/responsible-home']);
+
+    fixture.componentInstance.clicarHome();
     http.expectOne((r) => r.url === '/api/student/my-children').flush({ content: [LUCAS], last: true });
     http.expectOne('/api/student/lucas/today-trips').flush([]);
-    expect(navegar).toHaveBeenCalledWith(['/responsible-route']);
+    expect(navegar).toHaveBeenCalledWith(['/responsible-route'], { state: { semViagem: true } });
 
-    fixture.componentInstance.selecionarAba('meio');
+    fixture.componentInstance.clicarHome();
     http.expectOne((r) => r.url === '/api/student/my-children').flush({ content: [LUCAS], last: true });
     http.expectOne('/api/student/lucas/today-trips').flush([VIAGEM]);
     expect(navegar).toHaveBeenCalledWith(['/responsible-route', 't-1'], { queryParams: { aluno: 'lucas' } });

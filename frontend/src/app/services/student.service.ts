@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Page, paramsDePagina } from './dto/page.dto';
 import { HttpClient, HttpContext } from '@angular/common/http';
-import { catchError, firstValueFrom, forkJoin, map, Observable, of } from 'rxjs';
+import { catchError, firstValueFrom, forkJoin, map, Observable, of, switchMap } from 'rxjs';
 import {
   createStudentRequest,
   generateStudentLink,
@@ -13,7 +13,7 @@ import {
   studentResponsibleResponse,
 } from './dto/student/student.dto';
 import { API_URL, urlDoStorage } from './api';
-import { studentAbsence, studentRoute, studentTripToday } from './dto/trip/trip.dto';
+import { studentAbsence, studentRoute, studentTripToday, viagemAtiva } from './dto/trip/trip.dto';
 import { SKIP_ERROR_POPUP } from '../interceptor/http-context';
 import { StorageService } from './storage.service';
 
@@ -188,5 +188,25 @@ export class StudentService {
     return this.http.delete<void>(`${this.apiUrl}/${studentId}/absences/${absenceId}`, {
       context: new HttpContext().set(SKIP_ERROR_POPUP, true),
     });
+  }
+
+  // responsavel: a viagem que esta rodando agora com um dos filhos (null se nenhuma)
+  viagemEmAndamento(): Observable<{ filho: string; tripId: string } | null> {
+    return this.getMyChildren({ size: 100 }).pipe(
+      switchMap((pagina) => {
+        const filhos = pagina.content ?? [];
+        if (!filhos.length) return of([]);
+        return forkJoin(
+          filhos.map((filho) =>
+            this.getTodayTrips(filho.id).pipe(
+              map((viagens) => viagens.filter((v) => viagemAtiva(v.tripStatus)).map((v) => ({ filho: filho.id, tripId: v.tripId }))),
+              catchError(() => of([])),
+            ),
+          ),
+        ).pipe(map((listas) => listas.flat()));
+      }),
+      map((ativas) => ativas[0] ?? null),
+      catchError(() => of(null)),
+    );
   }
 }

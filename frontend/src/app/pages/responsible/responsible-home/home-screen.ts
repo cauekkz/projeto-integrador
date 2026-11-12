@@ -13,6 +13,7 @@ import { AuthService } from '../../../services/auth.service';
 import { PopUpService } from '../../../shared/pop-up';
 import { Footer } from '../../../shared/footer/footer';
 import { ProfileSelect } from '../../../components/common/profile-select/profile-select';
+import { TopoResponsavel } from '../../../shared/topo-responsavel/topo-responsavel';
 import {
   SELO_DO_ALUNO,
   BoardingStatus,
@@ -50,7 +51,7 @@ interface FolhaFalta {
 @Component({
   selector: 'app-responsible-home',
   standalone: true,
-  imports: [Trajeto, Esqueleto, Footer, ProfileSelect, FormsModule],
+  imports: [Trajeto, Esqueleto, Footer, ProfileSelect, FormsModule, TopoResponsavel],
   templateUrl: './home-screen.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './home-screen.css'],
 })

@@ -10,6 +10,7 @@ import {
   signal,
   ViewEncapsulation,
 } from '@angular/core';
+import { NavigationCancel, NavigationError, Router } from '@angular/router';
 import type { AbaGlisse, TabBarMontada } from './tab-bar.react';
 
 export type { AbaGlisse } from './tab-bar.react';
@@ -74,7 +75,17 @@ export class GlisseTabBar {
       });
     }
 
+    // tocou numa aba e a tela nao mudou (navegacao cancelada ou com erro): a bolha volta pra aba certa
+    const navegacao = inject(Router).events.subscribe((e) => {
+      if (e instanceof NavigationCancel || e instanceof NavigationError) {
+        queueMicrotask(() => {
+          if (vivo && compartilhada?.dono === this) this.barra()?.voltar();
+        });
+      }
+    });
+
     inject(DestroyRef).onDestroy(() => {
+      navegacao.unsubscribe();
       vivo = false;
       const atual = compartilhada;
       if (!atual || atual.dono !== this) return;

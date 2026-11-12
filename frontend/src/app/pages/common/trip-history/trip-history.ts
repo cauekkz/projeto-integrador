@@ -1,6 +1,6 @@
 import { Trajeto } from '../../../shared/trajeto/trajeto';
 import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
-import { Component, DestroyRef, ElementRef, OnInit, afterNextRender, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, afterNextRender, computed, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -61,6 +61,16 @@ export class TripHistory implements OnInit {
   protected alunos = signal<{ id: string; nome: string }[]>([]);
   protected rotas = signal<{ id: string; nome: string }[]>([]);
 
+  // pesquisa (motorista): filtra no front o que ja carregou, pelo aluno, pela rota e pelo dia
+  protected busca = signal('');
+  protected visiveis = computed(() => {
+    const termo = normalizar(this.busca().trim());
+    if (!termo) return this.itens();
+    return this.itens().filter((i) =>
+      normalizar(`${i.studentName} ${i.routeName} ${diaEMes(i.date)}`).includes(termo),
+    );
+  });
+
   private fimDaLista = viewChild<ElementRef<HTMLElement>>('fimDaLista');
   private observador?: IntersectionObserver;
 
@@ -112,6 +122,7 @@ export class TripHistory implements OnInit {
         this.temMais.set(!pagina.last);
         this.carregando.set(false);
         this.carregandoMais.set(false);
+        this.seguirSeFimNaTela();
       },
       error: (erro: HttpErrorResponse) => {
         this.carregando.set(false);
@@ -122,6 +133,21 @@ export class TripHistory implements OnInit {
         }
         this.erroCarregar.set(true);
       },
+    });
+  }
+
+  pesquisar(texto: string) {
+    this.busca.set(texto);
+    this.seguirSeFimNaTela();
+  }
+
+  // com a pesquisa a lista encolhe e o fim continua na tela: o observador nao avisa de novo,
+  // entao busca a proxima pagina por aqui ate o fim sair da tela (ou acabar o historico)
+  private seguirSeFimNaTela() {
+    if (!this.busca().trim()) return;
+    requestAnimationFrame(() => {
+      const fim = this.fimDaLista()?.nativeElement;
+      if (fim && fim.getBoundingClientRect().top < window.innerHeight) this.carregarMais();
     });
   }
 
@@ -224,4 +250,9 @@ export class TripHistory implements OnInit {
     this.rascunho = { ...VAZIO };
     this.aplicarFiltro();
   }
+}
+
+// minusculas e sem acento: "joão" acha "Joao"
+function normalizar(texto: string): string {
+  return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }

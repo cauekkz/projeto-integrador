@@ -6,7 +6,7 @@ import { NotificationService } from '../../services/notification.service';
 // cada item da trilha (menos o ultimo, que e a tela atual) leva pra pagina dele
 export const DESTINO_DA_TRILHA: Record<string, string> = {
   Motorista: '/driver-home',
-  'Responsável': '/responsible-home',
+  'Responsável': '/responsible-route',
   Rotas: '/driver-home',
   Grupos: '/driver-groups',
   Contrato: '/contracts',

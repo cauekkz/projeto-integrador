@@ -1,8 +1,6 @@
 import { Component, Input, OnInit, inject, signal } from '@angular/core';
 import { TripService } from '../../services/trip.service';
 import { StudentService } from '../../services/student.service';
-import { viagemAtiva } from '../../services/dto/trip/trip.dto';
-import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { Router, NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
@@ -30,6 +28,8 @@ export class Footer implements OnInit {
   protected posicao = signal<number | null>(null);
   protected origem = signal<number | null>(null);
   protected chave = signal(0);
+  // a barra so aparece nas telas pra onde as abas levam
+  protected visivel = signal(false);
 
   private tripService = inject(TripService);
   private studentService = inject(StudentService);
@@ -67,8 +67,9 @@ export class Footer implements OnInit {
     const rota = url.split('?')[0];
 
     // rotas do responsável
-    const homeResponsavel = ['/responsible-home', '/home-screen', '/dependentes', '/student/', '/trip-history'];
-    const meioResponsavel = ['/responsible-route'];
+    // casinha: o acompanhamento da viagem (a home do responsavel); meio: a lista dos filhos
+    const homeResponsavel = ['/responsible-route'];
+    const meioResponsavel = ['/responsible-home', '/home-screen'];
 
     // rotas do motorista
     // casinha: a lista das rotas (/driver-home) e o editor (/driver-routes/:id)
@@ -80,6 +81,13 @@ export class Footer implements OnInit {
     const meio = this.tipoUsuario === 'motorista' ? meioMotorista : meioResponsavel;
 
     const bate = (lista: string[]) => lista.some(r => rota.startsWith(r));
+
+    // telas que as abas abrem: Inicio, Rotas/Transporte (escolha ou viagem) e Conversas
+    const destinos =
+      this.tipoUsuario === 'motorista'
+        ? rota === '/driver-home' || rota === '/driver-routes' || rota.startsWith('/driver-route/')
+        : rota === '/responsible-home' || rota === '/responsible-route' || rota.startsWith('/responsible-route/');
+    this.visivel.set(destinos || rota === '/chat');
 
     if (rota.startsWith('/chat')) {
       this.abaAtiva = 'config';
@@ -108,41 +116,23 @@ export class Footer implements OnInit {
   @Input() tipo: 'normal' | 'mapa' = 'normal';
 
   clicarHome() {
-    this.router.navigate([
-      this.tipoUsuario === 'responsavel' ? '/responsible-home' : '/driver-home',
-    ]);
+    if (this.tipoUsuario === 'responsavel') this.acompanharViagem();
+    else this.router.navigate(['/driver-home']);
   }
 
   // responsavel: abre o acompanhamento da viagem que esta rodando agora com um dos filhos
   private acompanharViagem() {
     if (this.procurandoViagem) return;
     this.procurandoViagem = true;
-    this.studentService
-      .getMyChildren({ size: 100 })
-      .pipe(
-        switchMap((pagina) => {
-          const filhos = pagina.content ?? [];
-          if (!filhos.length) return of([]);
-          return forkJoin(
-            filhos.map((filho) =>
-              this.studentService.getTodayTrips(filho.id).pipe(
-                map((viagens) => viagens.filter((v) => viagemAtiva(v.tripStatus)).map((v) => ({ filho: filho.id, tripId: v.tripId }))),
-                catchError(() => of([])),
-              ),
-            ),
-          ).pipe(map((listas) => listas.flat()));
-        }),
-        catchError(() => of([])),
-      )
-      .subscribe((ativas) => {
-        this.procurandoViagem = false;
-        const viagem = ativas[0];
-        if (viagem) {
-          this.router.navigate(['/responsible-route', viagem.tripId], { queryParams: { aluno: viagem.filho } });
-        } else {
-          this.router.navigate(['/responsible-route']);
-        }
-      });
+    this.studentService.viagemEmAndamento().subscribe((viagem) => {
+      this.procurandoViagem = false;
+      if (viagem) {
+        this.router.navigate(['/responsible-route', viagem.tripId], { queryParams: { aluno: viagem.filho } });
+      } else {
+        // ja procurou: a tela "Nao ha uma rota" nao procura de novo
+        this.router.navigate(['/responsible-route'], { state: { semViagem: true } });
+      }
+    });
   }
 
   selecionarAba(aba: 'meio' | 'config') {
@@ -157,7 +147,7 @@ export class Footer implements OnInit {
           else this.router.navigate(['/driver-routes']);
         });
       } else {
-        this.acompanharViagem();
+        this.router.navigate(['/responsible-home']);
       }
     }
 

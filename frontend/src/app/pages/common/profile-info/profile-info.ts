@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,9 +7,6 @@ import { Header } from '../../../shared/header/header';
 import { PhoneMaskDirective, PasswordToggleDirective } from '../../../shared/directives';
 import { PopUpService } from '../../../shared/pop-up';
 import { formatarCpf, formatarTelefone, limparMascara } from '../../../shared/utils';
-import { ProfileService } from '../../../services/profile.service';
-import { responsibleProfile } from '../../../services/dto/profile/profile.dto';
-import { ResponsibleSituation } from '../../../components/common/responsible-situation/responsible-situation';
 
 // mesma regra do backend: maiuscula, minuscula, numero e caractere especial, 8+ caracteres
 const SENHA_FORTE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
@@ -20,15 +17,12 @@ const TAMANHO_MAX_FOTO = 5 * 1024 * 1024;
 @Component({
   selector: 'app-profile-info',
   standalone: true,
-  imports: [Header, FormsModule, PhoneMaskDirective, PasswordToggleDirective, ResponsibleSituation],
+  imports: [Header, FormsModule, PhoneMaskDirective, PasswordToggleDirective],
   templateUrl: './profile-info.html',
   styleUrl: './profile-info.css',
 })
 export class ProfileInfo implements OnInit {
   tipoUsuario = '';
-  // responsavel: situacao financeira geral e contratos dos filhos (Figma 1057:1016)
-  situacao = signal<responsibleProfile | null>(null);
-  private profileService = inject(ProfileService);
   modoEdicao = false;
 
   // dados do GET /api/users/me ja formatados pra exibir
@@ -75,23 +69,8 @@ export class ProfileInfo implements OnInit {
         this.enteredEmail = this.usuario.email;
         this.enteredPhone = this.usuario.phone;
         this.cdr.markForCheck();
-        if (this.tipoUsuario === 'responsavel' && me.id) this.carregarSituacao(me.id);
       },
       error: (err) => console.error(err),
-    });
-  }
-
-  private carregarSituacao(meuId: string) {
-    this.profileService.getResponsibleProfile(meuId).subscribe({
-      next: (perfil) => {
-        this.situacao.set(perfil);
-        if (perfil.financialStatus === 'OVERDUE') {
-          const n = perfil.overduePayments;
-          this.popUpService.show('Conta todos os seus contratos, com qualquer motorista.', 'error', n === 1 ? '1 parcela atrasada' : `${n} parcelas atrasadas`);
-        }
-      },
-      // sem a situacao a tela continua so com os dados
-      error: () => {},
     });
   }
 

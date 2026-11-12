@@ -200,6 +200,20 @@ export const routes: Routes = [
     data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
   },
   {
+    // pasta de um filho (tela de Contratos): contratos e parcelas dele
+    path: 'contracts/aluno/:studentId',
+    loadComponent: () => import('./pages/responsible/pasta-dependente/pasta-dependente').then((m) => m.PastaDependente),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER', 'ROLE_RESPONSIBLE'] },
+  },
+  {
+    // motorista: pasta de um responsavel, com as pastas dos dependentes dele
+    path: 'contracts/responsavel/:responsibleId',
+    loadComponent: () => import('./pages/common/contracts/contracts').then((m) => m.Contracts),
+    canActivate: [routeGuard, roleGuard],
+    data: { rolesPermitted: ['ROLE_DRIVER'] },
+  },
+  {
     // analise do contrato; ?chatId= faz o botao voltar pra conversa (so as partes do contrato conseguem ver)
     path: 'contract/:contractId',
     loadComponent: () => import('./pages/common/contract-view/contract-view').then((m) => m.ContractView),

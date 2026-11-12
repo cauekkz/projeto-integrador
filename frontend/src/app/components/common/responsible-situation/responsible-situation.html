@@ -10,7 +10,7 @@
   }
 </section>
 
-@if (perfil.students.length) {
+@if (mostrarContratos && perfil.students.length) {
   <section class="secao">
     <h2>{{ modo === 'proprio' ? 'Contratos dos filhos' : 'Filhos com contrato com você' }}</h2>
     @for (aluno of perfil.students; track aluno.contractId) {

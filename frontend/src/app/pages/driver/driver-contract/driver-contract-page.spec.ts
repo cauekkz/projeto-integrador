@@ -277,7 +277,7 @@ describe('Criação de contrato pelo motorista', () => {
       const rota = { data: { rolesPermitted: ['ROLE_DRIVER'] } } as unknown as ActivatedRouteSnapshot;
       const resultado = TestBed.runInInjectionContext(() => roleGuard(rota, {} as RouterStateSnapshot));
       expect(resultado).not.toBe(true);
-      expect(router.createUrlTree).toHaveBeenCalledWith(['/responsible-home']);
+      expect(router.createUrlTree).toHaveBeenCalledWith(['/responsible-route']);
     });
 
     it('motorista vê "Criar contrato" no chat e é levado pro fluxo', () => {
