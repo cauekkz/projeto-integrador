@@ -151,10 +151,11 @@ describe('Motorista preparado (vans e chave Pix)', () => {
       return fixture;
     }
 
-    it('sem chave abre o formulário e avisa', () => {
+    it('sem chave abre o formulário e explica na tela (sem pop-up por cima)', () => {
       const fixture = criar({ type: null, key: null });
-      expect(popUp.show).toHaveBeenCalledWith(expect.stringContaining('O app não recebe dinheiro'), 'info', 'Sem chave Pix cadastrada');
+      expect(popUp.show).not.toHaveBeenCalled();
       const texto: string = fixture.nativeElement.textContent;
+      expect(texto).toContain('O app não recebe dinheiro');
       expect(texto).toContain('Tipo de chave');
       expect(texto).toContain('Aleatória');
       expect(texto).toContain('Salvar chave');

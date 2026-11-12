@@ -89,22 +89,25 @@
       <!-- Figma "3 ponto" -->
       <h2>Em qual ponto?</h2>
       <ul class="opcoes">
-        <li>
-          <button type="button" class="opcao" [class.marcada]="ponto() === null" [attr.aria-pressed]="ponto() === null" (click)="ponto.set(null)">
-            <span class="marca"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
-            <span class="textos">
-              <strong>Criar ponto novo</strong>
-              <small>Mesmo que já exista outro neste endereço</small>
-            </span>
-          </button>
-        </li>
+        <!-- escola que ja tem parada: todos descem nela, sem criar outra -->
+        @if (!escolaJaTemPonto()) {
+          <li>
+            <button type="button" class="opcao" [class.marcada]="ponto() === null" [attr.aria-pressed]="ponto() === null" (click)="ponto.set(null)">
+              <span class="marca"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
+              <span class="textos">
+                <strong>Criar ponto novo</strong>
+                <small>Mesmo que já exista outro neste endereço</small>
+              </span>
+            </button>
+          </li>
+        }
         @for (p of pontosNoLugar(); track p.id) {
           <li>
             <button type="button" class="opcao" [class.marcada]="ponto() === p" [attr.aria-pressed]="ponto() === p" (click)="ponto.set(p)">
               <span class="marca"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
               <span class="textos">
                 <strong>Ponto {{ p.orderIndex }} · {{ ruaENumero(p.address) }}</strong>
-                <small>Ponto que já existe neste endereço</small>
+                <small>{{ escolaJaTemPonto() ? 'Parada da escola: todos da escola ficam juntos' : 'Ponto que já existe neste endereço' }}</small>
               </span>
             </button>
           </li>

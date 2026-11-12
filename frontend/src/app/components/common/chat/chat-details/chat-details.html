@@ -17,7 +17,7 @@
     @if (erroCarregar) {
       <p class="chat-aviso" role="alert">{{ erroCarregar }}</p>
     } @else if (!carregandoMensagens && mensagens.length === 0) {
-      <p class="chat-aviso">Nenhuma mensagem ainda. Envie a primeira!</p>
+      <p class="chat-aviso">Nenhuma mensagem ainda. Envie a primeira.</p>
     }
     @for (msg of mensagens; track msg.id) {
       @if (msg.tipo === 'PROPOSAL' && msg.contractId) {

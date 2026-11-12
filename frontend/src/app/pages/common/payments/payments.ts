@@ -1,5 +1,5 @@
 import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
-import { Component, DestroyRef, ElementRef, Input, OnInit, effect, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, Input, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -75,6 +75,8 @@ export class Payments implements OnInit {
   protected contractId: string | null = null;
   protected abaAtiva = signal<Aba>('todas');
   protected parcelas = signal<paymentResponse[]>([]);
+  // responsavel: alguma parcela em aberto de motorista sem chave Pix (aviso unico no topo)
+  protected semPix = computed(() => !this.ehMotorista && this.parcelas().some((p) => this.aberta(p) && !p.driverPixKey));
   protected carregando = signal(true);
   protected carregandoMais = signal(false);
   protected erroCarregar = signal(false);

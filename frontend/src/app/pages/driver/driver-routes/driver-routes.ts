@@ -1,5 +1,5 @@
 import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
-import { Component, DestroyRef, ElementRef, OnInit, effect, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ProfileSelect } from '../../../components/common/profile-select/profile-select';
@@ -9,8 +9,8 @@ import { UserMe } from '../../../models/user.model';
 import { Footer } from '../../../shared/footer/footer';
 import { PopUpService } from '../../../shared/pop-up';
 import { RouteService } from '../../../services/route.service';
-import { routeWithStops } from '../../../services/dto/route/route.dto';
-import { RouteCard } from '../../../components/driver/route/route-card/route-card';
+import { TripService } from '../../../services/trip.service';
+import { routeWithStops, ruaENumero } from '../../../services/dto/route/route.dto';
 
 const TAMANHO_PAGINA = 10;
 
@@ -19,12 +19,13 @@ const TAMANHO_PAGINA = 10;
 @Component({
   selector: 'app-driver-routes',
   standalone: true,
-  imports: [Esqueleto, Footer, FormsModule, RouteCard, ProfileSelect],
+  imports: [Esqueleto, Footer, FormsModule, ProfileSelect],
   templateUrl: './driver-routes.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-routes.css'],
 })
 export class DriverRoutes implements OnInit {
   private routeService = inject(RouteService);
+  private tripService = inject(TripService);
   private popUpService = inject(PopUpService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -38,6 +39,16 @@ export class DriverRoutes implements OnInit {
 
   // "Ativas" = so as rotas em que ele esta hoje; "Todas" inclui as que ele deixou
   protected ativas = signal(true);
+  protected readonly ruaENumero = ruaENumero;
+
+  // paradas e alunos (diferentes) das rotas da lista
+  protected resumo = computed(() => {
+    const rotas = this.rotas();
+    const alunos = new Set(rotas.flatMap((r) => r.stops.flatMap((s) => s.students.map((a) => a.studentId))));
+    return { paradas: rotas.reduce((t, r) => t + r.stops.length, 0), alunos: alunos.size };
+  });
+  // viagem rodando agora: aparece o card "Em rota" no topo, com o botao pro mapa
+  protected emRota = signal<{ routeId: string; nome: string } | null>(null);
   protected rotas = signal<routeWithStops[]>([]);
   protected carregando = signal(true);
   protected carregandoMais = signal(false);
@@ -76,6 +87,12 @@ export class DriverRoutes implements OnInit {
       error: (err) => console.error('Erro ao buscar motorista:', err),
     });
     this.carregar();
+    this.tripService.viagemAberta().subscribe((v) => this.emRota.set(v));
+  }
+
+  abrirViagem() {
+    const v = this.emRota();
+    if (v) this.router.navigate(['/driver-route', v.routeId], { queryParams: { continuar: 1 } });
   }
 
   trocarFiltro(ativas: boolean) {
@@ -117,6 +134,11 @@ export class DriverRoutes implements OnInit {
         this.carregandoMais.set(false);
       },
     });
+  }
+
+  // alunos diferentes da rota (o mesmo aluno embarca e desce)
+  alunosDa(rota: routeWithStops): number {
+    return new Set(rota.stops.flatMap((s) => s.students.map((a) => a.studentId))).size;
   }
 
   abrir(rota: routeWithStops) {

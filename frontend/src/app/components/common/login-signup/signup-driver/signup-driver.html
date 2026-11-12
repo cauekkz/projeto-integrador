@@ -13,7 +13,7 @@
       />
 
       @if (emailInvalido) {
-        <p class="error-message">O e-mail é obrigatório!</p>
+        <p class="error-message">O e-mail é obrigatório.</p>
       }
     </div>
 
@@ -22,7 +22,7 @@
       <input type="text" placeholder="(11) 99999-9999" [(ngModel)]="enteredPhone" name="phone" appPhoneMask />
 
       @if (phoneInvalido) {
-        <p class="error-message">O telefone é obrigatório!</p>
+        <p class="error-message">O telefone é obrigatório.</p>
       }
     </div>
 
@@ -36,7 +36,7 @@
       />
 
       @if (passInvalido) {
-        <p class="error-message">A senha é obrigatória!</p>
+        <p class="error-message">A senha é obrigatória.</p>
       }
     </div>
 
@@ -50,10 +50,10 @@
       />
 
       @if (confirmPassInvalido) {
-        <p class="error-message">Confirme sua senha!</p>
+        <p class="error-message">Confirme sua senha.</p>
       }
       @if (passwordsDontMatch) {
-        <p class="error-message">As senhas não coincidem!</p>
+        <p class="error-message">As senhas não coincidem.</p>
       }
     </div>
 

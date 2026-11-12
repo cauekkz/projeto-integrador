@@ -159,7 +159,7 @@ describe('Grupos e histórico', () => {
     http.expectOne((r) => r.url === '/api/student/my-children').flush({ content: [], last: true });
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Nenhuma viagem aqui');
-    expect(fixture.nativeElement.textContent).toContain('Histórico de viagens');
+    expect(fixture.nativeElement.textContent).toContain('Responsável Histórico');
   });
 
   it('ocorrências da viagem', () => {

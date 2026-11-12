@@ -86,16 +86,37 @@ describe('Rotas do motorista', () => {
   });
 
   describe('lista /driver-routes', () => {
-    function criar(rotas: object[]) {
+    // a home pede as rotas 2 vezes: a lista e a procura da viagem rodando (card "Em rota")
+    function criar(rotas: object[], viagemHoje: object | null = null) {
       configurar();
       const fixture = TestBed.createComponent(DriverRoutes);
       fixture.detectChanges();
-      const req = http.expectOne((r) => r.url === '/api/route/get-all-routes-and-stops');
-      expect(req.request.params.get('active')).toBe('true');
-      req.flush({ content: rotas, last: true });
+      const reqs = http.match((r) => r.url === '/api/route/get-all-routes-and-stops');
+      expect(reqs.length).toBe(2);
+      for (const req of reqs) {
+        expect(req.request.params.get('active')).toBe('true');
+        req.flush({ content: rotas, last: true });
+      }
+      for (const req of http.match((r) => r.url.startsWith('/api/trip/route/'))) {
+        if (viagemHoje) req.flush(viagemHoje);
+        else req.flush({}, { status: 404, statusText: 'Not Found' });
+      }
       fixture.detectChanges();
       return fixture;
     }
+
+    it('em rota: card no topo e "Abrir mapa" abre a viagem', () => {
+      const fixture = criar([{ id: 'r-1', name: 'Ida manhã', driverName: 'G', vehicle: null, stops: [] }], { id: 't-1', status: 'IN_PROGRESS' });
+      expect(fixture.nativeElement.querySelector('.em-rota')?.textContent).toContain('Ida manhã');
+      const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+      (fixture.nativeElement.querySelector('.em-rota-abrir') as HTMLElement).click();
+      expect(navegar).toHaveBeenCalledWith(['/driver-route', 'r-1'], { queryParams: { continuar: 1 } });
+    });
+
+    it('sem viagem rodando não mostra o card "Em rota"', () => {
+      const fixture = criar([{ id: 'r-1', name: 'Ida manhã', driverName: 'G', vehicle: null, stops: [] }]);
+      expect(fixture.nativeElement.querySelector('.em-rota')).toBeNull();
+    });
 
     it('mostra o cartão com pontos e alunos', () => {
       const texto: string = criar([{ id: 'r-1', name: 'Ida manhã', driverName: 'G', vehicle: null, stops: [PONTO_CASA, PONTO_ESCOLA] }])
@@ -176,13 +197,14 @@ describe('Rotas do motorista', () => {
       expect(popUp.show).toHaveBeenCalledWith('Ana: falta desembarque na sábado', 'warning', 'A viagem ainda não pode iniciar');
     });
 
-    it('rota pronta: "Iniciar rota" abre a viagem', () => {
+    it('rota pronta: "Iniciar rota" abre a viagem já iniciando (sem pedir de novo)', () => {
       const fixture = criar([PONTO_CASA, PONTO_ESCOLA], []);
-      expect(popUp.show).toHaveBeenCalledWith('Nenhuma pendência. A viagem já pode iniciar.', 'success', 'Rota pronta');
+      // abrir a rota pronta nao mostra pop-up (o "Iniciar rota" ja mostra)
+      expect(popUp.show).not.toHaveBeenCalledWith('Nenhuma pendência. A viagem já pode iniciar.', 'success', 'Rota pronta');
       const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       const iniciar = [...fixture.nativeElement.querySelectorAll('button')].find((b: HTMLElement) => b.textContent?.includes('Iniciar rota')) as HTMLElement;
       iniciar.click();
-      expect(navegar).toHaveBeenCalledWith(['/driver-route', 'r-1']);
+      expect(navegar).toHaveBeenCalledWith(['/driver-route', 'r-1'], { queryParams: { iniciar: 1 } });
     });
 
     it('adicionar aluno: embarque na Casa num ponto novo, com os dias e a posição', () => {
@@ -249,15 +271,47 @@ describe('Rotas do motorista', () => {
       http.expectNone('/api/route/stop/p-1');
     });
 
-    it('trocar posição do ponto chama o swap-order', () => {
+    it('arrastar a parada muda a ordem na hora e manda troca a troca com a vizinha', () => {
+      const P3 = { ...PONTO_ESCOLA, id: 'p-3', orderIndex: 3 };
+      const fixture = criar([PONTO_CASA, PONTO_ESCOLA, P3], []);
+      const comp = fixture.componentInstance as unknown as { moverPonto(de: number, para: number): void };
+      // a 1a parada vai pro fim: 2 trocas (com a 2 e depois com a 3)
+      comp.moverPonto(0, 2);
+      fixture.detectChanges();
+      const ordem = [...fixture.nativeElement.querySelectorAll('.ponto')].map((el: Element) => el.querySelector('.ordem')?.textContent?.trim());
+      expect(ordem).toEqual(['1', '2', '3']);
+      const primeira = http.expectOne('/api/route/stop/p-1/swap-order');
+      expect(primeira.request.body).toEqual({ orderIndex: 2 });
+      primeira.flush({ stops: [PONTO_ESCOLA, PONTO_CASA, P3], pending: [] });
+      const segunda = http.expectOne('/api/route/stop/p-1/swap-order');
+      expect(segunda.request.body).toEqual({ orderIndex: 3 });
+      segunda.flush({ stops: [PONTO_ESCOLA, P3, PONTO_CASA], pending: [] });
+    });
+
+    it('mesma escola em 2 paradas: "Juntar em uma" leva os alunos pra última e apaga a que sobrou', () => {
+      const P3 = {
+        ...PONTO_ESCOLA, id: 'p-3', orderIndex: 3,
+        schools: [{ id: 'sc-2', schoolId: 'esc-1', stopId: 'p-3' }],
+        students: [{ ...PONTO_ESCOLA.students[0], id: 'ss-3', studentId: 'bia', studentName: 'Bia', stopId: 'p-3' }],
+      };
+      const fixture = criar([PONTO_CASA, PONTO_ESCOLA, P3], []);
+      expect(fixture.nativeElement.querySelector('.repetida')?.textContent).toContain('está em 2 paradas');
+      (fixture.nativeElement.querySelector('.repetida .link') as HTMLElement).click();
+      const fim = { stops: [PONTO_CASA, P3], pending: [] };
+      http.expectOne('/api/route/student-stop/ss-2/move').flush(fim);
+      http.expectOne('/api/route/school-stop/sc-1').flush(fim);
+      http.expectOne('/api/route/stop/p-2').flush(fim);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.repetida')).toBeNull();
+    });
+
+    it('tocar no aluno abre os dias dele e a parada tem os 2 traços pra arrastar', () => {
       const fixture = criar([PONTO_CASA, PONTO_ESCOLA], []);
-      const comp = fixture.componentInstance as unknown as { abrirPonto(p: object): void; salvarPosicao(): void; novaPosicao: { set(n: number): void } };
-      comp.abrirPonto(PONTO_CASA);
-      comp.novaPosicao.set(2);
-      comp.salvarPosicao();
-      const req = http.expectOne('/api/route/stop/p-1/swap-order');
-      expect(req.request.body).toEqual({ orderIndex: 2 });
-      req.flush({ stops: [PONTO_CASA, PONTO_ESCOLA], pending: [] });
+      expect(fixture.nativeElement.querySelectorAll('.alca').length).toBe(2);
+      expect(fixture.nativeElement.querySelector('.mais')).toBeNull();
+      (fixture.nativeElement.querySelector('button.aluno') as HTMLButtonElement).click();
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain('Dias da semana');
     });
 
     it('ajustar aluno: muda os dias e tira do ponto', async () => {

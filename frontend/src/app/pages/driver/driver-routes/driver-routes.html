@@ -20,6 +20,32 @@
 
 
   <main class="conteudo">
+    <!-- titulo da tela (a lista das rotas) e o "Nova rota" -->
+    <header class="cabecalho-rotas">
+      <h1>Suas rotas</h1>
+      <button type="button" class="nova" (click)="abrirNova()">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i> Nova rota
+      </button>
+    </header>
+
+    @if (emRota(); as v) {
+      <!-- ja esta em rota: aviso no topo e o atalho pro mapa da viagem -->
+      <section class="em-rota" role="status" animate.enter="entrar-subindo">
+        <div class="em-rota-linha">
+          <span class="em-rota-icone" aria-hidden="true"><i class="bi bi-truck-front-fill"></i></span>
+          <div class="em-rota-texto">
+            <span class="em-rota-selo"><span class="ao-vivo" aria-hidden="true"></span>Em rota agora</span>
+            <strong>{{ v.nome }}</strong>
+          </div>
+        </div>
+        <!-- a faixa da estrada correndo: a van esta andando -->
+        <span class="em-rota-estrada" aria-hidden="true"></span>
+        <button type="button" class="btn em-rota-abrir" (click)="abrirViagem()">
+          <i class="bi bi-map" aria-hidden="true"></i> Abrir mapa
+        </button>
+      </section>
+    }
+
     @if (carregando()) {
       <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando rotas..." />
     } @else if (erroCarregar()) {
@@ -36,12 +62,18 @@
         <button type="button" class="btn btn-azul" (click)="abrirNova()">Nova rota</button>
       </section>
     } @else {
-      <div class="chips" role="tablist" aria-label="Filtrar rotas">
-        <button type="button" role="tab" class="chip" [class.ativo]="ativas()" [attr.aria-selected]="ativas()" (click)="trocarFiltro(true)">Ativas</button>
-        <button type="button" role="tab" class="chip" [class.ativo]="!ativas()" [attr.aria-selected]="!ativas()" (click)="trocarFiltro(false)">Todas</button>
+      <div class="filtros">
+        <div class="chips" role="tablist" aria-label="Filtrar rotas">
+          <button type="button" role="tab" class="chip" [class.ativo]="ativas()" [attr.aria-selected]="ativas()" (click)="trocarFiltro(true)">Ativas</button>
+          <button type="button" role="tab" class="chip" [class.ativo]="!ativas()" [attr.aria-selected]="!ativas()" (click)="trocarFiltro(false)">Todas</button>
+        </div>
+        @if (rotas().length) {
+          <p class="resumo">
+            <span><i class="bi bi-signpost-2" aria-hidden="true"></i>{{ resumo().paradas }} {{ resumo().paradas === 1 ? 'parada' : 'paradas' }}</span>
+            <span><i class="bi bi-people" aria-hidden="true"></i>{{ resumo().alunos }} {{ resumo().alunos === 1 ? 'aluno' : 'alunos' }}</span>
+          </p>
+        }
       </div>
-
-      <button type="button" class="btn btn-azul" (click)="abrirNova()">Nova rota</button>
 
       @if (!rotas().length) {
         <section class="vazio">
@@ -54,7 +86,36 @@
         @for (rota of rotas(); track rota.id; let i = $index) {
           <!-- Figma "Cartão de rota" 1038:648 -->
           <li animate.enter="entrar-subindo" [style.--i]="i">
-            <app-route-card [nome]="rota.name" [paradas]="rota.stops" (abrir)="abrir(rota)" />
+            <button type="button" class="rota" (click)="abrir(rota)">
+              <span class="rota-topo">
+                <strong [title]="rota.name">{{ rota.name }}</strong>
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              </span>
+              <span class="rota-meta">
+                <span>{{ rota.stops.length === 1 ? '1 ponto' : rota.stops.length + ' pontos' }}</span>
+                <span>{{ alunosDa(rota) === 1 ? '1 aluno' : alunosDa(rota) + ' alunos' }}</span>
+                @if (rota.vehicle) {
+                  <span class="placa">{{ rota.vehicle.plate }}</span>
+                }
+              </span>
+              @if (rota.stops.length) {
+                <!-- o caminho da rota em miniatura: uma bolinha por parada, como no editor -->
+                <span class="mini-estrada" aria-hidden="true">
+                  @for (p of rota.stops; track p.id) {
+                    <span class="mini-parada"></span>
+                  }
+                </span>
+                <span class="rota-trajeto">
+                  <span>{{ ruaENumero(rota.stops[0].address) }}</span>
+                  @if (rota.stops.length > 1) {
+                    <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    <span>{{ ruaENumero(rota.stops[rota.stops.length - 1].address) }}</span>
+                  }
+                </span>
+              } @else {
+                <span class="rota-vazia">Sem paradas ainda. Toque para adicionar alunos.</span>
+              }
+            </button>
           </li>
         }
       </ul>

@@ -35,9 +35,14 @@
             @if (semNadaHoje(filho)) {
               <!-- Figma "van ainda não saiu" -->
               <p class="linha">A van ainda não saiu</p>
-              <div class="botoes">
-                <button type="button" class="btn btn-perigo" (click)="abrirFalta(filho, true)">Não vai hoje</button>
-                <button type="button" class="btn btn-contorno" (click)="abrirFalta(filho, false)">Não vai outro dia</button>
+              <!-- avisar falta: acoes discretas (o vermelho fica so na confirmacao da folha) -->
+              <div class="faltas">
+                <button type="button" class="acao-falta" (click)="abrirFalta(filho, true)">
+                  <i class="bi bi-calendar-x" aria-hidden="true"></i> Não vai hoje
+                </button>
+                <button type="button" class="acao-falta" (click)="abrirFalta(filho, false)">
+                  <i class="bi bi-calendar-event" aria-hidden="true"></i> Não vai outro dia
+                </button>
               </div>
             } @else if (filho.viagens.length) {
               <!-- Figma "viagem em andamento" e "duas viagens no dia" -->
@@ -54,7 +59,7 @@
                     <button type="button" class="btn btn-azul" (click)="acompanhar(filho, viagem)">Acompanhar</button>
                   }
                   @if (viagensSemEmbarque(filho).length) {
-                    <button type="button" class="btn btn-perigo" (click)="abrirFalta(filho, true)">Não vai hoje</button>
+                    <button type="button" class="btn btn-contorno" (click)="abrirFalta(filho, true)">Não vai hoje</button>
                   }
                 </div>
               }

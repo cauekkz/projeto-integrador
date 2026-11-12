@@ -38,6 +38,13 @@
         </p>
       </section>
     } @else {
+      <!-- sem chave Pix: um aviso so, em cima, em vez de repetir em cada parcela -->
+      @if (semPix()) {
+        <p class="sem-pix" role="note">
+          <i class="bi bi-info-circle" aria-hidden="true"></i>
+          O motorista ainda não cadastrou a chave Pix.
+        </p>
+      }
       <ul class="lista">
         @for (p of parcelas(); track p.id; let i = $index) {
           @let s = statusInfo[p.status];
@@ -64,8 +71,6 @@
                     <span>Chave Pix · {{ tipoPix(p.driverPixKeyType) }}</span>
                     <strong>{{ chavePix(p.driverPixKeyType, p.driverPixKey) }}</strong>
                   </div>
-                } @else {
-                  <p class="sem-pix">O motorista ainda não cadastrou a chave Pix.</p>
                 }
                 <div class="botoes">
                   @if (p.driverPixKey) {

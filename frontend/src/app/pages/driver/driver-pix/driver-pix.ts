@@ -67,13 +67,6 @@ export class DriverPix implements OnInit {
     const chaveAtual = atual?.key ?? '';
     this.valor = atual?.type === 'CPF' ? formatarCpf(chaveAtual) : atual?.type === 'CNPJ' ? formatarCnpj(chaveAtual) : chaveAtual;
     this.editando.set(true);
-    if (!atual?.key) {
-      this.popUpService.show(
-        'Os responsáveis veem a sua chave nas parcelas para copiar e pagar. O app não recebe dinheiro.',
-        'info',
-        'Sem chave Pix cadastrada',
-      );
-    }
   }
 
   trocar() {

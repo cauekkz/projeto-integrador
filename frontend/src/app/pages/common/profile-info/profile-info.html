@@ -27,37 +27,43 @@
     </div>
 
     <div class="hero">
-      <div class="hero-label">Informações pessoais</div>
+      <h2 class="hero-label">{{ usuario.name || 'Informações pessoais' }}</h2>
     </div>
 
     <div class="body-white">
       <div class="info-card">
         @if (!modoEdicao) {
+          <span class="rotulo-campo" aria-hidden="true">Nome</span>
           <div class="field">
-            <input type="text" [(ngModel)]="usuario.name" placeholder="Nome completo" name="name" readonly>
+            <input aria-label="Nome" type="text" [(ngModel)]="usuario.name" placeholder="Nome completo" name="name" readonly>
           </div>
 
+          <span class="rotulo-campo" aria-hidden="true">CPF</span>
           <div class="field">
-            <input type="text" [(ngModel)]="usuario.cpf" placeholder="CPF/Documento" name="cpf" readonly>
+            <input aria-label="CPF" type="text" [(ngModel)]="usuario.cpf" placeholder="CPF/Documento" name="cpf" readonly>
           </div>
 
 
+          <span class="rotulo-campo" aria-hidden="true">E-mail</span>
           <div class="field">
-            <input type="email" [(ngModel)]="usuario.email" placeholder="E-mail" name="email" readonly>
+            <input aria-label="E-mail" type="email" [(ngModel)]="usuario.email" placeholder="E-mail" name="email" readonly>
           </div>
 
+          <span class="rotulo-campo" aria-hidden="true">Telefone</span>
           <div class="field">
-            <input type="text" [(ngModel)]="usuario.phone" placeholder="Telefone" name="phone" readonly>
+            <input aria-label="Telefone" type="text" [(ngModel)]="usuario.phone" placeholder="Telefone" name="phone" readonly>
           </div>
         }
 
         @if (modoEdicao) {
+          <span class="rotulo-campo" aria-hidden="true">E-mail</span>
           <div class="field">
-            <input type="email" [(ngModel)]="enteredEmail" placeholder="E-mail" name="email">
+            <input aria-label="E-mail" type="email" [(ngModel)]="enteredEmail" placeholder="E-mail" name="email">
           </div>
 
+          <span class="rotulo-campo" aria-hidden="true">Telefone</span>
           <div class="field">
-            <input type="text" [(ngModel)]="enteredPhone" placeholder="Telefone" name="phone" appPhoneMask>
+            <input aria-label="Telefone" type="text" [(ngModel)]="enteredPhone" placeholder="Telefone" name="phone" appPhoneMask>
           </div>
 
           <div class="field">

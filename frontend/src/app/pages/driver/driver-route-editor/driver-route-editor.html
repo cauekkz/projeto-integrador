@@ -29,63 +29,85 @@
         <button type="button" class="trocar" (click)="abrirVan()">Trocar</button>
       </div>
 
-      @if (!pontos().length) {
-        <button type="button" class="btn btn-azul" (click)="abrirAdicionar()">Adicionar aluno</button>
+      <!-- a mesma escola em varias paradas: um toque junta tudo numa so -->
+      @for (g of escolasRepetidas(); track g.escolaId) {
+        <div class="repetida" role="status">
+          <i class="bi bi-intersect" aria-hidden="true"></i>
+          <p><strong>{{ g.nome }}</strong> está em {{ g.pontos.length }} paradas.</p>
+          <button type="button" class="link" [disabled]="enviando()" (click)="juntarParadas(g)">Juntar em uma</button>
+        </div>
       }
 
-      <ol class="pontos">
+      <!-- acoes da rota: entre a van e a 1a parada -->
+      <div class="barra-acoes" [class.com-desembarque]="gruposDesembarque().length">
+        @if (gruposDesembarque().length) {
+          <button type="button" class="btn btn-azul desembarque" (click)="abrirDesembarque()">
+            <i class="bi bi-building" aria-hidden="true"></i> Adicionar desembarque
+          </button>
+        }
+        @if (pronta()) {
+          <button type="button" class="btn btn-contorno" (click)="abrirAdicionar()">
+            <i class="bi bi-person-plus" aria-hidden="true"></i> Adicionar aluno
+          </button>
+          <button type="button" class="btn btn-azul" (click)="iniciar()">
+            <i class="bi bi-play-fill" aria-hidden="true"></i> Iniciar rota
+          </button>
+        } @else {
+          <button type="button" class="btn" [class.btn-azul]="!gruposDesembarque().length" [class.btn-contorno]="gruposDesembarque().length" (click)="abrirAdicionar()">
+            <i class="bi bi-person-plus" aria-hidden="true"></i> Adicionar aluno
+          </button>
+        }
+      </div>
+
+      <!-- ordem das paradas: segura os 2 tracos e arrasta (como a fila de musicas);
+           tocar na parada abre escolas e apagar, tocar no aluno abre os dias e o ponto dele -->
+      <ol class="pontos" #listaPontos>
         @for (ponto of pontos(); track ponto.id; let i = $index) {
-          <li class="ponto" animate.enter="entrar-subindo" [style.--i]="i">
+          <li class="ponto" [class.arrastado]="arrastando() === i" animate.enter="entrar-subindo" [style.--i]="i">
             <!-- Figma "Cabeçalho do ponto" 1038:666 -->
             <div class="cabecalho-ponto">
-              <span class="ordem">{{ ponto.orderIndex }}</span>
-              <div class="endereco">
-                <strong>{{ ruaENumero(ponto.address) }}</strong>
-                @if (complemento(ponto)) {
-                  <small>{{ complemento(ponto) }}</small>
-                }
-              </div>
-              <button type="button" class="mais" [attr.aria-label]="'Opções do ponto ' + ponto.orderIndex" (click)="abrirPonto(ponto)">
-                <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+              <button type="button" class="abrir-ponto" [attr.aria-label]="'Ponto ' + ponto.orderIndex + ', ' + ruaENumero(ponto.address) + '. Ver escolas e apagar'" (click)="abrirPonto(ponto)">
+                <span class="ordem">{{ ponto.orderIndex }}</span>
+                <span class="endereco">
+                  <strong>{{ ruaENumero(ponto.address) }}</strong>
+                  @if (complemento(ponto)) {
+                    <small>{{ complemento(ponto) }}</small>
+                  }
+                </span>
               </button>
+              @if (pontos().length > 1) {
+                <button
+                  type="button"
+                  class="alca"
+                  [attr.aria-label]="'Mover o ponto ' + ponto.orderIndex + '. Arraste, ou use as setas para cima e para baixo'"
+                  [disabled]="enviando()"
+                  (pointerdown)="iniciarArraste($event, i)"
+                  (keydown.arrowup)="$event.preventDefault(); moverPonto(i, i - 1)"
+                  (keydown.arrowdown)="$event.preventDefault(); moverPonto(i, i + 1)">
+                  <span aria-hidden="true"></span>
+                  <span aria-hidden="true"></span>
+                </button>
+              }
             </div>
 
             <!-- Figma "Aluno no ponto" 1038:665 -->
             @for (aluno of ponto.students; track aluno.id) {
-              <div class="aluno">
+              <button type="button" class="aluno" [attr.aria-label]="'Ajustar ' + aluno.studentName" (click)="abrirAluno(aluno, ponto)">
                 <span class="acao" [class.desce]="aluno.action === 'ALIGHTING'">
                   {{ aluno.action === 'BOARDING' ? 'Embarca' : 'Desce' }}
                 </span>
-                <div class="dados">
+                <span class="dados">
                   <strong>{{ aluno.studentName }}</strong>
                   <small>{{ detalhe(aluno, ponto) }}</small>
-                </div>
-                <button type="button" class="mais pequeno" [attr.aria-label]="'Ajustar ' + aluno.studentName" (click)="abrirAluno(aluno, ponto)">
-                  <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
-                </button>
-              </div>
+                </span>
+                <i class="bi bi-chevron-right seta-aluno" aria-hidden="true"></i>
+              </button>
             }
           </li>
         }
       </ol>
     }
   </main>
-
-  @if (!carregando() && !erroCarregar() && pontos().length) {
-    <div class="barra-acoes" [class.com-desembarque]="gruposDesembarque().length">
-      @if (gruposDesembarque().length) {
-        <button type="button" class="btn btn-azul desembarque" (click)="abrirDesembarque()">
-          <i class="bi bi-building" aria-hidden="true"></i> Adicionar desembarque
-        </button>
-      }
-      @if (pronta()) {
-        <button type="button" class="btn btn-contorno" (click)="abrirAdicionar()">Adicionar aluno</button>
-        <button type="button" class="btn btn-azul" (click)="iniciar()">Iniciar rota</button>
-      } @else {
-        <button type="button" class="btn" [class.btn-azul]="!gruposDesembarque().length" [class.btn-contorno]="gruposDesembarque().length" (click)="abrirAdicionar()">Adicionar aluno</button>
-      }
-    </div>
-  }
 
   <app-footer tipoUsuario="motorista" />
 </div>
@@ -177,15 +199,6 @@
       <h2 id="ponto-titulo">Ponto {{ ponto.orderIndex }}</h2>
       <p class="sub">{{ ruaENumero(ponto.address) }}@if (ponto.address.neighborhood) { · {{ ponto.address.neighborhood }}}</p>
 
-      @if (posicoes().length > 1) {
-        <p class="rotulo">Trocar de posição com</p>
-        <div class="chips">
-          @for (n of posicoes(); track n) {
-            <button type="button" class="chip numero" [class.ativo]="novaPosicao() === n" [attr.aria-pressed]="novaPosicao() === n" (click)="novaPosicao.set(n)">{{ n }}</button>
-          }
-        </div>
-      }
-
       @if (ponto.schools.length) {
         <p class="rotulo">Escolas do ponto</p>
         <ul class="escolas">
@@ -198,11 +211,6 @@
         </ul>
       }
 
-      @if (posicoes().length > 1) {
-        <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="salvarPosicao()">
-          {{ enviando() ? 'Salvando...' : 'Salvar posição' }}
-        </button>
-      }
       <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="apagarPonto()">Apagar ponto</button>
     </div>
   </div>

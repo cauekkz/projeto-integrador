@@ -11,6 +11,8 @@
       </div>
     } @else if (editando()) {
       <form class="formulario" (ngSubmit)="salvar()" animate.enter="entrar-fade">
+        <!-- explicacao na propria tela (antes era um pop-up que cobria o topo) -->
+        <p class="explica">Os responsáveis veem a sua chave nas parcelas para copiar e pagar. O app não recebe dinheiro.</p>
         <fieldset>
           <legend>Tipo de chave</legend>
           <div class="tipos" role="radiogroup" aria-label="Tipo de chave">

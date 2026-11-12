@@ -7,7 +7,7 @@ import { TabBar } from 'glisse';
 
 export interface AbaGlisse {
   value: string;
-  /** nome da aba: fica escondido na tela, mas o leitor de tela le */
+  /** nome da aba: aparece embaixo do icone */
   label: string;
   /** classe do icone (bootstrap icons ou outra classe do projeto) */
   iconClass: string;
@@ -37,7 +37,7 @@ export function montarTabBar(alvo: HTMLElement) {
         },
         items: props.abas.map((aba) => ({
           value: aba.value,
-          label: createElement('span', { className: 'glisse-escondido' }, aba.label),
+          label: aba.label,
           icon: createElement('span', { className: aba.iconClass }),
         })),
       }),

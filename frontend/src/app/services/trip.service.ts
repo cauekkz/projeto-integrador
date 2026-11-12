@@ -149,6 +149,11 @@ export class TripService {
 
   // a rota com viagem aberta hoje (o back nao tem essa chamada: olha o "today" de cada rota ativa). null = nenhuma
   rotaComViagemAberta(): Observable<string | null> {
+    return this.viagemAberta().pipe(map((v) => v?.routeId ?? null));
+  }
+
+  // a rota (id e nome) que tem viagem rodando hoje; null se nenhuma
+  viagemAberta(): Observable<{ routeId: string; nome: string } | null> {
     return this.routeService.getMyRoutes({ active: true, size: 50 }).pipe(
       switchMap((pagina) => {
         const rotas = pagina.content ?? [];
@@ -156,11 +161,11 @@ export class TripService {
         return forkJoin(
           rotas.map((r) =>
             this.getToday(r.id).pipe(
-              map((trip) => (viagemAtiva(trip?.status) ? r.id : null)),
+              map((trip) => (viagemAtiva(trip?.status) ? { routeId: r.id, nome: r.name } : null)),
               catchError(() => of(null)),
             ),
           ),
-        ).pipe(map((ids) => ids.find((id) => !!id) ?? null));
+        ).pipe(map((abertas) => abertas.find((v) => !!v) ?? null));
       }),
       catchError(() => of(null)),
     );

@@ -13,7 +13,7 @@
       />
 
       @if (nameInvalido) {
-        <p class="error-message">O nome é obrigatório!</p>
+        <p class="error-message">O nome é obrigatório.</p>
       }
     </div>
 
@@ -22,7 +22,7 @@
       <input type="text" placeholder="000.000.000-00" [(ngModel)]="enteredCpf" name="cpf" appCpfMask />
 
       @if (cpfInvalido) {
-        <p class="error-message">O CPF é obrigatório!</p>
+        <p class="error-message">O CPF é obrigatório.</p>
       }
     </div>
 
@@ -31,7 +31,7 @@
       <input type="email" placeholder="Digite seu e-mail" [(ngModel)]="enteredEmail" name="email" />
 
       @if (emailInvalido) {
-        <p class="error-message">O e-mail é obrigatório!</p>
+        <p class="error-message">O e-mail é obrigatório.</p>
       }
     </div>
 
@@ -40,7 +40,7 @@
       <input type="text" placeholder="(11) 99999-9999" [(ngModel)]="enteredPhone" name="phone" appPhoneMask />
 
       @if (phoneInvalido) {
-        <p class="error-message">O telefone é obrigatório!</p>
+        <p class="error-message">O telefone é obrigatório.</p>
       }
     </div>
 
@@ -49,7 +49,7 @@
       <input type="text" inputmode="numeric" placeholder="00000-000" [(ngModel)]="enteredCep" name="cep" appCepMask appCepBusca (enderecoCep)="preencherEndereco($event); ($event.rua ? numeroInput : ruaInput).focus()" />
 
       @if (cepInvalido) {
-        <p class="error-message">O CEP é obrigatório!</p>
+        <p class="error-message">O CEP é obrigatório.</p>
       }
     </div>
 
@@ -58,7 +58,7 @@
       <input #ruaInput type="text" placeholder="Nome da rua" [(ngModel)]="enteredStreet" name="street" />
 
       @if (streetInvalido) {
-        <p class="error-message">A rua é obrigatória!</p>
+        <p class="error-message">A rua é obrigatória.</p>
       }
     </div>
 
@@ -77,7 +77,7 @@
       <input type="text" placeholder="Cidade" [(ngModel)]="enteredCity" name="city" />
 
       @if (cityInvalido) {
-        <p class="error-message">A cidade é obrigatória!</p>
+        <p class="error-message">A cidade é obrigatória.</p>
       }
     </div>
 
@@ -96,7 +96,7 @@
       />
 
       @if (passInvalido) {
-        <p class="error-message">A senha é obrigatória!</p>
+        <p class="error-message">A senha é obrigatória.</p>
       }
     </div>
 
@@ -110,11 +110,11 @@
       />
 
       @if (confirmPassInvalido) {
-        <p class="error-message">Confirme sua senha!</p>
+        <p class="error-message">Confirme sua senha.</p>
       }
 
       @if (passwordsDontMatch) {
-        <p class="error-message">As senhas não são iguais!</p>
+        <p class="error-message">As senhas não são iguais.</p>
       }
     </div>
 

@@ -178,7 +178,15 @@ export class DriverRoute implements OnInit {
         this.paradas.set(paradas ?? []);
         if (!hoje) {
           this.estado.set('antes');
-          this.carregarVans();
+          // veio do "Iniciar rota" do editor: ja inicia, sem pedir de novo
+          const jaIniciar = this.activatedRoute.snapshot.queryParamMap.has('iniciar');
+          if (jaIniciar) {
+            // tira o ?iniciar da URL: recarregar a pagina nao inicia de novo
+            this.router.navigate([], { queryParams: {}, replaceUrl: true });
+          }
+          this.carregarVans(() => {
+            if (jaIniciar) this.iniciar(false, true);
+          });
           this.avisarTelaAberta();
         } else if (hoje.status === 'FINISHED') {
           this.mostrarFinalizada(hoje.stops);
@@ -198,13 +206,14 @@ export class DriverRoute implements OnInit {
     });
   }
 
-  private carregarVans() {
+  private carregarVans(depois?: () => void) {
     this.vehicleService
       .getMyVehicles()
       .pipe(catchError(() => of([] as vehicleResponse[])))
       .subscribe((vans) => {
         this.vans.set(vans ?? []);
         this.vanEscolhida = this.rota()?.vehicle?.id ?? vans?.[0]?.id ?? '';
+        depois?.();
       });
   }
 
@@ -228,11 +237,13 @@ export class DriverRoute implements OnInit {
 
   // ---------- iniciar, continuar e recomeçar ----------
 
-  async iniciar(recomecar = false) {
+  // semPerguntar: o motorista ja tocou em "Iniciar rota" no editor
+  async iniciar(recomecar = false, semPerguntar = false) {
     if (this.enviando()) return;
     // recomecar ja passou pela confirmacao "Recomeçar do zero?"
     if (
       !recomecar &&
+      !semPerguntar &&
       !(await this.confirmacao.perguntar({
         titulo: 'Iniciar a rota?',
         texto: 'A viagem de hoje começa e os responsáveis passam a acompanhar a van no mapa.',

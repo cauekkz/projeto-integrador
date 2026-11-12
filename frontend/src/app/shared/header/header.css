@@ -124,35 +124,47 @@
 .header-geral {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 8px 16px;
+  gap: 8px;
+  padding: 8px 12px;
   background: #ffffff;
 }
 
 .back-button {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  display: flex;
+  flex-shrink: 0;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-left: -4px;
   padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
 }
 
 .back-button i {
-  font-size: 32px;
+  font-size: 24px;
   color: var(--texto);
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .back-button:hover i {
-    color: var(--azul);
+  .back-button:hover {
+    background: #f1f5f9;
   }
 }
 
+.back-button:focus-visible {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+}
+
+/* titulo junto da seta, a esquerda (como a trilha das outras telas) */
 h1 {
   flex: 1;
-  text-align: right;
-  font-size: 24px;
+  text-align: left;
+  font-size: 20px;
   font-weight: 600;
   color: var(--texto);
   margin: 0;

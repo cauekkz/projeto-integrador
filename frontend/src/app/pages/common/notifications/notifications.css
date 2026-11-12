@@ -138,9 +138,15 @@
   transform: scale(0.99);
 }
 
+/* nao lida: o ponto azul e o titulo forte ja marcam; o cartao fica neutro pra nao pintar a lista toda */
 .item.nao-lida {
-  border-color: #bfd6f6;
-  background: #f5f9ff;
+  border-color: #cbd5e1;
+}
+
+/* lida: o icone tambem fica neutro, so as novas tem cor */
+.item:not(.nao-lida) .icone {
+  background: #f1f5f9;
+  color: var(--texto-3);
 }
 
 .icone {

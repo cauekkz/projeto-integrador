@@ -131,3 +131,43 @@
   }
 }
 
+/* "Nao vai hoje" / "Nao vai outro dia": discretas, lado a lado */
+.faltas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.acao-falta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--texto-2);
+  cursor: pointer;
+  transition: var(--transicao-botao);
+}
+
+.acao-falta i {
+  font-size: 14px;
+  color: var(--texto-3);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .acao-falta:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+}
+
+.acao-falta:focus-visible {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+}

@@ -36,6 +36,8 @@
   flex: 1;
   height: 100%;
   display: flex;
+  flex-direction: column;
+  gap: 4px;
   align-items: center;
   justify-content: center;
   border: none;
@@ -73,7 +75,15 @@
 }
 
 .tab i {
-  font-size: 28px;
+  font-size: 22px;
+  line-height: 1;
+}
+
+/* nome da aba embaixo do icone */
+.nome-aba {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
 }
 
 /* chegou na aba: o icone cresce de leve */
@@ -90,8 +100,8 @@
 /* icone de rota do motorista (public/rota.svg): o SVG vira mascara pra seguir a cor da aba */
 .icone-rota {
   display: block;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   background-color: currentColor;
   -webkit-mask: url('/rota.svg') center / contain no-repeat;
   mask: url('/rota.svg') center / contain no-repeat;

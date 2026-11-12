@@ -102,18 +102,18 @@
   to { transform: rotate(360deg); }
 }
 
+/* sem faixa colorida: a foto e o nome sobre o fundo da tela */
 .hero {
-  background: var(--azul);
-  border-radius: 32px 32px 0 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 60px 20px 40px;
+  padding: 60px 20px 8px;
 }
 
 .hero-label {
-  color: #ffffff;
-  font-size: 16px;
+  margin: 0;
+  color: var(--texto);
+  font-size: 18px;
   font-weight: 600;
   text-align: center;
   font-family: inherit;
@@ -124,9 +124,7 @@
   display: flex;
   flex-direction: column;
   background: #ffffff;
-  border-radius: 24px 24px 0 0;
-  margin-top: -24px;
-  padding: 20px 20px 24px;
+  padding: 12px 20px 24px;
 }
 
 .info-card {
@@ -169,7 +167,7 @@
 .field input {
   width: 100%;
   height: 52px;
-  border: 1.5px solid #bcd4f7;
+  border: 1px solid #cbd5e1;
   border-radius: 12px;
   padding: 0 44px 0 16px;
   font-size: 16px;
@@ -182,9 +180,18 @@
 }
 
 .field input[readonly] {
-  background: #ffffff;
+  border-color: #e2e8f0;
+  background: #f8fafc;
   color: var(--texto);
   cursor: default;
+}
+
+/* nome de cada campo, em cima dele */
+.rotulo-campo {
+  margin-bottom: -6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--texto-2);
 }
 
 .field input:focus:not([readonly]) {

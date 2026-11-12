@@ -47,28 +47,25 @@ app-glisse-tab-bar {
 }
 
 .glisse-tab-bar .lg-tab-icon .bi {
-  font-size: 28px;
+  font-size: 22px;
   line-height: 1;
+}
+
+/* nome da aba embaixo do icone */
+.glisse-tab-bar .lg-tab-bar[data-icons] :is(.lg-tab, .lg-tab-copy) {
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 /* icone de rota do motorista (public/rota.svg): o SVG vira mascara pra seguir a cor da aba */
 .glisse-tab-bar .icone-rota {
   display: block;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   background-color: currentColor;
   -webkit-mask: url('/rota.svg') center / contain no-repeat;
   mask: url('/rota.svg') center / contain no-repeat;
-}
-
-/* o rodape e so de icones: o nome da aba fica so pro leitor de tela */
-.glisse-tab-bar .glisse-escondido {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 /* o rodape tem view-transition-name (footer.css) pra ficar parado na troca de telas, mas no Chrome isso

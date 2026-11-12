@@ -1,8 +1,6 @@
 <div class="login-container">
-  <app-header
-    titulo="Acessar {{ tipoUsuario === 'motorista' ? 'Motorista' : 'Responsável' }}"
-    (voltarEvent)="voltar()"
-  />
+  <!-- so a seta: o titulo da tela e o "Entrar como ..." do formulario -->
+  <app-header (voltarEvent)="voltar()" />
 
   <div class="content">
     <form (ngSubmit)="login()">
@@ -20,14 +18,14 @@
       }
 
       @if (cpfInvalido) {
-        <p class="error-message">O CPF é obrigatório!</p>
+        <p class="error-message">O CPF é obrigatório.</p>
       }
 
       <label>Senha</label>
       <input type="password" placeholder="Digite sua senha" name="senha" [(ngModel)]="enteredPass" required />
 
       @if (passInvalido) {
-        <p class="error-message">A senha é obrigatória!</p>
+        <p class="error-message">A senha é obrigatória.</p>
       }
 
       <app-button
@@ -36,11 +34,7 @@
         type="submit">
       </app-button>
 
-      <app-button
-        texto="Esqueceu sua senha?"
-        tipo="secondary"
-        (clickEvent)="mostrarForgotPassword = true">
-      </app-button>
+      <button type="button" class="esqueci" (click)="mostrarForgotPassword = true">Esqueceu sua senha?</button>
 
     </form>
   </div>
@@ -70,7 +64,7 @@
         <label>E-mail</label>
         <input type="email" placeholder="Digite seu e-mail" name="email" [(ngModel)]="enteredEmail" required />
         @if (emailInvalido) {
-          <p class="error-message">O e-mail é obrigatório!</p>
+          <p class="error-message">O e-mail é obrigatório.</p>
         }
 
         <app-button texto="Enviar código" tipo="primary" type="submit" />

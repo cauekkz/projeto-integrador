@@ -6,7 +6,6 @@ import { Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TrailHeader } from '../../../shared/trail-header/trail-header';
-import { Header } from '../../../shared/header/header';
 import { Footer } from '../../../shared/footer/footer';
 import { PopUpService } from '../../../shared/pop-up';
 import { AuthService } from '../../../services/auth.service';
@@ -30,7 +29,7 @@ const VAZIO: Filtro = { studentId: '', routeId: '', from: '', to: '' };
 @Component({
   selector: 'app-trip-history',
   standalone: true,
-  imports: [Trajeto, Esqueleto, FormsModule, TrailHeader, Header, Footer],
+  imports: [Trajeto, Esqueleto, FormsModule, TrailHeader, Footer],
   templateUrl: './trip-history.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './trip-history.css'],
 })

@@ -118,10 +118,18 @@ export class AddStudentToRoute implements OnInit {
 
   // passo 3: pontos que ja existem no lugar escolhido (escola: os pontos com escola; o backend confere se e a do contrato)
   protected pontosNoLugar = computed(() => {
-    if (this.local() === 'SCHOOL') return this.pontos().filter((p) => p.schools.length > 0);
+    if (this.local() === 'SCHOOL') {
+      const escola = this.escolaDoAluno();
+      const daEscola = this.pontos().filter((p) => p.schools.length > 0);
+      // sabendo a escola do contrato: so os pontos dela
+      return escola ? daEscola.filter((p) => p.schools.some((s) => s.schoolId === escola.id)) : daEscola;
+    }
     const enderecoId = this.endereco()?.address.id;
     return this.pontos().filter((p) => !p.schools.length && p.address.id === enderecoId);
   });
+
+  // escola com parada na rota: todo mundo dessa escola desce/embarca na mesma parada (nao cria outra)
+  protected escolaJaTemPonto = computed(() => this.local() === 'SCHOOL' && !!this.escolaDoAluno() && this.pontosNoLugar().length > 0);
 
   // "2 endereços"
   totalEnderecos(aluno: stopOptionStudent): string {
@@ -167,7 +175,7 @@ export class AddStudentToRoute implements OnInit {
     }
     if (this.passo() === 2) {
       if (this.local() !== 'SCHOOL' && !this.endereco()) return;
-      this.ponto.set(null);
+      this.ponto.set(this.escolaJaTemPonto() ? this.pontosNoLugar()[0] : null);
       this.posicao = null;
       this.passo.set(3);
       return;
