@@ -47,7 +47,7 @@
     }
 
     @if (carregando()) {
-      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando rotas..." />
+      <div class="sk-tela" role="status" aria-label="Carregando rotas..."><div class="sk-linha"><app-skeleton variante="rect" largura="72px" altura="34px" /><app-skeleton variante="rect" largura="72px" altura="34px" /></div>@for (i of [0,1,2,3]; track i) {<app-skeleton variante="card"><div class="sk-linha"><div class="sk-col"><app-skeleton variante="title" largura="50%" /></div><app-skeleton variante="rect" largura="12px" altura="12px" /></div><div class="sk-linha"><app-skeleton variante="rect" largura="60px" altura="12px" /><app-skeleton variante="rect" largura="60px" altura="12px" /></div><app-skeleton variante="rect" largura="100%" altura="10px" /></app-skeleton>}</div>
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar as rotas.</p>
@@ -143,11 +143,11 @@
     <form class="folha" role="dialog" aria-modal="true" aria-labelledby="nova-titulo" (click)="$event.stopPropagation()" (ngSubmit)="criar()">
       <h2 id="nova-titulo">Nova rota</h2>
       <p class="sub">A ida e a volta são rotas diferentes.</p>
-      <div class="campo">
+      <div class="campo flutua">
         <label for="nome-rota">Nome da rota</label>
         <input id="nome-rota" name="nome" [(ngModel)]="nome" placeholder="Ex.: Ida manhã" maxlength="80" autocomplete="off" />
       </div>
-      <button type="submit" class="btn btn-azul" [disabled]="enviando()">
+      <button type="submit" class="btn btn-azul" [disabled]="enviando()" [appCarregando]="enviando()">
         {{ enviando() ? 'Criando...' : 'Criar rota' }}
       </button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharNova()">Cancelar</button>

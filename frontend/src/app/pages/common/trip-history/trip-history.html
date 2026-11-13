@@ -23,7 +23,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando histórico..." />
+      <div class="sk-tela" role="status" aria-label="Carregando histórico...">@for (i of [0,1,2,3]; track i) {<app-skeleton variante="card"><div class="sk-linha"><div class="sk-col"><app-skeleton variante="text" largura="45%" altura="14px" /><app-skeleton variante="text" largura="35%" /></div><app-skeleton variante="rect" largura="84px" altura="24px" class="sk-pilula" /></div><app-skeleton variante="rect" largura="100%" altura="10px" /><app-skeleton variante="text" largura="60%" /></app-skeleton>}</div>
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar o histórico.</p>

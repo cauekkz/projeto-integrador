@@ -51,36 +51,36 @@
 }
 
 .btn-primary {
-  background-color: var(--azul);
-  color: #ffffff;
+  background-color: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .btn-primary:hover:not(:disabled) {
-    background-color: #0052a3;
+    background-color: var(--cor-primaria-hover);
   }
 }
 
 .btn-secondary {
   background-color: transparent;
-  border: var(--azul) 1.4px solid;
-  color:var(--azul) ;
+  border: var(--cor-primaria-texto) 1.4px solid;
+  color:var(--cor-primaria-texto) ;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .btn-secondary:hover:not(:disabled) {
-    background-color: #eff6ff;
+    background-color: var(--cor-primaria-suave);
   }
 }
 
 .btn-danger {
   background-color: transparent;
-  border: red 1.4px solid;
-  color: red;
+  border: var(--cor-perigo) 1.4px solid;
+  color: var(--cor-perigo);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .btn-danger:hover:not(:disabled) {
-    background-color: #fef2f2;
+    background-color: var(--cor-perigo-suave);
   }
 }

@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, DestroyRef, ElementRef, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,6 +12,7 @@ import { RouteService } from '../../../services/route.service';
 import { TripService } from '../../../services/trip.service';
 import { routeWithStops, ruaENumero } from '../../../services/dto/route/route.dto';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 const TAMANHO_PAGINA = 10;
 
 // home do motorista (/driver-home): a lista das rotas (Ativas/Todas), sem rotas e a folha "Nova rota" (Figma "Rotas · Motorista"),
@@ -19,7 +20,7 @@ const TAMANHO_PAGINA = 10;
 @Component({
   selector: 'app-driver-routes',
   standalone: true,
-  imports: [Esqueleto, Footer, FormsModule, ProfileSelect],
+  imports: [BotaoCarregandoDirective, Skeleton, Footer, FormsModule, ProfileSelect],
   templateUrl: './driver-routes.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-routes.css'],
 })

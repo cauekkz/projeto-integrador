@@ -2,14 +2,14 @@ import { Component, EventEmitter, Output, signal } from '@angular/core';
 import { AuthService } from '../../../../services/auth.service';
 import { RegisterService } from '../../../../services/register.service';
 import { Header } from '../../../../shared/header/header';
-import { Button } from '../../../../shared/button/button';
 
+import { BotaoCarregandoDirective } from '../../../../shared/botao-carregando/botao-carregando.directive';
 @Component({
   selector: 'app-signup-cnh-form',
   standalone: true,
-  imports: [Header, Button],
+  imports: [BotaoCarregandoDirective, Header],
   templateUrl: './signup-cnh-form.html',
-  styleUrl: './signup-cnh-form.css',
+  styleUrls: ['../../../../shared/cadastro.css', './signup-cnh-form.css'],
 })
 export class SignupCnhForm {
   @Output() prontoEvent = new EventEmitter<void>();

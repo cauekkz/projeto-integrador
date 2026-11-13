@@ -9,7 +9,7 @@
     </p>
 
     @if (carregando()) {
-      <app-esqueleto tipo="texto" [quantos]="1" texto="Carregando seu código..." />
+      <div class="sk-tela" role="status" aria-label="Carregando seu código..."><app-skeleton variante="rect" largura="100%" altura="88px" /></div>
     } @else if (codigo()) {
       <div class="code-box">
         <span class="codigo" [attr.aria-label]="'Código ' + codigo().split('').join(' ')">

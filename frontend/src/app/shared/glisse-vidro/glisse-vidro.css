@@ -1,4 +1,4 @@
-/* vidro da Glisse no tema claro (data-theme="light" so aqui), com os mesmos ajustes da tab bar
+/* vidro da Glisse no tema do app (claro: azul do VanRoute; escuro: dark da propria Glisse), com os mesmos ajustes da tab bar
    do rodape (glisse-tab-bar.css). CSS global (o HTML e do React), mas tudo preso em app-glisse-vidro.
    quem usa pode trocar as variaveis com um seletor mais forte (ex.: .popup-card app-glisse-vidro) */
 app-glisse-vidro {
@@ -7,12 +7,15 @@ app-glisse-vidro {
   z-index: 0;
   border-radius: inherit;
   pointer-events: none;
-  /* cor do VanRoute */
-  --lg-glass: rgba(29, 95, 161, 0.1);
   /* ajustes do vidro (os controles "Glass" do site da Glisse) */
   --lg-glass-bend: 0.04; /* bend */
   --lg-glass-dispersion: 0.9; /* dispersion */
   --lg-blur: 6.5px; /* frost */
+}
+
+app-glisse-vidro[data-theme='light'] {
+  /* cor do VanRoute */
+  --lg-glass: rgba(29, 95, 161, 0.1);
   --lg-rim-shine: 0.48; /* rim */
 }
 
@@ -22,5 +25,5 @@ app-glisse-vidro .lg-glass.glisse-vidro-camada {
   inset: 0;
   border-radius: inherit;
   /* mesma sombra do vidro antigo; quem usa pode trocar com --glisse-vidro-sombra */
-  box-shadow: var(--glisse-vidro-sombra, 0 6px 18px rgba(15, 23, 41, 0.12));
+  box-shadow: var(--glisse-vidro-sombra, 0 6px 18px rgb(var(--sombra-rgb) / calc(0.12 * var(--sombra-forca))));
 }

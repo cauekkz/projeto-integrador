@@ -5,6 +5,21 @@
   <title>VanRoute</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#323232" media="(prefers-color-scheme: dark)">
+  <!-- tema antes do Angular carregar: sem tela piscando branca no modo escuro (ThemeService assume depois) -->
+  <script>
+    (function () {
+      var modo = 'light';
+      try {
+        var t = localStorage.getItem('vanroute-tema');
+        var escuro = t === 'escuro' || (t !== 'claro' && matchMedia('(prefers-color-scheme: dark)').matches);
+        if (escuro) modo = 'dark';
+      } catch (e) {}
+      document.documentElement.setAttribute('data-theme', modo);
+    })();
+  </script>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 </head>

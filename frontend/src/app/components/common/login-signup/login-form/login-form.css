@@ -1,4 +1,9 @@
 .login-container {
+  position: relative;
+  isolation: isolate;
+  /* botoes da Glisse pintam com o azul da marca */
+  --lg-tint: var(--cor-primaria);
+  --lg-fill: var(--cor-primaria);
   min-height: 100dvh;
   max-width: 1200px;
   margin: 0 auto;
@@ -14,13 +19,12 @@
 }
 
 .bottom-container {
-  margin-top: auto;
-  padding-top: 40px;
-  padding-bottom: 16px;
+  /* "Criar uma conta" no pe da tela (margin-top auto empurra pra baixo) */
   width: 100%;
   max-width: 500px;
-  display: block;
-  margin: 0 auto;
+  margin: auto auto 0;
+  padding-top: 40px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom));
 }
 
 .header h1 {
@@ -28,7 +32,7 @@
   text-align: center;
   font-size: 32px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   margin-right: 15%;
   margin-top: -20px;
 }
@@ -43,28 +47,92 @@
 .content {
   width: 100%;
   max-width: 500px;
-  margin: 80px auto ;
+  margin: 80px auto 0;
   display: flex;
   flex-direction: column;
 
 }
 
 .content h2 {
-  font-size: 32px;
+  margin: 0;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--cor-texto);
+}
+
+/* ---------- boas-vindas: titulo e subtitulo ---------- */
+.boas-vindas {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 28px;
+}
+
+.subtitulo {
+  margin: 0;
+  max-width: 34ch;
+  color: var(--cor-texto-3);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ---------- botoes (Glisse lg-button, iguais ao perfil) ---------- */
+.botao.lg-button {
+  width: 100%;
+  height: 52px;
+  border-radius: 26px;
+  font-size: 16px;
   font-weight: 600;
-  margin-bottom: 32px;
+}
+
+.botao-cheio.lg-button {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.botao-vidro.lg-button {
+  --lg-glass: var(--cor-primaria-suave);
+  --lg-glass-active: color-mix(in srgb, var(--cor-primaria-suave), var(--cor-primaria) 12%);
+  color: var(--cor-primaria-texto);
+}
+
+/* "Ainda nao tem conta?" com uma linha de cada lado */
+.divisor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+  color: var(--cor-texto-3);
+  font-size: 13px;
+}
+
+.divisor::before,
+.divisor::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--cor-borda);
 }
 
 label {
   margin-bottom: 8px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
   font-size: 16px;
+}
+
+/* rotulo flutuante: o espaco entre os campos fica no bloco (o campo perde a margem dentro dele) */
+.flutua {
+  margin-bottom: 12px;
 }
 
 input {
   width: 100%;
   height: 56px;
-  border: 1px solid #d6dce5;
+  border: 1px solid var(--cor-borda-forte);
   border-radius: 14px;
   padding: 0 16px;
   margin-bottom: 12px;
@@ -73,7 +141,7 @@ input {
 
 .error-message {
   margin: 0 0 16px 0;
-  color: var(--vermelho);
+  color: var(--cor-perigo);
   font-size: 14px;
   padding-left: 4px;
 }
@@ -97,8 +165,11 @@ input {
   }
 
   .content h2 {
-    font-size: 32px;
-    margin-bottom: clamp(20px, 5dvh, 60px);
+    font-size: 28px;
+  }
+
+  .boas-vindas {
+    margin-bottom: clamp(20px, 4dvh, 32px);
   }
 
   input {
@@ -112,7 +183,7 @@ input {
 .confirmar-email {
   position: fixed;
   inset: 0;
-  background: white;
+  background: var(--cor-fundo);
   z-index: 200;
   overflow-y: auto;
   padding: 40px;
@@ -121,7 +192,7 @@ input {
 }
 
 .confirmar-email p {
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
   margin-bottom: 16px;
 }
 
@@ -136,7 +207,7 @@ input {
   font: inherit;
   font-size: 14px;
   font-weight: 500;
-  color: var(--azul-escuro);
+  color: var(--cor-primaria-texto-forte);
   cursor: pointer;
 }
 
@@ -148,7 +219,7 @@ input {
 }
 
 .esqueci:focus-visible {
-  outline: 2px solid var(--azul);
+  outline: 2px solid var(--cor-primaria-texto);
   outline-offset: 2px;
   border-radius: 8px;
 }

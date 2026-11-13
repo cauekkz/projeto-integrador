@@ -1,7 +1,7 @@
 /* pecas comuns das telas da etapa "Motorista preparado" (vans e Pix): pagina, botoes, folha de baixo */
 :host {
   display: block;
-  background: #ffffff;
+  background: var(--cor-fundo);
 }
 
 .pagina {
@@ -38,34 +38,34 @@
   cursor: default;
 }
 
-.btn-azul { border: none; background: var(--azul); color: #ffffff; }
+.btn-azul { border: none; background: var(--cor-primaria); color: var(--cor-sobre-primaria); }
 @media (hover: hover) and (pointer: fine) {
-  .btn-azul:hover:not(:disabled) { background: var(--azul-escuro); }
+  .btn-azul:hover:not(:disabled) { background: var(--cor-primaria-hover); }
 }
-.btn-vermelho { border: none; background: var(--vermelho); color: #ffffff; }
+.btn-vermelho { border: none; background: var(--cor-perigo-fundo); color: var(--cor-sobre-primaria); }
 @media (hover: hover) and (pointer: fine) {
-  .btn-vermelho:hover:not(:disabled) { background: var(--vermelho-texto); }
+  .btn-vermelho:hover:not(:disabled) { background: var(--cor-perigo-texto); }
 }
-.btn-perigo { border: 1px solid #fecaca; background: #ffffff; color: var(--vermelho-texto); }
+.btn-perigo { border: 1px solid var(--cor-perigo-borda); background: var(--cor-superficie); color: var(--cor-perigo-texto); }
 @media (hover: hover) and (pointer: fine) {
-  .btn-perigo:hover:not(:disabled) { background: #fef2f2; }
+  .btn-perigo:hover:not(:disabled) { background: var(--cor-perigo-suave); }
 }
-.btn-contorno { border: 1px solid #cbd5e1; background: #ffffff; color: var(--texto); }
+.btn-contorno { border: 1px solid var(--cor-borda-forte); background: var(--cor-superficie); color: var(--cor-texto); }
 
 .aviso {
   text-align: center;
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   padding: 24px 8px;
 }
 
-.aviso.erro { color: var(--vermelho-texto); }
+.aviso.erro { color: var(--cor-perigo-texto); }
 
 .link {
   margin-top: 8px;
   border: none;
   background: transparent;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
   font-weight: 600;
   cursor: pointer;
 }
@@ -77,7 +77,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(15, 23, 42, 0.35);
+  background: var(--overlay);
   animation: fundo-entrar 200ms ease both;
 }
 
@@ -93,19 +93,19 @@
   max-width: 480px;
   padding: 20px 24px 28px;
   border-radius: 24px 24px 0 0;
-  background: #ffffff;
+  background: var(--cor-superficie);
   animation: folha-subir 320ms var(--ease-folha, cubic-bezier(0.32, 0.72, 0, 1)) both;
 }
 
 .folha h2 {
   font-size: 18px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .folha p {
   font-size: 14px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 @keyframes folha-subir {

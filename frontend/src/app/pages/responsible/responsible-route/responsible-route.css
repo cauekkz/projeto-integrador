@@ -3,7 +3,7 @@
 .tela {
   position: fixed;
   inset: 0;
-  background: #e2e8f0;
+  background: var(--cor-borda);
 }
 
 .mapa {
@@ -38,9 +38,9 @@
   border-radius: 50%;
   /* branco translucido: o vidro da Glisse (app-glisse-vidro) desfoca o mapa atras */
   background: rgba(255, 255, 255, 0.55);
-  color: var(--texto);
+  color: var(--cor-texto);
   font-size: 16px;
-  box-shadow: 0 2px 8px rgba(15, 23, 41, 0.2);
+  box-shadow: 0 2px 8px rgb(var(--sombra-rgb) / calc(0.2 * var(--sombra-forca)));
   cursor: pointer;
 }
 
@@ -68,8 +68,8 @@
   /* espaco embaixo pro rodape flutuante (68px + 16px de margem) */
   padding: 8px 20px calc(96px + env(safe-area-inset-bottom));
   border-radius: 24px 24px 0 0;
-  background: #ffffff;
-  box-shadow: 0 -4px 20px rgba(15, 23, 41, 0.08);
+  background: var(--cor-superficie);
+  box-shadow: 0 -4px 20px rgb(var(--sombra-rgb) / calc(0.08 * var(--sombra-forca)));
 }
 
 /* seta pra cima: puxa os dados (previsao, explicacao e motorista); aberta vira pra baixo */
@@ -82,8 +82,8 @@
   height: 26px;
   border: none;
   border-radius: 13px;
-  background: #f1f5f9;
-  color: var(--texto-2);
+  background: var(--cor-superficie-3);
+  color: var(--cor-texto-2);
   font-size: 16px;
   cursor: pointer;
   margin-bottom: 4px;
@@ -91,7 +91,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .seta:hover {
-    background: #e2e8f0;
+    background: var(--cor-borda);
   }
 }
 
@@ -119,21 +119,21 @@ app-footer {
   margin: 0;
   padding: 16px 0;
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   text-align: center;
 }
 
 .quem {
   margin: 0;
   font-size: 13px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 .cartao h1 {
   margin: 0;
   font-size: 24px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .linha-titulo {
@@ -151,19 +151,19 @@ app-footer {
 
 .previsao small {
   font-size: 13px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 .previsao strong {
   font-size: 18px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .sub {
   margin: 0;
   font-size: 13px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 .motorista {
@@ -172,7 +172,7 @@ app-footer {
   gap: 12px;
   margin-top: 12px;
   padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--cor-borda);
 }
 
 .foto {
@@ -187,9 +187,9 @@ app-footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #afd9f7;
-  background: #eff8fe;
-  color: var(--azul-escuro);
+  border: 1px solid var(--cor-primaria-borda);
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto-forte);
   font-size: 14px;
   font-weight: 600;
 }
@@ -205,12 +205,12 @@ app-footer {
 .dados strong {
   font-size: 14px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .dados small {
   font-size: 12px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 .chat {
@@ -222,8 +222,8 @@ app-footer {
   height: 44px;
   border: none;
   border-radius: 50%;
-  background: #eff8fe;
-  color: var(--azul);
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto);
   font-size: 18px;
   cursor: pointer;
 }

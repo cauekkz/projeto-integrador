@@ -49,7 +49,8 @@ describe('Termos no cadastro', () => {
     (fixture.nativeElement.querySelector('.link') as HTMLElement).click();
     fixture.detectChanges();
     const tela = fixture.nativeElement.querySelector('.tela-termos') as HTMLElement;
-    expect(tela.textContent).toContain('Versão 3');
+    // a versao nao aparece mais na tela (pedido do chefe); so vai no aceite
+    expect(tela.textContent).not.toContain('Versão 3');
     expect(tela.querySelector('strong')?.textContent).toBe('não recebe dinheiro');
     expect(document.body.style.overflow).toBe('hidden');
 

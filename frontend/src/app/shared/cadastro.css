@@ -1,0 +1,128 @@
+/* telas de cadastro (responsavel, motorista, CNH): mesmo sistema do login e do perfil
+   - titulo + subtitulo, secoes com titulo pequeno, campos com rotulo flutuante (styles.css)
+   - botoes da Glisse (lg-button) no azul da marca */
+:host {
+  display: block;
+}
+
+.pagina-cadastro {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--cor-fundo);
+  --lg-tint: var(--cor-primaria);
+  --lg-fill: var(--cor-primaria);
+}
+
+.form,
+.corpo {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 24px 16px calc(32px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ---------- titulo e subtitulo ---------- */
+.intro {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.intro h2 {
+  margin: 0;
+  color: var(--cor-texto);
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.intro p {
+  margin: 0;
+  max-width: 38ch;
+  color: var(--cor-texto-3);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* ---------- secoes ---------- */
+.secao {
+  margin: 14px 0 0;
+  padding: 0 4px;
+  color: var(--cor-texto-3);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.secao-dica {
+  margin: -8px 0 0;
+  padding: 0 4px;
+  color: var(--cor-texto-3);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* ---------- campos ---------- */
+.field input {
+  width: 100%;
+  height: 54px;
+  padding: 0 16px;
+  border: 1px solid var(--cor-borda-forte);
+  border-radius: 14px;
+  color: var(--cor-texto);
+  font: inherit;
+  font-size: 16px;
+  outline: none;
+  transition: border-color var(--dur-rapida) ease;
+}
+
+/* dois campos lado a lado (Numero + Bairro, Cidade + Estado) */
+.linha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 12px;
+}
+
+.linha:has(> .curto:last-child) {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+.error-message {
+  margin: 0;
+  padding: 0 4px;
+  color: var(--cor-perigo);
+  font-size: 13px;
+}
+
+/* ---------- botoes (Glisse) ---------- */
+.botao.lg-button {
+  width: 100%;
+  height: 52px;
+  border-radius: 26px;
+  font-size: 16px;
+  font-weight: 600;
+  gap: 8px;
+}
+
+
+.botao-perigo.lg-button {
+  --lg-glass: var(--cor-perigo-suave);
+  color: var(--cor-perigo);
+}
+
+@media (min-width: 600px) {
+  .form,
+  .corpo {
+    padding-top: 48px;
+  }
+
+  .intro h2 {
+    font-size: 30px;
+  }
+}

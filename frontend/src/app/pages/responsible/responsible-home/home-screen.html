@@ -3,7 +3,7 @@
 
   <main class="content">
     @if (carregando()) {
-      <app-esqueleto tipo="lista" [quantos]="3" texto="Carregando..." />
+      <div class="sk-tela" role="status" aria-label="Carregando...">@for (i of [0,1,2]; track i) {<app-skeleton variante="card"><div class="sk-linha"><app-skeleton variante="circle" /><app-skeleton variante="title" largura="45%" /></div><app-skeleton variante="text" largura="40%" /><div class="sk-linha"><app-skeleton variante="rect" largura="120px" altura="36px" /><app-skeleton variante="rect" largura="140px" altura="36px" /></div></app-skeleton>}</div>
     } @else if (!filhos().length) {
       <section class="vazio" animate.enter="entrar-fade">
         <i class="bi bi-person-plus" aria-hidden="true"></i>
@@ -27,7 +27,7 @@
             <!-- Figma "falta avisada": a falta de hoje de uma rota que ainda nao saiu -->
             @for (falta of faltasSemViagem(filho); track falta.id) {
               <p class="falta">Falta avisada · {{ falta.routeName }} · hoje</p>
-              <button type="button" class="btn btn-contorno" [disabled]="desfazendo() === falta.id" (click)="eleVaiSim(filho, falta)">
+              <button type="button" class="btn btn-contorno" [disabled]="desfazendo() === falta.id" (click)="eleVaiSim(filho, falta)" [appCarregando]="desfazendo() === falta.id">
                 {{ desfazendo() === falta.id ? 'Desfazendo...' : (filho.name.split(' ')[0] + ' vai sim') }}
               </button>
             }
@@ -100,7 +100,7 @@
         </div>
       }
 
-      <button type="submit" class="btn btn-vermelho" [disabled]="enviando() || !f.rotas.length">
+      <button type="submit" class="btn btn-vermelho" [disabled]="enviando() || !f.rotas.length" [appCarregando]="enviando()">
         {{ enviando() ? 'Avisando...' : 'Avisar falta' }}
       </button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharFalta()">Voltar</button>

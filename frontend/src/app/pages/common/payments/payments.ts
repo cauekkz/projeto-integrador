@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, DestroyRef, ElementRef, Input, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -14,6 +14,7 @@ import { METODOS, PaymentMethod, paymentResponse, PaymentStatus } from '../../..
 import { formatarChavePix, pixTipoLabel } from '../../../services/dto/driver/pix.dto';
 import { diaMes, valorEmReais } from '../../../services/dto/contract/contract.dto';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 type Aba = 'todas' | PaymentStatus;
 
 const ABAS: { id: Aba; label: string }[] = [
@@ -45,7 +46,7 @@ interface Opcao {
 @Component({
   selector: 'app-payments',
   standalone: true,
-  imports: [Esqueleto, TrailHeader, Footer, FormsModule],
+  imports: [BotaoCarregandoDirective, Skeleton, TrailHeader, Footer, FormsModule],
   templateUrl: './payments.html',
   styleUrls: ['../../../shared/folha.css', './payments.css'],
 })

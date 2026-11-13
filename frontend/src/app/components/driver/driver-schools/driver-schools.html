@@ -1,13 +1,18 @@
 <section class="escolas" aria-labelledby="escolas-titulo">
-  <div class="cabecalho">
-    <div>
-      <h2 id="escolas-titulo">Minhas escolas</h2>
+  <header class="cabecalho">
+    <div class="cabecalho-texto">
+      <h2 id="escolas-titulo">
+        Minhas escolas
+        @if (!carregando() && escolas().length) {
+          <span class="contagem">{{ escolas().length }}</span>
+        }
+      </h2>
       <p>Escolas que você atende. Elas aparecem na hora de montar um contrato.</p>
     </div>
-  </div>
+  </header>
 
   @if (carregando()) {
-    <app-esqueleto tipo="lista" [quantos]="2" texto="Carregando escolas..." />
+    <div class="sk-tela" role="status" aria-label="Carregando escolas...">@for (i of [0,1]; track i) {<app-skeleton variante="card"><div class="sk-linha"><app-skeleton variante="rect" largura="40px" altura="40px" /><div class="sk-col"><app-skeleton variante="text" largura="55%" altura="14px" /><app-skeleton variante="text" largura="80%" /></div></div></app-skeleton>}</div>
   } @else if (erroCarregar()) {
     <div class="aviso erro" role="alert">
       {{ erroCarregar() }}
@@ -15,55 +20,69 @@
     </div>
   } @else {
     @if (escolas().length) {
-      <ul class="lista">
-        @for (escola of escolas(); track escola.id) {
-          <li class="escola">
-            <span class="icone" aria-hidden="true"><i class="bi bi-mortarboard"></i></span>
+      <ul class="lista vidro">
+        @for (escola of escolas(); track escola.id; let i = $index) {
+          <li class="escola" [style.--i]="i">
+            <span class="icone" aria-hidden="true"><i class="bi bi-mortarboard-fill"></i></span>
             <div class="escola-info">
               <strong>{{ escola.name }}</strong>
               @if (endereco(escola)) {
-                <span>{{ endereco(escola) }}</span>
+                <span class="endereco"><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ endereco(escola) }}</span>
               }
             </div>
           </li>
         }
       </ul>
     } @else {
-      <p class="aviso">Você ainda não cadastrou nenhuma escola.</p>
+      <div class="vazio vidro">
+        <span class="vazio-icone" aria-hidden="true"><i class="bi bi-mortarboard"></i></span>
+        <strong>Nenhuma escola ainda</strong>
+        <p>Cadastre as escolas que você atende para usá-las nos contratos.</p>
+      </div>
     }
   }
 
   @if (formularioAberto()) {
-    <form class="formulario" animate.enter="entrar-subindo" (ngSubmit)="salvar()" novalidate>
-      <div class="field">
-        <input type="text" placeholder="Nome da escola" name="schoolName" [(ngModel)]="form.name" maxlength="150" required>
+    <form class="formulario vidro" animate.enter="entrar-subindo" (ngSubmit)="salvar()" novalidate>
+      <p class="formulario-titulo">Nova escola</p>
+      <div class="field flutua">
+        <label for="campo-schoolName">Nome da escola</label>
+        <input id="campo-schoolName" type="text" placeholder=" " name="schoolName" [(ngModel)]="form.name" maxlength="150" required>
       </div>
-      <div class="field">
-        <input type="text" placeholder="Telefone (opcional)" name="schoolPhone" [(ngModel)]="form.phone" appPhoneMask>
+      <div class="field flutua">
+        <label for="campo-schoolPhone">Telefone (opcional)</label>
+        <input id="campo-schoolPhone" type="text" placeholder=" " name="schoolPhone" [(ngModel)]="form.phone" appPhoneMask>
       </div>
-      <div class="field">
-        <input type="email" placeholder="E-mail (opcional)" name="schoolEmail" [(ngModel)]="form.email">
+      <div class="field flutua">
+        <label for="campo-schoolEmail">E-mail (opcional)</label>
+        <input id="campo-schoolEmail" type="email" placeholder=" " name="schoolEmail" [(ngModel)]="form.email">
       </div>
-      <div class="field">
-        <input type="text" inputmode="numeric" placeholder="CEP" name="schoolZip" [(ngModel)]="form.zipCode" appCepMask appCepBusca (enderecoCep)="preencherEndereco($event); ($event.rua ? numeroInput : ruaInput).focus()" required>
+      <div class="field flutua">
+        <label for="campo-schoolZip">CEP</label>
+        <input id="campo-schoolZip" type="text" inputmode="numeric" placeholder=" " name="schoolZip" [(ngModel)]="form.zipCode" appCepMask appCepBusca (enderecoCep)="preencherEndereco($event); ($event.rua ? numeroInput : ruaInput).focus()" required>
       </div>
-      <div class="field">
-        <input #ruaInput type="text" placeholder="Rua" name="schoolStreet" [(ngModel)]="form.street" required>
-      </div>
-      <div class="linha">
-        <div class="field">
-          <input #numeroInput type="text" inputmode="numeric" placeholder="Número" name="schoolNumber" [(ngModel)]="form.number">
-        </div>
-        <div class="field">
-          <input type="text" placeholder="Bairro" name="schoolNeighborhood" [(ngModel)]="form.neighborhood" maxlength="100">
-        </div>
+      <div class="field flutua">
+        <label for="campo-schoolStreet">Rua</label>
+        <input id="campo-schoolStreet" #ruaInput type="text" placeholder=" " name="schoolStreet" [(ngModel)]="form.street" required>
       </div>
       <div class="linha">
-        <div class="field">
-          <input type="text" placeholder="Cidade" name="schoolCity" [(ngModel)]="form.city" maxlength="100" required>
+        <div class="field flutua">
+          <label for="campo-schoolNumber">Número</label>
+          <input id="campo-schoolNumber" #numeroInput type="text" inputmode="numeric" placeholder=" " name="schoolNumber" [(ngModel)]="form.number">
         </div>
-        <div class="field">
-          <input type="text" placeholder="UF" name="schoolState" [(ngModel)]="form.state" maxlength="2">
+        <div class="field flutua">
+          <label for="campo-schoolNeighborhood">Bairro</label>
+          <input id="campo-schoolNeighborhood" type="text" placeholder=" " name="schoolNeighborhood" [(ngModel)]="form.neighborhood" maxlength="100">
+        </div>
+      </div>
+      <div class="linha">
+        <div class="field flutua">
+          <label for="campo-schoolCity">Cidade</label>
+          <input id="campo-schoolCity" type="text" placeholder=" " name="schoolCity" [(ngModel)]="form.city" maxlength="100" required>
+        </div>
+        <div class="field flutua">
+          <label for="campo-schoolState">UF</label>
+          <input id="campo-schoolState" type="text" placeholder=" " name="schoolState" [(ngModel)]="form.state" maxlength="2">
         </div>
       </div>
 
@@ -71,13 +90,13 @@
         <p class="aviso erro" role="alert">{{ erro() }}</p>
       }
 
-      <button class="btn-primary" type="submit" [disabled]="salvando()">
+      <button class="lg-button botao botao-cheio" data-variant="filled" type="submit" [disabled]="salvando()" [appCarregando]="salvando()">
         {{ salvando() ? 'Salvando...' : 'Salvar escola' }}
       </button>
-      <button class="btn-secondary" type="button" [disabled]="salvando()" (click)="cancelar()">Cancelar</button>
+      <button class="lg-button lg-glass botao botao-vidro" type="button" [disabled]="salvando()" (click)="cancelar()">Cancelar</button>
     </form>
   } @else {
-    <button class="btn-adicionar" type="button" (click)="abrirFormulario()">
+    <button class="lg-button lg-glass botao botao-vidro" type="button" (click)="abrirFormulario()">
       <i class="bi bi-plus-lg" aria-hidden="true"></i>
       Adicionar escola
     </button>

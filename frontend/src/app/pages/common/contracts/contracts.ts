@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, DestroyRef, ElementRef, Input, OnInit, computed, inject, signal, viewChild, effect } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -56,7 +56,7 @@ interface Pasta {
 @Component({
   selector: 'app-contracts',
   standalone: true,
-  imports: [Esqueleto, TrailHeader, Footer],
+  imports: [Skeleton, TrailHeader, Footer],
   templateUrl: './contracts.html',
   styleUrl: './contracts.css',
 })

@@ -2,7 +2,7 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--cor-fundo);
 }
 
 .content {
@@ -22,13 +22,13 @@
 h1 {
   font-size: 20px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   text-align: center;
 }
 
 .description {
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   text-align: center;
   line-height: 1.4;
   margin-bottom: 8px;
@@ -37,17 +37,17 @@ h1 {
 .code-box {
   display: flex;
   justify-content: center;
-  border: 1px dashed var(--azul);
+  border: 1px dashed var(--cor-primaria-texto);
   border-radius: 12px;
   padding: 20px;
-  background: #eff6ff;
+  background: var(--cor-primaria-suave);
 }
 
 .codigo {
   font-size: 28px;
   font-weight: 600;
   letter-spacing: 0.12em;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
   font-variant-numeric: tabular-nums;
 }
 
@@ -56,15 +56,15 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   padding: 24px 0;
 }
 
 .spinner {
   width: 20px;
   height: 20px;
-  border: 2px solid #cbd5e1;
-  border-top-color: var(--azul);
+  border: 2px solid var(--cor-borda-forte);
+  border-top-color: var(--cor-primaria-texto);
   border-radius: 50%;
   animation: girar 0.8s linear infinite;
 
@@ -79,7 +79,7 @@ h1 {
 .feedback {
   min-height: 1.2em;
   font-size: 14px;
-  color: #16a34a;
+  color: var(--cor-sucesso);
   text-align: center;
 }
 
@@ -89,8 +89,8 @@ h1 {
   gap: 8px;
   padding: 12px 16px;
   border-radius: 12px;
-  background: #fef2f2;
-  color: var(--vermelho-texto);
+  background: var(--cor-perigo-suave);
+  color: var(--cor-perigo-texto);
   font-size: 14px;
 }
 
@@ -106,7 +106,7 @@ h1 {
   max-width: 480px;
   padding: 0 16px;
   box-sizing: border-box;
-  background: white;
+  background: var(--cor-superficie);
   z-index: 10;
 }
 

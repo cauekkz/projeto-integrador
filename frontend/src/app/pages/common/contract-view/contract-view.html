@@ -5,7 +5,7 @@
 
   <main class="conteudo">
     @if (carregando() && !c) {
-      <app-esqueleto tipo="perfil" [quantos]="2" texto="Carregando contrato..." />
+      <div class="sk-tela" role="status" aria-label="Carregando contrato..."><div class="sk-linha"><div class="sk-col"><app-skeleton variante="title" largura="55%" altura="24px" /></div><app-skeleton variante="rect" largura="84px" altura="24px" class="sk-pilula" /></div>@for (i of [0,1]; track i) {<app-skeleton variante="card"><app-skeleton variante="text" largura="35%" altura="14px" /><app-skeleton variante="text" [quantos]="3" /></app-skeleton>}</div>
     } @else if (erroCarregar() || !c) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar o contrato.</p>
@@ -122,11 +122,11 @@
 
         @if (pedidoPendente()) {
           @if (pedidoMeu()) {
-            <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="desistirCancelamento()">
+            <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="desistirCancelamento()" [appCarregando]="enviando()">
               {{ enviando() ? 'Enviando...' : 'Desistir do cancelamento' }}
             </button>
           } @else {
-            <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="aceitarCancelamento()">
+            <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="aceitarCancelamento()" [appCarregando]="enviando()">
               {{ enviando() ? 'Enviando...' : 'Aceitar e cancelar agora' }}
             </button>
           }
@@ -153,16 +153,18 @@
   <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharCancelamento()">
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="cancelar-titulo" (click)="$event.stopPropagation()">
       <h2 id="cancelar-titulo">Cancelar contrato</h2>
-      <label for="motivo">Motivo (obrigatório)</label>
-      <textarea
-        id="motivo"
-        rows="4"
-        [maxlength]="motivoMaximo"
-        placeholder="Conte o motivo do cancelamento"
-        [(ngModel)]="motivo"
-      ></textarea>
+      <div class="flutua">
+        <label for="motivo">Motivo (obrigatório)</label>
+        <textarea
+          id="motivo"
+          rows="4"
+          [maxlength]="motivoMaximo"
+          placeholder="Conte o motivo do cancelamento"
+          [(ngModel)]="motivo"
+        ></textarea>
+      </div>
       <span class="contador">{{ motivo.length }}/{{ motivoMaximo }}</span>
-      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="pedirCancelamento()">
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="pedirCancelamento()" [appCarregando]="enviando()">
         {{ enviando() ? 'Enviando...' : 'Pedir cancelamento' }}
       </button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharCancelamento()">Voltar</button>

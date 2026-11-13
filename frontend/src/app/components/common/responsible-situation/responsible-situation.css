@@ -39,6 +39,6 @@
 
 @media (hover: hover) and (pointer: fine) {
   .contrato:hover {
-    background: #f8fafc;
+    background: var(--cor-superficie-2);
   }
 }

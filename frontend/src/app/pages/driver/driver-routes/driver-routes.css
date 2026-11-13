@@ -29,17 +29,17 @@
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  color: var(--texto);
-  border: 0.8px solid #e2e8f0;
-  background: #ffffff;
+  color: var(--cor-texto);
+  border: 0.8px solid var(--cor-borda);
+  background: var(--cor-superficie);
 }
 
 .badge {
   position: absolute;
   top: -4px;
   right: -4px;
-  background: var(--vermelho);
-  color: #ffffff;
+  background: var(--cor-perigo-fundo);
+  color: var(--cor-sobre-primaria);
   font-size: 11px;
   font-weight: 600;
   border-radius: 999px;
@@ -54,8 +54,8 @@
   align-items: center;
   gap: 8px;
   border-radius: 999px;
-  border: 0.8px solid #e2e8f0;
-  background: #ffffff;
+  border: 0.8px solid var(--cor-borda);
+  background: var(--cor-superficie);
   box-sizing: border-box;
   cursor: pointer;
 }
@@ -70,7 +70,7 @@
 .name {
   font-size: 14px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -78,7 +78,7 @@
 
 .role {
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 
@@ -91,7 +91,7 @@
 
 .folha .sub {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .fim-da-lista {
@@ -108,8 +108,8 @@
   padding: 16px;
   border-radius: 20px;
   overflow: hidden;
-  color: #ffffff;
-  background: radial-gradient(120% 140% at 100% 0%, #2b86f0 0%, var(--azul) 45%, var(--azul-escuro) 100%);
+  color: var(--cor-sobre-primaria);
+  background: radial-gradient(120% 140% at 100% 0%, #2b86f0 0%, var(--cor-primaria) 45%, var(--cor-primaria-hover) 100%);
   box-shadow: 0 14px 28px -14px rgba(10, 84, 181, 0.7);
 }
 
@@ -126,8 +126,8 @@
   width: 44px;
   height: 44px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
+  background: rgb(var(--vidro-rgb) / 0.16);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / calc(0.22 * var(--brilho-forca)));
   font-size: 22px;
 }
 
@@ -190,8 +190,8 @@
   height: 6px;
   border-radius: 3px;
   background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.85) 0 14px, transparent 14px 28px) 0 50% / 28px 2px repeat-x,
-    rgba(255, 255, 255, 0.14);
+    repeating-linear-gradient(90deg, rgb(var(--vidro-rgb) / 0.85) 0 14px, transparent 14px 28px) 0 50% / 28px 2px repeat-x,
+    rgb(var(--vidro-rgb) / 0.14);
   animation: estrada-correndo 0.9s linear infinite;
 }
 
@@ -214,14 +214,14 @@
   justify-content: center;
   gap: 8px;
   border: none;
-  background: #ffffff;
-  color: var(--azul-escuro);
+  background: var(--cor-superficie);
+  color: var(--cor-primaria-texto-forte);
   font-weight: 600;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .em-rota-abrir:hover {
-    background: #eff6ff;
+    background: var(--cor-primaria-suave);
   }
 }
 
@@ -240,7 +240,7 @@
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.02em;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 /* "Nova rota" compacto, ao lado do titulo */
@@ -252,8 +252,8 @@
   padding: 0 16px;
   border: none;
   border-radius: 999px;
-  background: var(--azul);
-  color: #ffffff;
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
   font: inherit;
   font-size: 14px;
   font-weight: 600;
@@ -264,13 +264,13 @@
 
 @media (hover: hover) and (pointer: fine) {
   .nova:hover {
-    background: var(--azul-escuro);
+    background: var(--cor-primaria-hover);
   }
 }
 
 .nova:focus-visible,
 .rota:focus-visible {
-  outline: 2px solid var(--azul);
+  outline: 2px solid var(--cor-primaria-texto);
   outline-offset: 2px;
 }
 
@@ -286,7 +286,7 @@
   display: flex;
   gap: 12px;
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   font-variant-numeric: tabular-nums;
 }
 
@@ -304,20 +304,20 @@
   gap: 10px;
   width: 100%;
   padding: 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--cor-superficie);
   font: inherit;
   text-align: left;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 1px 2px rgb(var(--sombra-rgb) / calc(0.04 * var(--sombra-forca)));
   transition: var(--transicao-botao), box-shadow 200ms var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .rota:hover {
-    border-color: #cbd5e1;
-    box-shadow: 0 8px 20px -12px rgba(15, 23, 42, 0.25);
+    border-color: var(--cor-borda-forte);
+    box-shadow: 0 8px 20px -12px rgb(var(--sombra-rgb) / calc(0.25 * var(--sombra-forca)));
   }
 }
 
@@ -336,7 +336,7 @@
   min-width: 0;
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -348,7 +348,7 @@
 .rota-topo i {
   flex-shrink: 0;
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .rota-meta {
@@ -357,19 +357,19 @@
   align-items: center;
   gap: 4px 12px;
   font-size: 13px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
   font-variant-numeric: tabular-nums;
 }
 
 /* placa da van padrao, como uma plaquinha */
 .placa {
   padding: 1px 6px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--cor-borda-forte);
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 /* a estradinha: asfalto com a faixa tracejada e uma bolinha por parada */
@@ -388,8 +388,8 @@
   inset: 3px 4px;
   border-radius: 4px;
   background:
-    repeating-linear-gradient(90deg, #ffffff 0 6px, transparent 6px 12px) 0 50% / 100% 1.5px no-repeat,
-    #dbe3ec;
+    repeating-linear-gradient(90deg, var(--cor-superficie) 0 6px, transparent 6px 12px) 0 50% / 100% 1.5px no-repeat,
+    var(--cor-estrada);
 }
 
 .mini-parada {
@@ -397,15 +397,15 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--azul);
-  box-shadow: 0 0 0 2px #ffffff;
+  background: var(--cor-primaria);
+  box-shadow: 0 0 0 2px var(--cor-superficie);
 }
 
 .mini-parada:first-child,
 .mini-parada:last-child {
   width: 12px;
   height: 12px;
-  background: var(--azul-escuro);
+  background: var(--cor-primaria-hover);
 }
 
 /* uma parada so: a bolinha fica no comeco */
@@ -419,7 +419,7 @@
   gap: 6px;
   min-width: 0;
   font-size: 12px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .rota-trajeto span {
@@ -442,5 +442,5 @@
 
 .rota-vazia {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }

@@ -3,7 +3,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  background: #ffffff;
+  background: var(--cor-superficie);
 }
 
 .notif-wrapper {
@@ -20,9 +20,9 @@
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  color: var(--texto);
-  border: 0.8px solid #e2e8f0;
-  background: #ffffff;
+  color: var(--cor-texto);
+  border: 0.8px solid var(--cor-borda);
+  background: var(--cor-superficie);
   cursor: pointer;
   padding: 0;
 }
@@ -31,8 +31,8 @@
   position: absolute;
   top: -2px;
   right: -2px;
-  background: var(--vermelho);
-  color: #ffffff;
+  background: var(--cor-perigo-fundo);
+  color: var(--cor-sobre-primaria);
   font-size: 11px;
   font-weight: 600;
   border-radius: 999px;
@@ -51,8 +51,8 @@
   align-items: center;
   gap: 8px;
   border-radius: 999px;
-  border: 0.8px solid #e2e8f0;
-  background: #ffffff;
+  border: 0.8px solid var(--cor-borda);
+  background: var(--cor-superficie);
   box-sizing: border-box;
   cursor: pointer;
 }
@@ -67,7 +67,7 @@
 .name {
   font-size: 14px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -77,7 +77,7 @@
   flex-shrink: 0;
   margin-left: 8px;
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   font-weight: 500;
 }
 
@@ -86,7 +86,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: #ffffff;
+  background: var(--cor-superficie);
 }
 
 .chat-user-info {
@@ -100,8 +100,8 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  border: 0.8px solid #e2e8f0;
-  background: #f8fafc;
+  border: 0.8px solid var(--cor-borda);
+  background: var(--cor-superficie-2);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -112,21 +112,48 @@
 @media (hover: hover) and (pointer: fine) {
   .bell-btn:hover,
   .doc-button:hover {
-    background: #f1f5f9;
+    background: var(--cor-superficie-3);
   }
 }
 
 .doc-button i {
   font-size: 18px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
+}
+
+/* ---------- header so com titulo (seta + titulo) ----------
+   mesma cor do fundo da tela, em vidro (translucido + desfoque) e preso no topo;
+   a linha de baixo so aparece depois que a tela rola */
+:host(.fixo) {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: block;
 }
 
 .header-geral {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: #ffffff;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 16px;
+  padding-top: max(8px, env(safe-area-inset-top));
+  border-bottom: 1px solid transparent;
+  background: rgb(var(--fundo-rgb) / 0.82);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%);
+}
+
+@supports (animation-timeline: scroll()) {
+  .header-geral {
+    animation: header-rolou linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0 24px;
+  }
+}
+
+@keyframes header-rolou {
+  to { border-bottom-color: var(--cor-borda); }
 }
 
 .back-button {
@@ -146,27 +173,29 @@
 
 .back-button i {
   font-size: 24px;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
+/* so a seta, sem bolinha: no hover ela apaga um pouco */
 @media (hover: hover) and (pointer: fine) {
-  .back-button:hover {
-    background: #f1f5f9;
+  .back-button:hover i {
+    opacity: 0.6;
   }
 }
 
 .back-button:focus-visible {
-  outline: 2px solid var(--azul);
+  outline: 2px solid var(--cor-primaria-texto);
   outline-offset: 2px;
 }
 
-/* titulo junto da seta, a esquerda (como a trilha das outras telas) */
+/* seta na esquerda e titulo encostado na direita */
 h1 {
   flex: 1;
-  text-align: left;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--texto);
+  text-align: right;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cor-texto);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;

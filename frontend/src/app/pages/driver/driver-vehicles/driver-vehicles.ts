@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { TrailHeader } from '../../../shared/trail-header/trail-header';
@@ -8,6 +8,7 @@ import { VehicleService } from '../../../services/vehicle.service';
 import { vehicleResponse, VehicleStatus } from '../../../services/dto/vehicle/vehicle.dto';
 import { isoParaData } from '../../../services/dto/contract/contract.dto';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 // mesmo limite dos outros arquivos (anexo e PDF do contrato)
 export const CRLV_TAMANHO_MAXIMO = 10 * 1024 * 1024;
 
@@ -31,7 +32,7 @@ export function formatarCrlv(texto: string | null | undefined): string {
 @Component({
   selector: 'app-driver-vehicles',
   standalone: true,
-  imports: [Esqueleto, TrailHeader, Footer],
+  imports: [BotaoCarregandoDirective, Skeleton, TrailHeader, Footer],
   templateUrl: './driver-vehicles.html',
   styleUrls: ['../../../shared/folha.css', './driver-vehicles.css'],
 })

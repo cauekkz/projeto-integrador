@@ -5,12 +5,13 @@ import { Header } from '../../../shared/header/header';
 import { TripService } from '../../../services/trip.service';
 import { tripOccurrence } from '../../../services/dto/group/group.dto';
 import { TIPOS_DE_OCORRENCIA, diaEMes } from '../../../services/dto/trip/trip.dto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 
 // Figma "Ambos · Ocorrências da viagem" (1058:1808). ?data= e ?rota= vem do cartao do historico
 @Component({
   selector: 'app-trip-occurrences',
   standalone: true,
-  imports: [Header],
+  imports: [Skeleton, Header],
   template: `
     <div class="pagina">
       <app-header titulo="Ocorrências" (voltarEvent)="voltar()" />
@@ -19,7 +20,15 @@ import { TIPOS_DE_OCORRENCIA, diaEMes } from '../../../services/dto/trip/trip.dt
           <p class="subtitulo">{{ subtitulo }}</p>
         }
         @if (carregando()) {
-          <p class="aviso" role="status">Carregando ocorrências...</p>
+          <div class="sk-tela" role="status" aria-label="Carregando ocorrências...">
+            @for (i of [0, 1, 2]; track i) {
+              <app-skeleton variante="card">
+                <div class="sk-linha"><app-skeleton variante="text" largura="45%" altura="14px" /><app-skeleton variante="rect" largura="40px" altura="12px" /></div>
+                <app-skeleton variante="text" [quantos]="2" />
+                <app-skeleton variante="text" largura="40%" />
+              </app-skeleton>
+            }
+          </div>
         } @else if (erro()) {
           <p class="aviso erro" role="alert">Não foi possível carregar as ocorrências.</p>
         } @else {
@@ -43,12 +52,12 @@ import { TIPOS_DE_OCORRENCIA, diaEMes } from '../../../services/dto/trip/trip.dt
   `,
   styleUrls: ['../../../shared/folha.css'],
   styles: `
-    .subtitulo { font-size: 13px; color: var(--texto-3); }
-    .cartao { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 14px; }
+    .subtitulo { font-size: 13px; color: var(--cor-texto-3); }
+    .cartao { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--cor-borda); border-radius: 14px; }
     .topo { display: flex; justify-content: space-between; align-items: center; }
-    .topo strong { font-size: 14px; font-weight: 600; color: var(--texto); }
-    .cartao p { font-size: 13px; color: var(--texto-2); }
-    .cartao small { font-size: 12px; color: var(--texto-3); }
+    .topo strong { font-size: 14px; font-weight: 600; color: var(--cor-texto); }
+    .cartao p { font-size: 13px; color: var(--cor-texto-2); }
+    .cartao small { font-size: 12px; color: var(--cor-texto-3); }
   `,
 })
 export class TripOccurrences implements OnInit {

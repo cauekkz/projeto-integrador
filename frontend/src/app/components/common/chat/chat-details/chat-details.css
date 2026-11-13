@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: white;
+  background: var(--cor-superficie);
 }
 
 .topbar {
@@ -17,8 +17,8 @@
   align-items: center;
   gap: 12px;
   padding: 16px 16px;
-  border-bottom: 1px solid #f1f5f9;
-  background: white;
+  border-bottom: 1px solid var(--cor-borda-suave);
+  background: var(--cor-superficie);
 }
 
 .back-button {
@@ -32,12 +32,12 @@
 
 .back-button i {
   font-size: 32px;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .back-button:hover i {
-    color: var(--azul);
+    color: var(--cor-primaria-texto);
   }
 }
 
@@ -52,7 +52,7 @@
   flex: 1;
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .contrato-btn {
@@ -60,7 +60,7 @@
   border: none;
   cursor: pointer;
   font-size: 20px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .mensagens {
@@ -86,7 +86,7 @@
 /* Figma (Etapa 2 · chat): recebida azul a esquerda, minha branca com borda a direita, raio 8 */
 .msg-balao {
   max-width: 75%;
-  background: var(--azul);
+  background: var(--cor-primaria);
   border-radius: 8px;
   padding: 8px 12px;
   display: flex;
@@ -95,20 +95,20 @@
 }
 
 .msg-balao.minha {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
 }
 
 .msg-texto {
   font-size: 13px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--cor-sobre-primaria);
   line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
 .msg-balao.minha .msg-texto {
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 /* ---------- anexos (video, PDF, outros) ---------- */
@@ -119,7 +119,7 @@
   max-width: 100%;
   max-height: 320px;
   border-radius: 12px;
-  background: var(--texto);
+  background: var(--cor-texto);
 }
 
 .anexo-pdf {
@@ -128,9 +128,9 @@
   width: 240px;
   max-width: 100%;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--cor-superficie);
   text-decoration: none;
   transition: box-shadow var(--dur-media) var(--ease-suave),
     scale 160ms var(--ease-out, ease-out);
@@ -138,7 +138,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .anexo-pdf:hover {
-    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.15);
+    box-shadow: 0 4px 14px rgb(var(--sombra-rgb) / calc(0.15 * var(--sombra-forca)));
   }
 }
 
@@ -148,7 +148,7 @@
   width: 100%;
   height: 300px;
   border: none;
-  background: #f1f5f9;
+  background: var(--cor-superficie-3);
   pointer-events: none;
 }
 
@@ -160,7 +160,7 @@
   padding: 12px 12px;
   font-size: 14px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .anexo-rodape span,
@@ -170,18 +170,18 @@
 
 .anexo-rodape .bi-file-earmark-pdf-fill {
   font-size: 20px;
-  color: var(--vermelho);
+  color: var(--cor-perigo);
 }
 
 .anexo-rodape .bi-box-arrow-up-right,
 .anexo-arquivo .bi-download {
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .anexo-arquivo {
   min-width: 200px;
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--cor-superficie);
   text-decoration: none;
   transition: background-color var(--dur-media) var(--ease-suave),
     scale 160ms var(--ease-out, ease-out);
@@ -189,13 +189,13 @@
 
 @media (hover: hover) and (pointer: fine) {
   .anexo-arquivo:hover {
-    background: #eff6ff;
+    background: var(--cor-primaria-suave);
   }
 }
 
 .anexo-arquivo .bi-file-earmark-fill {
   font-size: 20px;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
 }
 
 .anexo-carregando {
@@ -204,7 +204,7 @@
 }
 
 .msg-balao.minha .anexo-carregando {
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .msg-hora {
@@ -218,18 +218,18 @@
 }
 
 .msg-balao.minha .msg-hora {
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 /* ✓ enviada (cinza); ✓✓ lida (azul) */
 .tique {
   font-size: 14px;
   line-height: 1;
-  color: #94a3b8;
+  color: var(--cor-texto-4);
 }
 
 .tique.lida {
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
 }
 
 .input-bar {
@@ -241,8 +241,8 @@
   align-items: center;
   gap: 8px;
   padding: 12px 16px;
-  background: white;
-  border-top: 1px solid #f1f5f9;
+  background: var(--cor-superficie);
+  border-top: 1px solid var(--cor-borda-suave);
 }
 
 .input-bar input {
@@ -250,20 +250,20 @@
   min-width: 0;
   height: 44px;
   padding: 0 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
   outline: none;
   font-size: 14px;
-  color: var(--texto);
+  color: var(--cor-texto);
   font-family: inherit;
 }
 
 .input-bar input:focus {
-  border-color: var(--azul);
+  border-color: var(--cor-primaria-texto);
 }
 
 .input-bar input::placeholder {
-  color: #94a3b8;
+  color: var(--cor-texto-4);
 }
 
 /* anexo: quadrado arredondado com borda, como no Figma */
@@ -274,18 +274,18 @@
   width: 54px;
   height: 44px;
   padding: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--cor-superficie);
   cursor: pointer;
   font-size: 20px;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .contrato-btn:hover,
   .btn-icon:hover {
-    color: var(--azul);
+    color: var(--cor-primaria-texto);
   }
 }
 
@@ -299,16 +299,15 @@
   padding: 0;
   border: none;
   border-radius: 30%;
-  background: var(--azul);
-  color: #ffffff;
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
   font-size: 16px;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .btn-enviar:hover:not(:disabled) {
-    background: var(--azul-escuro);
+    background: var(--cor-primaria-hover);
   }
 }
 
@@ -326,13 +325,13 @@
   max-width: 320px;
   padding: 0 16px;
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   text-align: center;
 }
 
 .chat-aviso.erro {
   margin: 8px auto;
-  color: var(--vermelho-texto);
+  color: var(--cor-perigo-texto);
 }
 
 
@@ -351,16 +350,16 @@
   position: absolute;
   bottom: calc(100% + 8px);
   right: 0;
-  background: #FFF;
+  background: var(--cor-superficie);
   background-blend-mode: multiply;
   display: flex;
   width: 250px;
   padding: 12px 0;
   flex-direction: column;
   align-items: center;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--cor-borda);
   border-radius: 24px;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.34);
+  box-shadow: 0 4px 24px rgb(var(--sombra-rgb) / calc(0.34 * var(--sombra-forca)));
   z-index: 1000;
 }
 
@@ -377,7 +376,7 @@
   border: none;
   background: transparent;
 
-  color: #222;
+  color: var(--cor-texto);
   font-family: inherit;
   font-size: 13px;
   text-align: left;
@@ -387,19 +386,19 @@
 
 /* Separador entre as opções */
 .attachment-option + .attachment-option {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--cor-borda);
 }
 
 /* Ícones */
 .attachment-option i {
   font-size: 18px;
-  color: #222;
+  color: var(--cor-texto);
 }
 
 /* Efeito ao passar o mouse */
 @media (hover: hover) and (pointer: fine) {
   .attachment-option:hover {
-    background: #f8fafc;
+    background: var(--cor-superficie-2);
   }
 }
 
@@ -431,15 +430,15 @@
   margin: 4px 0;
   padding: 8px 12px;
   border-radius: 999px;
-  background: #dcfce7;
-  color: #166534;
+  background: var(--cor-sucesso-suave);
+  color: var(--cor-sucesso-texto);
   font-size: 12px;
   text-align: center;
 }
 
 .msg-sistema.recusado {
-  background: #fee2e2;
-  color: var(--vermelho-texto);
+  background: var(--cor-perigo-suave);
+  color: var(--cor-perigo-texto);
 }
 
 /* nome e foto do contato: tocar abre o perfil dele */

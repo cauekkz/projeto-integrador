@@ -1,10 +1,11 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
+import { BotaoCarregandoDirective } from '../botao-carregando/botao-carregando.directive';
 @Component({
   selector: 'app-code-input',
   standalone: true,
-  imports: [FormsModule],
+  imports: [BotaoCarregandoDirective, FormsModule],
   templateUrl: './code-input.html',
   styleUrl: './code-input.css',
 })

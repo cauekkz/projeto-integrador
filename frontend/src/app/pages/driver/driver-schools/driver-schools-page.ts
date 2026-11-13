@@ -19,7 +19,7 @@ import { DriverSchools } from '../../../components/driver/driver-schools/driver-
   styles: `
     :host {
       display: block;
-      background: #ffffff;
+      background: var(--cor-fundo);
     }
 
     .pagina {

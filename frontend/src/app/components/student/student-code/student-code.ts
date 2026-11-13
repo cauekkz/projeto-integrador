@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Header } from '../../../shared/header/header';
 import { CodeInput } from '../../../shared/code-input/code-input';
@@ -12,6 +12,8 @@ import { StudentService } from '../../../services/student.service';
   styleUrl: './student-code.css',
 })
 export class StudentCode {
+  // so pra tela: barra no botao Confirmar enquanto o codigo e conferido
+  protected confirmando = signal(false);
 
   constructor(
     private studentService: StudentService,
@@ -23,11 +25,15 @@ export class StudentCode {
   }
 
   confirmar(codigo: string): void {
+    if (this.confirmando()) return;
+    this.confirmando.set(true);
     this.studentService.confirmCode(codigo).subscribe({
       next: () => {
+        this.confirmando.set(false);
         this.router.navigate(['/responsible-home']);
       },
       error: (err: any) => {
+        this.confirmando.set(false);
         console.error('Erro ao confirmar código:', err);
       },
     });

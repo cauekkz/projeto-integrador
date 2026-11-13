@@ -3,7 +3,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <app-esqueleto tipo="texto" [quantos]="1" texto="Carregando chave Pix..." />
+      <div class="sk-tela" role="status" aria-label="Carregando chave Pix..."><app-skeleton variante="card"><app-skeleton variante="text" largura="30%" altura="14px" /><app-skeleton variante="title" largura="70%" /><app-skeleton variante="text" largura="50%" /></app-skeleton><app-skeleton variante="rect" largura="100%" altura="48px" class="sk-botao" /></div>
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar a chave Pix.</p>
@@ -31,20 +31,22 @@
           </div>
         </fieldset>
 
-        <label for="chave">Chave</label>
-        <input
-          id="chave"
-          name="chave"
-          [ngModel]="valor"
-          (ngModelChange)="digitarChave($event)"
-          [placeholder]="tipoAtual().placeholder"
-          [attr.inputmode]="tipoAtual().inputmode"
-          autocomplete="off"
-          maxlength="140"
-        />
+        <div class="flutua">
+          <label for="chave">Chave</label>
+          <input
+            id="chave"
+            name="chave"
+            [ngModel]="valor"
+            (ngModelChange)="digitarChave($event)"
+            [placeholder]="tipoAtual().placeholder"
+            [attr.inputmode]="tipoAtual().inputmode"
+            autocomplete="off"
+            maxlength="140"
+          />
+        </div>
 
         <div class="rodape">
-          <button type="submit" class="btn btn-azul" [disabled]="enviando()">
+          <button type="submit" class="btn btn-azul" [disabled]="enviando()" [appCarregando]="enviando()">
             {{ enviando() ? 'Salvando...' : 'Salvar chave' }}
           </button>
           @if (temChave()) {
@@ -75,7 +77,7 @@
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="remover-titulo" (click)="$event.stopPropagation()">
       <h2 id="remover-titulo">Remover a chave Pix?</h2>
       <p>Os responsáveis vão ver que você ainda não cadastrou uma chave.</p>
-      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="remover()">
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="remover()" [appCarregando]="enviando()">
         {{ enviando() ? 'Removendo...' : 'Remover chave' }}
       </button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharRemover()">Voltar</button>

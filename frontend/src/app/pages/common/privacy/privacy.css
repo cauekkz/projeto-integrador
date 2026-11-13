@@ -6,7 +6,7 @@
 .lista {
   display: flex;
   flex-direction: column;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
   overflow: hidden;
 }
@@ -18,8 +18,8 @@
   width: 100%;
   padding: 16px 16px;
   border: none;
-  border-bottom: 1px solid #e2e8f0;
-  background: #ffffff;
+  border-bottom: 1px solid var(--cor-borda);
+  background: var(--cor-superficie);
   font: inherit;
   text-align: left;
   cursor: pointer;
@@ -32,7 +32,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .item:hover:not(:disabled) {
-    background: #f8fafc;
+    background: var(--cor-superficie-2);
   }
 }
 
@@ -50,23 +50,23 @@
 .textos strong {
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .textos span {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .item i {
-  color: #94a3b8;
+  color: var(--cor-texto-4);
 }
 
 .item.perigo strong {
-  color: var(--vermelho-texto);
+  color: var(--cor-perigo-texto);
 }
 
 .item.desligado strong,
 .item.desligado span {
-  color: #94a3b8;
+  color: var(--cor-texto-4);
 }

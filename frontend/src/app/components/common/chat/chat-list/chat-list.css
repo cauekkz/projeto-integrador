@@ -2,7 +2,7 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--cor-fundo);
 }
 
 .lista {
@@ -18,14 +18,14 @@
   gap: 12px;
   padding: 16px 20px;
   cursor: pointer;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--cor-borda-suave);
   transition: background-color var(--dur-rapida) ease,
     scale 160ms var(--ease-out, ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .conversa-item:hover {
-    background: #f8fafc;
+    background: var(--cor-superficie-2);
   }
 }
 
@@ -48,12 +48,12 @@
 .conversa-nome {
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .conversa-msg {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -61,7 +61,7 @@
 
 .conversa-hora {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--cor-texto-4);
   flex-shrink: 0;
 }
 
@@ -71,7 +71,7 @@
   align-items: center;
   gap: 12px;
   padding: 48px 16px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   font-size: 14px;
   text-align: center;
   line-height: 1.4;
@@ -79,8 +79,8 @@
 
 .btn-estado {
   border: none;
-  background: var(--azul);
-  color: white;
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
   font-size: 14px;
   font-weight: 600;
   padding: 12px 20px;
@@ -91,7 +91,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .btn-estado:hover {
-    background: #0052a3;
+    background: var(--cor-primaria-hover);
   }
 }
 
@@ -108,11 +108,11 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--azul);
+  background: var(--cor-primaria);
 }
 
 .conversa-nome.nao-lida,
 .conversa-msg.nao-lida {
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }

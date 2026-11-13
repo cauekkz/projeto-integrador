@@ -1,8 +1,15 @@
-<div class="signup-container">
+<div class="pagina-cadastro signup-container">
   <app-header titulo="Cadastrar responsável" (voltarEvent)="voltar()" />
 
   <form class="form" (ngSubmit)="signup()">
-    <div class="field">
+    <div class="intro">
+      <h2>Crie sua conta</h2>
+      <p>Preencha seus dados para acompanhar o transporte dos seus dependentes.</p>
+    </div>
+
+    <!-- seus dados -->
+    <h3 class="secao">Seus dados</h3>
+    <div class="field flutua">
       <label>Nome completo</label>
       <input
         type="text"
@@ -17,7 +24,7 @@
       }
     </div>
 
-    <div class="field">
+    <div class="field flutua">
       <label>CPF do responsável</label>
       <input type="text" placeholder="000.000.000-00" [(ngModel)]="enteredCpf" name="cpf" appCpfMask />
 
@@ -26,7 +33,7 @@
       }
     </div>
 
-    <div class="field">
+    <div class="field flutua">
       <label>E-mail</label>
       <input type="email" placeholder="Digite seu e-mail" [(ngModel)]="enteredEmail" name="email" />
 
@@ -35,7 +42,7 @@
       }
     </div>
 
-    <div class="field">
+    <div class="field flutua">
       <label>Telefone</label>
       <input type="text" placeholder="(11) 99999-9999" [(ngModel)]="enteredPhone" name="phone" appPhoneMask />
 
@@ -44,7 +51,10 @@
       }
     </div>
 
-    <div class="field">
+    <!-- endereco: o CEP completa o resto -->
+    <h3 class="secao">Endereço</h3>
+    <p class="secao-dica">Digite o CEP e a gente completa rua, bairro e cidade.</p>
+    <div class="field flutua">
       <label>CEP</label>
       <input type="text" inputmode="numeric" placeholder="00000-000" [(ngModel)]="enteredCep" name="cep" appCepMask appCepBusca (enderecoCep)="preencherEndereco($event); ($event.rua ? numeroInput : ruaInput).focus()" />
 
@@ -53,7 +63,7 @@
       }
     </div>
 
-    <div class="field">
+    <div class="field flutua">
       <label>Rua</label>
       <input #ruaInput type="text" placeholder="Nome da rua" [(ngModel)]="enteredStreet" name="street" />
 
@@ -62,17 +72,20 @@
       }
     </div>
 
-    <div class="field">
+    <div class="linha">
+    <div class="field flutua curto">
       <label>Número</label>
       <input #numeroInput type="text" inputmode="numeric" placeholder="Número" [(ngModel)]="enteredNumber" name="number" />
     </div>
 
-    <div class="field">
+    <div class="field flutua">
       <label>Bairro</label>
       <input type="text" placeholder="Bairro" [(ngModel)]="enteredNeighborhood" name="neighborhood" />
     </div>
+    </div>
 
-    <div class="field">
+    <div class="linha">
+    <div class="field flutua">
       <label>Cidade</label>
       <input type="text" placeholder="Cidade" [(ngModel)]="enteredCity" name="city" />
 
@@ -81,12 +94,15 @@
       }
     </div>
 
-    <div class="field">
+    <div class="field flutua curto">
       <label>Estado</label>
       <input type="text" placeholder="UF" maxlength="2" [(ngModel)]="enteredState" name="state" />
     </div>
+    </div>
 
-    <div class="field">
+    <!-- acesso -->
+    <h3 class="secao">Acesso</h3>
+    <div class="field flutua">
       <label>Senha</label>
       <input
         type="password"
@@ -100,7 +116,7 @@
       }
     </div>
 
-    <div class="field">
+    <div class="field flutua">
       <label>Confirmar senha</label>
       <input
         type="password"
@@ -120,11 +136,6 @@
 
     <app-terms-accept (versaoAceitaChange)="versaoTermos = $event" />
 
-    <app-button
-      texto="Criar uma conta"
-      tipo="primary"
-      posicao="bottom"
-      type="submit">
-    </app-button>
+    <button type="submit" class="lg-button botao botao-cheio" data-variant="filled" [disabled]="cadastrando()" [appCarregando]="cadastrando()">{{ cadastrando() ? 'Criando conta...' : 'Criar uma conta' }}</button>
   </form>
 </div>

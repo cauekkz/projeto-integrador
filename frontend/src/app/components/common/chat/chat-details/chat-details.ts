@@ -1,5 +1,6 @@
 import { PopUpService } from '../../../../shared/pop-up';
 
+import { Skeleton } from '../../../../shared/skeleton/skeleton';
 import {
   ChangeDetectorRef,
   Component,
@@ -25,7 +26,7 @@ import { ContractProposalCard } from '../contract-proposal-card/contract-proposa
 @Component({
   selector: 'app-chat-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, ContractProposalCard],
+  imports: [Skeleton, CommonModule, FormsModule, ContractProposalCard],
   templateUrl: './chat-details.html',
   styleUrl: './chat-details.css',
 })

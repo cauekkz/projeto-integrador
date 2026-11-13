@@ -26,7 +26,7 @@
   }
 
   <div class="botoes">
-    <button class="btn-verificar" type="button" [disabled]="desabilitado" (click)="verificar()">{{ textoBotao }}</button>
+    <button class="btn-verificar" type="button" [disabled]="desabilitado" [appCarregando]="desabilitado" (click)="verificar()">{{ textoBotao }}</button>
     @if (mostrarReenviar) {
       <button class="btn-reenviar" (click)="reenviar()">Reenviar código</button>
     }

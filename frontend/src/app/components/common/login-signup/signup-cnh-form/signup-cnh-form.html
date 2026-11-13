@@ -1,35 +1,36 @@
-<div class="cnh-container">
+<div class="pagina-cadastro cnh-container">
 
   <app-header titulo="Validação de CNH" (voltarEvent)="voltar()" />
 
-  <div class="upload-card" (click)="fileInput.click()">
-    <div class="upload-content">
-      <div class="upload-icon">
-        <img src="/AddFile.png" alt="">
-      </div>
-      @if (registerService.selectedFile) {
-        <p>{{ registerService.selectedFile.name }}</p>
-      } @else {
-        <p>Envie sua CNH para validação</p>
-      }
+  <main class="corpo">
+    <div class="intro">
+      <h2>Envie sua CNH</h2>
+      <p>A gente lê seu nome e CPF direto do documento. Use o PDF da CNH digital.</p>
     </div>
-  </div>
+
+    <button type="button" class="upload-card" [class.com-arquivo]="registerService.selectedFile" (click)="fileInput.click()">
+      <span class="upload-icone" aria-hidden="true">
+        <i class="bi" [class.bi-file-earmark-pdf-fill]="registerService.selectedFile" [class.bi-cloud-arrow-up]="!registerService.selectedFile"></i>
+      </span>
+      @if (registerService.selectedFile) {
+        <span class="upload-titulo">{{ registerService.selectedFile.name }}</span>
+        <span class="upload-dica">Toque para trocar o arquivo</span>
+      } @else {
+        <span class="upload-titulo">Envie sua CNH para validação</span>
+        <span class="upload-dica">Toque para escolher o PDF</span>
+      }
+    </button>
+  </main>
   <input #fileInput type="file" accept=".pdf" hidden (change)="onFileSelected($event)">
 
   <div class="bottom-actions">
-    <app-button
-      texto="Excluir PDF"
-      tipo="danger"
-      [disabled]="validando()"
-      (clickEvent)="delete(fileInput)">
-    </app-button>
-
-    <app-button
-      [texto]="validando() ? 'Validando...' : 'Confirmar'"
-      tipo="primary"
-      [disabled]="validando()"
-      (clickEvent)="pronto()">
-    </app-button>
+    <button type="button" class="lg-button botao botao-cheio" data-variant="filled" [disabled]="validando()" (click)="pronto()" [appCarregando]="validando()">
+      {{ validando() ? 'Validando...' : 'Confirmar' }}
+    </button>
+    <button type="button" class="lg-button lg-glass botao botao-perigo" [disabled]="validando()" (click)="delete(fileInput)">
+      <i class="bi bi-trash3" aria-hidden="true"></i>
+      Excluir PDF
+    </button>
   </div>
 
 </div>

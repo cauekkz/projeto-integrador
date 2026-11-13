@@ -13,7 +13,7 @@
     @if (admin) {
       <input #fotoInput type="file" accept="image/*" hidden (change)="selecionar($event)" />
       <div class="acoes">
-        <button type="button" class="link" [disabled]="enviando" (click)="fotoInput.click()">
+        <button type="button" class="link" [disabled]="enviando" (click)="fotoInput.click()" [appCarregando]="enviando">
           {{ enviando ? 'Enviando...' : 'Trocar foto' }}
         </button>
         @if (photoUrl) {

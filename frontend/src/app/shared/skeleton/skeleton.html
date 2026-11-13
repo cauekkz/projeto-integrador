@@ -1,0 +1,7 @@
+@for (i of itens(); track i) {
+  <span class="sk" [style.width]="larguraDe(i)" [style.height]="altura()">
+    @if (variante() === 'card') {
+      <ng-content />
+    }
+  </span>
+}

@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Location } from '@angular/common';
@@ -7,6 +7,7 @@ import { Footer } from '../../../shared/footer/footer';
 import { AuthService } from '../../../services/auth.service';
 import { Notificacao, NotificacaoMensagem, NotificationService } from '../../../services/notification.service';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 type Aba = 'todas' | 'mensagens' | 'avisos';
 
 // item da lista: notificacao do backend ou mensagem de conversa, no mesmo formato
@@ -56,7 +57,7 @@ const TIPOS_VIAGEM = ['TRIP_STARTED', 'VAN_ON_THE_WAY', 'STUDENT_BOARDED', 'STUD
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [Esqueleto, Footer],
+  imports: [BotaoCarregandoDirective, Skeleton, Footer],
   templateUrl: './notifications.html',
   styleUrl: './notifications.css',
 })

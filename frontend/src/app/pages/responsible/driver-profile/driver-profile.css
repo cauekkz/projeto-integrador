@@ -8,13 +8,13 @@
 .media {
   font-size: 32px !important;
   font-weight: 600 !important;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .estrelas {
   display: inline-flex;
   gap: 2px;
-  color: #cbd5e1;
+  color: var(--cor-texto-4);
   font-size: 13px;
 }
 
@@ -37,11 +37,11 @@
 .lista li {
   padding: 12px 0;
   font-size: 16px;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .lista li + li {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--cor-borda);
 }
 
 .van {
@@ -58,26 +58,26 @@
 
 .placa {
   padding: 8px 12px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--cor-borda-forte);
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.5px;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .avaliacao p {
   font-size: 13px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 .avaliacao small {
-  color: #90a1b9;
+  color: var(--cor-texto-4);
 }
 
 .avaliacao.minha {
-  border-color: #bfdbfe;
-  background: #eff8fe;
+  border-color: var(--cor-primaria-borda);
+  background: var(--cor-primaria-suave);
 }
 
 .topo-avaliacao {
@@ -100,7 +100,7 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: #cbd5e1;
+  color: var(--cor-texto-4);
   font-size: 40px;
   line-height: 1;
   cursor: pointer;

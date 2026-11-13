@@ -18,7 +18,7 @@ legend,
 label {
   margin-bottom: 8px;
   font-size: 14px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 .tipos {
@@ -29,33 +29,33 @@ label {
 
 .tipo {
   padding: 8px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 12px;
-  background: #ffffff;
-  color: var(--texto-2);
+  background: var(--cor-superficie);
+  color: var(--cor-texto-2);
   font: inherit;
   font-size: 14px;
   cursor: pointer;
 }
 
 .tipo.ativo {
-  border-color: #93c5fd;
-  background: #eff8fe;
-  color: var(--azul-escuro);
+  border-color: var(--cor-primaria-borda-forte);
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto-forte);
 }
 
 input {
   width: 100%;
   min-height: 44px;
   padding: 0 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 12px;
   font: inherit;
   font-size: 16px;
 }
 
 input:focus {
-  outline: 2px solid var(--azul);
+  outline: 2px solid var(--cor-primaria-texto);
   outline-offset: -1px;
 }
 
@@ -65,27 +65,27 @@ input:focus {
   gap: 4px;
   margin: 0 12px;
   padding: 16px 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--cor-superficie-2);
 }
 
 .chave span {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .chave strong {
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   overflow-wrap: anywhere;
 }
 
 .info {
   margin: 0 12px;
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 /* botoes no fim da tela, acima do footer */
@@ -100,5 +100,5 @@ input:focus {
 .explica {
   font-size: 13px;
   line-height: 1.5;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }

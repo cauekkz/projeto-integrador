@@ -17,7 +17,7 @@
   background: rgba(29, 95, 161, 0.1);
   -webkit-backdrop-filter: blur(18px) saturate(180%);
   backdrop-filter: blur(18px) saturate(180%);
-  box-shadow: 0 6px 18px rgba(15, 23, 41, 0.12);
+  box-shadow: 0 6px 18px rgb(var(--sombra-rgb) / calc(0.12 * var(--sombra-forca)));
 }
 
 /* com a Glisse o fundo e o vidro dela (glisse-vidro.css); aqui so tira o antigo e poe o conteudo por cima */
@@ -36,13 +36,13 @@
 
 .barra.flutuante .status,
 .barra.flutuante .sino {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgb(var(--vidro-rgb) / 0.55);
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
 .barra.flutuante .sino {
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 .foto {
@@ -71,8 +71,8 @@
   gap: 8px;
   height: 38px;
   border-radius: 999px;
-  background: rgba(239, 248, 254, 0.55);
-  color: #dba40c;
+  background: rgb(var(--vidro-ceu-rgb) / 0.55);
+  color: var(--cor-aviso);
   font-size: 13px;
   font-weight: 600;
 }
@@ -85,7 +85,7 @@
 }
 
 .status.ativo {
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
 }
 
 .sino {
@@ -98,8 +98,8 @@
   height: 36px;
   border: none;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.55);
-  color: var(--texto);
+  background: rgb(var(--vidro-rgb) / 0.55);
+  color: var(--cor-texto);
   font-size: 16px;
   cursor: pointer;
 }
@@ -112,8 +112,8 @@
   height: 18px;
   padding: 0 4px;
   border-radius: 999px;
-  background: var(--vermelho);
-  color: #ffffff;
+  background: var(--cor-perigo-fundo);
+  color: var(--cor-sobre-primaria);
   font-size: 11px;
   font-weight: 600;
   line-height: 18px;

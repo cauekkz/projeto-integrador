@@ -3,7 +3,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <app-esqueleto tipo="perfil" [quantos]="2" texto="Carregando perfil..." />
+      <div class="sk-tela" role="status" aria-label="Carregando perfil..."><div class="sk-linha"><app-skeleton variante="circle" largura="72px" altura="72px" /><div class="sk-col"><app-skeleton variante="title" largura="60%" altura="22px" /><app-skeleton variante="text" largura="45%" /></div></div><app-skeleton variante="card"><div class="sk-linha"><app-skeleton variante="rect" largura="64px" altura="44px" /><div class="sk-col"><app-skeleton variante="text" largura="50%" /><app-skeleton variante="text" largura="35%" /></div></div></app-skeleton>@for (i of [0,1]; track i) {<app-skeleton variante="card"><app-skeleton variante="text" largura="35%" altura="14px" /><app-skeleton variante="text" [quantos]="2" /></app-skeleton>}</div>
     } @else if (perfil(); as p) {
       <section class="quem" animate.enter="entrar-fade">
         @if (foto()) {
@@ -147,14 +147,14 @@
       }
     </div>
 
-    <div class="campo">
+    <div class="campo flutua">
       <label for="comentario">Comentário (opcional)</label>
       <input id="comentario" name="comentario" maxlength="500" placeholder="Conte como foi" [(ngModel)]="comentario" />
     </div>
     <p class="ajuda">Até 500 caracteres.</p>
 
     <div class="acoes">
-      <button type="submit" class="btn btn-azul" [disabled]="enviando()">
+      <button type="submit" class="btn btn-azul" [disabled]="enviando()" [appCarregando]="enviando()">
         {{ enviando() ? 'Enviando...' : p.myRating ? 'Salvar avaliação' : 'Enviar avaliação' }}
       </button>
       @if (p.myRating) {
@@ -170,7 +170,7 @@
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="apagar-titulo" (click)="$event.stopPropagation()">
       <h2 id="apagar-titulo">Apagar sua avaliação?</h2>
       <p class="sub">Sua nota e seu comentário saem do perfil do motorista.</p>
-      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="apagar()">{{ enviando() ? 'Apagando...' : 'Apagar avaliação' }}</button>
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="apagar()" [appCarregando]="enviando()">{{ enviando() ? 'Apagando...' : 'Apagar avaliação' }}</button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharApagar()">Voltar</button>
     </div>
   </div>

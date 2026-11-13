@@ -8,6 +8,19 @@ import { SegmentedControl } from 'glisse';
 export interface OpcaoSegmentada {
   value: string;
   label: string;
+  /** classe do Bootstrap Icons (ex.: 'bi-sun'), desenhada antes do texto */
+  icone?: string;
+}
+
+// rotulo com icone opcional (o icone e decorativo: o nome do segmento continua sendo o texto)
+function rotulo(o: OpcaoSegmentada) {
+  if (!o.icone) return o.label;
+  return createElement(
+    'span',
+    { className: 'glisse-seg-rotulo' },
+    createElement('i', { className: `bi ${o.icone}`, 'aria-hidden': true }),
+    o.label,
+  );
 }
 
 export interface PropsSegmentado {
@@ -30,7 +43,7 @@ export function montarSegmentado(alvo: HTMLElement) {
           if (v !== valor) flushSync(() => desenhar(props, v));
           props.aoEscolher(v);
         },
-        items: props.opcoes.map((o) => ({ value: o.value, label: o.label })),
+        items: props.opcoes.map((o) => ({ value: o.value, label: rotulo(o) })),
       }),
     );
   };

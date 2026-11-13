@@ -8,7 +8,7 @@
   @if (modoPastas) {
     <main class="conteudo">
       @if (carregando()) {
-        <app-esqueleto tipo="lista" [quantos]="2" texto="Carregando contratos..." />
+        <div class="sk-tela" role="status" aria-label="Carregando contratos..."><div class="sk-grade">@for (i of [0,1,2]; track i) {<app-skeleton variante="rect" largura="100%" altura="96px" />}</div></div>
       } @else if (erroCarregar()) {
         <div class="aviso erro" role="alert">
           <p>Não foi possível carregar os contratos.</p>
@@ -31,8 +31,8 @@
                   <svg class="pasta-tras" viewBox="0 0 1000 770" preserveAspectRatio="none">
                     <defs>
                       <linearGradient id="pasta-tras-cor" x1="0" y1="0" x2="1" y2="0.4">
-                        <stop offset="0" stop-color="#e2e8f0" />
-                        <stop offset="1" stop-color="#c3cfdd" />
+                        <stop offset="0" style="stop-color: var(--cor-borda)" />
+                        <stop offset="1" style="stop-color: var(--cor-pasta-2)" />
                       </linearGradient>
                     </defs>
                     <path fill="url(#pasta-tras-cor)" d="M0 75A75 75 0 0 1 75 0H270Q300 0 322 22L375 75H925A75 75 0 0 1 1000 150V695A75 75 0 0 1 925 770H75A75 75 0 0 1 0 695Z" />
@@ -69,7 +69,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando contratos..." />
+      <div class="sk-tela" role="status" aria-label="Carregando contratos...">@for (i of [0,1,2,3]; track i) {<app-skeleton variante="card"><div class="sk-linha"><app-skeleton variante="rect" largura="84px" altura="24px" class="sk-pilula" /><app-skeleton variante="rect" largura="70px" altura="12px" /></div><app-skeleton variante="title" largura="50%" /><app-skeleton variante="text" largura="70%" /><app-skeleton variante="text" largura="40%" /></app-skeleton>}</div>
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar os contratos.</p>

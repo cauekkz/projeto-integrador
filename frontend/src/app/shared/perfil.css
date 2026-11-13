@@ -25,27 +25,27 @@
 .quem h1 {
   font-size: 20px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .quem.pequeno strong {
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .desde {
   font-size: 13px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 .foto.iniciais {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #afd9f7;
-  background: #eff8fe;
-  color: var(--azul-escuro);
+  border: 1px solid var(--cor-primaria-borda);
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto-forte);
   font-size: 24px;
   font-weight: 600;
 }
@@ -63,7 +63,7 @@
 .secao h2 {
   font-size: 14px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .cartao {
@@ -71,20 +71,20 @@
   flex-direction: column;
   gap: 4px;
   padding: 16px 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--cor-superficie);
 }
 
 .cartao strong {
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .cartao small {
   font-size: 12px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 /* botao azul no fim da tela */
@@ -105,5 +105,5 @@
 
 .sub {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
