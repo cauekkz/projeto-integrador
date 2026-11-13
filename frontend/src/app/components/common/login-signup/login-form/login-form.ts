@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../services/auth.service';
@@ -11,17 +11,20 @@ import { limparMascara } from '../../../../shared/utils';
 import { EmailCode } from '../email-code/email-code';
 import { HttpErrorResponse } from '@angular/common/http';
 
+import { BotaoCarregandoDirective } from '../../../../shared/botao-carregando/botao-carregando.directive';
 // senha certa, mas a conta ainda nao confirmou o e-mail (o backend responde 400 com essa frase)
 const EMAIL_NAO_VERIFICADO = 'Verifique seu e-mail';
 
 @Component({
   selector: 'app-login-form',
   standalone: true,
-  imports: [FormsModule, Header, Button, ForgotPassword, CpfMaskDirective, PasswordToggleDirective, EmailCode],
+  imports: [BotaoCarregandoDirective, FormsModule, Header, Button, ForgotPassword, CpfMaskDirective, PasswordToggleDirective, EmailCode],
   templateUrl: './login-form.html',
   styleUrl: './login-form.css',
 })
 export class LoginForm {
+  // so pra tela: barra no botao Entrar enquanto o login responde
+  protected entrando = signal(false);
   @Input() tipoUsuario = '';
 
   @Output() voltarEvent = new EventEmitter<void>();
@@ -70,6 +73,8 @@ export class LoginForm {
       return;
     }
 
+    if (this.entrando()) return;
+    this.entrando.set(true);
     this.authService
       .login({
         cpf: limparMascara(this.enteredCPF),
@@ -77,6 +82,7 @@ export class LoginForm {
       })
       .subscribe({
         next: (response) => {
+          this.entrando.set(false);
           this.authService.saveTokens(response);
 
           // destino vem da role do token, nao do :tipo da url
@@ -91,6 +97,7 @@ export class LoginForm {
         },
         // o popup global ja mostra o erro (senha errada, 429...); e-mail nao confirmado abre a confirmacao
         error: (err: unknown) => {
+          this.entrando.set(false);
           if (err instanceof HttpErrorResponse && err.status === 400 && String(err.error?.message ?? err.error ?? '').includes(EMAIL_NAO_VERIFICADO)) {
             this.etapaEmail = 'email';
             this.cdr.markForCheck();

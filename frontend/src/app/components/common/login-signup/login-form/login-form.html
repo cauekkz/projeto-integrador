@@ -1,38 +1,46 @@
 <div class="login-container">
-  <!-- so a seta: o titulo da tela e o "Entrar como ..." do formulario -->
-  <app-header (voltarEvent)="voltar()" />
+  <!-- header: seta + "Entrar como ..."; o formulario da as boas-vindas -->
+  <app-header [titulo]="tipoUsuario === 'motorista' ? 'Entrar como motorista' : 'Entrar como responsável'" (voltarEvent)="voltar()" />
 
   <div class="content">
-    <form (ngSubmit)="login()">
+    <form class="entrar" (ngSubmit)="login()">
+
+      <!-- boas-vindas -->
+      <div class="boas-vindas">
+        <h2>Bem-vindo ao VanRoute</h2>
+        <p class="subtitulo">
+          {{ tipoUsuario === 'motorista' ? 'Entre com seu CPF e senha para cuidar das suas rotas.' : 'Entre com seu CPF e senha para acompanhar seus dependentes.' }}
+        </p>
+      </div>
 
       @if (tipoUsuario === 'motorista') {
-        <h2>Entrar como motorista</h2>
-        <label>CPF do motorista</label>
-        <input type="text" placeholder="000.000.000-00" name="cpf" [(ngModel)]="enteredCPF" appCpfMask required />
+        <div class="flutua">
+          <label>CPF do motorista</label>
+          <input type="text" placeholder="000.000.000-00" name="cpf" [(ngModel)]="enteredCPF" appCpfMask required />
+        </div>
       }
 
       @if (tipoUsuario === 'responsavel') {
-        <h2>Entrar como responsável</h2>
-        <label>CPF do responsável</label>
-        <input type="text" placeholder="000.000.000-00" name="cpf" [(ngModel)]="enteredCPF" appCpfMask required />
+        <div class="flutua">
+          <label>CPF do responsável</label>
+          <input type="text" placeholder="000.000.000-00" name="cpf" [(ngModel)]="enteredCPF" appCpfMask required />
+        </div>
       }
 
       @if (cpfInvalido) {
         <p class="error-message">O CPF é obrigatório.</p>
       }
 
-      <label>Senha</label>
-      <input type="password" placeholder="Digite sua senha" name="senha" [(ngModel)]="enteredPass" required />
+      <div class="flutua">
+        <label>Senha</label>
+        <input type="password" placeholder="Digite sua senha" name="senha" [(ngModel)]="enteredPass" required />
+      </div>
 
       @if (passInvalido) {
         <p class="error-message">A senha é obrigatória.</p>
       }
 
-      <app-button
-        texto="Entrar"
-        tipo="primary"
-        type="submit">
-      </app-button>
+      <button type="submit" class="lg-button botao botao-cheio" data-variant="filled" [disabled]="entrando()" [appCarregando]="entrando()">{{ entrando() ? 'Entrando...' : 'Entrar' }}</button>
 
       <button type="button" class="esqueci" (click)="mostrarForgotPassword = true">Esqueceu sua senha?</button>
 
@@ -40,11 +48,8 @@
   </div>
 
   <div class="bottom-container">
-    <app-button
-      texto="Criar uma conta"
-      tipo="secondary"
-      (clickEvent)="irParaCadastro()">
-    </app-button>
+    <p class="divisor"><span>Ainda não tem conta?</span></p>
+    <button type="button" class="lg-button lg-glass botao botao-vidro" (click)="irParaCadastro()">Criar uma conta</button>
   </div>
 </div>
 
@@ -61,13 +66,15 @@
         <h2>Falta confirmar seu e-mail</h2>
         <p>Digite o e-mail do cadastro. Vamos mandar um código novo.</p>
 
-        <label>E-mail</label>
-        <input type="email" placeholder="Digite seu e-mail" name="email" [(ngModel)]="enteredEmail" required />
+        <div class="flutua">
+          <label>E-mail</label>
+          <input type="email" placeholder="Digite seu e-mail" name="email" [(ngModel)]="enteredEmail" required />
+        </div>
         @if (emailInvalido) {
           <p class="error-message">O e-mail é obrigatório.</p>
         }
 
-        <app-button texto="Enviar código" tipo="primary" type="submit" />
+        <app-button [texto]="enviandoCodigo ? 'Enviando...' : 'Enviar código'" tipo="primary" type="submit" [carregando]="enviandoCodigo" />
       </form>
     </div>
   </div>

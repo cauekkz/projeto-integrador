@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,6 +10,7 @@ import { DeleteAccount } from '../../../components/common/delete-account/delete-
 import { MarkdownText } from '../../../shared/markdown-text/markdown-text';
 import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 // dois modos:
 // - reaceite: termos mudaram depois do cadastro, o backend responde 403 TERMS_NOT_ACCEPTED e o interceptor traz pra ca
 //   (Figma "Ambos · /terms · aceitar nova versão" e "não aceitou")
@@ -17,7 +18,7 @@ import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.serv
 @Component({
   selector: 'app-terms',
   standalone: true,
-  imports: [Esqueleto, Header, DeleteAccount, MarkdownText],
+  imports: [BotaoCarregandoDirective, Skeleton, Header, DeleteAccount, MarkdownText],
   templateUrl: './terms.html',
   styleUrls: ['../../../shared/folha.css', './terms.css'],
 })

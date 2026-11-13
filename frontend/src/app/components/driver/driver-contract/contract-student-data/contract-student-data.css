@@ -7,10 +7,10 @@
 
 .ajuda {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .ajuda a {
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
   font-weight: 600;
 }

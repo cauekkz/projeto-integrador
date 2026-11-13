@@ -1,9 +1,9 @@
 <div class="pagina">
-  <app-trail-header [trilha]="['Motorista', 'Grupos']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+  <app-trail-header [trilha]="['Motorista', 'Grupos']" [mostrarSino]="true" />
 
   <main class="conteudo">
     @if (carregando()) {
-      <app-esqueleto tipo="lista" [quantos]="3" texto="Carregando grupos..." />
+      <div class="sk-tela" role="status" aria-label="Carregando grupos..."><app-skeleton variante="rect" largura="100%" altura="48px" class="sk-botao" />@for (i of [0,1,2]; track i) {<app-skeleton variante="card"><div class="sk-linha"><div class="sk-col"><app-skeleton variante="text" largura="45%" altura="14px" /><app-skeleton variante="text" largura="30%" /></div><app-skeleton variante="rect" largura="12px" altura="12px" /></div></app-skeleton>}</div>
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar os grupos.</p>
@@ -38,11 +38,11 @@
   <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharNovo()">
     <form class="folha" role="dialog" aria-modal="true" aria-labelledby="novo-titulo" (click)="$event.stopPropagation()" (ngSubmit)="criar()">
       <h2 id="novo-titulo">Novo grupo</h2>
-      <div class="campo">
+      <div class="campo flutua">
         <label for="nome-grupo">Nome do grupo (até 60 caracteres)</label>
         <input id="nome-grupo" name="nome" maxlength="60" placeholder="Fatec manhã" [(ngModel)]="nome" />
       </div>
-      <button type="submit" class="btn btn-azul" [disabled]="enviando()">{{ enviando() ? 'Criando...' : 'Criar grupo' }}</button>
+      <button type="submit" class="btn btn-azul" [disabled]="enviando()" [appCarregando]="enviando()">{{ enviando() ? 'Criando...' : 'Criar grupo' }}</button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharNovo()">Voltar</button>
     </form>
   </div>

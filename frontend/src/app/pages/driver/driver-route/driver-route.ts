@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -39,6 +39,7 @@ import { UserMe } from '../../../models/user.model';
 import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 type Estado = 'carregando' | 'erro' | 'semAcesso' | 'antes' | 'aberta' | 'finalizada' | 'viagem';
 
 // o GPS manda a posicao no maximo a cada 3 s (o backend pede de 2 a 5 s)
@@ -48,7 +49,7 @@ const INTERVALO_GPS_MS = 3000;
 @Component({
   selector: 'app-driver-route',
   standalone: true,
-  imports: [Esqueleto, TrailHeader, Footer, StatusTopbar, RouteCard, TripMap, ProfileSelect, FormsModule, NgTemplateOutlet, GlisseVidro],
+  imports: [BotaoCarregandoDirective, Skeleton, TrailHeader, Footer, StatusTopbar, RouteCard, TripMap, ProfileSelect, FormsModule, NgTemplateOutlet, GlisseVidro],
   templateUrl: './driver-route.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-route.css'],
 })

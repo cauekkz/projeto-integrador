@@ -4,6 +4,7 @@ import { PopUpService } from '../../../shared/pop-up';
 import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 import { iniciaisDe, fotosQuebradas } from '../../../shared/iniciais/iniciais';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 // mesmo limite do backend para a foto do aluno
 const FOTO_TAMANHO_MAXIMO = 10 * 1024 * 1024;
 
@@ -12,6 +13,7 @@ const FOTO_TAMANHO_MAXIMO = 10 * 1024 * 1024;
 @Component({
   selector: 'app-student-photo',
   standalone: true,
+  imports: [BotaoCarregandoDirective],
   templateUrl: './student-photo.html',
   styleUrl: './student-photo.css',
 })

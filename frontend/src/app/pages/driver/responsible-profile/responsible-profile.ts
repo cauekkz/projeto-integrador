@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -17,7 +17,7 @@ import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 @Component({
   selector: 'app-responsible-profile',
   standalone: true,
-  imports: [Esqueleto, Header, ResponsibleSituation],
+  imports: [Skeleton, Header, ResponsibleSituation],
   templateUrl: './responsible-profile.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/perfil.css'],
 })

@@ -5,7 +5,7 @@
 
   <div class="lista-dependentes">
     @if (carregando()) {
-      <app-esqueleto tipo="lista" [quantos]="2" texto="Carregando..." />
+      <div class="sk-tela" role="status" aria-label="Carregando...">@for (i of [0,1]; track i) {<app-skeleton variante="card"><div class="sk-linha"><app-skeleton variante="circle" largura="48px" altura="48px" /><div class="sk-col"><app-skeleton variante="text" largura="45%" altura="14px" /></div><app-skeleton variante="rect" largura="12px" altura="12px" /></div></app-skeleton>}</div>
     }
 
     @if (!carregando() && dependentes().length === 0) {

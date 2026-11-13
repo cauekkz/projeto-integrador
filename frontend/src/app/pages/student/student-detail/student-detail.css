@@ -18,7 +18,7 @@
 .titulo-secao h2 {
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 /* "Adicionar", "Convidar", "Não vai", "Ele vai sim" */
@@ -26,7 +26,7 @@
   flex-shrink: 0;
   border: none;
   background: transparent;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
   font: inherit;
   font-size: 14px;
   font-weight: 500;
@@ -44,9 +44,9 @@
   gap: 12px;
   min-height: 58px;
   padding: 12px 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--cor-superficie);
 }
 
 .cartao.coluna {
@@ -72,12 +72,12 @@
 .cartao strong {
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .cartao small {
   font-size: 12px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .nome-rota {
@@ -94,8 +94,8 @@
   height: 40px;
   border: none;
   border-radius: 12px;
-  background: var(--vermelho);
-  color: #ffffff;
+  background: var(--cor-perigo-fundo);
+  color: var(--cor-sobre-primaria);
   font-size: 18px;
   cursor: pointer;
   transition: var(--transicao-botao);
@@ -123,17 +123,17 @@
 }
 
 .link-azul {
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
 }
 
 .link-vermelho {
-  color: var(--vermelho);
+  color: var(--cor-perigo);
 }
 
 /* falta avisada: cartão amarelo */
 .cartao.falta {
-  border-color: #fde68a;
-  background: #fefce8;
+  border-color: var(--cor-aviso-borda);
+  background: var(--cor-aviso-suave);
 }
 
 /* "Lucas ainda não está em nenhuma rota" */
@@ -147,25 +147,25 @@
 .sem-rotas h2 {
   font-size: 20px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .sem-rotas p {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .sub {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 /* código do convite */
 .codigo {
   padding: 16px;
   border-radius: 12px;
-  background: #eff8fe;
-  color: var(--azul-escuro) !important;
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto-forte) !important;
   font-size: 24px !important;
   font-weight: 600;
   letter-spacing: 4px;
@@ -188,12 +188,12 @@
   width: 100%;
   font: inherit;
   text-align: left;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   cursor: pointer;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .linha-historico:hover {
-    background: #f8fafc;
+    background: var(--cor-superficie-2);
   }
 }

@@ -9,8 +9,8 @@
   flex-direction: column;
   gap: 16px;
   padding: 20px;
-  background: #ffffff;
-  border: 1px solid #d6dee8;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda-forte);
   border-radius: 14px;
 }
 
@@ -28,31 +28,31 @@
   height: 44px;
   flex-shrink: 0;
   border-radius: 12px;
-  background: #eaf2fd;
-  color: #0b66d8;
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto);
   font-size: 20px;
 }
 
 .topo h3 {
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .subtitulo {
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .texto {
   font-size: 14px;
   line-height: 1.5;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .divisor {
   border: none;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--cor-borda);
   margin: 0;
 }
 
@@ -65,13 +65,13 @@
 
 .resumo strong {
   font-size: 16px;
-  color: var(--texto);
+  color: var(--cor-texto);
   overflow-wrap: anywhere;
 }
 
 .resumo span {
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   overflow-wrap: anywhere;
 }
 
@@ -91,32 +91,32 @@
 
 .btn-azul {
   border: none;
-  background: #0b66d8;
-  color: #ffffff;
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .btn-azul:hover:not(:disabled) {
-    background: #0052a3;
+    background: var(--cor-primaria-hover);
   }
 }
 
 .btn-decisao {
-  border: 1px solid #eadf2a;
-  background: #fefed6;
-  color: var(--texto);
+  border: 1px solid var(--cor-aviso-borda);
+  background: var(--cor-aviso-suave);
+  color: var(--cor-texto);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .btn-decisao:hover:not(:disabled) {
-    background: #fcfcc0;
+    background: var(--cor-aviso-suave);
   }
 }
 
 .btn-negar {
   border: none;
   background: #ff0000;
-  color: #ffffff;
+  color: var(--cor-sobre-primaria);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -137,21 +137,21 @@
 }
 
 .resultado.aceito {
-  border: 1.5px solid #4ade3a;
-  background: #ebfde8;
-  color: var(--texto);
+  border: 1.5px solid var(--cor-sucesso-borda);
+  background: var(--cor-sucesso-suave);
+  color: var(--cor-texto);
 }
 
 .resultado.negado {
-  border: 1.5px solid #ef1c3c;
-  background: #ffe8e8;
-  color: var(--texto);
+  border: 1.5px solid var(--cor-perigo-borda);
+  background: var(--cor-perigo-suave);
+  color: var(--cor-texto);
 }
 
 .resultado.neutro {
-  border: 1.5px solid #cbd5e1;
-  background: #f1f5f9;
-  color: var(--texto-2);
+  border: 1.5px solid var(--cor-borda-forte);
+  background: var(--cor-superficie-3);
+  color: var(--cor-texto-2);
 }
 
 .status {
@@ -163,23 +163,23 @@
 }
 
 .status.pendente {
-  background: #fefed6;
-  color: #854d0e;
+  background: var(--cor-aviso-suave);
+  color: var(--cor-aviso-texto);
 }
 
 .status.aceito {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--cor-sucesso-suave);
+  color: var(--cor-sucesso-texto);
 }
 
 .status.recusado {
-  background: #fee2e2;
-  color: var(--vermelho-texto);
+  background: var(--cor-perigo-suave);
+  color: var(--cor-perigo-texto);
 }
 
 .status.neutro {
-  background: #f1f5f9;
-  color: var(--texto-2);
+  background: var(--cor-superficie-3);
+  color: var(--cor-texto-2);
 }
 
 .rodape {
@@ -188,7 +188,7 @@
   justify-content: flex-end;
   gap: 4px;
   font-size: 12px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .rodape span + span::before {
@@ -198,17 +198,17 @@
 
 .aviso {
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .aviso.erro {
-  color: var(--vermelho-texto);
+  color: var(--cor-perigo-texto);
 }
 
 .link {
   border: none;
   background: transparent;
-  color: #0b66d8;
+  color: var(--cor-primaria-texto);
   font-weight: 600;
   cursor: pointer;
 }
@@ -224,7 +224,7 @@
   align-items: center;
   justify-content: center;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.45);
+  background: rgb(var(--vidro-rgb) / 0.45);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
 }
@@ -240,34 +240,33 @@
 .decisao .btn {
   min-height: 44px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 }
 
 .decisao .aviso {
   text-align: center;
   padding: 8px 12px;
   border-radius: 12px;
-  background: #ffffff;
+  background: var(--cor-superficie);
 }
 
 /* ---------- retirar proposta (motorista, pendente) ---------- */
 
 .btn-retirar {
-  border: 1px solid #fecaca;
-  background: #ffffff;
-  color: var(--vermelho-texto);
+  border: 1px solid var(--cor-perigo-borda);
+  background: var(--cor-superficie);
+  color: var(--cor-perigo-texto);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .btn-retirar:hover:not(:disabled) {
-    background: #fef2f2;
+    background: var(--cor-perigo-suave);
   }
 }
 
 .btn-voltar {
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: var(--texto);
+  border: 1px solid var(--cor-borda-forte);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
 }
 
 .fundo {
@@ -277,7 +276,7 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(15, 23, 42, 0.35);
+  background: var(--overlay);
 }
 
 .folha {
@@ -288,19 +287,19 @@
   max-width: 480px;
   padding: 20px 24px 28px;
   border-radius: 24px 24px 0 0;
-  background: #ffffff;
+  background: var(--cor-superficie);
   animation: folha-subir 320ms var(--ease-folha, cubic-bezier(0.32, 0.72, 0, 1)) both;
 }
 
 .folha h2 {
   font-size: 18px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .folha p {
   font-size: 14px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 .folha .btn {

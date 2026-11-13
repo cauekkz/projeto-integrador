@@ -1,9 +1,15 @@
-<div class="form-container">
+<div class="pagina-cadastro form-container">
   <app-header titulo="Cadastro motorista" (voltarEvent)="voltar()" />
 
   <form class="form" (ngSubmit)="signup()">
     <!-- o nome e o CPF saem da CNH: nao tem campo de nome -->
-    <div class="field">
+    <div class="intro">
+      <h2>Quase lá</h2>
+      <p>Seu nome e CPF vêm da CNH. Agora falta só o contato e a senha.</p>
+    </div>
+
+    <h3 class="secao">Contato</h3>
+    <div class="field flutua">
       <label>E-mail do motorista</label>
       <input
         type="email"
@@ -17,7 +23,7 @@
       }
     </div>
 
-    <div class="field">
+    <div class="field flutua">
       <label>Telefone do motorista</label>
       <input type="text" placeholder="(11) 99999-9999" [(ngModel)]="enteredPhone" name="phone" appPhoneMask />
 
@@ -26,7 +32,8 @@
       }
     </div>
 
-    <div class="field">
+    <h3 class="secao">Acesso</h3>
+    <div class="field flutua">
       <label>Senha</label>
       <input
         type="password"
@@ -40,7 +47,7 @@
       }
     </div>
 
-    <div class="field">
+    <div class="field flutua">
       <label>Confirmar senha</label>
       <input
         type="password"
@@ -59,11 +66,6 @@
 
     <app-terms-accept (versaoAceitaChange)="versaoTermos = $event" />
 
-    <app-button
-      texto="Finalizar cadastro"
-      tipo="primary"
-      posicao="bottom"
-      type="submit">
-    </app-button>
+    <button type="submit" class="lg-button botao botao-cheio" data-variant="filled" [disabled]="cadastrando()" [appCarregando]="cadastrando()">{{ cadastrando() ? 'Finalizando...' : 'Finalizar cadastro' }}</button>
   </form>
 </div>

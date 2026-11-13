@@ -25,7 +25,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando notificações..." />
+      <div class="sk-tela" role="status" aria-label="Carregando notificações...">@for (i of [0,1,2,3]; track i) {<div class="sk-linha"><app-skeleton variante="circle" largura="40px" altura="40px" /><div class="sk-col"><div class="sk-linha"><div class="sk-col"><app-skeleton variante="text" largura="45%" altura="14px" /></div><app-skeleton variante="rect" largura="40px" altura="12px" /></div><app-skeleton variante="text" largura="85%" /></div></div>}</div>
     } @else if (erro()) {
       <div class="estado">
         <i class="bi bi-wifi-off" aria-hidden="true"></i>
@@ -59,7 +59,7 @@
           </ul>
 
           @if (temMais() && abaAtiva() !== 'mensagens') {
-            <button type="button" class="btn-mais" [disabled]="carregandoMais()" (click)="carregarMais()">
+            <button type="button" class="btn-mais" [disabled]="carregandoMais()" (click)="carregarMais()" [appCarregando]="carregandoMais()">
               {{ carregandoMais() ? 'Carregando...' : 'Ver mais antigas' }}
             </button>
           }

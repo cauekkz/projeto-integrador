@@ -39,7 +39,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <app-esqueleto tipo="texto" [quantos]="3" texto="Carregando dados do contrato..." />
+      <div class="sk-tela" role="status" aria-label="Carregando dados do contrato..."><app-skeleton variante="card"><app-skeleton variante="text" largura="30%" altura="14px" /><app-skeleton variante="rect" largura="100%" altura="58px" /><app-skeleton variante="text" largura="30%" altura="14px" /><app-skeleton variante="rect" largura="100%" altura="58px" /><app-skeleton variante="text" largura="30%" altura="14px" /><app-skeleton variante="rect" largura="100%" altura="58px" /></app-skeleton></div>
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>{{ erroCarregar() }}</p>
@@ -71,7 +71,8 @@
   <footer class="rodape">
     <app-button
       [texto]="ultimaEtapa() ? (enviando() ? 'Enviando...' : 'Salvar e enviar') : 'Próxima etapa'"
-      [disabled]="carregando() || !!erroCarregar() || enviando()"
+      [disabled]="carregando() || !!erroCarregar()"
+      [carregando]="enviando()"
       (clickEvent)="avancar()"
     />
   </footer>

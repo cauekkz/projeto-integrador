@@ -1,6 +1,6 @@
 :host {
   display: block;
-  background: #ffffff;
+  background: var(--cor-fundo);
 }
 
 .pagina {
@@ -21,7 +21,7 @@
   align-items: center;
   gap: 8px;
   padding: 20px 16px 16px 8px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
 }
 
@@ -35,13 +35,13 @@
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   cursor: pointer;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .voltar:hover:not(:disabled) {
-    background: #f1f5f9;
+    background: var(--cor-superficie-3);
   }
 }
 
@@ -66,7 +66,7 @@
   min-width: 0;
   list-style: none;
   font-size: clamp(0.75rem, 3.4vw, 0.85rem);
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .migalhas li {
@@ -99,8 +99,8 @@
 
 @media (hover: hover) and (pointer: fine) {
   .migalha-link:hover:not(:disabled) {
-    color: var(--azul);
-    background: #eff6ff;
+    color: var(--cor-primaria-texto);
+    background: var(--cor-primaria-suave);
   }
 }
 
@@ -121,19 +121,19 @@
 }
 
 .migalhas .atual {
-  color: #1e293b;
+  color: var(--cor-texto);
 }
 
 .barra {
   height: 3px;
   border-radius: 2px;
-  background: #c4c4c4;
+  background: var(--cor-texto-4);
   overflow: hidden;
 }
 
 .barra-preenchida {
   height: 100%;
-  background: #1d6fe0;
+  background: var(--cor-primaria);
   transform-origin: left;
   transition: transform 300ms var(--ease-out, ease-out),
     scale 160ms var(--ease-out, ease-out);
@@ -151,12 +151,12 @@
 .aviso {
   text-align: center;
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   padding: 24px 8px;
 }
 
 .aviso.erro {
-  color: var(--vermelho-texto);
+  color: var(--cor-perigo-texto);
   padding: 8px;
 }
 
@@ -165,9 +165,9 @@
 }
 
 .tentar-novamente {
-  border: 1px solid var(--azul);
+  border: 1px solid var(--cor-primaria-texto);
   background: transparent;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
   border-radius: 12px;
   padding: 8px 16px;
   font-weight: 600;

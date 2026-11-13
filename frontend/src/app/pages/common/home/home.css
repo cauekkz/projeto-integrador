@@ -1,72 +1,168 @@
+/* Primeira tela (Figma "SelectTypeUser" 313:49): marca VanRoute, ilustracao da van e a escolha
+   motorista / responsavel com os botoes da Glisse. Uma coluna estreita, centralizada tambem no computador */
 :host {
   display: block;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100dvh;
+  background: var(--cor-fundo);
+  /* botoes da Glisse pintam com --lg-tint: o azul da marca */
+  --lg-tint: var(--cor-primaria);
+  --lg-fill: var(--cor-primaria);
 }
 
-.container {
+.home {
   box-sizing: border-box;
-  height: 100dvh;
-  max-width: 1200px;
+  min-height: 100dvh;
+  max-width: 440px;
   margin: 0 auto;
-  padding: 32px 40px;
-
+  padding: max(40px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom));
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 24px;
+  gap: 8px;
 }
 
-.title {
-  font-size: 40px;
-  font-weight: 600;
+/* ---------- marca ---------- */
+.topo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  animation: home-entrar 520ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) both;
+}
+
+/* o logotipo do Figma (public/vanroute-marca.svg) pintado com a cor do texto: preto no claro, branco no escuro */
+.marca {
+  width: 196px;
+  height: 33px;
   margin: 0;
-  text-align: center;
+  background: var(--cor-texto);
+  -webkit-mask: url('/vanroute-marca.svg') center / contain no-repeat;
+  mask: url('/vanroute-marca.svg') center / contain no-repeat;
 }
 
-.image-container {
+.slogan {
+  margin: 0;
+  color: var(--cor-texto-3);
+  font-size: 15px;
+}
+
+/* ---------- ilustracao ---------- */
+.palco {
+  position: relative;
   flex: 1 1 auto;
   min-height: 0;
+  width: 100%;
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  padding: 12px 0;
+  animation: home-entrar 620ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) 80ms both;
 }
 
-.main-image {
-  max-width: 400px;
+/* luz azul atras da van */
+.brilho {
+  position: absolute;
+  inset: 12% 6%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--cor-primaria) 22%, transparent), transparent);
+  filter: blur(8px);
+}
+
+.ilustracao {
+  position: relative;
+  width: min(100%, 330px);
   max-height: 100%;
-  width: auto;
   height: auto;
   object-fit: contain;
+  /* a van flutua de leve */
+  animation: home-flutuar 5s ease-in-out 700ms infinite;
 }
 
-.button-group {
+/* ---------- escolha ---------- */
+.escolha {
   width: 100%;
-  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: home-entrar 560ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) 160ms both;
 }
 
+.titulo {
+  margin: 0 0 6px;
+  text-align: center;
+  color: var(--cor-texto);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
 
-@media (max-width: 480px) {
+.botao.lg-button {
+  width: 100%;
+  height: 54px;
+  border-radius: 27px;
+  font-size: 16px;
+  font-weight: 600;
+  gap: 10px;
+  text-decoration: none;
+}
 
-  .container {
-    padding: 48px 20px 24px;
-    align-items: stretch;
-    justify-content: space-between;
-    gap: 16px;
+.botao .bi {
+  font-size: 19px;
+}
+
+/* vidro com o texto azul (o "tinted" da Glisse) */
+.botao-vidro.lg-button {
+  --lg-glass: var(--cor-primaria-suave);
+  --lg-glass-active: color-mix(in srgb, var(--cor-primaria-suave), var(--cor-primaria) 12%);
+  color: var(--cor-primaria-texto);
+}
+
+@keyframes home-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes home-flutuar {
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* computador: a ilustracao ganha mais espaco */
+@media (min-width: 600px) {
+  .home {
+    padding-top: 64px;
+    padding-bottom: 48px;
   }
 
-  .title {
-    font-size: 32px;
-    letter-spacing: -1px;
+  .marca {
+    width: 224px;
+    height: 37px;
   }
 
-  .main-image {
-    max-width: 300px;
+  .ilustracao {
+    width: min(100%, 380px);
+  }
+}
+
+/* telas baixas (celular deitado, iPhone SE): ilustracao menor pra caber tudo */
+@media (max-height: 640px) {
+  .home {
+    padding-top: 24px;
   }
 
-  .button-group {
-    display: flex;
-    flex-direction: column;
+  .ilustracao {
+    width: min(100%, 220px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topo,
+  .palco,
+  .escolha,
+  .ilustracao {
+    animation: none;
   }
 }

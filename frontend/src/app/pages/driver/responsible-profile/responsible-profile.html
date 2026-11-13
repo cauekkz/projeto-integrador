@@ -3,7 +3,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <app-esqueleto tipo="perfil" [quantos]="2" texto="Carregando perfil..." />
+      <div class="sk-tela" role="status" aria-label="Carregando perfil..."><div class="sk-linha"><app-skeleton variante="circle" largura="72px" altura="72px" /><div class="sk-col"><app-skeleton variante="title" largura="60%" altura="22px" /><app-skeleton variante="text" largura="40%" /></div></div>@for (i of [0,1]; track i) {<app-skeleton variante="card"><app-skeleton variante="text" largura="35%" altura="14px" /><app-skeleton variante="text" [quantos]="2" /></app-skeleton>}</div>
     } @else if (perfil(); as p) {
       <section class="quem" animate.enter="entrar-fade">
         @if (foto()) {

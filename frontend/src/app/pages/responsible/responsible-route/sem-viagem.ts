@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { Footer } from '../../../shared/footer/footer';
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { StudentService } from '../../../services/student.service';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -15,13 +15,17 @@ import { switchMap } from 'rxjs';
 @Component({
   selector: 'app-sem-viagem',
   standalone: true,
-  imports: [Footer, Esqueleto, TopoResponsavel, ProfileSelect],
+  imports: [Footer, Skeleton, TopoResponsavel, ProfileSelect],
   template: `
     <app-topo-responsavel [usuario]="usuario()" [filhos]="filhos()" (perfil)="mostrarPerfil.set(true)" />
 
     @if (procurando()) {
       <main class="vazio">
-        <app-esqueleto tipo="lista" [quantos]="1" texto="Procurando a viagem..." />
+        <div class="sk-tela sk-centro" role="status" aria-label="Procurando a viagem...">
+          <app-skeleton variante="circle" largura="56px" altura="56px" />
+          <app-skeleton variante="title" largura="70%" />
+          <app-skeleton variante="text" largura="85%" [quantos]="2" />
+        </div>
       </main>
     } @else {
       <main class="vazio">
@@ -41,7 +45,7 @@ import { switchMap } from 'rxjs';
       display: flex;
       flex-direction: column;
       min-height: 100dvh;
-      background: #ffffff;
+      background: var(--cor-fundo);
     }
 
     .vazio {
@@ -59,18 +63,18 @@ import { switchMap } from 'rxjs';
 
     .vazio i {
       font-size: 40px;
-      color: #94a3b8;
+      color: var(--cor-texto-4);
     }
 
     .vazio h1 {
       font-size: 20px;
       font-weight: 600;
-      color: var(--texto);
+      color: var(--cor-texto);
     }
 
     .vazio p {
       font-size: 14px;
-      color: var(--texto-3);
+      color: var(--cor-texto-3);
     }
   `,
 })

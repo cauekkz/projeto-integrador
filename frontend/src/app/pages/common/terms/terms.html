@@ -19,13 +19,13 @@
           <app-markdown-text [conteudo]="t.content" />
         </div>
       } @else {
-        <app-esqueleto tipo="texto" [quantos]="4" texto="Carregando os termos..." />
+        <div class="sk-tela" role="status" aria-label="Carregando os termos..."><app-skeleton variante="card"><app-skeleton variante="title" largura="65%" /><app-skeleton variante="text" [quantos]="4" /><app-skeleton variante="title" largura="40%" /><app-skeleton variante="text" [quantos]="6" /></app-skeleton></div>
       }
     </main>
 
     @if (!leitura) {
       <div class="acoes">
-        <button type="button" class="btn btn-azul" [disabled]="!termos() || enviando()" (click)="aceitar()">
+        <button type="button" class="btn btn-azul" [disabled]="!termos() || enviando()" (click)="aceitar()" [appCarregando]="enviando()">
           {{ enviando() ? 'Enviando...' : 'Aceito' }}
         </button>
         <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="naoAceitar()">Não aceito</button>

@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -9,12 +9,13 @@ import { DriverService } from '../../../services/driver.service';
 import { formatarChavePix, formatarCnpj, PIX_TIPOS, pixKey, PixKeyType, pixTipoLabel } from '../../../services/dto/driver/pix.dto';
 import { formatarCpf, limparMascara } from '../../../shared/utils';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 // Figma "Etapa 3 · Motorista preparado": Chave Pix (sem chave, com chave, trocar, remover)
 // a chave e conferida e normalizada no backend: a tela mostra o que voltar
 @Component({
   selector: 'app-driver-pix',
   standalone: true,
-  imports: [Esqueleto, TrailHeader, Footer, FormsModule],
+  imports: [BotaoCarregandoDirective, Skeleton, TrailHeader, Footer, FormsModule],
   templateUrl: './driver-pix.html',
   styleUrls: ['../../../shared/folha.css', './driver-pix.css'],
 })

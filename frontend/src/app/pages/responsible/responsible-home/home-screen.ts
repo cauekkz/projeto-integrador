@@ -1,5 +1,5 @@
 import { Trajeto } from '../../../shared/trajeto/trajeto';
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { catchError, forkJoin, of, switchMap } from 'rxjs';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -27,6 +27,7 @@ import {
 import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 // notificacoes que mudam o card do filho (a viagem saiu, embarcou, chegou...): busca de novo, sem polling
 const TIPOS_QUE_ATUALIZAM = ['TRIP_STARTED', 'VAN_ON_THE_WAY', 'STUDENT_BOARDED', 'STUDENT_DELIVERED', 'STUDENT_ABSENT'];
 
@@ -51,7 +52,7 @@ interface FolhaFalta {
 @Component({
   selector: 'app-responsible-home',
   standalone: true,
-  imports: [Trajeto, Esqueleto, Footer, ProfileSelect, FormsModule, TopoResponsavel],
+  imports: [BotaoCarregandoDirective, Trajeto, Skeleton, Footer, ProfileSelect, FormsModule, TopoResponsavel],
   templateUrl: './home-screen.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './home-screen.css'],
 })

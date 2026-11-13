@@ -9,16 +9,18 @@
       <form class="senha" (ngSubmit)="excluir()">
         <h2 id="excluir-titulo">Confirme com sua senha</h2>
         <p>Depois disso, sua conta não pode ser recuperada.</p>
-        <label for="senha-excluir">Senha</label>
-        <input
-          id="senha-excluir"
-          name="senha"
-          type="password"
-          [(ngModel)]="senha"
-          placeholder="Digite sua senha"
-          autocomplete="current-password"
-        />
-        <button type="submit" class="btn btn-perigo" [disabled]="enviando()">
+        <div class="flutua">
+          <label for="senha-excluir">Senha</label>
+          <input
+            id="senha-excluir"
+            name="senha"
+            type="password"
+            [(ngModel)]="senha"
+            placeholder="Digite sua senha"
+            autocomplete="current-password"
+          />
+        </div>
+        <button type="submit" class="btn btn-perigo" [disabled]="enviando()" [appCarregando]="enviando()">
           {{ enviando() ? 'Excluindo...' : 'Excluir minha conta' }}
         </button>
         <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fechar()">Voltar</button>

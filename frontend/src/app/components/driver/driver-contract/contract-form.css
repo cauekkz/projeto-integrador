@@ -1,18 +1,18 @@
 /* estilos comuns das etapas do contrato (componentes desta pasta e a pagina pages/driver-contract) */
 
 .card {
-  border: 1px solid #d6dee8;
+  border: 1px solid var(--cor-borda-forte);
   border-radius: 8px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  background: #ffffff;
+  background: var(--cor-superficie);
 }
 
 .divisor {
   border: none;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--cor-borda);
   margin: 0;
 }
 
@@ -26,7 +26,12 @@
 .campo > label,
 .campo > .rotulo {
   font-size: 14px;
-  color: #5b6b82;
+  color: var(--cor-texto-3);
+}
+
+/* rotulo flutuante (styles.css): a faixa que corta a borda tem a cor da caixa */
+.campo.flutua {
+  --flutua-fundo: var(--cor-superficie-2);
 }
 
 .caixa {
@@ -36,21 +41,21 @@
   gap: 12px;
   min-height: 58px;
   padding: 0 16px;
-  background: #f8fafc;
-  border: 1px solid #d6dee8;
+  background: var(--cor-superficie-2);
+  border: 1px solid var(--cor-borda-forte);
   border-radius: 12px;
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   min-width: 0;
 }
 
 .caixa:focus-within {
-  border-color: var(--azul);
+  border-color: var(--cor-primaria-texto);
 }
 
 .caixa.invalida {
-  border-color: var(--vermelho);
+  border-color: var(--cor-perigo);
 }
 
 .caixa input,
@@ -74,7 +79,7 @@
 
 .caixa select:invalid,
 .caixa select option[value=''] {
-  color: #94a3b8;
+  color: var(--cor-texto-4);
   font-weight: 500;
 }
 
@@ -83,7 +88,7 @@
   position: absolute;
   right: 14px;
   pointer-events: none;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   font-size: 14px;
 }
 
@@ -112,15 +117,15 @@
 
 @media (hover: hover) and (pointer: fine) {
   .caixa:has(select:not(:disabled)):not(:focus-within, .invalida):hover {
-    border-color: #b9c6d6;
-    background: #f1f5f9;
+    border-color: var(--cor-borda-forte);
+    background: var(--cor-superficie-3);
   }
 }
 
 @media (hover: hover) and (pointer: fine) {
   .caixa:has(select:not(:disabled)):hover .seta,
   .caixa:has(select:focus-visible) .seta {
-    color: var(--azul);
+    color: var(--cor-primaria-texto);
   }
 }
 
@@ -133,7 +138,7 @@
 }
 
 .caixa:focus-within {
-  box-shadow: 0 0 0 4px rgba(12, 102, 219, 0.15);
+  box-shadow: 0 0 0 4px var(--cor-foco);
 }
 
 .caixa .seta {
@@ -197,8 +202,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #e0ecfb;
-  color: #0b5cb8;
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto-forte);
   font-size: 13px;
   font-weight: 600;
 }
@@ -209,7 +214,7 @@
 
 .erro-campo {
   font-size: 13px;
-  color: var(--vermelho);
+  color: var(--cor-perigo);
 }
 
 /* barra cinza dos "Visualizar ..." */
@@ -222,17 +227,17 @@
   padding: 0 16px 0 44px;
   border: none;
   border-radius: 12px;
-  background: #f3f4f6;
+  background: var(--cor-superficie-3);
   font-size: 13px;
   font-weight: 500;
-  color: var(--texto);
+  color: var(--cor-texto);
   cursor: pointer;
   text-align: left;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .expansivel:hover {
-    background: #eceef1;
+    background: var(--cor-superficie-3);
   }
 }
 
@@ -249,12 +254,12 @@
 
 .responsavel-info .rotulo {
   font-size: 13px;
-  color: #5b6b82;
+  color: var(--cor-texto-3);
 }
 
 .responsavel-info strong {
   font-size: 14px;
-  color: var(--texto);
+  color: var(--cor-texto);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

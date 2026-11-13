@@ -11,7 +11,8 @@
       [length]="9"
       [separadores]="[3, 6]"
       instrucao=""
-      textoBotao="Confirmar"
+      [textoBotao]="confirmando() ? 'Confirmando...' : 'Confirmar'"
+      [desabilitado]="confirmando()"
       (codigoVerificado)="confirmar($event)"
     />
   </div>

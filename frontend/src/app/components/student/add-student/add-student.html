@@ -42,12 +42,12 @@
     </section>
 
     <form class="form">
-      <div class="field">
+      <div class="field flutua">
         <label>Nome do dependente</label>
         <input type="text" placeholder="Nome do dependente" [(ngModel)]="enteredName" name="name" appNameFormat />
       </div>
 
-      <div class="field">
+      <div class="field flutua">
         <label>Data de nascimento</label>
         <input
           type="text"
@@ -58,7 +58,7 @@
         />
       </div>
 
-      <div class="field">
+      <div class="field flutua">
         <label>Observações</label>
         <textarea
           placeholder="Coloque aqui informações necessárias que o motorista precise saber sobre seu dependente. Ex: auxílio para subir na van, tomar remédios."
@@ -69,32 +69,32 @@
         <span class="counter">{{ enteredObservacoes.length }}/{{ maxObs }}</span>
       </div>
 
-      <div class="field">
+      <div class="field flutua">
         <label>CEP</label>
         <input type="text" inputmode="numeric" placeholder="00000-000" [(ngModel)]="enteredCep" name="cep" appCepMask appCepBusca (enderecoCep)="preencherEndereco($event); ($event.rua ? numeroInput : ruaInput).focus()" />
       </div>
 
-      <div class="field">
+      <div class="field flutua">
         <label>Rua</label>
         <input #ruaInput type="text" placeholder="Nome da rua" [(ngModel)]="enteredStreet" name="street" />
       </div>
 
-      <div class="field">
+      <div class="field flutua">
         <label>Número</label>
         <input #numeroInput type="text" inputmode="numeric" placeholder="Número" [(ngModel)]="enteredNumber" name="number" />
       </div>
 
-      <div class="field">
+      <div class="field flutua">
         <label>Bairro</label>
         <input type="text" placeholder="Bairro" [(ngModel)]="enteredNeighborhood" name="neighborhood" />
       </div>
 
-      <div class="field">
+      <div class="field flutua">
         <label>Cidade</label>
         <input type="text" placeholder="Cidade" [(ngModel)]="enteredCity" name="city" />
       </div>
 
-      <div class="field">
+      <div class="field flutua">
         <label>Estado</label>
         <input type="text" placeholder="UF" maxlength="2" [(ngModel)]="enteredState" name="state" />
       </div>
@@ -111,7 +111,7 @@
       </div>
 
       <div class="bottom-actions">
-        <app-button [texto]="salvando ? 'Salvando...' : 'Pronto'" tipo="primary" [disabled]="salvando" (clickEvent)="pronto()"></app-button>
+        <app-button [texto]="salvando ? 'Salvando...' : 'Pronto'" tipo="primary" [carregando]="salvando" (clickEvent)="pronto()"></app-button>
         <app-button texto="Tenho um código" tipo="secondary" (clickEvent)="vincularDependente()"></app-button>
       </div>
     </form>

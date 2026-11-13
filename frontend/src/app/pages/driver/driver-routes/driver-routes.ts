@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, DestroyRef, ElementRef, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,6 +12,8 @@ import { RouteService } from '../../../services/route.service';
 import { TripService } from '../../../services/trip.service';
 import { routeWithStops, ruaENumero } from '../../../services/dto/route/route.dto';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
+import { CenaEmRota } from '../../../components/driver/cena-em-rota/cena-em-rota';
 const TAMANHO_PAGINA = 10;
 
 // home do motorista (/driver-home): a lista das rotas (Ativas/Todas), sem rotas e a folha "Nova rota" (Figma "Rotas · Motorista"),
@@ -19,7 +21,7 @@ const TAMANHO_PAGINA = 10;
 @Component({
   selector: 'app-driver-routes',
   standalone: true,
-  imports: [Esqueleto, Footer, FormsModule, ProfileSelect],
+  imports: [BotaoCarregandoDirective, Skeleton, Footer, FormsModule, ProfileSelect, CenaEmRota],
   templateUrl: './driver-routes.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-routes.css'],
 })
@@ -36,6 +38,23 @@ export class DriverRoutes implements OnInit {
   protected mostrarPerfil = signal(false);
   protected usuarioLogado = signal<UserMe | null>(null);
   private destroyRef = inject(DestroyRef);
+
+  // de noite (das 18h as 6h) os postes e o farol do card "Em rota agora" acendem; de dia aparece o sol no canto.
+  // confere o relogio a cada minuto e na hora em que a aba volta a aparecer (ex.: mudou a hora do PC e voltou pro app)
+  protected noite = signal(DriverRoutes.ehNoite());
+  private conferirHora = () => this.noite.set(DriverRoutes.ehNoite());
+  private relogio = setInterval(this.conferirHora, 60_000);
+  private ouvirAba = (document.addEventListener('visibilitychange', this.conferirHora), window.addEventListener('focus', this.conferirHora));
+  private pararRelogio = this.destroyRef.onDestroy(() => {
+    clearInterval(this.relogio);
+    document.removeEventListener('visibilitychange', this.conferirHora);
+    window.removeEventListener('focus', this.conferirHora);
+  });
+
+  private static ehNoite(agora = new Date()): boolean {
+    const hora = agora.getHours();
+    return hora >= 18 || hora < 6;
+  }
 
   // "Ativas" = so as rotas em que ele esta hoje; "Todas" inclui as que ele deixou
   protected ativas = signal(true);

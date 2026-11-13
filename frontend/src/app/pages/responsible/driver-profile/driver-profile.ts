@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Location } from '@angular/common';
@@ -12,13 +12,14 @@ import { StorageService } from '../../../services/storage.service';
 import { dataBr, driverProfile, notaBr, ratingResponse } from '../../../services/dto/profile/profile.dto';
 import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 const ESTRELAS = [1, 2, 3, 4, 5];
 
 // Figma "Responsável · /driver-profile/:id" (1057:635, 1057:709, 1057:784, 1057:994) e "Avaliar" (1057:823, 1057:904, 1057:945)
 @Component({
   selector: 'app-driver-profile',
   standalone: true,
-  imports: [Esqueleto, FormsModule, Header],
+  imports: [BotaoCarregandoDirective, Skeleton, FormsModule, Header],
   templateUrl: './driver-profile.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', '../../../shared/perfil.css', './driver-profile.css'],
 })

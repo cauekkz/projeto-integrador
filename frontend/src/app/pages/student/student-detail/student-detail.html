@@ -3,7 +3,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <app-esqueleto tipo="perfil" [quantos]="2" texto="Carregando..." />
+      <div class="sk-tela" role="status" aria-label="Carregando..."><div class="sk-centro"><app-skeleton variante="circle" largura="112px" altura="112px" /><app-skeleton variante="title" largura="40%" /></div>@for (i of [0,1]; track i) {<app-skeleton variante="card"><app-skeleton variante="text" largura="35%" altura="14px" /><div class="sk-linha"><app-skeleton variante="rect" largura="40px" altura="40px" /><div class="sk-col"><app-skeleton variante="text" largura="60%" /><app-skeleton variante="text" largura="40%" /></div></div></app-skeleton>}</div>
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar os dados.</p>
@@ -105,7 +105,7 @@
                   <strong>{{ diaEMes(falta.date) }} · {{ falta.routeName }}</strong>
                   <small>Antes de a viagem do dia começar, dá para desfazer.</small>
                 </div>
-                <button type="button" class="acao-titulo" [disabled]="desfazendo() === falta.id" (click)="eleVaiSim(falta)">
+                <button type="button" class="acao-titulo" [disabled]="desfazendo() === falta.id" (click)="eleVaiSim(falta)" [appCarregando]="desfazendo() === falta.id">
                   {{ desfazendo() === falta.id ? 'Desfazendo...' : primeiroNome() + ' vai sim' }}
                 </button>
               </div>
@@ -138,22 +138,22 @@
         @case ('tirar-endereco') {
           <h2 id="confirmar-titulo">Tirar o endereço {{ c.lugar.label || '' }}?</h2>
           <p class="sub">{{ primeiroNome() }} sai dos pontos de casa com este endereço e o motorista é avisado.</p>
-          <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="executar()">{{ enviando() ? 'Tirando...' : 'Tirar endereço' }}</button>
+          <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="executar()" [appCarregando]="enviando()">{{ enviando() ? 'Tirando...' : 'Tirar endereço' }}</button>
         }
         @case ('remover') {
           <h2 id="confirmar-titulo">Remover {{ c.pessoa.name }}?</h2>
           <p class="sub">Perde na hora o acesso às rotas, às viagens, à localização e ao histórico de {{ primeiroNome() }}.</p>
-          <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="executar()">{{ enviando() ? 'Removendo...' : 'Remover' }}</button>
+          <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="executar()" [appCarregando]="enviando()">{{ enviando() ? 'Removendo...' : 'Remover' }}</button>
         }
         @case ('passar-admin') {
           <h2 id="confirmar-titulo">Passar o admin para {{ c.pessoa.name }}?</h2>
           <p class="sub">As parcelas continuam com quem assinou o contrato. As próximas propostas do motorista vão para o novo admin.</p>
-          <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="executar()">{{ enviando() ? 'Passando...' : 'Passar o admin' }}</button>
+          <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="executar()" [appCarregando]="enviando()">{{ enviando() ? 'Passando...' : 'Passar o admin' }}</button>
         }
         @case ('sair') {
           <h2 id="confirmar-titulo">Deixar de ser responsável de {{ primeiroNome() }}?</h2>
           <p class="sub">Você perde na hora o acesso às rotas, às viagens, à localização e ao histórico de {{ primeiroNome() }}.</p>
-          <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="executar()">{{ enviando() ? 'Saindo...' : 'Deixar de ser responsável' }}</button>
+          <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="executar()" [appCarregando]="enviando()">{{ enviando() ? 'Saindo...' : 'Deixar de ser responsável' }}</button>
         }
       }
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharConfirmacao()">Voltar</button>
@@ -183,7 +183,7 @@
         <input id="data-falta" name="dataFalta" type="date" [min]="hoje()" [(ngModel)]="dataDaFalta" />
       </div>
 
-      <button type="submit" class="btn btn-azul" [disabled]="enviando()">{{ enviando() ? 'Avisando...' : 'Confirmar falta' }}</button>
+      <button type="submit" class="btn btn-azul" [disabled]="enviando()" [appCarregando]="enviando()">{{ enviando() ? 'Avisando...' : 'Confirmar falta' }}</button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharFalta()">Cancelar</button>
     </form>
   </div>
@@ -206,7 +206,7 @@
             <button type="button" class="chip" [class.ativo]="relacaoConvite() === rel" [attr.aria-pressed]="relacaoConvite() === rel" (click)="relacaoConvite.set(rel)">{{ rotuloRelacao[rel] }}</button>
           }
         </div>
-        <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="gerarCodigo()">{{ enviando() ? 'Gerando...' : 'Gerar código' }}</button>
+        <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="gerarCodigo()" [appCarregando]="enviando()">{{ enviando() ? 'Gerando...' : 'Gerar código' }}</button>
         <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharConvite()">Voltar</button>
       }
     </div>
@@ -221,7 +221,7 @@
       <h1 id="novo-endereco-titulo">Novo endereço</h1>
     </div>
 
-    <div class="campo">
+    <div class="campo flutua">
       <label for="apelido">Apelido</label>
       <input id="apelido" name="apelido" maxlength="60" placeholder="Casa da avó" [(ngModel)]="apelido" />
     </div>
@@ -242,30 +242,30 @@
     }
 
     @if (digitando()) {
-      <div class="campo">
+      <div class="campo flutua">
         <label for="cep">CEP</label>
         <input id="cep" name="cep" inputmode="numeric" placeholder="00000-000" [(ngModel)]="cep" appCepMask appCepBusca (enderecoCep)="preencherEndereco($event)" />
       </div>
-      <div class="campo">
+      <div class="campo flutua">
         <label for="rua">Rua</label>
         <input id="rua" name="rua" placeholder="Nome da rua" [(ngModel)]="rua" />
       </div>
       <div class="dupla">
-        <div class="campo">
+        <div class="campo flutua">
           <label for="numero">Número (opcional)</label>
           <input id="numero" name="numero" inputmode="numeric" placeholder="1000" [(ngModel)]="numero" />
         </div>
-        <div class="campo">
+        <div class="campo flutua">
           <label for="bairro">Bairro (opcional)</label>
           <input id="bairro" name="bairro" placeholder="Bela Vista" [(ngModel)]="bairro" />
         </div>
       </div>
       <div class="dupla">
-        <div class="campo">
+        <div class="campo flutua">
           <label for="cidade">Cidade</label>
           <input id="cidade" name="cidade" placeholder="São Paulo" [(ngModel)]="cidade" />
         </div>
-        <div class="campo">
+        <div class="campo flutua">
           <label for="estado">Estado (opcional)</label>
           <input id="estado" name="estado" maxlength="50" placeholder="SP" [(ngModel)]="estado" />
         </div>
@@ -273,7 +273,7 @@
     }
 
     <div class="acoes">
-      <button type="submit" class="btn btn-azul" [disabled]="enviando()">{{ enviando() ? 'Adicionando...' : 'Adicionar endereço' }}</button>
+      <button type="submit" class="btn btn-azul" [disabled]="enviando()" [appCarregando]="enviando()">{{ enviando() ? 'Adicionando...' : 'Adicionar endereço' }}</button>
     </div>
   </form>
 }

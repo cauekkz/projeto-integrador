@@ -1,0 +1,80 @@
+/* blocos do esqueleto com brilho passando da esquerda pra direita (CSS puro).
+   cores: --cor-esqueleto e --cor-esqueleto-brilho (styles.css, claro e escuro).
+   background-attachment: fixed deixa o brilho de todos os blocos da tela andando juntos */
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sk-gap, 8px);
+  min-width: 0;
+}
+
+.sk {
+  display: block;
+  width: 100%;
+  height: 12px;
+  border-radius: 6px;
+  background-color: var(--cor-esqueleto);
+  background-image: linear-gradient(
+    100deg,
+    transparent 30%,
+    var(--cor-esqueleto-brilho) 50%,
+    transparent 70%
+  );
+  background-size: 200vw 100%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  animation: sk-brilho 1.6s ease-in-out infinite;
+}
+
+:host(.sk-text) > .sk {
+  height: 12px;
+}
+
+:host(.sk-title) > .sk {
+  height: 20px;
+  width: 55%;
+  border-radius: 8px;
+}
+
+:host(.sk-circle) {
+  flex-direction: row;
+  flex-shrink: 0;
+}
+
+:host(.sk-circle) > .sk {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+}
+
+:host(.sk-rect) > .sk {
+  height: 120px;
+  border-radius: 14px;
+}
+
+/* "> .sk": so o bloco do proprio skeleton (um skeleton dentro do cartao tem a mesma classe) */
+/* cartao: a "casca" de um cartao real; os skeletons de dentro tem o brilho, ele nao */
+:host(.sk-card) > .sk {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: auto;
+  padding: 16px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 16px;
+  background: var(--cor-superficie);
+  animation: none;
+}
+
+@keyframes sk-brilho {
+  from { background-position: 100vw 0; }
+  to { background-position: -100vw 0; }
+}
+
+/* menos movimento: bloco parado, sem brilho */
+@media (prefers-reduced-motion: reduce) {
+  .sk {
+    background-image: none;
+    animation: none;
+  }
+}

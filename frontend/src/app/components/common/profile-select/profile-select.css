@@ -1,123 +1,241 @@
-.backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(1px);
-  -webkit-backdrop-filter: blur(4px);
-  z-index: 100;
-}
-
-.sheet {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: white;
-  border-radius: 24px 24px 0 0;
-  padding: 12px 24px 40px;
-  z-index: 101;
-  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
-}
-
-.sheet-handle {
-  width: 40px;
-  height: 4px;
-  background: #e2e8f0;
-  border-radius: 999px;
-  margin: 0 auto 24px;
-}
-
-.perfil-topo {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #f1f5f9;
-  margin-bottom: 8px;
-}
-
-.avatar {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.perfil-nome {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--texto);
-}
-
-.perfil-email {
-  font-size: 13px;
-  color: var(--texto-3);
-}
-
-.menu-lista {
-  display: flex;
-  flex-direction: column;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 4px;
-  border: none;
-  background: white;
-  font-size: 16px;
-  font-weight: 500;
-  color: var(--texto);
-  cursor: pointer;
-  border-bottom: 1px solid #f1f5f9;
-  font-family: inherit;
-}
-
-.menu-item i {
-  font-size: 18px;
-  color: var(--texto-3);
-  width: 22px;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .menu-item:hover {
-    background: #f8fafc;
-  }
-}
-
-.menu-item.danger {
-  color: var(--vermelho);
-  border-bottom: none;
-}
-
-.menu-item.danger i {
-  color: var(--vermelho);
-}
-
-/* ---------- abrir / fechar ---------- */
+/* menu do perfil: folha de baixo no estilo ajustes do iOS
+   (cartao com a lista, icones em quadradinhos, "Sair" separado) */
 
 /* display block pra opacidade do animate.leave (classe sair-perfil vem da pagina) valer pro conteudo */
 :host {
   display: block;
 }
 
-.sheet-entrar {
-  animation: sheet-subir 320ms var(--ease-folha, cubic-bezier(0.32, 0.72, 0, 1)) both;
+.fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  background: var(--overlay);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: menu-fundo-entrar 260ms ease both;
 }
 
-:host(.sair-perfil) {
-  animation: fade-sair 200ms ease both;
+.folha {
+  width: 100%;
+  max-width: 560px;
+  max-height: 90dvh;
+  overflow-y: auto;
+  /* o menu do motorista e longo: rola, mas sem a barra (ela cortava o canto redondo) */
+  scrollbar-width: none;
+  padding: 28px 16px calc(20px + env(safe-area-inset-bottom));
+  border-radius: 28px 28px 0 0;
+  background: var(--cor-fundo);
+  box-shadow: 0 -8px 30px rgb(var(--sombra-rgb) / calc(0.14 * var(--sombra-forca)));
+  animation: menu-subir 460ms var(--ease-folha) both;
 }
 
-:host(.sair-perfil) .sheet {
-  animation: sheet-descer 200ms var(--ease-out) both;
+/* ---------- topo: foto, nome e e-mail ---------- */
+.perfil-topo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 4px 18px;
 }
 
-@keyframes sheet-subir {
+.avatar {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--cor-superficie);
+  box-shadow: 0 0 0 1px var(--cor-primaria-borda);
+}
+
+.perfil-info {
+  min-width: 0;
+}
+
+.perfil-nome {
+  margin: 0;
+  overflow: hidden;
+  color: var(--cor-texto);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.perfil-email {
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: var(--cor-texto-3);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- lista em cartao ---------- */
+.menu-lista {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--cor-borda);
+  border-radius: 18px;
+  background: var(--cor-superficie);
+}
+
+.menu-lista + .menu-lista {
+  margin-top: 12px;
+}
+
+.menu-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 14px;
+  border: none;
+  background: transparent;
+  color: var(--cor-texto);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--dur-rapida) ease;
+}
+
+/* linha entre os itens comeca depois do icone (como no iOS) */
+.menu-item + .menu-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 60px;
+  right: 0;
+  height: 1px;
+  background: var(--cor-borda-suave);
+}
+
+.menu-item span {
+  flex: 1;
+  min-width: 0;
+}
+
+/* icone num quadradinho azul claro */
+.menu-item > i:first-child {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto);
+  font-size: 17px;
+}
+
+.seta {
+  color: var(--cor-texto-4);
+  font-size: 14px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .menu-item:hover {
+    background: var(--cor-superficie-2);
+  }
+}
+
+.menu-item:active {
+  background: var(--cor-superficie-3);
+}
+
+.menu-item:focus-visible {
+  outline: 2px solid var(--cor-primaria-texto);
+  outline-offset: -2px;
+  border-radius: 18px;
+}
+
+.menu-item.danger {
+  justify-content: center;
+  color: var(--cor-perigo);
+  font-weight: 600;
+}
+
+.menu-item.danger span {
+  flex: 0 1 auto;
+}
+
+.menu-item.danger > i:first-child {
+  width: auto;
+  height: auto;
+  background: none;
+  color: var(--cor-perigo);
+}
+
+/* ---------- abrir: fundo aparece, folha sobe com mola e os itens entram em cascata ---------- */
+.perfil-topo,
+.menu-lista {
+  animation: menu-item-entrar 420ms var(--ease-out) both;
+}
+
+.perfil-topo { animation-delay: 60ms; }
+.menu-lista { animation-delay: 110ms; }
+.menu-lista + .menu-lista { animation-delay: 160ms; }
+
+@keyframes menu-fundo-entrar {
+  from { background-color: transparent; -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); }
+}
+
+@keyframes menu-subir {
   from { transform: translateY(100%); }
 }
 
-@keyframes sheet-descer {
+@keyframes menu-item-entrar {
+  from { opacity: 0; transform: translateY(14px); }
+}
+
+/* ---------- fechar (clique fora, item ou puxar pra baixo): desce de onde estiver ---------- */
+:host(.sair-perfil) .fundo {
+  animation: menu-fundo-sair 240ms ease both;
+  pointer-events: none;
+}
+
+/* o host anima junto: o animate.leave do Angular espera a animacao dele pra tirar o menu da tela */
+:host(.sair-perfil) {
+  animation: menu-host-sair 240ms linear both;
+}
+
+/* !important: depois de puxar com o dedo, o arrastar-folha deixa animation:none inline na folha */
+:host(.sair-perfil) .folha {
+  animation: menu-descer 240ms cubic-bezier(0.4, 0, 1, 1) both !important;
+}
+
+@keyframes menu-host-sair {
+  to { opacity: 1; }
+}
+
+@keyframes menu-fundo-sair {
+  to { background-color: transparent; -webkit-backdrop-filter: blur(0); backdrop-filter: blur(0); }
+}
+
+/* sem "from": sai de onde esta (inclusive do meio do arrasto) */
+@keyframes menu-descer {
   to { transform: translateY(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fundo,
+  .folha,
+  .perfil-topo,
+  .menu-lista,
+  :host(.sair-perfil) .fundo,
+  :host(.sair-perfil) .folha {
+    animation-duration: 0.01ms;
+    animation-delay: 0ms;
+  }
 }

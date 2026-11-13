@@ -3,7 +3,7 @@
 
   <div class="lista">
     @if (carregandoInicial) {
-      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando conversas..." />
+      <div class="sk-tela sk-recuo" role="status" aria-label="Carregando conversas...">@for (i of [0,1,2,3]; track i) {<div class="sk-linha"><app-skeleton variante="circle" largura="52px" altura="52px" /><div class="sk-col"><app-skeleton variante="text" largura="40%" altura="14px" /><app-skeleton variante="text" largura="75%" /></div><app-skeleton variante="rect" largura="36px" altura="12px" /></div>}</div>
     } @else if (erroAoCarregar) {
       <div class="estado-lista" role="alert">
         <p>Não foi possível carregar suas conversas.</p>

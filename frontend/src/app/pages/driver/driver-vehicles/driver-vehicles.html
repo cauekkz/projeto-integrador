@@ -1,9 +1,9 @@
 <div class="pagina">
-  <app-trail-header [trilha]="['Motorista', 'Minhas vans']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+  <app-trail-header [trilha]="['Motorista', 'Minhas vans']" [mostrarSino]="true" />
 
   <main class="conteudo">
     @if (carregando()) {
-      <app-esqueleto tipo="lista" [quantos]="2" texto="Carregando vans..." />
+      <div class="sk-tela" role="status" aria-label="Carregando vans..."><app-skeleton variante="rect" largura="100%" altura="48px" class="sk-botao" />@for (i of [0,1]; track i) {<app-skeleton variante="card"><div class="sk-linha"><app-skeleton variante="rect" largura="28px" altura="28px" /><div class="sk-col"><app-skeleton variante="title" largura="40%" /></div><app-skeleton variante="rect" largura="84px" altura="24px" class="sk-pilula" /></div><app-skeleton variante="text" largura="70%" /><app-skeleton variante="rect" largura="100%" altura="48px" class="sk-botao" /></app-skeleton>}</div>
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar as vans.</p>
@@ -59,7 +59,7 @@
     </button>
     <p class="ajuda">A placa, o modelo, o ano e a lotação são lidos do CRLV. Licenciamento vencido não é aceito.</p>
 
-    <button type="button" class="btn btn-azul enviar" [disabled]="enviando()" (click)="enviar()">
+    <button type="button" class="btn btn-azul enviar" [disabled]="enviando()" (click)="enviar()" [appCarregando]="enviando()">
       {{ enviando() ? 'Enviando...' : 'Enviar' }}
     </button>
   </div>
@@ -71,7 +71,7 @@
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="parar-titulo" (click)="$event.stopPropagation()">
       <h2 id="parar-titulo">Parar de usar esta van?</h2>
       <p>A van {{ van.plate }} sai da sua lista de vans.</p>
-      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="pararDeUsar()">
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="pararDeUsar()" [appCarregando]="enviando()">
         {{ enviando() ? 'Enviando...' : 'Parar de usar' }}
       </button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharParar()">Voltar</button>

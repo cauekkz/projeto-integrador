@@ -3,7 +3,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { describe, it, expect, afterEach, vi } from 'vitest';
+import { Location } from '@angular/common';
 import { TrailHeader } from './trail-header';
+import { AuthService } from '../../services/auth.service';
 
 describe('Trilha do topo', () => {
   let http: HttpTestingController;
@@ -41,6 +43,23 @@ describe('Trilha do topo', () => {
     links[1].click();
     expect(navegar).toHaveBeenCalledWith('/responsible-route');
     expect(navegar).toHaveBeenCalledWith('/driver-groups');
+  });
+
+  it('a seta leva pra home de quem está logado', () => {
+    const { fixture, navegar } = criar(['Motorista', 'Viagem']);
+    vi.spyOn(TestBed.inject(AuthService), 'getHomeRoute').mockReturnValue('/driver-home');
+    (fixture.nativeElement.querySelector('.voltar') as HTMLButtonElement).click();
+    expect(navegar).toHaveBeenCalledWith('/driver-home');
+  });
+
+  it('com tela anterior no app, o nome na trilha volta pra ela', () => {
+    const { fixture, navegar } = criar(['Motorista', 'Viagem']);
+    const voltar = vi.spyOn(TestBed.inject(Location), 'back').mockImplementation(() => {});
+    history.replaceState({ navigationId: 3 }, '');
+    (fixture.nativeElement.querySelector('.migalha-link') as HTMLButtonElement).click();
+    history.replaceState(null, '');
+    expect(voltar).toHaveBeenCalled();
+    expect(navegar).not.toHaveBeenCalled();
   });
 
   it('links passados pela tela mandam no destino', () => {

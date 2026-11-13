@@ -1,4 +1,4 @@
-/* SegmentedControl da Glisse no VanRoute, sempre no tema claro (data-theme="light" so no controle).
+/* SegmentedControl da Glisse no VanRoute: data-theme segue o app (claro: cores do VanRoute; escuro: dark da Glisse).
    CSS global (o HTML e do React), mas tudo preso dentro de .glisse-segmentado */
 app-glisse-segmentado {
   display: block;
@@ -17,14 +17,17 @@ app-glisse-segmentado {
   --lg-tab-height: 40px;
   --lg-tab-width: calc(100cqw / var(--lg-tabs, 2));
   --lg-thumb-inset: 3px;
-  /* cores do VanRoute: trilho cinza bem leve, polegar branco, texto escuro */
-  --lg-segment-label: var(--texto);
-  --lg-segment-track: rgba(15, 23, 42, 0.06);
+  display: flex;
+  width: 100%;
+}
+
+/* cores do VanRoute no claro: trilho cinza bem leve, polegar branco, texto escuro */
+.glisse-segmentado[data-theme='light'] .lg-segmented.lg-segmented {
+  --lg-segment-label: #0f172a;
+  --lg-segment-track: rgba(0, 0, 0, 0.06);
   --lg-segment-thumb: #ffffff;
   --lg-segment-lens: rgba(12, 102, 219, 0.08);
   --lg-ring: rgba(12, 102, 219, 0.5);
-  display: flex;
-  width: 100%;
 }
 
 .glisse-segmentado .lg-segmented :is(.lg-tab, .lg-tab-copy) {
@@ -38,6 +41,18 @@ app-glisse-segmentado {
 /* polegar com uma sombra curta, como o do iOS */
 .glisse-segmentado .lg-segmented-thumb {
   box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.1),
-    0 3px 8px rgba(15, 23, 42, 0.08);
+    0 1px 2px rgb(var(--sombra-rgb) / calc(0.1 * var(--sombra-forca))),
+    0 3px 8px rgb(var(--sombra-rgb) / calc(0.08 * var(--sombra-forca)));
+}
+
+/* rotulo com icone (ex.: Aparencia no perfil): icone e texto lado a lado */
+.glisse-segmentado .glisse-seg-rotulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.glisse-segmentado .glisse-seg-rotulo i {
+  font-size: 15px;
+  line-height: 1;
 }

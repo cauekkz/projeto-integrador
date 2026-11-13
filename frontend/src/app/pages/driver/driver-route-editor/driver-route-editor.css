@@ -10,14 +10,14 @@
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
-  background: #f8fafc;
+  background: var(--cor-superficie-2);
 }
 
 .van > i {
   font-size: 24px;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
 }
 
 .van .dados {
@@ -29,19 +29,19 @@
 
 .van small {
   font-size: 11px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .van strong {
   font-size: 14px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .trocar {
   border: none;
   background: transparent;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
   font: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -73,8 +73,8 @@
   width: var(--estrada);
   border-radius: calc(var(--estrada) / 2);
   background:
-    repeating-linear-gradient(to bottom, #ffffff 0 9px, transparent 9px 18px) center / 2px 100% no-repeat,
-    linear-gradient(90deg, #cbd5e1, #dbe3ec 50%, #cbd5e1);
+    repeating-linear-gradient(to bottom, var(--cor-superficie) 0 9px, transparent 9px 18px) center / 2px 100% no-repeat,
+    linear-gradient(90deg, var(--cor-borda-forte), var(--cor-estrada) 50%, var(--cor-borda-forte));
   box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.35);
   pointer-events: none;
 }
@@ -90,9 +90,9 @@
   flex-direction: column;
   gap: 8px;
   padding: 12px 12px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--cor-superficie);
   /* as outras paradas abrem espaco deslizando enquanto uma e arrastada */
   transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 160ms ease-out;
 }
@@ -101,8 +101,8 @@
 .ponto.arrastado {
   z-index: 2;
   transition: box-shadow 160ms ease-out;
-  box-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.28);
-  border-color: #cbd5e1;
+  box-shadow: 0 12px 28px -8px rgb(var(--sombra-rgb) / calc(0.28 * var(--sombra-forca)));
+  border-color: var(--cor-borda-forte);
 }
 
 .sem-transicao > .ponto {
@@ -155,7 +155,7 @@
   width: 18px;
   height: 2px;
   border-radius: 2px;
-  background: #94a3b8;
+  background: var(--cor-texto-4);
 }
 
 .arrastado .alca {
@@ -163,12 +163,12 @@
 }
 
 .arrastado .alca span {
-  background: var(--azul);
+  background: var(--cor-primaria);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .alca:hover {
-    background: #f1f5f9;
+    background: var(--cor-superficie-3);
   }
 }
 
@@ -185,20 +185,20 @@
   width: 28px;
   height: 28px;
   border-radius: 14px;
-  background: var(--azul);
-  color: #ffffff;
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
   font-size: 13px;
   font-weight: 600;
   /* anel branco separa o marcador do asfalto */
   box-shadow:
-    0 0 0 3px #ffffff,
+    0 0 0 3px var(--cor-superficie),
     0 2px 6px rgba(12, 102, 219, 0.35);
 }
 
 /* comeco e fim do caminho: o primeiro e o ultimo marcador em azul escuro */
 .ponto:first-child .ordem,
 .ponto:last-child .ordem {
-  background: var(--azul-escuro);
+  background: var(--cor-primaria-hover);
 }
 
 .endereco,
@@ -212,12 +212,12 @@
 .endereco strong {
   font-size: 14px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .endereco small {
   font-size: 12px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .mais {
@@ -231,7 +231,7 @@
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
   font-size: 18px;
   cursor: pointer;
 }
@@ -242,7 +242,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .mais:hover {
-    background: #f1f5f9;
+    background: var(--cor-superficie-3);
   }
 }
 
@@ -263,33 +263,33 @@
 .seta-aluno {
   flex-shrink: 0;
   font-size: 12px;
-  color: #cbd5e1;
+  color: var(--cor-texto-4);
 }
 
 .acao {
   flex-shrink: 0;
   padding: 4px 8px;
   border-radius: 8px;
-  background: #ecfdf5;
-  color: #047857;
+  background: var(--cor-sucesso-suave);
+  color: var(--cor-sucesso-texto);
   font-size: 11px;
   font-weight: 600;
 }
 
 .acao.desce {
-  background: #eff8fe;
-  color: var(--azul-escuro);
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto-forte);
 }
 
 .aluno strong {
   font-size: 13px;
   font-weight: 500;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .aluno small {
   font-size: 11px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 /* "Adicionar aluno" / "Iniciar rota" logo acima do rodape */
@@ -328,7 +328,7 @@
 
 .folha .sub {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .chip.numero {
@@ -349,16 +349,16 @@
   justify-content: space-between;
   gap: 12px;
   padding: 12px 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
   font-size: 14px;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .tirar {
   border: none;
   background: transparent;
-  color: var(--vermelho-texto);
+  color: var(--cor-perigo-texto);
   font: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -375,11 +375,11 @@
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
-  border: 1px solid #fde68a;
+  border: 1px solid var(--cor-aviso-borda);
   border-radius: 14px;
-  background: #fffbeb;
+  background: var(--cor-aviso-suave);
   font-size: 13px;
-  color: #92400e;
+  color: var(--cor-aviso-texto);
 }
 
 .repetida i {
@@ -398,7 +398,7 @@
   background: none;
   font: inherit;
   font-weight: 600;
-  color: #92400e;
+  color: var(--cor-aviso-texto);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;

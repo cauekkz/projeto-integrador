@@ -13,8 +13,8 @@
 .sucesso-card {
   width: 100%;
   border-radius: 24px;
-  background: white;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  background: var(--cor-superficie);
+  box-shadow: 0 4px 16px rgb(var(--sombra-rgb) / calc(0.08 * var(--sombra-forca)));
   padding: 32px 24px;
   display: flex;
   flex-direction: column;
@@ -35,7 +35,7 @@
 .sucesso-texto {
   font-size: 20px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .sucesso-ilustracao {

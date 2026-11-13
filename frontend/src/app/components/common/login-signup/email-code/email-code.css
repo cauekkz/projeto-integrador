@@ -15,7 +15,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100dvh;
-  background: white;
+  background: var(--cor-fundo);
 }
 
 .code-container {
@@ -31,14 +31,14 @@
 }
 .instrucao {
   text-align: center;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   font-size: 16px;
   max-width: 260px;
 }
 
 .email {
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   font-size: 16px;
 }
 
@@ -52,35 +52,35 @@
   width: 48px;
   height: 60px;
   border: none;
-  border-bottom: 2px solid #cbd5e1;
+  border-bottom: 2px solid var(--cor-borda-forte);
   border-radius: 0;
   text-align: center;
   font-size: 32px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   outline: none;
   background: transparent;
 }
 
 .code-input:focus {
-  border-bottom-color: var(--azul);
+  border-bottom-color: var(--cor-primaria-texto);
 }
 
 .nao-encontrou {
-  color: #94a3b8;
+  color: var(--cor-texto-4);
   font-size: 14px;
   text-align: center;
 }
 
 .nao-encontrou em {
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .btn-reenviar {
   margin-top: 8px;
   background: transparent;
-  border: 1px solid var(--azul);
-  color: var(--azul);
+  border: 1px solid var(--cor-primaria-texto);
+  color: var(--cor-primaria-texto);
   border-radius: 14px;
   padding: 12px 32px;
   font-size: 16px;
@@ -90,7 +90,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .btn-reenviar:hover {
-    background: #eff6ff;
+    background: var(--cor-primaria-suave);
   }
 }
 
@@ -99,8 +99,8 @@
   height: 56px;
   border: none;
   border-radius: 14px;
-  background: var(--azul);
-  color: white;
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
@@ -114,7 +114,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .btn-verificar:hover:not(:disabled) {
-    background: #0052a3;
+    background: var(--cor-primaria-hover);
   }
 }
 

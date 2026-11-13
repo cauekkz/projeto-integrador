@@ -2,7 +2,8 @@
   <button
     [type]="type"
     [ngClass]="['btn', 'btn-' + tipo]"
-    [disabled]="disabled"
+    [disabled]="disabled || carregando"
+    [appCarregando]="carregando"
     (click)="onClick()">
     <ng-content></ng-content>
     @if (texto) {

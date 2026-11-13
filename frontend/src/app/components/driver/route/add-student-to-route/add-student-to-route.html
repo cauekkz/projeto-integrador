@@ -115,7 +115,7 @@
       </ul>
 
       @if (ponto() === null) {
-        <div class="campo">
+        <div class="campo flutua">
           <label for="posicao">Posição do ponto novo (opcional)</label>
           <input id="posicao" name="posicao" type="number" min="1" inputmode="numeric" [(ngModel)]="posicao" placeholder="Automática" />
         </div>
@@ -125,7 +125,7 @@
         @if (temEtapa4()) {
           <button type="button" class="btn btn-azul" (click)="continuar()">Continuar</button>
         } @else {
-          <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="enviar()">
+          <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="enviar()" [appCarregando]="enviando()">
             {{ enviando() ? 'Adicionando...' : 'Adicionar à rota' }}
           </button>
         }
@@ -147,7 +147,7 @@
         }
       </ul>
       <div class="acoes">
-        <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="enviar()">
+        <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="enviar()" [appCarregando]="enviando()">
           {{ enviando() ? 'Adicionando...' : totalNoEnvio() > 1 ? 'Adicionar ' + totalNoEnvio() + ' alunos' : 'Adicionar só ' + (aluno()?.studentName ?? '') }}
         </button>
       </div>

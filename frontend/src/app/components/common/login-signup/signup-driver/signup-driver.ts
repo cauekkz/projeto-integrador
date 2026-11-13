@@ -1,22 +1,24 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RegisterService } from '../../../../services/register.service';
 import { AuthService } from '../../../../services/auth.service';
 import { Header } from '../../../../shared/header/header';
-import { Button } from '../../../../shared/button/button';
 import { PhoneMaskDirective, PasswordToggleDirective } from '../../../../shared/directives';
 import { TermsAccept } from '../terms-accept/terms-accept';
 import { PopUpService } from '../../../../shared/pop-up';
 import { limparMascara } from '../../../../shared/utils';
 
+import { BotaoCarregandoDirective } from '../../../../shared/botao-carregando/botao-carregando.directive';
 @Component({
   selector: 'app-signup-driver',
   standalone: true,
-  imports: [FormsModule, Header, Button, PhoneMaskDirective, PasswordToggleDirective, TermsAccept],
+  imports: [BotaoCarregandoDirective, FormsModule, Header, PhoneMaskDirective, PasswordToggleDirective, TermsAccept],
   templateUrl: './signup-driver.html',
-  styleUrl: './signup-driver.css',
+  styleUrls: ['../../../../shared/cadastro.css', './signup-driver.css'],
 })
 export class SignupDriver {
+  // so pra tela: barra no botao enquanto o cadastro responde
+  protected cadastrando = signal(false);
   @Output() cadastroConcluidoEvent = new EventEmitter<{
     email: string;
   }>();
@@ -95,14 +97,17 @@ export class SignupDriver {
       acceptedTermsVersion: this.versaoTermos,
     };
 
+    if (this.cadastrando()) return;
+    this.cadastrando.set(true);
     this.authService.createDriver(data).subscribe({
       next: () => {
+        this.cadastrando.set(false);
         this.cadastroConcluidoEvent.emit({
           email: this.enteredEmail,
         });
       },
       // o popup global mostra a mensagem do backend (CNH recusada, e-mail em uso, senha fraca...)
-      error: () => {},
+      error: () => this.cadastrando.set(false),
     });
   }
 }

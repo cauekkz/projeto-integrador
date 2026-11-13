@@ -4,21 +4,21 @@
   gap: 8px;
   font-size: 14px;
   line-height: 1.55;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 .titulo {
   font-size: 16px;
   font-weight: 600;
   line-height: 1.35;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .secao {
   margin-top: 12px;
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .paragrafo,
@@ -40,7 +40,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--azul);
+  background: var(--cor-primaria);
 }
 
 .item.sub {
@@ -49,12 +49,12 @@
 
 .item.sub::before {
   background: transparent;
-  border: 1px solid var(--azul);
+  border: 1px solid var(--cor-primaria-texto);
   width: 4px;
   height: 4px;
 }
 
 strong {
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
