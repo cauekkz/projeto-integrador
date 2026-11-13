@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- foto de perfil padrao: circulo cinza claro com a silhueta (cabeca e ombros) em cinza medio -->
+  <defs><clipPath id="c"><circle cx="64" cy="64" r="64"/></clipPath></defs>
+  <g clip-path="url(#c)">
+    <rect width="128" height="128" fill="#c8c8c8"/>
+    <circle cx="64" cy="48" r="24" fill="#9a9a9a"/>
+    <ellipse cx="64" cy="118" rx="44" ry="36" fill="#9a9a9a"/>
+  </g>
+</svg>

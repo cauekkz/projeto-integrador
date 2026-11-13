@@ -22,7 +22,7 @@
         @if (carregando) {
           <app-skeleton variante="circle" largura="112px" altura="112px" />
         } @else {
-          <img [src]="fotoPreview || usuario.photoUrl || '/testee.jpg'" class="avatar-grande" alt="Foto do usuário">
+          <img [src]="fotoPreview || usuario.photoUrl || '/avatar-padrao.svg'" class="avatar-grande" alt="Foto do usuário">
         }
         @if (enviandoFoto) {
           <span class="avatar-carregando" aria-hidden="true"></span>

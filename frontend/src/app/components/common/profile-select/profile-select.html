@@ -3,7 +3,7 @@
 <div class="folha" role="dialog" aria-modal="true" aria-label="Menu do perfil" (click)="$event.stopPropagation()">
 
   <div class="perfil-topo">
-    <img [src]="usuario?.photoUrl || '/testee.jpg'" class="avatar" alt="">
+    <img [src]="usuario?.photoUrl || '/avatar-padrao.svg'" class="avatar" alt="">
     <div class="perfil-info">
       <p class="perfil-nome">{{ usuario?.name || '' }}</p>
       <p class="perfil-email">{{ usuario?.email || '' }}</p>

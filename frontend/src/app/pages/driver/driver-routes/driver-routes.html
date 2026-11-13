@@ -11,7 +11,7 @@
     </div>
 
     <div class="user-info" role="button" tabindex="0" (click)="mostrarPerfil.set(true)" (keydown.enter)="mostrarPerfil.set(true)">
-      <img [src]="usuarioLogado()?.photoUrl || '/testee.jpg'" class="avatar" alt="Foto do motorista" />
+      <img [src]="usuarioLogado()?.photoUrl || '/avatar-padrao.svg'" class="avatar" alt="Foto do motorista" />
       <span class="name">{{ usuarioLogado()?.name || '' }}</span>
     </div>
 
