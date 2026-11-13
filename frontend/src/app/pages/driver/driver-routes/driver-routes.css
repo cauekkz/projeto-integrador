@@ -169,66 +169,51 @@
 }
 
 /* sol (de dia) e lua (de noite) no canto de cima do card; a hora decide, nao o tema.
-   as cores funcionam tanto no card azul (claro) quanto na superficie escura */
+   cores quentes/claras que funcionam no card azul (claro) e na superficie escura */
 .em-rota-astro {
   position: absolute;
-  top: 18px;
-  right: 20px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
+  top: 10px;
+  right: 12px;
+  overflow: visible;
 }
 
-/* sol: miolo amarelo com halo suave e raios curtos girando devagar */
+/* sol: miolo com degrade e halo quente; raios girando devagar */
 .em-rota-sol {
-  background: radial-gradient(circle at 35% 35%, #fff3c4, #fcd34d 55%, #f59e0b);
-  box-shadow: 0 0 0 4px rgb(252 211 77 / 0.18), 0 0 16px 4px rgb(252 211 77 / 0.35);
+  filter: drop-shadow(0 0 6px rgb(252 211 77 / 0.55));
 }
 
-.em-rota-sol::before {
-  content: '';
-  position: absolute;
-  inset: -9px;
-  border-radius: 50%;
-  background: repeating-conic-gradient(rgb(252 211 77 / 0.9) 0 6deg, transparent 6deg 45deg);
-  mask: radial-gradient(circle, transparent 13.5px, #000 14px, #000 18px, transparent 18.5px);
-  animation: sol-girando 24s linear infinite;
+.em-rota-sol .sol-raios {
+  stroke: #fcd34d;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  transform-origin: 20px 20px;
+  animation: sol-girando 30s linear infinite;
 }
 
-/* lua: crescente (circulo claro recortado por uma sombra interna), com brilho frio e duas estrelinhas */
+/* lua: crescente marfim com brilho frio, crateras discretas e estrelinhas piscando */
 .em-rota-lua {
-  box-shadow: inset -7px -3px 0 0 #f1f5f9;
-  filter: drop-shadow(0 0 6px rgb(226 232 240 / 0.55));
-  transform: rotate(-20deg);
+  filter: drop-shadow(0 0 7px rgb(255 248 220 / 0.45));
 }
 
-.em-rota-lua::before,
-.em-rota-lua::after {
-  content: '';
-  position: absolute;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: #f1f5f9;
-  animation: estrela-piscando 2.8s ease-in-out infinite;
+.em-rota-lua .lua-cratera {
+  fill: rgb(180 165 120 / 0.35);
 }
 
-.em-rota-lua::before {
-  top: 18px;
-  left: -14px;
+.em-rota-lua .lua-estrela {
+  fill: #fffdf2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: estrela-piscando 3s ease-in-out infinite;
 }
 
-.em-rota-lua::after {
-  top: -4px;
-  left: -8px;
-  width: 2px;
-  height: 2px;
-  animation-delay: 1.4s;
+.em-rota-lua .lua-estrela-2 {
+  animation-delay: 1.5s;
 }
 
 @keyframes estrela-piscando {
   50% {
-    opacity: 0.25;
+    opacity: 0.3;
+    transform: scale(0.7);
   }
 }
 
@@ -240,9 +225,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ao-vivo::after,
-  .em-rota-sol::before,
-  .em-rota-lua::before,
-  .em-rota-lua::after {
+  .em-rota-sol .sol-raios,
+  .em-rota-lua .lua-estrela {
     animation: none;
   }
 }
