@@ -109,30 +109,12 @@
   border-radius: 20px;
   overflow: hidden;
   color: var(--cor-sobre-primaria);
-  background: radial-gradient(120% 140% at 100% 0%, #2b86f0 0%, var(--cor-primaria) 45%, var(--cor-primaria-hover) 100%);
-  box-shadow: 0 14px 28px -14px rgba(10, 84, 181, 0.7);
-}
-
-.em-rota-linha {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.em-rota-icone {
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: rgb(var(--vidro-rgb) / 0.16);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / calc(0.22 * var(--brilho-forca)));
-  font-size: 22px;
+  /* azul solido da marca e a sombra padrao dos cartoes (sem brilho/gradiente) */
+  background: var(--cor-primaria);
+  box-shadow: 0 6px 16px -8px rgb(var(--sombra-rgb) / calc(0.35 * var(--sombra-forca)));
 }
 
 .em-rota-texto {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -140,8 +122,9 @@
 }
 
 .em-rota-texto strong {
-  font-size: 17px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -185,26 +168,106 @@
   }
 }
 
-/* a faixa tracejada da estrada correndo pra tras: a van esta andando */
-.em-rota-estrada {
-  height: 6px;
-  border-radius: 3px;
-  background:
-    repeating-linear-gradient(90deg, rgb(var(--vidro-rgb) / 0.85) 0 14px, transparent 14px 28px) 0 50% / 28px 2px repeat-x,
-    rgb(var(--vidro-rgb) / 0.14);
-  animation: estrada-correndo 0.9s linear infinite;
+/* sol (de dia) e lua (de noite) no canto de cima do card; a hora decide, nao o tema.
+   as cores funcionam tanto no card azul (claro) quanto na superficie escura */
+.em-rota-astro {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
 }
 
-@keyframes estrada-correndo {
+/* sol: miolo amarelo com halo suave e raios curtos girando devagar */
+.em-rota-sol {
+  background: radial-gradient(circle at 35% 35%, #fff3c4, #fcd34d 55%, #f59e0b);
+  box-shadow: 0 0 0 4px rgb(252 211 77 / 0.18), 0 0 16px 4px rgb(252 211 77 / 0.35);
+}
+
+.em-rota-sol::before {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(rgb(252 211 77 / 0.9) 0 6deg, transparent 6deg 45deg);
+  mask: radial-gradient(circle, transparent 13.5px, #000 14px, #000 18px, transparent 18.5px);
+  animation: sol-girando 24s linear infinite;
+}
+
+/* lua: crescente (circulo claro recortado por uma sombra interna), com brilho frio e duas estrelinhas */
+.em-rota-lua {
+  box-shadow: inset -7px -3px 0 0 #f1f5f9;
+  filter: drop-shadow(0 0 6px rgb(226 232 240 / 0.55));
+  transform: rotate(-20deg);
+}
+
+.em-rota-lua::before,
+.em-rota-lua::after {
+  content: '';
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  animation: estrela-piscando 2.8s ease-in-out infinite;
+}
+
+.em-rota-lua::before {
+  top: 18px;
+  left: -14px;
+}
+
+.em-rota-lua::after {
+  top: -4px;
+  left: -8px;
+  width: 2px;
+  height: 2px;
+  animation-delay: 1.4s;
+}
+
+@keyframes estrela-piscando {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes sol-girando {
   to {
-    background-position: -28px 50%, 0 0;
+    transform: rotate(360deg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ao-vivo::after,
-  .em-rota-estrada {
+  .em-rota-sol::before,
+  .em-rota-lua::before,
+  .em-rota-lua::after {
     animation: none;
+  }
+}
+
+/* ---------- modo escuro: o card vira uma cena de noite ----------
+   mesmo fundo dos outros cartoes do tema escuro (superficie + borda), sem o azul chapado;
+   o azul da marca fica so no botao, como o "Nova rota" */
+:host-context([data-theme='dark']) .em-rota {
+  background: var(--cor-superficie);
+  box-shadow: inset 0 0 0 1px var(--cor-borda), 0 6px 16px -8px rgb(var(--sombra-rgb) / 0.6);
+  color: var(--cor-texto);
+}
+
+:host-context([data-theme='dark']) .em-rota-selo {
+  color: #86efac;
+}
+
+:host-context([data-theme='dark']) .em-rota-abrir {
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :host-context([data-theme='dark']) .em-rota-abrir:hover {
+    background: var(--cor-primaria-hover);
   }
 }
 

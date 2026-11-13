@@ -2,7 +2,7 @@
 // so e carregado por import() no TripMap, entao React + MapLibre ficam num pedaco separado do app.
 // claro/escuro: o mapcn le o data-theme do <html> (ThemeService) e troca o fundo sozinho
 import type * as MapLibreGL from 'maplibre-gl';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Map, MapMarker, MapRoute, MarkerContent, useMap } from '../../../../shared/mapcn/map';
 
@@ -81,40 +81,210 @@ function Camera({ props, aoCarregar }: { props: PropsMapaViagem; aoCarregar: (ma
   return null;
 }
 
-// a van desliza ate a posicao nova (~1 s) em vez de pular; o GPS manda a cada 3 s
-function Van({ latitude, longitude }: { latitude: number; longitude: number }) {
-  const [posicao, setPosicao] = useState<Ponto>([longitude, latitude]);
-  const atual = useRef<Ponto>(posicao);
+// rumo (graus, 0 = norte, sentido horario) de um ponto pro outro
+function rumo([lng1, lat1]: Ponto, [lng2, lat2]: Ponto): number {
+  const rad = Math.PI / 180;
+  const y = Math.sin((lng2 - lng1) * rad) * Math.cos(lat2 * rad);
+  const x = Math.cos(lat1 * rad) * Math.sin(lat2 * rad) - Math.sin(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos((lng2 - lng1) * rad);
+  return (Math.atan2(y, x) / rad + 360) % 360;
+}
+
+// distancia aproximada em metros (so pra saber se andou o bastante)
+function metros([lng1, lat1]: Ponto, [lng2, lat2]: Ponto): number {
+  const k = 111_320;
+  const dx = (lng2 - lng1) * k * Math.cos(((lat1 + lat2) / 2) * (Math.PI / 180));
+  const dy = (lat2 - lat1) * k;
+  return Math.hypot(dx, dy);
+}
+
+// pra onde a van esta indo: a direcao da rua no comeco do caminho (primeiro trecho de uns 10 m).
+// usa o proprio caminho e nao a van, porque o GPS costuma ficar uns metros fora da linha
+function rumoPeloCaminho(caminho: Ponto[]): number | null {
+  const inicio = caminho[0];
+  if (!inicio) return null;
+  for (const ponto of caminho) {
+    if (metros(inicio, ponto) >= 10) return rumo(inicio, ponto);
+  }
+  return null;
+}
+
+// van escolar vista de cima (frente pra cima), no formato da referencia do chefe: capo arredondado,
+// para-brisa, retrovisores, tres janelas no teto e as janelas laterais. Cores pelos tokens do app
+// (trip-map.css): a lataria usa --cor-texto, entao fica escura no tema claro e branca no escuro
+function VanDeCima() {
+  // ids unicos dos gradientes (dois mapas na tela nao se misturam)
+  const id = useId().replace(/:/g, '');
+  const lataria = `van-lataria-${id}`;
+  const teto = `van-teto-${id}`;
+  const capo = `van-capo-${id}`;
+  return (
+    <svg className="van-3d" viewBox="0 0 48 100" width="26" height="54" role="img" aria-label="Van escolar">
+      <defs>
+        {/* lataria: laterais mais escuras, como luz vindo de cima */}
+        <linearGradient id={lataria} x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" className="van-c-lateral" />
+          <stop offset="0.2" className="van-c-corpo" />
+          <stop offset="0.8" className="van-c-corpo" />
+          <stop offset="1" className="van-c-lateral" />
+        </linearGradient>
+        {/* teto: brilho no meio, cai pras bordas */}
+        <linearGradient id={teto} x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" className="van-c-corpo" />
+          <stop offset="0.5" className="van-c-brilho" />
+          <stop offset="1" className="van-c-corpo" />
+        </linearGradient>
+        {/* capo: mais claro na frente */}
+        <linearGradient id={capo} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0" className="van-c-brilho" />
+          <stop offset="1" className="van-c-corpo" />
+        </linearGradient>
+      </defs>
+
+      {/* retrovisores */}
+      <path className="van-detalhe" d="M5 25.5 L1.6 23 Q0.4 21.9 2 21.2 L7.5 22.6 Z" />
+      <path className="van-detalhe" d="M43 25.5 L46.4 23 Q47.6 21.9 46 21.2 L40.5 22.6 Z" />
+
+      {/* lataria */}
+      <path className="van-contorno" fill={`url(#${lataria})`} d="M10 4 Q24 0 38 4 Q43 6 43 14 L43 92 Q43 98 37 98 L11 98 Q5 98 5 92 L5 14 Q5 6 10 4 Z" />
+
+      {/* capo e farois */}
+      <path fill={`url(#${capo})`} d="M9 7 Q24 3 39 7 Q41 10 41 17 L7 17 Q7 10 9 7 Z" />
+      <rect className="van-farol" x="9.5" y="5.2" width="6" height="2.2" rx="1.1" />
+      <rect className="van-farol" x="32.5" y="5.2" width="6" height="2.2" rx="1.1" />
+
+      {/* para-brisa com reflexo */}
+      <path className="van-vidro" d="M7.5 18 L40.5 18 Q41 22 38.5 25.5 L9.5 25.5 Q7 22 7.5 18 Z" />
+      <path className="van-reflexo" d="M11 19.2 L20 19.2 L16 24.2 L10.6 24.2 Q9.6 22 11 19.2 Z" />
+
+      {/* teto */}
+      <rect fill={`url(#${teto})`} className="van-contorno-suave" x="9" y="27" width="30" height="67" rx="3.5" />
+
+      {/* janelas do teto */}
+      <rect className="van-vidro" x="17" y="35" width="14" height="8" rx="1.6" />
+      <rect className="van-vidro" x="17" y="55" width="14" height="8" rx="1.6" />
+      <rect className="van-vidro" x="17" y="75" width="14" height="8" rx="1.6" />
+
+      {/* janelas laterais */}
+      <rect className="van-vidro" x="5.6" y="30" width="2.6" height="13" rx="1" />
+      <rect className="van-vidro" x="5.6" y="46" width="2.6" height="13" rx="1" />
+      <rect className="van-vidro" x="5.6" y="62" width="2.6" height="13" rx="1" />
+      <rect className="van-vidro" x="5.6" y="78" width="2.6" height="13" rx="1" />
+      <rect className="van-vidro" x="39.8" y="30" width="2.6" height="13" rx="1" />
+      <rect className="van-vidro" x="39.8" y="46" width="2.6" height="13" rx="1" />
+      <rect className="van-vidro" x="39.8" y="62" width="2.6" height="13" rx="1" />
+      <rect className="van-vidro" x="39.8" y="78" width="2.6" height="13" rx="1" />
+
+      {/* lanternas */}
+      <rect className="van-lanterna" x="8" y="95.2" width="6" height="2" rx="1" />
+      <rect className="van-lanterna" x="34" y="95.2" width="6" height="2" rx="1" />
+    </svg>
+  );
+}
+
+// van 3D (vista de cima, como nos apps de corrida): desliza ate a posicao nova (~1 s, o GPS manda a cada 3 s)
+// e gira pra direcao do motorista. Sem caminho, usa a direcao em que ela andou
+function Van({ latitude, longitude, caminho }: { latitude: number; longitude: number; caminho: Ponto[] }) {
+  const [estado, setEstado] = useState<{ p: Ponto; angulo: number }>({ p: [longitude, latitude], angulo: 0 });
+  const atual = useRef(estado);
 
   useEffect(() => {
     const origem = atual.current;
     const destino: Ponto = [longitude, latitude];
-    if (origem[0] === destino[0] && origem[1] === destino[1]) return;
+    const andou = metros(origem.p, destino);
+    const alvoAngulo = rumoPeloCaminho(caminho) ?? (andou >= 3 ? rumo(origem.p, destino) : origem.angulo);
+    // gira pelo lado mais curto (de 350 pra 10 sao 20 graus, nao 340)
+    const giro = ((alvoAngulo - origem.angulo + 540) % 360) - 180;
+    if (andou === 0 && Math.abs(giro) < 0.5) return;
     const inicio = performance.now();
     let quadro = 0;
     const passo = (agora: number) => {
       const t = Math.min(1, (agora - inicio) / 1000);
       const suave = t * (2 - t);
-      const p: Ponto = [origem[0] + (destino[0] - origem[0]) * suave, origem[1] + (destino[1] - origem[1]) * suave];
-      atual.current = p;
-      setPosicao(p);
+      const novo = {
+        p: [origem.p[0] + (destino[0] - origem.p[0]) * suave, origem.p[1] + (destino[1] - origem.p[1]) * suave] as Ponto,
+        angulo: (origem.angulo + giro * suave + 360) % 360,
+      };
+      atual.current = novo;
+      setEstado(novo);
       if (t < 1) quadro = requestAnimationFrame(passo);
     };
     quadro = requestAnimationFrame(passo);
     return () => cancelAnimationFrame(quadro);
-  }, [latitude, longitude]);
+  }, [latitude, longitude, caminho]);
 
   return (
-    <MapMarker longitude={posicao[0]} latitude={posicao[1]}>
+    <MapMarker longitude={estado.p[0]} latitude={estado.p[1]} rotation={estado.angulo} rotationAlignment="map" pitchAlignment="map">
       <MarkerContent>
-        <div className="marcador-van" style={{ zIndex: 2 }}>
-          <span>
-            <i className="bi bi-bus-front-fill" aria-hidden="true"></i>
-          </span>
-        </div>
+        <VanDeCima />
       </MarkerContent>
     </MapMarker>
   );
+}
+
+// setas brancas ao longo da linha mostrando o sentido da viagem (o caminho vai da van pros pontos).
+// camada de simbolos do MapLibre presa na linha; volta sozinha quando o tema troca o estilo do mapa
+const IMAGEM_SETA = 'vanroute-seta-rota';
+
+function desenharSeta(): ImageData {
+  const lado = 24;
+  const canvas = document.createElement('canvas');
+  canvas.width = lado;
+  canvas.height = lado;
+  const ctx = canvas.getContext('2d')!;
+  // chevron apontando pra direita: o MapLibre alinha a direita da imagem com o sentido da linha
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 3.4;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.beginPath();
+  ctx.moveTo(8, 6);
+  ctx.lineTo(15, 12);
+  ctx.lineTo(8, 18);
+  ctx.stroke();
+  return ctx.getImageData(0, 0, lado, lado);
+}
+
+function SetasDaRota({ linha }: { linha: Ponto[] }) {
+  const { map, isLoaded } = useMap();
+  const fonte = 'vanroute-setas-fonte';
+  const camada = 'vanroute-setas';
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    if (!map.hasImage(IMAGEM_SETA)) map.addImage(IMAGEM_SETA, desenharSeta(), { pixelRatio: 2 });
+    map.addSource(fonte, { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: [] } } });
+    map.addLayer({
+      id: camada,
+      type: 'symbol',
+      source: fonte,
+      layout: {
+        'symbol-placement': 'line',
+        'symbol-spacing': 64,
+        'icon-image': IMAGEM_SETA,
+        'icon-size': 1,
+        'icon-allow-overlap': true,
+        'icon-ignore-placement': true,
+        'icon-rotation-alignment': 'map',
+        'icon-keep-upright': false,
+      },
+    });
+    return () => {
+      try {
+        if (map.getLayer(camada)) map.removeLayer(camada);
+        if (map.getSource(fonte)) map.removeSource(fonte);
+      } catch {
+        // mapa ja destruido
+      }
+    };
+  }, [map, isLoaded]);
+
+  useEffect(() => {
+    if (!map || !isLoaded) return;
+    const origem = map.getSource(fonte) as MapLibreGL.GeoJSONSource | undefined;
+    origem?.setData({ type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: linha.length > 1 ? linha : [] } });
+  }, [map, isLoaded, linha]);
+
+  return null;
 }
 
 // linha azul com borda por baixo (como nos apps de corrida); a borda acompanha o fundo do tema
@@ -133,6 +303,7 @@ function MapaViagem({ props, aoCarregar }: { props: PropsMapaViagem; aoCarregar:
   return (
     <Map center={CENTRO_INICIAL} zoom={13} className="mapa-viagem">
       {linha.length > 1 && <Rota linha={linha} />}
+      {linha.length > 1 && <SetasDaRota linha={linha} />}
       {props.pontos.map((ponto) => (
         <MapMarker key={ponto.id} longitude={ponto.longitude} latitude={ponto.latitude}>
           <MarkerContent>
@@ -145,7 +316,7 @@ function MapaViagem({ props, aoCarregar }: { props: PropsMapaViagem; aoCarregar:
           </MarkerContent>
         </MapMarker>
       ))}
-      {props.van && <Van latitude={props.van.latitude} longitude={props.van.longitude} />}
+      {props.van && <Van latitude={props.van.latitude} longitude={props.van.longitude} caminho={linha} />}
       <Camera props={props} aoCarregar={aoCarregar} />
     </Map>
   );

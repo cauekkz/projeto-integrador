@@ -40,7 +40,12 @@ export class TripMap implements AfterViewInit, OnDestroy {
   private destruido = false;
 
   constructor() {
-    effect(() => this.mapa?.atualizar(this.props()));
+    // le os dados SEMPRE (antes de olhar o mapa): assim o effect fica inscrito nos inputs
+    // mesmo quando a viagem chega antes do mapa terminar de abrir
+    effect(() => {
+      const props = this.props();
+      this.mapa?.atualizar(props);
+    });
   }
 
   private props(): PropsMapaViagem {
