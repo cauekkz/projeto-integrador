@@ -105,6 +105,26 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--cor-texto);
+  /* agora e botao: tira o visual padrao e mostra que da pra tocar */
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .usuario:hover {
+    background: var(--cor-fundo-suave, rgb(var(--sombra-rgb) / 0.06));
+  }
+}
+
+.usuario:active {
+  transform: scale(0.97);
+}
+
+.usuario:focus-visible {
+  outline: 2px solid var(--cor-primaria-texto);
+  outline-offset: 2px;
 }
 
 .usuario img {

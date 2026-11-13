@@ -3,6 +3,8 @@ import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
+import { ProfileSelect } from '../../components/common/profile-select/profile-select';
+import { UserMe } from '../../models/user.model';
 
 // cada item da trilha (menos o ultimo, que e a tela atual) leva pra pagina dele
 export const DESTINO_DA_TRILHA: Record<string, string> = {
@@ -18,6 +20,7 @@ export const DESTINO_DA_TRILHA: Record<string, string> = {
 @Component({
   selector: 'app-trail-header',
   standalone: true,
+  imports: [ProfileSelect],
   templateUrl: './trail-header.html',
   styleUrl: './trail-header.css',
 })
@@ -34,7 +37,10 @@ export class TrailHeader implements OnInit {
   protected notificacoes = inject(NotificationService);
 
   protected nome = signal('');
-  protected foto = signal('/testee.jpg');
+  protected foto = signal('/avatar-padrao.svg');
+  // painel do perfil (o mesmo das homes), aberto pela foto/nome
+  protected mostrarPerfil = signal(false);
+  protected usuario = signal<UserMe | null>(null);
 
   protected destino(indice: number, item: string): string | null {
     const links = this.links();
@@ -58,6 +64,7 @@ export class TrailHeader implements OnInit {
     if (this.mostrarSino()) this.notificacoes.iniciar();
     this.authService.getMe().subscribe({
       next: (me) => {
+        this.usuario.set(me);
         // so o primeiro nome cabe na pilula
         this.nome.set((me.name ?? '').split(' ')[0]);
         if (me.photoUrl) this.foto.set(me.photoUrl);
