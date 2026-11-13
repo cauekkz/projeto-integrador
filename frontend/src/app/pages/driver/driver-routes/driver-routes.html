@@ -56,22 +56,7 @@
             <path class="lua-estrela lua-estrela-2" d="M36 17l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" />
           </svg>
         } @else {
-          <svg class="em-rota-astro em-rota-sol" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
-            <defs>
-              <radialGradient id="em-rota-sol-cor" cx="0.38" cy="0.35" r="0.7">
-                <stop offset="0" stop-color="#fff7d1" />
-                <stop offset="0.55" stop-color="#fcd34d" />
-                <stop offset="1" stop-color="#f59e0b" />
-              </radialGradient>
-            </defs>
-            <!-- raios arredondados, girando devagar -->
-            <g class="sol-raios">
-              @for (a of [0, 45, 90, 135, 180, 225, 270, 315]; track a) {
-                <line x1="20" y1="3.5" x2="20" y2="7.5" [attr.transform]="'rotate(' + a + ' 20 20)'" />
-              }
-            </g>
-            <circle cx="20" cy="20" r="8.5" fill="url(#em-rota-sol-cor)" />
-          </svg>
+          <span class="em-rota-astro em-rota-sol" aria-hidden="true"></span>
         }
         <div class="em-rota-texto">
           <span class="em-rota-selo"><span class="ao-vivo" aria-hidden="true"></span>Em rota agora</span>

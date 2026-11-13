@@ -131,12 +131,17 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  overflow: hidden;
+  /* a largura da cena vira unidade (cqw) pros postes andarem com transform, que nao deixa rastro */
+  container-type: inline-size;
 }
 
 .em-rota-postes i {
   position: absolute;
-  left: 105%;
+  left: 0;
   bottom: 14px;
+  transform: translateX(105cqw);
+  will-change: transform;
   width: 3px;
   height: 46px;
   border-radius: 2px 2px 0 0;
@@ -206,8 +211,11 @@
 }
 
 @keyframes poste-passando {
+  from {
+    transform: translateX(105cqw);
+  }
   to {
-    left: -10%;
+    transform: translateX(-10cqw);
   }
 }
 

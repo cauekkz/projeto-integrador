@@ -177,17 +177,25 @@
   overflow: visible;
 }
 
-/* sol: miolo com degrade e halo quente; raios girando devagar */
+/* sol (primeira versao): bolinha amarela com brilho e raios curtos girando devagar */
 .em-rota-sol {
-  filter: drop-shadow(0 0 6px rgb(252 211 77 / 0.55));
+  top: 16px;
+  right: 18px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fcd34d;
+  box-shadow: 0 0 10px 2px rgb(252 211 77 / 0.45);
 }
 
-.em-rota-sol .sol-raios {
-  stroke: #fcd34d;
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  transform-origin: 20px 20px;
-  animation: sol-girando 30s linear infinite;
+.em-rota-sol::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(#fcd34d 0 8deg, transparent 8deg 45deg);
+  mask: radial-gradient(circle, transparent 12px, #000 12.5px);
+  animation: sol-girando 18s linear infinite;
 }
 
 /* lua: crescente marfim com brilho frio, crateras discretas e estrelinhas piscando */
@@ -225,7 +233,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .ao-vivo::after,
-  .em-rota-sol .sol-raios,
+  .em-rota-sol::before,
   .em-rota-lua .lua-estrela {
     animation: none;
   }
