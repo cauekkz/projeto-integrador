@@ -31,7 +31,7 @@
     @if (emRota(); as v) {
       <!-- ja esta em rota: aviso no topo e o atalho pro mapa da viagem -->
       <section class="em-rota" role="status" animate.enter="entrar-subindo">
-        <!-- pela hora (nao pelo tema): de dia o sol, de noite a lua, no canto do card -->
+        <!-- pela hora (nao pelo tema): de noite a lua no canto do card -->
         @if (noite()) {
           <svg class="em-rota-astro em-rota-lua" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
             <defs>
@@ -55,8 +55,6 @@
             <path class="lua-estrela" d="M33 3l1.2 3.3 3.3 1.2-3.3 1.2L33 12l-1.2-3.3-3.3-1.2 3.3-1.2z" />
             <path class="lua-estrela lua-estrela-2" d="M36 17l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" />
           </svg>
-        } @else {
-          <span class="em-rota-astro em-rota-sol" aria-hidden="true"></span>
         }
         <div class="em-rota-texto">
           <span class="em-rota-selo"><span class="ao-vivo" aria-hidden="true"></span>Em rota agora</span>

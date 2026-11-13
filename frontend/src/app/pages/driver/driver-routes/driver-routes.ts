@@ -39,7 +39,7 @@ export class DriverRoutes implements OnInit {
   protected usuarioLogado = signal<UserMe | null>(null);
   private destroyRef = inject(DestroyRef);
 
-  // de noite (das 18h as 6h) os postes e o farol do card "Em rota agora" acendem; de dia aparece o sol no canto.
+  // de noite (das 18h as 6h) os postes e o farol do card "Em rota agora" acendem; e aparece a lua no canto.
   // confere o relogio a cada minuto e na hora em que a aba volta a aparecer (ex.: mudou a hora do PC e voltou pro app)
   protected noite = signal(DriverRoutes.ehNoite());
   private conferirHora = () => this.noite.set(DriverRoutes.ehNoite());

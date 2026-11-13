@@ -168,34 +168,13 @@
   }
 }
 
-/* sol (de dia) e lua (de noite) no canto de cima do card; a hora decide, nao o tema.
+/* lua (de noite) no canto de cima do card; a hora decide, nao o tema.
    cores quentes/claras que funcionam no card azul (claro) e na superficie escura */
 .em-rota-astro {
   position: absolute;
   top: 10px;
   right: 12px;
   overflow: visible;
-}
-
-/* sol (primeira versao): bolinha amarela com brilho e raios curtos girando devagar */
-.em-rota-sol {
-  top: 16px;
-  right: 18px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #fcd34d;
-  box-shadow: 0 0 10px 2px rgb(252 211 77 / 0.45);
-}
-
-.em-rota-sol::before {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  background: repeating-conic-gradient(#fcd34d 0 8deg, transparent 8deg 45deg);
-  mask: radial-gradient(circle, transparent 12px, #000 12.5px);
-  animation: sol-girando 18s linear infinite;
 }
 
 /* lua: crescente marfim com brilho frio, crateras discretas e estrelinhas piscando */
@@ -225,15 +204,8 @@
   }
 }
 
-@keyframes sol-girando {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .ao-vivo::after,
-  .em-rota-sol::before,
   .em-rota-lua .lua-estrela {
     animation: none;
   }
