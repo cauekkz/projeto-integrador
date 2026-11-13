@@ -8,6 +8,7 @@
     "target": "ws://localhost:9090",
     "ws": true,
     "changeOrigin": true,
+    "headers": { "Origin": "http://localhost:4200" },
     "pathRewrite": { "^/ws": "" }
   },
   "/storage": {

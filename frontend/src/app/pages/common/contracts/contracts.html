@@ -1,8 +1,7 @@
 <div class="pagina" [class.embutido]="embutido">
   @if (!embutido) {
     <app-trail-header
-      [trilha]="responsavelId ? ['Contratos', responsavelNome] : [ehMotorista ? 'Motorista' : 'Responsável', 'Contratos']"
-      (voltarEvent)="voltar()" />
+      [trilha]="responsavelId ? ['Contratos', responsavelNome] : [ehMotorista ? 'Motorista' : 'Responsável', 'Contratos']" />
   }
 
   @if (modoPastas) {

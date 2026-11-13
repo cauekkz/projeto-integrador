@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-/* mapa da viagem (Leaflet): sem este CSS os quadrados do mapa ficam soltos e a linha/pinos somem */
-@import 'leaflet/dist/leaflet.css';
+/* mapa da viagem (mapcn / MapLibre): sem este CSS os controles e marcadores do mapa ficam soltos */
 @import 'maplibre-gl/dist/maplibre-gl.css';
 
 /* ---------- cores (tokens) ----------

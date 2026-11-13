@@ -1,21 +1,24 @@
-<div class="container">
-  <h1 class="title">Escolha seu tipo de usuário</h1>
+<main class="home">
+  <header class="topo">
+    <h1 class="marca" aria-label="VanRoute"></h1>
+    <p class="slogan">Transporte escolar com tranquilidade</p>
+  </header>
 
-  <div class="image-container">
-    <img src="/ImageLoginAndChoose.png" alt="Ilustração de seleção de usuário" class="main-image">
+  <div class="palco" aria-hidden="true">
+    <span class="brilho"></span>
+    <img src="/ImageLoginAndChoose.png" alt="" class="ilustracao" width="374" height="328">
   </div>
 
-  <div class="button-group">
-    <app-button
-      tipo="primary"
-      routerLink="/login/motorista">
-      <img src="/Driver.png" alt=""> <p> Motorista</p>
-    </app-button>
+  <section class="escolha" aria-labelledby="escolha-titulo">
+    <h2 id="escolha-titulo" class="titulo">Escolha seu tipo de usuário</h2>
 
-    <app-button
-      tipo="secondary"
-      routerLink="/login/responsavel">
-      <img src="/Icon.png" alt=""> <p> Responsável</p>
-    </app-button>
-  </div>
-</div>
+    <a class="lg-button botao botao-cheio" data-variant="filled" routerLink="/login/motorista">
+      <i class="bi bi-person-badge" aria-hidden="true"></i>
+      Sou motorista
+    </a>
+    <a class="lg-button lg-glass botao botao-vidro" routerLink="/login/responsavel">
+      <i class="bi bi-people" aria-hidden="true"></i>
+      Sou responsável
+    </a>
+  </section>
+</main>

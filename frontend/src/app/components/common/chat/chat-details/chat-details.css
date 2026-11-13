@@ -1,7 +1,11 @@
-/* a tela tem a altura do aparelho: so a lista de mensagens rola e o header fica sempre em cima */
+/* a tela tem a altura da area visivel (--altura-visivel vem do visualViewport, encolhe com o teclado):
+   so a lista de mensagens rola, o header fica sempre em cima e a barra de digitar logo acima do teclado */
 .screen {
-  height: 100dvh;
-  height: 100dvh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--altura-visivel, 100dvh);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -71,7 +75,7 @@
   padding: 16px;
   gap: 8px;
   overflow-y: auto;
-  padding-bottom: 80px;
+  overscroll-behavior: contain;
 }
 
 .msg-wrapper {
@@ -233,14 +237,12 @@
 }
 
 .input-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: relative;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  padding: 12px 16px max(12px, env(safe-area-inset-bottom));
   background: var(--cor-superficie);
   border-top: 1px solid var(--cor-borda-suave);
 }

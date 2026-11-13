@@ -1,6 +1,6 @@
 <div class="pagina" [class.embutido]="embutido">
   @if (!embutido) {
-    <app-trail-header [trilha]="[ehMotorista ? 'Motorista' : 'Responsável', 'Parcelas']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+    <app-trail-header [trilha]="[ehMotorista ? 'Motorista' : 'Responsável', 'Parcelas']" [mostrarSino]="true" />
   }
 
   @if (!contractId) {

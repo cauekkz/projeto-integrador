@@ -1,5 +1,5 @@
 <div class="pagina" [class.sem-rodape]="estado() === 'antes' || estado() === 'aberta'">
-  <app-trail-header [trilha]="['Motorista', 'Viagem']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+  <app-trail-header [trilha]="['Motorista', 'Viagem']" [mostrarSino]="true" />
 
   <main class="conteudo">
     @switch (estado()) {

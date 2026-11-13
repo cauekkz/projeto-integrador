@@ -64,6 +64,7 @@ export class ChatDetails implements OnInit, OnDestroy {
   carregandoMensagens = true;
   private subscription?: Subscription;
   private leituraSubscription?: Subscription;
+  private reconexaoSubscription?: Subscription;
 
   mensagens: Array<{
     id: string;
@@ -88,6 +89,9 @@ export class ChatDetails implements OnInit, OnDestroy {
   private previasPdf = new Map<string, SafeResourceUrl>();
   private sanitizer = inject(DomSanitizer);
   private popUpService = inject(PopUpService);
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
+  // teclado do celular: a tela segue a area visivel (visualViewport) em vez de ser empurrada pra cima
+  private pararDeSeguirTeclado?: () => void;
 
   constructor(
     private route: ActivatedRoute,
@@ -99,6 +103,7 @@ export class ChatDetails implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+    this.seguirAreaVisivel();
     const home = this.authService.getHomeRoute();
     const roles = this.authService.getRolesFromToken();
     this.podeCriarContrato = roles.includes('ROLE_DRIVER');
@@ -197,6 +202,11 @@ export class ChatDetails implements OnInit, OnDestroy {
       }
     });
 
+    // a conexao caiu (celular) e voltou: busca as ultimas mensagens e junta com as que ja estao na tela
+    this.reconexaoSubscription = this.chatService.reconectou$.subscribe((chatId) => {
+      if (chatId === this.chatId) this.sincronizarMensagens();
+    });
+
     // o outro leu: todas as minhas mensagens viram ✓✓
     this.leituraSubscription = this.chatService.reads$.subscribe((evento) => {
       if (evento.chatId !== this.chatId || evento.userId === this.usuarioLogadoId) {
@@ -204,6 +214,28 @@ export class ChatDetails implements OnInit, OnDestroy {
       }
       this.mensagens = this.mensagens.map((item) => (item.minha && !item.lida ? { ...item, lida: true } : item));
       this.cdr.markForCheck();
+    });
+  }
+
+  // ultima pagina de novo (o que chegou com a conexao fora); adicionarMensagens nao duplica (junta por id)
+  private sincronizarMensagens() {
+    this.chatService.getMessages(this.chatId, 0).subscribe({
+      next: (primeira) => {
+        const ultima = Math.max(primeira.totalPages - 1, 0);
+        const pagina = ultima === 0 ? of(primeira) : this.chatService.getMessages(this.chatId, ultima);
+        pagina.subscribe({
+          next: (recentes) => {
+            const antes = this.mensagens.length;
+            this.adicionarMensagens(recentes.content ?? []);
+            if (this.mensagens.length > antes) {
+              this.rolarParaFim();
+              this.marcarComoLida();
+            }
+          },
+          error: () => {},
+        });
+      },
+      error: () => {},
     });
   }
 
@@ -257,12 +289,35 @@ export class ChatDetails implements OnInit, OnDestroy {
     });
   }
 
+  // iOS e Android abrem o teclado por cima da pagina e rolam ela pra mostrar o campo: aqui a tela
+  // encolhe pra altura que sobrou, volta a pagina pro topo e, se estava no fim da conversa, continua no fim
+  private seguirAreaVisivel() {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null;
+    if (!vv) return;
+    const ajustar = () => {
+      const lista = this.messagesContainer?.nativeElement;
+      const estavaNoFim = !!lista && lista.scrollHeight - lista.scrollTop - lista.clientHeight < 40;
+      this.host.nativeElement.style.setProperty('--altura-visivel', `${Math.round(vv.height)}px`);
+      if (window.scrollY !== 0) window.scrollTo(0, 0);
+      if (estavaNoFim) this.rolarParaFim();
+    };
+    ajustar();
+    vv.addEventListener('resize', ajustar);
+    vv.addEventListener('scroll', ajustar);
+    this.pararDeSeguirTeclado = () => {
+      vv.removeEventListener('resize', ajustar);
+      vv.removeEventListener('scroll', ajustar);
+    };
+  }
+
   ngOnDestroy() {
+    this.pararDeSeguirTeclado?.();
     // o que chegou com a conversa aberta tambem ja foi visto
     if (this.chatId) this.notificacoes.marcarConversaVista(this.chatId);
     this.chatService.disconnect();
     this.subscription?.unsubscribe();
     this.leituraSubscription?.unsubscribe();
+    this.reconexaoSubscription?.unsubscribe();
   }
 
   private carregarMensagens() {

@@ -11,7 +11,17 @@
   background: #f2f3f0;
 }
 
+/* modo escuro: fundo do Dark Matter enquanto carrega */
+:host-context([data-theme='dark']) .mapa {
+  background: #0e0e0e;
+}
+
 /* marcadores do Figma: van azul com o onibus, pontos com casa/escola e o rotulo "Próximo ponto" */
+:host ::ng-deep .marcador-ponto {
+  /* o rotulo "Próximo ponto" se posiciona em relacao ao pino */
+  position: relative;
+}
+
 :host ::ng-deep .marcador-van span,
 :host ::ng-deep .marcador-ponto span {
   display: flex;
@@ -94,9 +104,7 @@
   transform: scale(0.94);
 }
 
-/* creditos discretos, como nos apps */
-:host ::ng-deep .leaflet-control-attribution {
-  background: rgb(var(--vidro-rgb) / 0.7);
-  color: var(--cor-texto-3);
+/* creditos discretos, como nos apps (o resto do visual vem do src/tailwind.css, igual ao mapcn) */
+:host ::ng-deep .maplibregl-ctrl-attrib {
   font-size: 11px;
 }

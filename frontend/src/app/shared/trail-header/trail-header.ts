@@ -1,4 +1,5 @@
-import { Component, OnInit, inject, input, output, signal } from '@angular/core';
+import { Component, OnInit, inject, input, signal } from '@angular/core';
+import { Location } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
@@ -13,7 +14,7 @@ export const DESTINO_DA_TRILHA: Record<string, string> = {
   Contratos: '/contracts',
 };
 
-// topo das telas de contrato: voltar, trilha ("Contrato > Análise contrato") e o usuario logado
+// topo das telas: seta = home da role, itens da trilha = tela anterior (historico); trilha ("Contrato > Análise contrato") e o usuario logado
 @Component({
   selector: 'app-trail-header',
   standalone: true,
@@ -24,11 +25,11 @@ export class TrailHeader implements OnInit {
   readonly trilha = input<string[]>([]);
   readonly mostrarVoltar = input(true);
   readonly mostrarSino = input(false);
-  readonly voltarEvent = output<void>();
   // destino de cada item quando o nome nao basta (null = item sem link); sem isso usa DESTINO_DA_TRILHA
   readonly links = input<(string | null)[] | null>(null);
 
   private router = inject(Router);
+  private location = inject(Location);
   private authService = inject(AuthService);
   protected notificacoes = inject(NotificationService);
 
@@ -41,8 +42,16 @@ export class TrailHeader implements OnInit {
     return DESTINO_DA_TRILHA[item] ?? null;
   }
 
-  protected irPara(url: string) {
-    this.router.navigateByUrl(url);
+  // seta: home de quem esta logado (motorista ou responsavel)
+  protected irParaHome() {
+    this.router.navigateByUrl(this.authService.getHomeRoute() ?? '/');
+  }
+
+  // nome na trilha: volta pra tela anterior; se abriu direto (sem tela anterior no app), vai pro destino do item
+  protected voltarParaAnterior(url: string) {
+    const navegacao = (history.state as { navigationId?: number } | null)?.navigationId ?? 1;
+    if (navegacao > 1) this.location.back();
+    else this.router.navigateByUrl(url);
   }
 
   ngOnInit() {
