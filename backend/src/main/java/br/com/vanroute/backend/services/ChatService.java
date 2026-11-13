@@ -15,8 +15,10 @@ public class ChatService {
 
     private final ChatRepository chatRepository;
     private final UserRepository userRepository;
+    private final ChatReadService chatReadService;
 
-    public ChatService(ChatRepository chatRepository, UserRepository userRepository) {
+    public ChatService(ChatRepository chatRepository, UserRepository userRepository, ChatReadService chatReadService) {
+        this.chatReadService = chatReadService;
         this.chatRepository = chatRepository;
         this.userRepository = userRepository;
     }
@@ -56,7 +58,7 @@ public class ChatService {
 
     public Page<ChatResponseDTO> getUserChats(UUID userId, Pageable pageable) {
         return chatRepository.findChatsByUserIdOrderByRecentMessage(userId, pageable)
-                .map(chat -> ChatResponseDTO.from(chat, userId));
+                .map(chat -> ChatResponseDTO.from(chat, userId, chatReadService.unreadCount(chat.getId(), userId)));
     }
 
     public void UsersInChat(UUID chatId, UUID requesterId, UUID userId) {

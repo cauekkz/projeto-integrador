@@ -40,6 +40,19 @@ export class CodeInput implements OnInit {
 
   onKeydown(event: KeyboardEvent, index: number) {
     const input = event.target as HTMLInputElement;
+
+    // caixa ja preenchida: digitar por cima troca o caractere e anda pra proxima
+    // (com maxlength=1 o navegador ignoraria a tecla)
+    const caractere = event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
+    if (caractere && input.value !== '' && input.selectionStart === input.selectionEnd) {
+      if (!/[A-Za-z0-9]/.test(event.key)) return;
+      event.preventDefault();
+      input.value = event.key;
+      this.codes[index] = event.key;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      return;
+    }
+
     if (event.key === 'Backspace' && input.value === '') {
       const inputs = document.querySelectorAll('.code-input');
       const prev = inputs[index - 1] as HTMLInputElement;

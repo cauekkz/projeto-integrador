@@ -73,7 +73,8 @@ public class ResponsibleProfileService {
                                     .findByResponsible_UserIdAndStudent_Id(responsibleId, udc.getStudent().getId()).orElse(null);
                             return new ResponsibleProfileResponseDTO.StudentItem(udc.getStudent().getId(), udc.getStudent().getName(),
                                     udc.getContract().getId(), udc.getContract().getStatus(),
-                                    link == null ? null : link.getRelationType(), link != null && link.isAdmin());
+                                    link == null ? null : link.getRelationType(), link != null && link.isAdmin(),
+                                    udc.getStudent().getPhotoKey());
                         })
                         .toList());
     }
@@ -89,7 +90,8 @@ public class ResponsibleProfileService {
                                     .findByResponsible_UserIdAndStudent_Id(id, udc.getStudent().getId()).orElse(null);
                             return new ResponsibleProfileResponseDTO.StudentItem(udc.getStudent().getId(), udc.getStudent().getName(),
                                     udc.getContract().getId(), udc.getContract().getStatus(),
-                                    link == null ? null : link.getRelationType(), link != null && link.isAdmin());
+                                    link == null ? null : link.getRelationType(), link != null && link.isAdmin(),
+                                    udc.getStudent().getPhotoKey());
                         })
                         .toList());
     }

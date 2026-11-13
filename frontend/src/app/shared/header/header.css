@@ -19,8 +19,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  color: #1f2937;
+  font-size: 20px;
+  color: var(--texto);
   border: 0.8px solid #e2e8f0;
   background: #ffffff;
   cursor: pointer;
@@ -31,12 +31,12 @@
   position: absolute;
   top: -2px;
   right: -2px;
-  background: #ef4444;
+  background: var(--vermelho);
   color: #ffffff;
-  font-size: 0.65rem;
-  font-weight: 700;
+  font-size: 11px;
+  font-weight: 600;
   border-radius: 999px;
-  padding: 2px 6px;
+  padding: 2px 8px;
   min-width: 12px;
   text-align: center;
 }
@@ -44,6 +44,8 @@
 .user-info {
   display: flex;
   width: 180px;
+  min-width: 0;
+  flex-shrink: 1;
   height: 50px;
   padding: 4px 12px 4px 4px;
   align-items: center;
@@ -63,17 +65,19 @@
 }
 
 .name {
-  font-size: 0.9rem;
+  font-size: 14px;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--texto);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .role {
-  font-size: 0.9rem;
-  color: #64748b;
+  flex-shrink: 0;
+  margin-left: 8px;
+  font-size: 14px;
+  color: var(--texto-3);
   font-weight: 500;
 }
 
@@ -88,7 +92,7 @@
 .chat-user-info {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   cursor: pointer;
 }
 
@@ -105,48 +109,64 @@
   padding: 0;
 }
 
-.bell-btn:hover,
-.doc-button:hover {
-  background: #f1f5f9;
+@media (hover: hover) and (pointer: fine) {
+  .bell-btn:hover,
+  .doc-button:hover {
+    background: #f1f5f9;
+  }
 }
 
 .doc-button i {
-  font-size: 1.1rem;
-  color: #334155;
+  font-size: 18px;
+  color: var(--texto-2);
 }
 
 .header-geral {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 8px 16px;
+  gap: 8px;
+  padding: 8px 12px;
   background: #ffffff;
 }
 
 .back-button {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  display: flex;
+  flex-shrink: 0;
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-left: -4px;
   padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
 }
 
 .back-button i {
-  font-size: 2rem;
-  color: #1f2937;
+  font-size: 24px;
+  color: var(--texto);
 }
 
-.back-button:hover i {
-  color: #1565d8;
+@media (hover: hover) and (pointer: fine) {
+  .back-button:hover {
+    background: #f1f5f9;
+  }
 }
 
+.back-button:focus-visible {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+}
+
+/* titulo junto da seta, a esquerda (como a trilha das outras telas) */
 h1 {
   flex: 1;
-  text-align: right;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #1f2937;
+  text-align: left;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--texto);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;

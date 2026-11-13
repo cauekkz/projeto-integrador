@@ -1,0 +1,129 @@
+.header {
+  position: fixed;
+  top: 2px;
+  left: 24px;
+
+}
+
+.back-button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  background: white;
+}
+
+.code-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  /* padrao das telas de codigo: o bloco centraliza no espaco acima dos botoes fixos (code-input),
+     entao os quadradinhos ficam um pouco acima do meio da tela */
+  padding: 24px 24px 200px;
+}
+.instrucao {
+  text-align: center;
+  color: var(--texto-3);
+  font-size: 16px;
+  max-width: 260px;
+}
+
+.email {
+  font-weight: 600;
+  color: var(--texto);
+  font-size: 16px;
+}
+
+.inputs {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.code-input {
+  width: 48px;
+  height: 60px;
+  border: none;
+  border-bottom: 2px solid #cbd5e1;
+  border-radius: 0;
+  text-align: center;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--texto);
+  outline: none;
+  background: transparent;
+}
+
+.code-input:focus {
+  border-bottom-color: var(--azul);
+}
+
+.nao-encontrou {
+  color: #94a3b8;
+  font-size: 14px;
+  text-align: center;
+}
+
+.nao-encontrou em {
+  color: var(--texto-3);
+}
+
+.btn-reenviar {
+  margin-top: 8px;
+  background: transparent;
+  border: 1px solid var(--azul);
+  color: var(--azul);
+  border-radius: 14px;
+  padding: 12px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-reenviar:hover {
+    background: #eff6ff;
+  }
+}
+
+.btn-verificar {
+  width: 100%;
+  height: 56px;
+  border: none;
+  border-radius: 14px;
+  background: var(--azul);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: none;
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  right: 24px;
+  width: calc(100% - 48px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-verificar:hover:not(:disabled) {
+    background: #0052a3;
+  }
+}
+
+
+@keyframes slideUp {
+  0%   { transform: translateY(8px); opacity: 0; }
+  100% { transform: translateY(0);   opacity: 1; }
+}
+
+.code-input.animate {
+  animation: slideUp 200ms var(--ease-out, ease-out);
+}

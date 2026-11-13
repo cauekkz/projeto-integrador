@@ -3,7 +3,7 @@
 Guia para quem consome a API, principalmente o front. Para cada endpoint, mostra **o que mandar**, **o que volta** e **as regras**.
 
 Outros guias:
-- **[`docs/FLUXO_FRONT.md`](../docs/FLUXO_FRONT.md)**: como montar o front (telas, a ordem das chamadas, os WebSockets e a renovação do token);
+- **[`docs/FLUXO_FRONT.md`](../docs/FLUXO_FRONT.md)**: o que ainda falta no front e a situação da responsividade;
 - [`docs/FLUXO_ROTA.md`](../docs/FLUXO_ROTA.md): endereços, rota e pontos, do cadastro até a rota pronta (cada entidade, DTO e verificação);
 - [`docs/FLUXO_TRIP.md`](../docs/FLUXO_TRIP.md): execução da rota, faltas e notificações, com todas as entradas e saídas;
 - [`docs/FLUXO_CONTRATO.md`](../docs/FLUXO_CONTRATO.md): contrato passo a passo (com a assinatura);
@@ -32,7 +32,7 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 | 403 | sem permissão (inclusive rota de outro perfil). Com `{"code":"TERMS_NOT_ACCEPTED","version":"2"}`: o usuário ainda não aceitou a versão atual dos termos (só ver/aceitar os termos, `/me`, sair, exportar e excluir a conta funcionam) |
 | 404 | não existe |
 | 409 | conflito (duplicado ou estado errado) |
-| 422 | documento (CNH, CRLV) não passou na validação: assinatura, nome diferente do da CNH, CNH vencida, categoria sem D/E, menos de 21 anos, licenciamento da van vencido |
+| 422 | documento (CNH, CRLV) não passou na validação: assinatura, nome diferente do da CNH, CNH vencida, categoria sem D/E, menos de 18 anos, licenciamento da van vencido |
 | 429 | muitas tentativas: código de e-mail, outro código antes de 1 minuto, ou login bloqueado (5 senhas erradas no CPF ou 30 no IP: 15 minutos) |
 | 500 | erro interno: a mensagem é sempre "Erro interno no servidor" (o detalhe fica só no log) |
 
@@ -136,7 +136,7 @@ Esse é o **único** jeito de criar ponto: não existe ponto sem aluno.
 ```
 → `201`:
 ```json
-{ "id": "uuid", "name": "Ida Manhã", "driverName": "Nome do motorista" }
+{ "id": "uuid", "name": "Ida Manhã", "driverName": "Nome do motorista", "vehicle": null }
 ```
 
 ### Endereços: quem cadastra o quê
@@ -212,7 +212,7 @@ Regras (no `add-student` e também no `move`, que muda o aluno de ponto):
 
 O caso comum é **um** embarque e **um** desembarque, sem dias.
 
-O que o front precisa mudar está em [`docs/FLUXO_FRONT.md`, seções 6.2.5 (rotas) e 6.3.2 (endereços do filho)](../docs/FLUXO_FRONT.md).
+O passo a passo da rota e dos endereços está em [`docs/FLUXO_ROTA.md`](../docs/FLUXO_ROTA.md).
 
 ### Ajustes
 | Endpoint | Corpo | O que faz |
@@ -230,8 +230,8 @@ Todos devolvem `{ stops, pending }` (seção "Resposta das alterações").
 | Endpoint | Quem | Retorno |
 |---|---|---|
 | `GET /api/route/{routeId}/stops` | dono da rota | pontos em ordem, com alunos e escolas |
-| `GET /api/route/get-all-routes-and-stops` | motorista | `[{ id, name, driverName, stops: [...] }]`, só as rotas dele |
-| `GET /api/route/{id}` | dono da rota | `{ id, name, driverName }` |
+| `GET /api/route/get-all-routes-and-stops` | motorista | `[{ id, name, driverName, vehicle, stops: [...] }]`, só as rotas dele. `vehicle` = van padrão `{ id, plate, model, color, capacity }` ou `null` |
+| `GET /api/route/{id}` | dono da rota | `{ id, name, driverName, vehicle }` (`vehicle` = van padrão ou `null`) |
 | `GET /api/route/{routeId}/pending` | dono da rota | `[{ studentId, studentName, missingBoarding: [...], missingAlighting: [...] }]`: dias em que o aluno aparece mas falta embarque ou desembarque. Lista vazia = rota completa |
 | `GET /api/student/{studentId}/routes` | responsável do aluno | `[{ id, name }]`: só o nome das rotas em que o filho está |
 | `GET /api/school/my-schools` | motorista | `[{ id, name, phone, email, address }]` |
@@ -339,7 +339,7 @@ A proposta nasce no chat. Criar, aceitar e recusar ficam no `ChatController`; a 
 
 | Endpoint | Quem | Retorno |
 |---|---|---|
-| `GET /api/chats/{chatId}/students` | só o **motorista** que participa do chat | `[{ id, name }]`: filhos do pai da conversa de que ele é admin (o botão "ver filhos" usado para escolher o aluno da proposta) |
+| `GET /api/chats/{chatId}/students` | só o **motorista** que participa do chat | `[{ id, name, photoKey }]`: filhos do pai da conversa de que ele é admin (o botão "ver filhos" usado para escolher o aluno da proposta) |
 | `POST /api/chats/{chatId}/contract` | motorista | `201`: `{ message, userDriverContractId, contract }`, onde `contract` já vem completo (formato abaixo) |
 | `PUT /api/chats/{chatId}/contracts/{contractId}/accept` | responsável do contrato (o contrato tem que ser dessa conversa) | `200`; o contrato fica `ACTIVE` se começa hoje, ou `SCHEDULED` se começa depois (o worker ativa no dia); as parcelas são geradas e o responsável **assina** (o documento fica `SIGNED`) |
 | `PUT /api/chats/{chatId}/contracts/{contractId}/reject` | responsável do contrato | `200`; o contrato fica `CANCELED` e o documento `REJECTED` |
@@ -408,7 +408,7 @@ O aviso **não gera falta** nem mexe na rota: é só uma mensagem. Chega na hora
 ```json
 { "driverId": "...", "name": "Carlos", "photoKey": "profile/...", "memberSince": "2026-10-01",
   "schools":  [ { "schoolId": "...", "name": "Escola X" } ],
-  "vehicles": [ { "model": "Sprinter", "color": "Branca", "plate": "ABC1D23", "capacity": 15 } ],
+  "vehicles": [ { "model": "Sprinter", "color": "Branca", "plate": "ABC1D23" } ],
   "ratingAverage": 4.7, "ratingCount": 3,
   "myRating": { "score": 5, "comment": "Pontual", "date": "...", "responsibleName": "Maria" },
   "recentRatings": [ { "score": 5, "comment": "Pontual", "date": "...", "responsibleName": "Maria" } ] }
@@ -436,7 +436,9 @@ Use **`messageType`** para saber se é proposta, aceite ou recusa.
 
 **Tempo real:** conecte em `ws://localhost:9090/chat/{chatId}?token=<jwt>`. Cada mensagem enviada no chat chega como JSON para os dois participantes. Quem não participa do chat é desconectado (código `1003`).
 
-`GET /api/chats` traz, por chat, `otherUserId`, `otherUserName` e `otherUserPhotoKey`.
+`GET /api/chats` traz, por chat, `otherUserId`, `otherUserName`, `otherUserPhotoKey`, e `unreadCount` (mensagens do outro que você ainda não leu).
+
+**Lidas:** cada mensagem tem `readAt` (coluna `chat_messages.read_at`; `null` = não lida). `PUT /api/chats/{chatId}/read` (204) marca como lidas as mensagens do outro, e ele recebe no WebSocket do chat `{"type":"read","chatId","userId","readAt"}`. Responder já marca como lido o que o outro mandou.
 
 ---
 
@@ -469,6 +471,7 @@ Quem pode baixar:
 | anexo de chat | quem participa do chat |
 | PDF de contrato (`contracts/{contractId}.pdf`) | as partes do contrato |
 | foto de perfil | qualquer usuário logado |
+| foto do aluno (`students/{studentId}/...`) | os responsáveis do aluno e o motorista que tem ou teve contrato com ele |
 | arquivo que você enviou (`uploads/{seuId}/...`) | você |
 
 **Foto de perfil:**
@@ -480,6 +483,18 @@ Quem pode baixar:
 ```
 - Só aceita chave da sua própria pasta e que já exista no bucket; a foto antiga é apagada.
 - O `photoKey` dos outros vem no `GET /api/chats` (`otherUserPhotoKey`); a sua vem no `/me`. Para exibir, use o `download-url`.
+
+**Foto do aluno** (só o responsável **admin**; os outros recebem `403`):
+```
+1. GET /api/student/{studentId}/photo-upload-url?fileName=filho.jpeg&contentType=image/jpeg   (só image/*)
+   → { "uploadUrl": "...", "fileKey": "students/{studentId}/....jpeg" }
+2. PUT <uploadUrl> com a imagem
+3. PUT /api/student/{studentId}/photo   { "fileKey": "students/{studentId}/....jpeg" }   → { "photoKey": "..." }
+   DELETE /api/student/{studentId}/photo   → 204 (tira a foto)
+```
+- Só aceita chave da pasta desse aluno e que já exista no bucket (até 10 MB); a foto antiga é apagada.
+- O `photoKey` do aluno vem em `my-children`, `GET /api/chats/{id}/students`, perfil do responsável, membros do grupo e alunos da viagem. O contrato traz só o `studentId`: a foto sai dessas listas.
+- Se o aluno fica sem nenhum responsável (exclusão de conta), a foto é apagada.
 
 ---
 
@@ -493,10 +508,11 @@ Quem pode baixar:
   - exige `acceptedTermsVersion` igual à versão atual dos termos (`GET /api/terms`).
 - **Cadastro de motorista** (`POST /api/driver/auth/signup`, multipart com a CNH digital em `documentPdf`):
   - confere a assinatura ICP-Brasil da CNH e lê por OCR o CPF, o nome, o nascimento, a validade e a categoria;
-  - o `name` digitado tem que ser o da CNH (sem importar acentos e maiúsculas), a CNH tem que estar válida, ser **D ou E**, e o motorista ter **21 anos ou mais**: senão `422` com a mensagem;
+  - o nome sai da CNH, como o CPF (não existe campo `name`): fica sem acento, com as iniciais maiúsculas e, se for longo, cortado como a CNH traz (a linha do nome tem 30 caracteres);
+  - a CNH tem que estar válida, ser **D ou E**, e o motorista ter **18 anos ou mais**: senão `422` com a mensagem;
   - o PDF da CNH não é guardado.
 - **Login** (`POST /api/auth/login`): CPF inexistente e senha errada dão o mesmo `401`; "Verifique seu e-mail" (`400`) só aparece com a senha certa. 5 senhas erradas no mesmo CPF (ou 30 no mesmo IP) bloqueiam por 15 minutos (`429`).
-- **Responsáveis do aluno:** `GET /api/student/{studentId}/responsibles` (qualquer responsável do aluno), `DELETE /api/student/{studentId}/responsibles/{responsibleId}` (o admin remove outro, ou a pessoa sai; o admin passa o admin antes) e `PUT /api/student/{studentId}/responsibles/{responsibleId}/admin` (o admin passa o admin). Quem tem contrato ou proposta em andamento com o aluno não sai (`409`). Detalhes em `docs/FLUXO_FRONT.md`, seção 6.3.3.
+- **Responsáveis do aluno:** `GET /api/student/{studentId}/responsibles` (qualquer responsável do aluno), `DELETE /api/student/{studentId}/responsibles/{responsibleId}` (o admin remove outro, ou a pessoa sai; o admin passa o admin antes) e `PUT /api/student/{studentId}/responsibles/{responsibleId}/admin` (o admin passa o admin). Quem tem contrato ou proposta em andamento com o aluno não sai (`409`).
 - **Termos:** quando sai uma versão nova, o resto da API responde `403` `TERMS_NOT_ACCEPTED` até a pessoa aceitar (`POST /api/terms/accept`).
 - **Papel do usuário:** cada usuário tem **um** papel (`ROLE_DRIVER`, `ROLE_RESPONSIBLE` ou `ROLE_ADMIN`), na coluna `users.role`. Ele vai no JWT, na claim `roles` (ex.: `["ROLE_DRIVER"]`), e no `GET /api/users/me`.
 - **Escola** (`POST /api/school/add-school`): se a escola (nome + rua) já existe, o motorista é **vinculado** a ela. `409` se já estiver vinculado.
@@ -508,7 +524,7 @@ Quem pode baixar:
 
 ## 6. Banco
 
-As migrations ficam em `src/main/resources/db/migration` e o Flyway aplica sozinho quando o backend sobe (a última é a **V36**). Migration que já rodou não se edita: mudança de banco é sempre numa migration nova, com o próximo número (**V37**). Para zerar o banco local: `docker compose down -v`.
+As migrations ficam em `src/main/resources/db/migration` e o Flyway aplica sozinho quando o backend sobe (a última é a **V37**). Migration que já rodou não se edita: mudança de banco é sempre numa migration nova, com o próximo número (**V38**). Para zerar o banco local: `docker compose down -v`.
 
 | Assunto | Tabelas |
 |---|---|

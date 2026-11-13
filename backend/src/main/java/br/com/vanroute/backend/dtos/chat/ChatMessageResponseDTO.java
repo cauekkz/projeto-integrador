@@ -16,7 +16,9 @@ public record ChatMessageResponseDTO(
                 AttachmentType attachmentType,
                 LocalDateTime sentAt,
                 MessageType messageType,
-                String payload) {
+                String payload,
+                // quando o outro leu (null = nao lida: ✓; preenchida: ✓✓)
+                LocalDateTime readAt) {
 
         public static ChatMessageResponseDTO from(ChatMessage message) {
                 return new ChatMessageResponseDTO(
@@ -27,7 +29,8 @@ public record ChatMessageResponseDTO(
                                 message.getAttachmentType(),
                                 message.getSentAt(),
                                 message.getMessageType(),
-                                message.getPayload());
+                                message.getPayload(),
+                                message.getReadAt());
         }
 
 }

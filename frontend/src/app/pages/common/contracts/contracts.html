@@ -1,0 +1,150 @@
+<div class="pagina" [class.embutido]="embutido">
+  @if (!embutido) {
+    <app-trail-header
+      [trilha]="responsavelId ? ['Contratos', responsavelNome] : [ehMotorista ? 'Motorista' : 'Responsável', 'Contratos']"
+      (voltarEvent)="voltar()" />
+  }
+
+  @if (modoPastas) {
+    <main class="conteudo">
+      @if (carregando()) {
+        <app-esqueleto tipo="lista" [quantos]="2" texto="Carregando contratos..." />
+      } @else if (erroCarregar()) {
+        <div class="aviso erro" role="alert">
+          <p>Não foi possível carregar os contratos.</p>
+          <button type="button" class="link" (click)="carregarPastas()">Tentar novamente</button>
+        </div>
+      } @else if (!pastas().length) {
+        <section class="vazio" animate.enter="entrar-fade">
+          <i class="bi bi-folder2" aria-hidden="true"></i>
+          <h2>Nenhum contrato por aqui</h2>
+        </section>
+      } @else {
+        <h2 class="titulo-pastas">{{ ehMotorista && !responsavelId ? 'Responsáveis' : 'Dependentes' }}</h2>
+        <ul class="pastas">
+          @for (p of pastas(); track p.id; let i = $index) {
+            @let r = resumoPasta(p);
+            <li animate.enter="entrar-subindo" [style.--i]="i % 20">
+              <button type="button" class="pasta" [attr.data-status]="r.classe" [class.abrindo]="abrindo() === p.id" [attr.aria-label]="'Abrir a pasta de ' + p.nome + ', ' + r.texto" (click)="abrirPasta(p)">
+                <!-- pasta em camadas: fundo com a aba, folhas guardadas (vistas pelo vidro) e a frente de vidro com nome e status -->
+                <span class="pasta-icone" aria-hidden="true">
+                  <svg class="pasta-tras" viewBox="0 0 1000 770" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="pasta-tras-cor" x1="0" y1="0" x2="1" y2="0.4">
+                        <stop offset="0" stop-color="#e2e8f0" />
+                        <stop offset="1" stop-color="#c3cfdd" />
+                      </linearGradient>
+                    </defs>
+                    <path fill="url(#pasta-tras-cor)" d="M0 75A75 75 0 0 1 75 0H270Q300 0 322 22L375 75H925A75 75 0 0 1 1000 150V695A75 75 0 0 1 925 770H75A75 75 0 0 1 0 695Z" />
+                  </svg>
+                  <span class="papel papel-1"></span>
+                  <span class="papel papel-2"></span>
+                  <span class="papel papel-3"></span>
+                  <span class="pasta-frente">
+                    <span class="pasta-nome">{{ p.nome }}</span>
+                    <span [class]="'selo ' + r.classe">{{ r.texto }}</span>
+                  </span>
+                </span>
+              </button>
+            </li>
+          }
+        </ul>
+      }
+    </main>
+  } @else {
+  <div class="abas" role="tablist" aria-label="Filtrar contratos">
+    @for (aba of abas; track aba.id) {
+      <button
+        type="button"
+        role="tab"
+        class="aba"
+        [class.ativa]="abaAtiva() === aba.id"
+        [attr.aria-selected]="abaAtiva() === aba.id"
+        (click)="trocarAba(aba.id)"
+      >
+        {{ aba.label }}
+      </button>
+    }
+  </div>
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando contratos..." />
+    } @else if (erroCarregar()) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar os contratos.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else if (!contratos().length) {
+      <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+        <h2>Nenhum contrato por aqui</h2>
+      </section>
+    } @else {
+      <ul class="grade">
+        @for (c of contratos(); track c.contractId; let i = $index) {
+          @let info = statusInfo[c.status];
+          @let inicio = inicioAgendado(c);
+          @let cancela = dataCancelamento(c);
+          @let atraso = atrasadas(c);
+          <li class="card" animate.enter="entrar-subindo" [style.--i]="i % 20">
+            <div class="selos">
+              <span class="selo" [class]="'selo ' + (info?.classe ?? 'inativo')">{{ info?.texto ?? c.status }}</span>
+              <span class="periodicidade">{{ periodicidade(c.periodicity) }}</span>
+            </div>
+
+            <div class="resumo">
+              <h2>Transporte escolar</h2>
+              <p class="parte">
+                @if (ehMotorista) {
+                  Responsável: {{ c.responsibleName }}
+                } @else {
+                  Motorista: {{ c.driverName }}
+                }
+              </p>
+
+              <hr class="divisor">
+
+              <div class="aluno">
+                @if (fotos().get(c.studentId); as foto) {
+                  <img class="foto-aluno" [src]="foto" alt="" />
+                } @else {
+                  <span class="iniciais" aria-hidden="true">{{ iniciais(c.studentName) }}</span>
+                }
+                <div>
+                  <strong>{{ c.studentName }}</strong>
+                  <span>{{ c.schoolName }}</span>
+                </div>
+              </div>
+
+              @if (inicio) {
+                <p class="linha info">Começa em {{ inicio }}</p>
+              }
+              @if (cancela) {
+                <p class="linha info">Cancela em {{ cancela }}</p>
+              }
+              @if (atraso) {
+                <p class="linha alerta">{{ atraso }}</p>
+              }
+
+              <button type="button" class="btn-ver" (click)="visualizar(c)">Visualizar contrato</button>
+            </div>
+          </li>
+        }
+      </ul>
+
+      @if (temMais()) {
+        <div #fimDaLista class="fim-lista" role="status">
+          @if (carregandoMais()) {
+            Carregando mais...
+          }
+        </div>
+      }
+    }
+  </main>
+  }
+
+  @if (!embutido) {
+    <app-footer [tipoUsuario]="ehMotorista ? 'motorista' : 'responsavel'" tipo="mapa" />
+  }
+</div>

@@ -16,13 +16,29 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 14px 16px;
+  padding: 16px 16px;
   border-radius: 14px;
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
-  font-family: 'Inter', sans-serif;
+  font-family: inherit;
   animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  transition: all 0.3s ease;
+  transition: opacity 200ms ease, transform 200ms var(--ease-out),
+    scale 160ms var(--ease-out, ease-out);
   border: 1.5px solid transparent;
+  position: relative;
+}
+
+/* vidro da Glisse atras do conteudo (app-glisse-vidro): a cor de cada tipo fica no cartao, translucida,
+   e o vidro desfoca ela junto com a tela; frost alto pra borrar bem o fundo */
+.popup-card app-glisse-vidro {
+  --lg-glass: transparent;
+  --lg-blur: 16px; /* frost */
+  --glisse-vidro-sombra: none;
+  border-radius: 12.5px; /* 14px do cartao menos a borda */
+}
+
+.popup-card > :not(app-glisse-vidro) {
+  position: relative;
+  z-index: 1;
 }
 
 @keyframes slideInRight {
@@ -49,17 +65,17 @@
 }
 
 .popup-card.error {
-  background-color: #fef2f2;
+  background-color: rgb(254 242 242 / 0.78);
   border-color: #fecaca;
   color: #991b1b;
 }
 
 .popup-card.error .popup-icon {
-  color: #dc2626;
+  color: var(--vermelho);
 }
 
 .popup-card.warning {
-  background-color: #fffbeb;
+  background-color: rgb(255 251 235 / 0.78);
   border-color: #fde68a;
   color: #92400e;
 }
@@ -69,7 +85,7 @@
 }
 
 .popup-card.success {
-  background-color: #f0fdf4;
+  background-color: rgb(240 253 244 / 0.78);
   border-color: #bbf7d0;
   color: #166534;
 }
@@ -79,7 +95,7 @@
 }
 
 .popup-card.info {
-  background-color: #eff6ff;
+  background-color: rgb(239 246 255 / 0.78);
   border-color: #bfdbfe;
   color: #1e40af;
 }
@@ -104,27 +120,27 @@
 }
 
 .popup-title {
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 600;
   line-height: 1.3;
 }
 
 .popup-contador {
   display: inline-flex;
   align-items: center;
-  margin-left: 6px;
-  padding: 1px 7px;
+  margin-left: 8px;
+  padding: 1px 8px;
   border-radius: 999px;
   color: #ffffff;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   line-height: 1.4;
   vertical-align: 1px;
   animation: contadorPulso 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* selo na cor do icone de cada tipo */
-.popup-card.error .popup-contador { background: #dc2626; }
+.popup-card.error .popup-contador { background: var(--vermelho); }
 .popup-card.warning .popup-contador { background: #d97706; }
 .popup-card.success .popup-contador { background: #16a34a; }
 .popup-card.info .popup-contador { background: #2563eb; }
@@ -135,7 +151,7 @@
 }
 
 .popup-message {
-  font-size: 0.875rem;
+  font-size: 14px;
   font-weight: 400;
   line-height: 1.4;
   margin: 0;
@@ -145,21 +161,24 @@
 .popup-close {
   background: transparent;
   border: none;
-  font-size: 1.1rem;
+  font-size: 18px;
   font-weight: 600;
   color: currentColor;
   opacity: 0.6;
   cursor: pointer;
-  padding: 2px 6px;
-  border-radius: 6px;
+  padding: 2px 8px;
+  border-radius: 8px;
   line-height: 1;
   flex-shrink: 0;
-  transition: opacity 0.2s, background-color 0.2s;
+  transition: opacity 0.2s, background-color 0.2s,
+    scale 160ms var(--ease-out, ease-out);
 }
 
-.popup-close:hover {
-  opacity: 1;
-  background-color: rgba(0, 0, 0, 0.06);
+@media (hover: hover) and (pointer: fine) {
+  .popup-close:hover {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.06);
+  }
 }
 
 @media (max-width: 480px) {

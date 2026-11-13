@@ -39,7 +39,13 @@ function ajustarTermos(mensagem: string): string {
  * ("Http failure response...") ou o "Invalid request content." do @Valid, que nao diz o campo.
  */
 export function mensagemDoBackend(error: unknown): string | null {
-  const corpo = (error as { error?: unknown } | null)?.error;
+  let corpo = (error as { error?: unknown } | null)?.error;
+  // chamadas com responseType 'text' recebem o JSON de erro como texto: le a mensagem de dentro
+  if (typeof corpo === 'string' && corpo.trim().startsWith('{')) {
+    try {
+      corpo = JSON.parse(corpo);
+    } catch {}
+  }
   const bruta =
     typeof corpo === 'string'
       ? corpo
@@ -70,7 +76,7 @@ export class PopUpService {
     message: string,
     type: 'error' | 'warning' | 'info' | 'success' = 'error',
     title?: string,
-    durationMs: number = 4500
+    durationMs: number = 3000
   ): string {
     const defaultTitle =
       title ||
@@ -157,6 +163,8 @@ export class PopUpService {
       this.show(backendMessage || 'Esta ação conflita com dados já cadastrados.', 'warning', 'Não foi possível concluir');
     } else if (status === 422) {
       this.show(backendMessage || 'Informações inválidas. Verifique os dados inseridos.', 'error', 'Dados inválidos');
+    } else if (status === 429) {
+      this.show(backendMessage || 'Muitas tentativas. Aguarde um pouco e tente de novo.', 'warning', 'Aguarde');
     } else if (status === 503) {
       this.show(backendMessage || 'Serviço indisponível agora. Tente mais tarde.', 'error', 'Serviço indisponível');
     } else if (status !== undefined && status >= 500) {

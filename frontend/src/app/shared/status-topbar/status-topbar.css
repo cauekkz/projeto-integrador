@@ -1,0 +1,121 @@
+:host {
+  display: block;
+}
+
+.barra {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 87px;
+  padding: 0 16px;
+  border-radius: 999px;
+  background: rgba(160, 160, 160, 0.35);
+}
+
+.barra.flutuante {
+  /* por cima do mapa: o mesmo vidro do rodape (Figma 1072:5168) */
+  background: rgba(29, 95, 161, 0.1);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  backdrop-filter: blur(18px) saturate(180%);
+  box-shadow: 0 6px 18px rgba(15, 23, 41, 0.12);
+}
+
+/* com a Glisse o fundo e o vidro dela (glisse-vidro.css); aqui so tira o antigo e poe o conteudo por cima */
+.barra.com-glisse {
+  position: relative;
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.barra.com-glisse > :not(app-glisse-vidro) {
+  position: relative;
+  z-index: 1;
+}
+
+.barra.flutuante .status,
+.barra.flutuante .sino {
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.barra.flutuante .sino {
+  color: var(--texto-2);
+}
+
+.foto {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #3d5695;
+  cursor: pointer;
+}
+
+.foto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.status {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  border-radius: 999px;
+  background: rgba(239, 248, 254, 0.55);
+  color: #dba40c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.status .ponto {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.status.ativo {
+  color: var(--azul);
+}
+
+.sino {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--texto);
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--vermelho);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  text-align: center;
+}

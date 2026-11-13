@@ -1,0 +1,49 @@
+<div class="pagina">
+  <app-trail-header [trilha]="['Motorista', 'Grupos']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <app-esqueleto tipo="lista" [quantos]="3" texto="Carregando grupos..." />
+    } @else if (erroCarregar()) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar os grupos.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else if (!grupos().length) {
+      <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-people" aria-hidden="true"></i>
+        <h2>Você ainda não tem grupos</h2>
+        <p>Junte alunos em um grupo para avisar todos os responsáveis de uma vez.</p>
+        <button type="button" class="btn btn-azul" (click)="abrirNovo()">Novo grupo</button>
+      </section>
+    } @else {
+      <button type="button" class="btn btn-azul" (click)="abrirNovo()">Novo grupo</button>
+      @for (grupo of grupos(); track grupo.id; let i = $index) {
+        <button type="button" class="cartao-grupo" animate.enter="entrar-subindo" [style.--i]="i" (click)="abrir(grupo)">
+          <span class="textos">
+            <strong>{{ grupo.name }}</strong>
+            <small>{{ quantos(grupo) }}</small>
+          </span>
+          <i class="bi bi-chevron-right" aria-hidden="true"></i>
+        </button>
+      }
+    }
+  </main>
+
+  <app-footer tipoUsuario="motorista" />
+</div>
+
+<!-- Figma 1058:751 "Novo grupo" -->
+@if (criando()) {
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharNovo()">
+    <form class="folha" role="dialog" aria-modal="true" aria-labelledby="novo-titulo" (click)="$event.stopPropagation()" (ngSubmit)="criar()">
+      <h2 id="novo-titulo">Novo grupo</h2>
+      <div class="campo">
+        <label for="nome-grupo">Nome do grupo (até 60 caracteres)</label>
+        <input id="nome-grupo" name="nome" maxlength="60" placeholder="Fatec manhã" [(ngModel)]="nome" />
+      </div>
+      <button type="submit" class="btn btn-azul" [disabled]="enviando()">{{ enviando() ? 'Criando...' : 'Criar grupo' }}</button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharNovo()">Voltar</button>
+    </form>
+  </div>
+}

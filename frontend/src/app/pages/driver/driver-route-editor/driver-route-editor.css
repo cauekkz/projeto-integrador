@@ -1,0 +1,405 @@
+/* pagina, botoes e folha vem de shared/folha.css; chip, opcao e rotulo de shared/rota.css */
+
+.conteudo {
+  gap: 8px;
+}
+
+/* Figma "Van padrão" 1038:692 */
+.van {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.van > i {
+  font-size: 24px;
+  color: var(--azul);
+}
+
+.van .dados {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.van small {
+  font-size: 11px;
+  color: var(--texto-3);
+}
+
+.van strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.trocar {
+  border: none;
+  background: transparent;
+  color: var(--azul);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* ---------- a estrada: o caminho da van passando por cada parada ---------- */
+
+.pontos {
+  --estrada: 22px;
+  --margem-estrada: 40px;
+  position: relative;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* os cards ficam a direita da estrada */
+  padding-left: var(--margem-estrada);
+}
+
+/* asfalto com a faixa branca tracejada no meio, do 1o ao ultimo marcador
+   (o fim, --fim-estrada, e medido no TS pela altura do ultimo card) */
+.pontos::before {
+  content: '';
+  position: absolute;
+  top: 27px;
+  bottom: var(--fim-estrada, 27px);
+  left: calc(14px - var(--estrada) / 2);
+  width: var(--estrada);
+  border-radius: calc(var(--estrada) / 2);
+  background:
+    repeating-linear-gradient(to bottom, #ffffff 0 9px, transparent 9px 18px) center / 2px 100% no-repeat,
+    linear-gradient(90deg, #cbd5e1, #dbe3ec 50%, #cbd5e1);
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.35);
+  pointer-events: none;
+}
+
+/* uma parada so: nao tem caminho */
+.pontos:has(> .ponto:only-child)::before {
+  display: none;
+}
+
+.ponto {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  /* as outras paradas abrem espaco deslizando enquanto uma e arrastada */
+  transition: transform 200ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 160ms ease-out;
+}
+
+/* a parada que esta sendo arrastada: levanta e segue o dedo, sem atraso */
+.ponto.arrastado {
+  z-index: 2;
+  transition: box-shadow 160ms ease-out;
+  box-shadow: 0 12px 28px -8px rgba(15, 23, 42, 0.28);
+  border-color: #cbd5e1;
+}
+
+.sem-transicao > .ponto {
+  transition: none;
+}
+
+/* Figma "Cabeçalho do ponto" 1038:666 */
+.cabecalho-ponto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* tocar na parada abre escolas e apagar */
+.abrir-ponto {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* os 2 tracos pra arrastar (no lugar do menu de 3 pontinhos) */
+.alca {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 44px;
+  height: 44px;
+  margin: -8px -10px -8px 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  cursor: grab;
+  /* o dedo arrasta a parada, nao a pagina */
+  touch-action: none;
+}
+
+.alca span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 2px;
+  background: #94a3b8;
+}
+
+.arrastado .alca {
+  cursor: grabbing;
+}
+
+.arrastado .alca span {
+  background: var(--azul);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .alca:hover {
+    background: #f1f5f9;
+  }
+}
+
+/* o numero da parada vira o marcador em cima da estrada (fora do card, a esquerda) */
+.ordem {
+  position: absolute;
+  z-index: 1;
+  top: 12px;
+  /* centro na estrada: margem da lista + borda do card */
+  left: calc(14px - 14px - var(--margem-estrada) - 1px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  background: var(--azul);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  /* anel branco separa o marcador do asfalto */
+  box-shadow:
+    0 0 0 3px #ffffff,
+    0 2px 6px rgba(12, 102, 219, 0.35);
+}
+
+/* comeco e fim do caminho: o primeiro e o ultimo marcador em azul escuro */
+.ponto:first-child .ordem,
+.ponto:last-child .ordem {
+  background: var(--azul-escuro);
+}
+
+.endereco,
+.aluno .dados {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.endereco strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.endereco small {
+  font-size: 12px;
+  color: var(--texto-3);
+}
+
+.mais {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-right: -8px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--texto-2);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.mais.pequeno {
+  font-size: 16px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mais:hover {
+    background: #f1f5f9;
+  }
+}
+
+/* Figma "Aluno no ponto" 1038:665 — tocar abre os dias e o ponto dele */
+.aluno {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.seta-aluno {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+
+.acao {
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: #ecfdf5;
+  color: #047857;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.acao.desce {
+  background: #eff8fe;
+  color: var(--azul-escuro);
+}
+
+.aluno strong {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--texto);
+}
+
+.aluno small {
+  font-size: 11px;
+  color: var(--texto-3);
+}
+
+/* "Adicionar aluno" / "Iniciar rota" logo acima do rodape */
+/* "Adicionar aluno" e "Iniciar rota" entre a van e a 1a parada */
+.barra-acoes {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+
+.barra-acoes .btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.barra-acoes .btn i {
+  font-size: 18px;
+  line-height: 1;
+}
+
+/* com desembarque: ele em cima, na largura toda; os outros embaixo */
+.barra-acoes.com-desembarque {
+  flex-wrap: wrap;
+}
+
+.barra-acoes .desembarque {
+  flex-basis: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.folha .sub {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.chip.numero {
+  min-width: 34px;
+  padding: 0 12px;
+}
+
+.escolas {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.escolas li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  font-size: 14px;
+  color: var(--texto);
+}
+
+.tirar {
+  border: none;
+  background: transparent;
+  color: var(--vermelho-texto);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.folha .aviso {
+  padding: 8px 0;
+}
+
+/* a mesma escola em mais de uma parada */
+.repetida {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #fde68a;
+  border-radius: 14px;
+  background: #fffbeb;
+  font-size: 13px;
+  color: #92400e;
+}
+
+.repetida i {
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.repetida p {
+  flex: 1;
+  min-width: 0;
+}
+
+.repetida .link {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  color: #92400e;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}

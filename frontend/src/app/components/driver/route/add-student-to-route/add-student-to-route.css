@@ -1,0 +1,15 @@
+/* tela cheia, chip, campo e opcao vem de shared/rota.css */
+
+.sub {
+  font-size: 13px;
+  color: var(--texto-2);
+}
+
+.rotulo {
+  margin-top: 4px;
+}
+
+.aviso {
+  padding: 12px 0;
+  text-align: left;
+}

@@ -1,0 +1,113 @@
+<div class="screen">
+  <app-topo-responsavel [usuario]="usuarioLogado()" [filhos]="filhos()" (perfil)="mostrarPerfil.set(true)" />
+
+  <main class="content">
+    @if (carregando()) {
+      <app-esqueleto tipo="lista" [quantos]="3" texto="Carregando..." />
+    } @else if (!filhos().length) {
+      <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-person-plus" aria-hidden="true"></i>
+        <h2>Adicione seu filho</h2>
+        <p>Com ele cadastrado, você acompanha a van e avisa as faltas por aqui.</p>
+        <button type="button" class="btn btn-azul" (click)="abrirFluxoDependente()">Adicionar filho</button>
+      </section>
+    } @else {
+      <ul class="filhos">
+        @for (filho of filhos(); track filho.id; let i = $index) {
+          <li class="cartao" animate.enter="entrar-subindo" [style.--i]="i">
+            <div class="quem">
+              @if (filho.photoUrl) {
+                <img class="foto" [src]="filho.photoUrl" alt="" />
+              } @else {
+                <span class="foto iniciais" aria-hidden="true">{{ iniciais(filho.name) }}</span>
+              }
+              <strong>{{ filho.name }}</strong>
+            </div>
+
+            <!-- Figma "falta avisada": a falta de hoje de uma rota que ainda nao saiu -->
+            @for (falta of faltasSemViagem(filho); track falta.id) {
+              <p class="falta">Falta avisada · {{ falta.routeName }} · hoje</p>
+              <button type="button" class="btn btn-contorno" [disabled]="desfazendo() === falta.id" (click)="eleVaiSim(filho, falta)">
+                {{ desfazendo() === falta.id ? 'Desfazendo...' : (filho.name.split(' ')[0] + ' vai sim') }}
+              </button>
+            }
+
+            @if (semNadaHoje(filho)) {
+              <!-- Figma "van ainda não saiu" -->
+              <p class="linha">A van ainda não saiu</p>
+              <!-- avisar falta: acoes discretas (o vermelho fica so na confirmacao da folha) -->
+              <div class="faltas">
+                <button type="button" class="acao-falta" (click)="abrirFalta(filho, true)">
+                  <i class="bi bi-calendar-x" aria-hidden="true"></i> Não vai hoje
+                </button>
+                <button type="button" class="acao-falta" (click)="abrirFalta(filho, false)">
+                  <i class="bi bi-calendar-event" aria-hidden="true"></i> Não vai outro dia
+                </button>
+              </div>
+            } @else if (filho.viagens.length) {
+              <!-- Figma "viagem em andamento" e "duas viagens no dia" -->
+              @for (viagem of filho.viagens; track viagem.tripId) {
+                <div class="viagem">
+                  <span class="linha">{{ viagem.routeName }}</span>
+                  <span [class]="'selo ' + selo(viagem.boardingStatus).classe">{{ selo(viagem.boardingStatus).texto }}</span>
+                </div>
+                <app-trajeto [status]="viagem.boardingStatus" />
+              }
+              @if (viagemParaAcompanhar(filho) || viagensSemEmbarque(filho).length) {
+                <div class="botoes">
+                  @if (viagemParaAcompanhar(filho); as viagem) {
+                    <button type="button" class="btn btn-azul" (click)="acompanhar(filho, viagem)">Acompanhar</button>
+                  }
+                  @if (viagensSemEmbarque(filho).length) {
+                    <button type="button" class="btn btn-contorno" (click)="abrirFalta(filho, true)">Não vai hoje</button>
+                  }
+                </div>
+              }
+            }
+          </li>
+        }
+      </ul>
+    }
+  </main>
+
+  <app-footer tipoUsuario="responsavel" abaAtiva="home" />
+</div>
+
+<!-- folha "Não vai hoje" / "Não vai outro dia" -->
+@if (folha(); as f) {
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharFalta()">
+    <form class="folha" role="dialog" aria-modal="true" aria-labelledby="falta-titulo" (click)="$event.stopPropagation()" (ngSubmit)="avisarFalta()">
+      <h2 id="falta-titulo">{{ f.hoje ? primeiroNome(f.filho.name) + ' não vai hoje?' : 'Em que dia ' + primeiroNome(f.filho.name) + ' não vai?' }}</h2>
+      <p class="sub">O motorista é avisado no chat.</p>
+
+      <p class="rotulo">Rota</p>
+      @if (f.carregando) {
+        <p class="ajuda">Carregando rotas...</p>
+      } @else if (!f.rotas.length) {
+        <p class="ajuda">{{ primeiroNome(f.filho.name) }} ainda não está em nenhuma rota.</p>
+      } @else {
+        <div class="chips">
+          @for (r of f.rotas; track r.id) {
+            <button type="button" class="chip" [class.ativo]="rotaEscolhida() === r.id" [attr.aria-pressed]="rotaEscolhida() === r.id" (click)="rotaEscolhida.set(r.id)">{{ r.name }}</button>
+          }
+        </div>
+      }
+
+      @if (!f.hoje) {
+        <div class="campo">
+          <label for="dia">Dia</label>
+          <input id="dia" name="dia" type="date" [min]="amanha()" [(ngModel)]="dataEscolhida" />
+        </div>
+      }
+
+      <button type="submit" class="btn btn-vermelho" [disabled]="enviando() || !f.rotas.length">
+        {{ enviando() ? 'Avisando...' : 'Avisar falta' }}
+      </button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharFalta()">Voltar</button>
+    </form>
+  </div>
+}
+
+@if (mostrarPerfil()) {
+  <app-profile-select animate.leave="sair-perfil" tipoUsuario="responsavel" [usuario]="usuarioLogado()" (fecharEvent)="fecharPerfil()" />
+}

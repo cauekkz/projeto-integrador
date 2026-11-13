@@ -1,0 +1,90 @@
+/* pagina e botoes vem de shared/folha.css; o :host de la pinta fundo branco, aqui nao */
+:host {
+  display: block;
+  background: none;
+}
+
+.terms {
+  margin-bottom: 20px;
+}
+
+.aceite {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 16px;
+  color: var(--texto-2);
+  cursor: pointer;
+}
+
+.aceite input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  accent-color: var(--azul);
+  flex-shrink: 0;
+}
+
+.link {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--azul);
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+small {
+  color: var(--texto-3);
+}
+
+/* pagina dos termos por cima do cadastro */
+.tela-termos {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow-y: auto;
+  background: #ffffff;
+}
+
+.tela-termos .pagina {
+  padding-bottom: 0;
+}
+
+.cabeca {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.cabeca h2 {
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--texto);
+}
+
+.cabeca span {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.texto {
+  padding: 16px;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+/* botoes presos no fim da tela enquanto o texto rola */
+.acoes {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 0 24px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), #ffffff 24%);
+}

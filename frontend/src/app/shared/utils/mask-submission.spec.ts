@@ -4,9 +4,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { of } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
-import { LoginForm } from '../../components/login-signup/login-form/login-form';
-import { SignupResponsible } from '../../components/login-signup/signup-responsible/signup-responsible';
-import { SignupDriver } from '../../components/login-signup/signup-driver/signup-driver';
+import { LoginForm } from '../../components/common/login-signup/login-form/login-form';
+import { SignupResponsible } from '../../components/common/login-signup/signup-responsible/signup-responsible';
+import { SignupDriver } from '../../components/common/login-signup/signup-driver/signup-driver';
 import { Router } from '@angular/router';
 import { PopUpService } from '../pop-up';
 import { RegisterService } from '../../services/register.service';
@@ -116,6 +116,7 @@ describe('Mask Submission & API Integration', () => {
       component.enteredNeighborhood = 'Consolação';
       component.enteredCity = 'São Paulo';
       component.enteredState = 'sp';
+      component.versaoTermos = '3';
 
       component.signup();
 
@@ -139,6 +140,7 @@ describe('Mask Submission & API Integration', () => {
           city: 'São Paulo',
           state: 'SP',
         },
+        acceptedTermsVersion: '3',
       });
     });
   });
@@ -164,11 +166,11 @@ describe('Mask Submission & API Integration', () => {
       const fixture = TestBed.createComponent(SignupDriver);
       const component = fixture.componentInstance;
 
-      component.enteredName = 'Carlos Santos';
       component.enteredEmail = 'carlos@example.com';
       component.enteredPhone = '(11) 99887-6655';
       component.enteredPass = 'driverPass123';
       component.enteredConfirmPass = 'driverPass123';
+      component.versaoTermos = '3';
 
       component.signup();
 
@@ -176,11 +178,11 @@ describe('Mask Submission & API Integration', () => {
 
       expect(authServiceMock.createDriver).toHaveBeenCalledWith({
         documentPdf: registerMock.selectedFile,
-        name: 'Carlos Santos',
         email: 'carlos@example.com',
         password: 'driverPass123',
         confirmPassword: 'driverPass123',
         phone: '11998876655',
+        acceptedTermsVersion: '3',
       });
     });
   });
@@ -259,7 +261,7 @@ describe('Mask Submission & API Integration', () => {
         passwordHash: 'pass123',
       }).subscribe();
 
-      const req = httpMock.expectOne('http://localhost:9090/api/auth/login');
+      const req = httpMock.expectOne('/api/auth/login');
       expect(req.request.method).toBe('POST');
       expect(req.request.body).toEqual({
         cpf: '12345678900',
@@ -277,9 +279,10 @@ describe('Mask Submission & API Integration', () => {
         password: 'pass',
         confirmPassword: 'pass',
         address: { zipCode: '01304-000', street: 'Rua Augusta', number: 500, neighborhood: '', city: 'São Paulo', state: 'SP' },
+        acceptedTermsVersion: '3',
       }).subscribe();
 
-      const req = httpMock.expectOne('http://localhost:9090/api/responsible/auth/signup');
+      const req = httpMock.expectOne('/api/responsible/auth/signup');
       expect(req.request.method).toBe('POST');
       expect(req.request.body.cpf).toBe('12345678900');
       expect(req.request.body.phone).toBe('11987654321');
@@ -292,20 +295,31 @@ describe('Mask Submission & API Integration', () => {
     it('should clean phone mask before POST /driver/auth/signup request with FormData', () => {
       service.createDriver({
         documentPdf: new File([''], 'doc.pdf'),
-        name: 'Motorista Silva',
         email: 'motorista@example.com',
         password: 'pass',
         confirmPassword: 'pass',
         phone: '(11) 91234-5678',
+        acceptedTermsVersion: '3',
       }).subscribe();
 
-      const req = httpMock.expectOne('http://localhost:9090/api/driver/auth/signup');
+      const req = httpMock.expectOne('/api/driver/auth/signup');
       expect(req.request.method).toBe('POST');
       expect(req.request.body instanceof FormData).toBe(true);
       const formData = req.request.body as FormData;
       expect(formData.get('phone')).toBe('11912345678');
-      expect(formData.get('name')).toBe('Motorista Silva');
+      // o nome sai da CNH no backend: o front nao manda
+      expect(formData.has('name')).toBe(false);
+      expect(formData.get('acceptedTermsVersion')).toBe('3');
       req.flush('ok');
+    });
+
+    it('exclui a própria conta em DELETE /users/me com a senha no corpo', () => {
+      service.deleteMyAccount('Senha@123').subscribe();
+
+      const req = httpMock.expectOne('/api/users/me');
+      expect(req.request.method).toBe('DELETE');
+      expect(req.request.body).toEqual({ password: 'Senha@123' });
+      req.flush(null, { status: 204, statusText: 'No Content' });
     });
   });
 });

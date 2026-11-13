@@ -67,11 +67,11 @@ class TripNotificationServiceTest {
     }
 
     private static TripStudentDTO st(UUID id, String name, StudentStopAction action, StudentStopLocationType type, BoardingStatus status) {
-        return new TripStudentDTO(id, name, action, type, status, null, null);
+        return new TripStudentDTO(id, name, action, type, status, null, null, null, null);
     }
 
     private static TripLiveStopDTO stop(UUID id, boolean done, Double eta, TripStudentDTO... students) {
-        return new TripLiveStopDTO(id, 1, -23.5, -46.6, List.of(students), List.of(), done, null, eta);
+        return new TripLiveStopDTO(id, 1, -23.5, -46.6, List.of(students), List.of(), done, null, eta, null, null, null, List.of());
     }
 
     private static TripLiveStateDTO state(TripLiveStopDTO... stops) {

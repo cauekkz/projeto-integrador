@@ -67,7 +67,7 @@ public class DriverProfileService {
                         .toList(),
                 driverVehicleRepository.findActiveByDriver(driverId).stream()
                         .map(link -> new DriverProfileResponseDTO.VehicleItem(link.getVehicle().getModel(),
-                                link.getVehicle().getColor(), link.getVehicle().getPlate(), link.getVehicle().getCapacity()))
+                                link.getVehicle().getColor(), link.getVehicle().getPlate()))
                         .toList(),
                 average,
                 count,

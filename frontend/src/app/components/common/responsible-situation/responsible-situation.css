@@ -1,0 +1,44 @@
+:host {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  background: transparent;
+}
+
+.situacao,
+.contrato {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.situacao > div,
+.contrato > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.situacao small {
+  font-size: 13px;
+}
+
+.situacao strong {
+  font-size: 16px;
+}
+
+.contrato {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .contrato:hover {
+    background: #f8fafc;
+  }
+}

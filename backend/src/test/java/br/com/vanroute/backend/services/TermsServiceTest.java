@@ -69,7 +69,7 @@ class TermsServiceTest {
         TermsService service = new TermsService(repository);
         when(repository.existsByUserIdAndVersion(userId, TermsService.CURRENT_VERSION)).thenReturn(false);
 
-        assertEquals("2", TermsService.CURRENT_VERSION);
+        assertEquals("3", TermsService.CURRENT_VERSION);
         assertFalse(service.acceptedCurrent(userId));
         assertThrows(BadRequestException.class, () -> service.accept(userId, "1"));
         assertThrows(BadRequestException.class, () -> service.requireCurrent("1"));
@@ -79,12 +79,14 @@ class TermsServiceTest {
     void textOfTheCurrentVersionFollowsTheCode() {
         String text = new TermsService(repository).current().content();
 
-        assertTrue(text.contains("versão 2"));
+        assertTrue(text.contains("versão 3"));
         assertFalse(text.contains("RASCUNHO"));
         // regras que o codigo aplica: aviso previo, divida que nao some, CNH nao guardada, operadores
         assertTrue(text.contains("30 dias depois do pedido"));
         assertTrue(text.contains("não apaga dívidas"));
         assertTrue(text.contains("não são guardados"));
         assertTrue(text.contains("OpenRouteService"));
+        // foto do aluno: quem ve
+        assertTrue(text.contains("foto do aluno"));
     }
 }

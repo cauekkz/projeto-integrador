@@ -1,0 +1,131 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.anexo {
+  width: 100%;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+
+.anexo-vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 32px 16px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--texto);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .anexo-vazio:hover:not(:disabled) {
+    border-color: #c7d2e0;
+  }
+}
+
+.anexo-vazio.invalida {
+  border-color: var(--vermelho);
+}
+
+.anexo-vazio:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.icone-adicionar {
+  font-size: 64px;
+  line-height: 1;
+  color: #111111;
+  margin-bottom: 8px;
+}
+
+.anexo-titulo {
+  font-size: 16px;
+  text-align: center;
+}
+
+.anexo-opcional {
+  font-size: 16px;
+  color: #c4c4c4;
+}
+
+.anexo-escolhido {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  min-width: 0;
+}
+
+.icone-pdf {
+  font-size: 32px;
+  color: var(--vermelho);
+  flex-shrink: 0;
+}
+
+.anexo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.anexo-nome {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.anexo-tamanho {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.anexo-acoes {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.acao {
+  border: none;
+  background: transparent;
+  color: var(--azul);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .acao:hover:not(:disabled) {
+    background: #f1f5f9;
+  }
+}
+
+.acao:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.acao-remover {
+  color: var(--vermelho);
+  font-size: 16px;
+}
+
+.erro {
+  font-size: 13px;
+  color: var(--vermelho);
+}

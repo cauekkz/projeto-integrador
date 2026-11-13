@@ -1,25 +1,25 @@
 @if (tipo === 'driver') {
   <header class="topbar">
-    <button type="button" class="back-button" (click)="voltar()">
-      <i class="bi bi-chevron-left"></i>
+    <button type="button" class="back-button" aria-label="Voltar" (click)="voltar()">
+      <i class="bi bi-chevron-left" aria-hidden="true"></i>
     </button>
 
     <div class="user-info" (click)="irParaPerfil()">
       <img [src]="fotoUrl" class="avatar" [alt]="nomeUsuario">
-      <span class="name">{{ nomeUsuario }}</span>
+      <span class="name" [title]="nomeUsuario">{{ nomeUsuario }}</span>
     </div>
 
     <span class="role">{{ role }}</span>
   </header>
 } @else if (tipo === 'chat') {
   <header class="header-chat">
-    <button type="button" class="back-button" (click)="voltar()">
-      <i class="bi bi-chevron-left"></i>
+    <button type="button" class="back-button" aria-label="Voltar" (click)="voltar()">
+      <i class="bi bi-chevron-left" aria-hidden="true"></i>
     </button>
 
     <div class="chat-user-info" (click)="irParaPerfil()">
       <img [src]="fotoUrl" class="avatar" [alt]="nomeUsuario">
-      <span class="name">{{ nomeUsuario }}</span>
+      <span class="name" [title]="nomeUsuario">{{ nomeUsuario }}</span>
     </div>
 
     <button type="button" class="doc-button" (click)="clicarAcaoChat()">
@@ -28,9 +28,9 @@
   </header>
 } @else {
   <header class="header-geral">
-    <button type="button" class="back-button" (click)="voltar()">
-      <i class="bi bi-chevron-left"></i>
+    <button type="button" class="back-button" aria-label="Voltar" (click)="voltar()">
+      <i class="bi bi-chevron-left" aria-hidden="true"></i>
     </button>
-    <h1>{{ titulo }}</h1>
+    <h1 [title]="titulo">{{ titulo }}</h1>
   </header>
 }

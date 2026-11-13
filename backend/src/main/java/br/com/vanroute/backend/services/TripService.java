@@ -50,6 +50,7 @@ public class TripService {
     private final TripLiveService tripLiveService;
     private final TripNotificationService tripNotificationService;
     private final UserDriverContractRepository userDriverContractRepository;
+    private final RatingRepository ratingRepository;
 
     // embarque/desembarque so com a van perto do ponto do aluno (0 desliga)
     @Value("${trip.max-stop-distance-meters:1000}")
@@ -62,7 +63,8 @@ public class TripService {
                        VehicleRepository vehicleRepository, StudentResponsibleRepository studentResponsibleRepository,
                        RouteService routeService, TripLiveService tripLiveService,
                        TripNotificationService tripNotificationService,
-                       UserDriverContractRepository userDriverContractRepository) {
+                       UserDriverContractRepository userDriverContractRepository, RatingRepository ratingRepository) {
+        this.ratingRepository = ratingRepository;
         this.tripRepository = tripRepository;
         this.boardingRepository = boardingRepository;
         this.studentAbsenceRepository = studentAbsenceRepository;
@@ -91,8 +93,8 @@ public class TripService {
         if (!pending.isEmpty()) {
             throw new BadRequestException("A rota tem alunos sem embarque ou desembarque em algum dia: " + pending.stream()
                     .map(p -> p.studentName()
-                            + (p.missingBoarding().isEmpty() ? "" : " sem embarque " + p.missingBoarding())
-                            + (p.missingAlighting().isEmpty() ? "" : " sem desembarque " + p.missingAlighting()))
+                            + (p.missingBoarding().isEmpty() ? "" : " sem embarque (" + WeekDay.labels(p.missingBoarding()) + ")")
+                            + (p.missingAlighting().isEmpty() ? "" : " sem desembarque (" + WeekDay.labels(p.missingAlighting()) + ")"))
                     .collect(Collectors.joining("; ")));
         }
 
@@ -245,13 +247,31 @@ public class TripService {
             throw new AccessDeniedException("Responsável não vinculado a esse aluno");
         }
         return boardingRepository.findTodayOfStudent(studentId, LocalDate.now(ZONE)).stream()
-                .map(boarding -> new StudentTripTodayDTO(
-                        boarding.getTrip().getId(),
-                        boarding.getTrip().getRoute().getId(),
-                        boarding.getTrip().getRoute().getName(),
-                        boarding.getTrip().getStatus(),
-                        boarding.getStatus()))
+                .map(this::toToday)
                 .toList();
+    }
+
+    // viagem de hoje do filho com o motorista (nome, foto, nota) e a van dessa viagem, pro card do acompanhamento
+    private StudentTripTodayDTO toToday(Boarding boarding) {
+        Trip trip = boarding.getTrip();
+        Driver driver = trip.getDriver();
+        Vehicle vehicle = trip.getVehicle();
+        Double rating = null;
+        if (driver != null) {
+            List<Object[]> summary = ratingRepository.summaryOf(driver.getUserId());
+            if (!summary.isEmpty() && summary.get(0)[0] != null) {
+                rating = Math.round(((Number) summary.get(0)[0]).doubleValue() * 10) / 10.0;
+            }
+        }
+        return new StudentTripTodayDTO(trip.getId(), trip.getRoute().getId(), trip.getRoute().getName(), trip.getStatus(),
+                boarding.getStatus(),
+                driver == null ? null : driver.getUserId(),
+                driver == null ? null : driver.getUser().getName(),
+                driver == null ? null : driver.getUser().getPhotoKey(),
+                rating,
+                vehicle == null ? null : vehicle.getPlate(),
+                vehicle == null ? null : vehicle.getModel(),
+                vehicle == null ? null : vehicle.getColor());
     }
 
     // o responsavel pode avisar falta enquanto o filho ainda nao embarcou; com a rota do dia finalizada, nao
@@ -394,6 +414,6 @@ public class TripService {
 
     private TripStudentDTO toStudent(Boarding boarding) {
         return new TripStudentDTO(boarding.getStudent().getId(), boarding.getStudent().getName(), null, null, boarding.getStatus(),
-                boarding.getBoardingTime(), boarding.getUnboardingTime());
+                boarding.getBoardingTime(), boarding.getUnboardingTime(), null, boarding.getStudent().getPhotoKey());
     }
 }

@@ -1,0 +1,154 @@
+.login-container {
+  min-height: 100dvh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.bottom-container {
+  margin-top: auto;
+  padding-top: 40px;
+  padding-bottom: 16px;
+  width: 100%;
+  max-width: 500px;
+  display: block;
+  margin: 0 auto;
+}
+
+.header h1 {
+  flex: 1;
+  text-align: center;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--texto);
+  margin-right: 15%;
+  margin-top: -20px;
+}
+
+.back-button {
+  border: none;
+  background: transparent;
+  font-size: 32px;
+  cursor: pointer;
+}
+
+.content {
+  width: 100%;
+  max-width: 500px;
+  margin: 80px auto ;
+  display: flex;
+  flex-direction: column;
+
+}
+
+.content h2 {
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 32px;
+}
+
+label {
+  margin-bottom: 8px;
+  color: var(--texto-2);
+  font-size: 16px;
+}
+
+input {
+  width: 100%;
+  height: 56px;
+  border: 1px solid #d6dce5;
+  border-radius: 14px;
+  padding: 0 16px;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.error-message {
+  margin: 0 0 16px 0;
+  color: var(--vermelho);
+  font-size: 14px;
+  padding-left: 4px;
+}
+
+
+
+@media (max-width: 480px) {
+
+  .login-container {
+    padding: 24px 16px;
+  }
+
+  .header h1 {
+    font-size: 32px;
+  }
+
+  /* margens acompanham a altura da tela: em celular baixo nao sobra rolagem */
+  .content {
+    margin: clamp(16px, 7dvh, 72px) auto 0;
+    max-width: 380px;
+  }
+
+  .content h2 {
+    font-size: 32px;
+    margin-bottom: clamp(20px, 5dvh, 60px);
+  }
+
+  input {
+    height: 52px;
+  }
+
+
+}
+
+/* confirmar o e-mail: cobre a tela de login, igual ao "esqueci a senha" */
+.confirmar-email {
+  position: fixed;
+  inset: 0;
+  background: white;
+  z-index: 200;
+  overflow-y: auto;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.confirmar-email p {
+  color: var(--texto-2);
+  margin-bottom: 16px;
+}
+
+/* "Esqueceu sua senha?": link de texto, nao um terceiro botao */
+.esqueci {
+  display: block;
+  margin: 0 auto;
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--azul-escuro);
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .esqueci:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+.esqueci:focus-visible {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+  border-radius: 8px;
+}

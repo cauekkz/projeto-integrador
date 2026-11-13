@@ -1,0 +1,83 @@
+<div class="login-container">
+  <!-- so a seta: o titulo da tela e o "Entrar como ..." do formulario -->
+  <app-header (voltarEvent)="voltar()" />
+
+  <div class="content">
+    <form (ngSubmit)="login()">
+
+      @if (tipoUsuario === 'motorista') {
+        <h2>Entrar como motorista</h2>
+        <label>CPF do motorista</label>
+        <input type="text" placeholder="000.000.000-00" name="cpf" [(ngModel)]="enteredCPF" appCpfMask required />
+      }
+
+      @if (tipoUsuario === 'responsavel') {
+        <h2>Entrar como responsável</h2>
+        <label>CPF do responsável</label>
+        <input type="text" placeholder="000.000.000-00" name="cpf" [(ngModel)]="enteredCPF" appCpfMask required />
+      }
+
+      @if (cpfInvalido) {
+        <p class="error-message">O CPF é obrigatório.</p>
+      }
+
+      <label>Senha</label>
+      <input type="password" placeholder="Digite sua senha" name="senha" [(ngModel)]="enteredPass" required />
+
+      @if (passInvalido) {
+        <p class="error-message">A senha é obrigatória.</p>
+      }
+
+      <app-button
+        texto="Entrar"
+        tipo="primary"
+        type="submit">
+      </app-button>
+
+      <button type="button" class="esqueci" (click)="mostrarForgotPassword = true">Esqueceu sua senha?</button>
+
+    </form>
+  </div>
+
+  <div class="bottom-container">
+    <app-button
+      texto="Criar uma conta"
+      tipo="secondary"
+      (clickEvent)="irParaCadastro()">
+    </app-button>
+  </div>
+</div>
+
+@if (mostrarForgotPassword) {
+  <app-forgot-password (voltarEvent)="mostrarForgotPassword = false" />
+}
+
+@if (etapaEmail === 'email') {
+  <div class="confirmar-email">
+    <app-header titulo="Confirme seu e-mail" (voltarEvent)="etapaEmail = 'nenhuma'" />
+
+    <div class="content">
+      <form (ngSubmit)="enviarCodigoEmail()">
+        <h2>Falta confirmar seu e-mail</h2>
+        <p>Digite o e-mail do cadastro. Vamos mandar um código novo.</p>
+
+        <label>E-mail</label>
+        <input type="email" placeholder="Digite seu e-mail" name="email" [(ngModel)]="enteredEmail" required />
+        @if (emailInvalido) {
+          <p class="error-message">O e-mail é obrigatório.</p>
+        }
+
+        <app-button texto="Enviar código" tipo="primary" type="submit" />
+      </form>
+    </div>
+  </div>
+}
+
+@if (etapaEmail === 'codigo') {
+  <div class="confirmar-email">
+    <app-email-code
+      [email]="enteredEmail"
+      (verificadoEvent)="emailVerificado()"
+      (voltarEvent)="etapaEmail = 'email'" />
+  </div>
+}

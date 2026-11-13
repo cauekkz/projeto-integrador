@@ -34,7 +34,7 @@ public final class PixKeys {
             case RANDOM -> randomKey(key);
         };
         if (normalized == null) {
-            throw new BadRequestException("Chave Pix inválida para o tipo " + type);
+            throw new BadRequestException("Chave Pix inválida para o tipo " + type.label());
         }
         return normalized;
     }

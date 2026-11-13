@@ -19,9 +19,9 @@
 .header h1 {
     flex: 1;
     text-align: center;
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: #1f2937;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--texto);
     margin-right: 10%;
 }
 
@@ -36,13 +36,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
+    gap: 16px;
     padding: 28px 20px 24px;
     border: 1px solid #dbe6f5;
-    border-radius: 20px;
-    background:
-        radial-gradient(circle at 50% 0%, rgba(21, 101, 216, 0.12), transparent 65%),
-        linear-gradient(180deg, #f5f9ff 0%, #ffffff 100%);
+    border-radius: 24px;
+    background: #f8fafc;
     text-align: center;
 }
 
@@ -59,12 +57,15 @@
     transition:
         transform var(--dur-rapida) ease,
         border-color var(--dur-rapida) ease,
-        box-shadow var(--dur-media) ease;
+        box-shadow var(--dur-media) ease,
+    scale 160ms var(--ease-out, ease-out);
 }
 
-.photo-avatar:hover {
-    border-color: #1565d8;
-    box-shadow: 0 0 0 6px rgba(21, 101, 216, 0.1);
+@media (hover: hover) and (pointer: fine) {
+  .photo-avatar:hover {
+      border-color: var(--azul);
+      box-shadow: 0 0 0 6px rgba(12, 102, 219, 0.1);
+  }
 }
 
 .photo-avatar:active {
@@ -72,7 +73,7 @@
 }
 
 .photo-avatar:focus-visible {
-    outline: 3px solid #1565d8;
+    outline: 3px solid var(--azul);
     outline-offset: 4px;
 }
 
@@ -82,7 +83,7 @@
 }
 
 .photo-vazio {
-    font-size: 3.2rem;
+    font-size: 48px;
     color: #9dbdea;
     line-height: 1;
 }
@@ -106,10 +107,10 @@
     height: 36px;
     border: 3px solid #ffffff;
     border-radius: 50%;
-    background: #1565d8;
+    background: var(--azul);
     color: #ffffff;
-    font-size: 0.85rem;
-    box-shadow: 0 3px 8px rgba(21, 101, 216, 0.35);
+    font-size: 14px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
 }
 
 .photo-texto {
@@ -119,40 +120,43 @@
 }
 
 .photo-texto strong {
-    font-size: 1rem;
+    font-size: 16px;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--texto);
 }
 
 .photo-texto span {
-    font-size: 0.9rem;
-    color: #475569;
+    font-size: 14px;
+    color: var(--texto-2);
 }
 
 .photo-texto small {
-    font-size: 0.78rem;
+    font-size: 12px;
     color: #94a3b8;
 }
 
 .photo-remover {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
+    gap: 8px;
+    padding: 8px 16px;
     border: 1px solid #fecaca;
     border-radius: 999px;
     background: #ffffff;
-    color: #dc2626;
+    color: var(--vermelho);
     font: inherit;
-    font-size: 0.82rem;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     animation: fade-entrar var(--dur-media) ease both;
-    transition: background-color var(--dur-rapida) ease;
+    transition: background-color var(--dur-rapida) ease,
+    scale 160ms var(--ease-out, ease-out);
 }
 
-.photo-remover:hover {
-    background: #fef2f2;
+@media (hover: hover) and (pointer: fine) {
+  .photo-remover:hover {
+      background: #fef2f2;
+  }
 }
 
 .form {
@@ -168,8 +172,8 @@
 }
 
 .field label {
-    font-size: 0.9rem;
-    color: #334155;
+    font-size: 14px;
+    color: var(--texto-2);
     font-weight: 500;
 }
 
@@ -178,15 +182,15 @@
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     padding: 0 16px;
-    font-size: 0.95rem;
+    font-size: 16px;
     outline: none;
 }
 
 .field textarea {
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    padding: 14px 16px;
-    font-size: 0.95rem;
+    padding: 16px 16px;
+    font-size: 16px;
     outline: none;
     resize: none;
     min-height: 120px;
@@ -195,7 +199,7 @@
 
 .counter {
     text-align: right;
-    font-size: 0.8rem;
+    font-size: 13px;
     color: #94a3b8;
 }
 
@@ -232,8 +236,8 @@
 }
 
 .code-instrucao {
-  color: #334155;
-  font-size: 0.95rem;
+  color: var(--texto-2);
+  font-size: 16px;
   text-align: center;
   line-height: 1.4;
 }
@@ -242,13 +246,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px dashed #1565d8;
+  border: 1px dashed var(--azul);
   border-radius: 12px;
   padding: 16px 20px;
   background: #eff6ff;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #1565d8;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--azul);
   letter-spacing: 1px;
   word-break: break-all;
   gap: 12px;
@@ -260,23 +264,24 @@
 .btn-copy {
   flex-shrink: 0;
   border: none;
-  background: #1565d8;
+  background: var(--azul);
   color: white;
-  font-size: 0.85rem;
+  font-size: 14px;
   font-weight: 600;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 8px;
   cursor: pointer;
 }
 
-.btn-copy:hover {
-  background: #0052a3;
+@media (hover: hover) and (pointer: fine) {
+  .btn-copy:hover {
+    background: #0052a3;
+  }
 }
 
+/* no fim do formulario (nao fica preso por cima dos campos ao rolar) */
 .bottom-actions {
   margin-top: auto;
-  position: sticky;
-  bottom: 0;
   background-color: white;
   padding: 16px 0;
   display: flex;
@@ -285,11 +290,11 @@
   width: 100%;
   max-width: 600px;
   align-self: center;
-  margin-top: 55px;
+  margin-top: 56px;
   z-index: 10;
 }
 
 .bottom-actions app-button {
-  margin: -10px 0px;
+  margin: -12px 0px;
   padding: 0;
 }

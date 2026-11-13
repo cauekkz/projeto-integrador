@@ -1,4 +1,28 @@
+@if (visivel()) {
+@if (!glisseFalhou()) {
+  <!-- motorista e responsavel: TabBar da Glisse (Liquid Glass) -->
+  <nav class="bottombar com-glisse" aria-label="Navegação principal">
+    <app-glisse-tab-bar
+      ariaLabel="Navegação principal"
+      [abas]="tipoUsuario === 'motorista' ? abasMotorista : abasResponsavel"
+      [valor]="abaAtiva || null"
+      (escolheu)="escolheuGlisse($event)"
+      (falhou)="glisseFalhou.set(true)" />
+  </nav>
+} @else {
 <nav class="bottombar" aria-label="Navegação principal">
+  <!-- pilula azul que desliza ate a aba atual (esticando como liquido) -->
+  @if (posicao() !== null) {
+    @for (k of [chave()]; track k) {
+      <span
+        class="pilula"
+        [class.anda]="origem() !== null"
+        [class.direita]="origem() !== null && origem()! < posicao()!"
+        [style.--de]="origem() ?? posicao()"
+        [style.--para]="posicao()"
+        aria-hidden="true"></span>
+    }
+  }
   <button
     type="button"
     class="tab"
@@ -6,15 +30,22 @@
     [class.active]="abaAtiva === 'home'"
     (click)="clicarHome()">
     <i class="bi bi-house-door-fill" aria-hidden="true"></i>
+    <span class="nome-aba" aria-hidden="true">Início</span>
   </button>
 
   <button
     type="button"
     class="tab"
-    [attr.aria-label]="tipoUsuario === 'motorista' ? 'Rota' : 'Transporte'"
+    [attr.aria-label]="tipoUsuario === 'motorista' ? 'Rotas' : 'Transporte'"
     [class.active]="abaAtiva === 'meio'"
     (click)="selecionarAba('meio')">
-    <i class="bi bi-truck-front-fill" aria-hidden="true"></i>
+    @if (tipoUsuario === 'motorista') {
+      <!-- icone de rota do Figma (public/rota.svg), pintado pela cor da aba -->
+      <span class="icone-rota" aria-hidden="true"></span>
+    } @else {
+      <i class="bi bi-truck" aria-hidden="true"></i>
+    }
+    <span class="nome-aba" aria-hidden="true">{{ tipoUsuario === 'motorista' ? 'Rotas' : 'Transporte' }}</span>
   </button>
 
   <button
@@ -23,6 +54,9 @@
     aria-label="Conversas"
     [class.active]="abaAtiva === 'config'"
     (click)="selecionarAba('config')">
-    <i class="bi bi-chat-dots-fill" aria-hidden="true"></i>
+    <i class="bi bi-chat-dots" aria-hidden="true"></i>
+    <span class="nome-aba" aria-hidden="true">Conversas</span>
   </button>
 </nav>
+}
+}

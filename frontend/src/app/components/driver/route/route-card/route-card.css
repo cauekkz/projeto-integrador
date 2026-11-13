@@ -1,0 +1,79 @@
+:host {
+  display: block;
+}
+
+.cartao {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 80px;
+  padding: 20px;
+  border: 0.8px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transicao-botao);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cartao:hover:not(:disabled) {
+    background: #f8fafc;
+  }
+}
+
+.cartao:disabled {
+  cursor: default;
+}
+
+.textos {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+small {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+strong {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
+  /* o nome identifica a rota: ate 2 linhas, e o resto vai no title */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.alunos {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto-2);
+}
+
+.alunos i {
+  font-size: 18px;
+}
+
+.seta {
+  font-size: 16px;
+  color: var(--texto-3);
+  transition: transform var(--dur-media, 0.25s) ease,
+    scale 160ms var(--ease-out, ease-out);
+}
+
+.seta.virada {
+  transform: rotate(180deg);
+}

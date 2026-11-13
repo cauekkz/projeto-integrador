@@ -133,7 +133,7 @@ public class StudentService {
         Chat chat = chatService.getChatById(chatId);
         User other = chat.getUserOne().getId().equals(driverId) ? chat.getUserTwo() : chat.getUserOne();
         return studentResponsibleRepository.findAdminChildren(other.getId()).stream()
-                .map(student -> new ChildSummaryResponseDTO(student.getId(), student.getName()))
+                .map(student -> new ChildSummaryResponseDTO(student.getId(), student.getName(), student.getPhotoKey()))
                 .toList();
     }
 }

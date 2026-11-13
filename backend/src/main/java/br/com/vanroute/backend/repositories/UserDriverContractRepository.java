@@ -77,6 +77,9 @@ public interface UserDriverContractRepository extends JpaRepository<UserDriverCo
 
     boolean existsByDriverUserIdAndResponsibleUserId(UUID driverId, UUID responsibleId);
 
+    // o motorista tem ou teve contrato (qualquer status) com o aluno: ve a foto dele
+    boolean existsByDriverUserIdAndStudentId(UUID driverId, UUID studentId);
+
     // o usuario (motorista ou responsavel) tem contrato num desses status
     @Query("SELECT COUNT(u) > 0 FROM UserDriverContract u WHERE (u.driver.userId = :userId OR u.responsible.userId = :userId) " +
             "AND u.contract.status IN :statuses")

@@ -36,6 +36,9 @@ class ChatMessageServiceTest {
     @Mock
     private StorageService storageService;
 
+    @Mock
+    private ChatReadService chatReadService;
+
     @InjectMocks
     private ChatMessageService chatMessageService;
 

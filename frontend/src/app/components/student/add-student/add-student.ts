@@ -7,10 +7,10 @@ import { StudentService } from '../../../services/student.service';
 import { NameFormatDirective, DateMaskDirective, CepMaskDirective, CepBuscaDirective, EnderecoCep } from '../../../shared/directives';
 import { dataParaIso, limparMascara } from '../../../shared/utils';
 import { PopUpService } from '../../../shared/pop-up';
-import { StudentPhotoService } from '../../../services/student-photo.service';
 
 const TIPOS_FOTO = ['image/png', 'image/jpeg', 'image/webp'];
-const TAMANHO_MAX_FOTO = 5 * 1024 * 1024;
+// mesmo limite do backend para a foto do aluno
+const TAMANHO_MAX_FOTO = 10 * 1024 * 1024;
 
 @Component({
   selector: 'app-add-student',
@@ -34,7 +34,7 @@ export class AddStudent implements OnDestroy {
   enteredCity = '';
   enteredState = '';
   maxObs = 1200;
-  // foto escolhida da galeria; e guardada pelo StudentPhotoService depois que o dependente e criado
+  // foto escolhida da galeria; sobe pro backend depois que o dependente e criado (quem cria e o admin)
   fotoPreview: string | null = null;
   private fotoArquivo: File | null = null;
 
@@ -50,7 +50,6 @@ export class AddStudent implements OnDestroy {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private popUpService: PopUpService,
-    private studentPhotoService: StudentPhotoService,
   ) {}
 
   voltar() {
@@ -102,8 +101,13 @@ export class AddStudent implements OnDestroy {
       next: async (studentResponsible) => {
         const studentId = studentResponsible.studentResponseDTO.id;
         this.studentIdCriado = studentId;
-        if (this.fotoArquivo && !(await this.studentPhotoService.salvar(studentId, this.fotoArquivo))) {
-          this.popUpService.show('O dependente foi criado, mas a foto não pôde ser salva.', 'warning', 'Foto não salva');
+        if (this.fotoArquivo) {
+          try {
+            await this.studentService.uploadStudentPhoto(studentId, this.fotoArquivo);
+          } catch (error) {
+            console.error('Erro ao enviar a foto do dependente:', error);
+            this.popUpService.show('O dependente foi criado, mas a foto não pôde ser salva.', 'warning', 'Foto não salva');
+          }
         }
         this.gerarCodigo(studentId, data.relationType);
       },
@@ -154,7 +158,7 @@ export class AddStudent implements OnDestroy {
       return;
     }
     if (arquivo.size > TAMANHO_MAX_FOTO) {
-      this.popUpService.show('A foto pode ter no máximo 5 MB.', 'warning', 'Imagem muito grande');
+      this.popUpService.show('O arquivo pode ter no máximo 10 MB', 'warning', 'Imagem muito grande');
       return;
     }
 

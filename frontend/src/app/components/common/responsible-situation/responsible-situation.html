@@ -1,0 +1,35 @@
+<section class="cartao situacao">
+  <div>
+    <small>{{ modo === 'proprio' ? 'Situação financeira geral' : 'Situação financeira com você' }}</small>
+    <strong>{{ perfil.financialStatus === 'OVERDUE' ? atrasadas() : 'Nenhuma parcela atrasada' }}</strong>
+  </div>
+  @if (perfil.financialStatus === 'OVERDUE') {
+    <span class="selo atrasada">Atrasada</span>
+  } @else {
+    <span class="selo em-dia">Em dia</span>
+  }
+</section>
+
+@if (mostrarContratos && perfil.students.length) {
+  <section class="secao">
+    <h2>{{ modo === 'proprio' ? 'Contratos dos filhos' : 'Filhos com contrato com você' }}</h2>
+    @for (aluno of perfil.students; track aluno.contractId) {
+      @let s = selo(aluno.contractStatus);
+      <button type="button" class="cartao contrato" (click)="abrirContrato(aluno.contractId)">
+        <div>
+          <strong>{{ aluno.studentName }}</strong>
+          <small>{{ relacao[aluno.relationType] || aluno.relationType }}{{ aluno.admin ? ' · Admin' : '' }}</small>
+        </div>
+        <span [class]="'selo ' + s.classe">{{ s.texto }}</span>
+      </button>
+    }
+  </section>
+}
+
+@if (modo === 'motorista' || perfil.financialStatus === 'OVERDUE') {
+  <div class="rodape-acao">
+    <button type="button" class="btn btn-azul" (click)="verParcelas()">
+      {{ modo === 'proprio' ? 'Ver parcelas atrasadas' : 'Ver parcelas' }}
+    </button>
+  </div>
+}

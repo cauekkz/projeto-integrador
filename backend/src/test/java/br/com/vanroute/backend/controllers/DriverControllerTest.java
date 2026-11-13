@@ -79,11 +79,10 @@ public class DriverControllerTest {
         user.setEmail("neymar@teste.com");
         Driver mockedDriver = new Driver();
         mockedDriver.setUser(user);
-        when(driverService.createDriver(any(), anyString())).thenReturn(mockedDriver);
+        when(driverService.createDriver(any(), anyString(), anyString())).thenReturn(mockedDriver);
 
         mockMvc.perform(multipart("/api/driver/auth/signup")
                 .file(documentPdf)
-                .param("name", "Neymar Junior")
                 .param("email", "neymar@teste.com")
                 .param("password", "Hexa2026123!")
                 .param("confirmPassword", "Hexa2026123!")
@@ -95,7 +94,7 @@ public class DriverControllerTest {
 
         verify(icpValidationService, times(1)).validateCnhSignature(any());
         verify(documentOcrExtractionService, times(1)).extractFromCnh(any());
-        verify(driverService, times(1)).createDriver(any(), anyString());
+        verify(driverService, times(1)).createDriver(any(), anyString(), eq("Neymar Junior"));
         verify(emailVerificationService, times(1)).sendCodeAfterSignup(
                 eq("verificationEmail:email:neymar@teste.com"),
                 eq("neymar@teste.com")
@@ -113,7 +112,6 @@ public class DriverControllerTest {
 
         mockMvc.perform(multipart("/api/driver/auth/signup")
                 .file(documentPdf)
-                .param("name", "Neymar Junior")
                 .param("email", "neymar@teste.com")
                 .param("password", "Hexa2026123!")
                 .param("confirmPassword", "Hexa2026123!")
@@ -124,15 +122,33 @@ public class DriverControllerTest {
     }
 
     @Test
-    void nameDifferentFromTheCnhIsRefused() throws Exception {
-        signupWith(cnh("OUTRA PESSOA", "AD"), 422);
-        verify(driverService, never()).createDriver(any(), anyString());
+    void nameSentByTheClientIsIgnored() throws Exception {
+        doNothing().when(icpValidationService).validateCnhSignature(any());
+        when(documentOcrExtractionService.extractFromCnh(any())).thenReturn(cnh("NEYMAR DA SILVA SANTOS JUNIOR", "AD"));
+        User user = new User();
+        user.setEmail("neymar@teste.com");
+        Driver mockedDriver = new Driver();
+        mockedDriver.setUser(user);
+        when(driverService.createDriver(any(), anyString(), anyString())).thenReturn(mockedDriver);
+
+        mockMvc.perform(multipart("/api/driver/auth/signup")
+                .file(documentPdf)
+                .param("name", "Outra Pessoa")
+                .param("email", "neymar@teste.com")
+                .param("password", "Hexa2026123!")
+                .param("confirmPassword", "Hexa2026123!")
+                .param("phone", "11999999999")
+                .param("acceptedTermsVersion", TermsService.CURRENT_VERSION)
+                .contentType(MediaType.MULTIPART_FORM_DATA))
+                .andExpect(status().isCreated());
+
+        verify(driverService).createDriver(any(), anyString(), eq("Neymar da Silva Santos Junior"));
     }
 
     @Test
     void cnhWithoutCategoryDIsRefused() throws Exception {
         signupWith(cnh("NEYMAR JUNIOR", "B"), 422);
-        verify(driverService, never()).createDriver(any(), anyString());
+        verify(driverService, never()).createDriver(any(), anyString(), anyString());
     }
 
     @Test
@@ -141,7 +157,6 @@ public class DriverControllerTest {
 
         mockMvc.perform(multipart("/api/driver/auth/signup")
                 .file(documentPdf)
-                .param("name", "Neymar Junior")
                 .param("email", "neymar@teste.com")
                 .param("cnhNumber", "123456789")
                 .param("password", "Hexa2026123!")
@@ -154,7 +169,7 @@ public class DriverControllerTest {
 
         verify(icpValidationService, times(1)).validateCnhSignature(any());
         verify(documentOcrExtractionService, never()).extractFromCnh(any());
-        verify(driverService, never()).createDriver(any(), anyString());
+        verify(driverService, never()).createDriver(any(), anyString(), anyString());
         verify(emailVerificationService, never()).sendCodeAfterSignup(any(), any());
     }
 

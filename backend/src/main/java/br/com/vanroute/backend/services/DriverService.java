@@ -32,10 +32,10 @@ public class DriverService {
     }
 
     @Transactional
-    public Driver createDriver(DriverRequestDTO driverRequestDto, String cpf) {
+    public Driver createDriver(DriverRequestDTO driverRequestDto, String cpf, String name) {
 
         UserCreateDTO userDto = new UserCreateDTO();
-        userDto.setName(driverRequestDto.getName());
+        userDto.setName(name);
         userDto.setCpf(cpf);
         userDto.setPasswordHash(driverRequestDto.getPassword());
         userDto.setEmail(driverRequestDto.getEmail());

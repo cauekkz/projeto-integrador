@@ -1,0 +1,14 @@
+<div class="trajeto" [class]="'trajeto ' + etapa()" aria-hidden="true">
+  <span class="parada comeco"></span>
+  <span class="trilho">
+    <span class="feito"></span>
+    @if (etapa() !== 'fora') {
+      <span class="van"><i class="bi bi-bus-front-fill"></i></span>
+    }
+  </span>
+  <span class="parada final"></span>
+</div>
+<div class="rotulos" aria-hidden="true">
+  <span>Embarque</span>
+  <span>Desembarque</span>
+</div>

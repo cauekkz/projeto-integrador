@@ -8,6 +8,8 @@ public record StudentResponseDTO(
         String name,
         String notes,
         LocalDate birthDate,
-        StudentAddressResponseDTO studentAddressResponseDTO
+        StudentAddressResponseDTO studentAddressResponseDTO,
+        // foto do aluno (fileKey) ou null
+        String photoKey
 ) {
 }

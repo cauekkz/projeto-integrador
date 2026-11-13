@@ -26,6 +26,10 @@ public class    Student {
 
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
+
+    // foto no MinIO (students/{id}/...), ou null; o admin troca em PUT /api/student/{id}/photo
+    @Column(name = "photo_key")
+    private String photoKey;
 //
 //    @ManyToOne
 //    @JoinColumn(name = "school_id", nullable = true)
@@ -68,5 +72,13 @@ public class    Student {
     }
     public String getName(){
         return this.name;
+    }
+
+    public String getPhotoKey() {
+        return photoKey;
+    }
+
+    public void setPhotoKey(String photoKey) {
+        this.photoKey = photoKey;
     }
 }

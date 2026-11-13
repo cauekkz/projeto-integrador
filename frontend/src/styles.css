@@ -1,4 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* mapa da viagem (Leaflet): sem este CSS os quadrados do mapa ficam soltos e a linha/pinos somem */
+@import 'leaflet/dist/leaflet.css';
+@import 'maplibre-gl/dist/maplibre-gl.css';
+
+/* sem o cursor de digitar piscando ao clicar em texto comum (ex.: navegacao por cursor do Chrome, tecla F7); nos campos ele continua */
+html {
+  caret-color: transparent;
+}
+
+input,
+textarea,
+select,
+[contenteditable='true'] {
+  caret-color: auto;
+}
 
 * {
   box-sizing: border-box;
@@ -13,8 +28,25 @@
 
 :root {
   --ease-suave: cubic-bezier(0.22, 1, 0.36, 1);
+  /* saida forte (entrar/abrir) e a curva de folha do iOS (folhas que sobem de baixo) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-folha: cubic-bezier(0.32, 0.72, 0, 1);
   --dur-rapida: 150ms;
   --dur-media: 250ms;
+
+  /* cores do app: um azul da marca, um vermelho, tres papeis de texto */
+  --azul: #0c66db;
+  --azul-escuro: #0a54b5;
+  --vermelho: #dc2626;
+  --vermelho-texto: #b91c1c;
+  --texto: #0f172a;
+  --texto-2: #475569;
+  --texto-3: #64748b;
+
+  /* cantos: campos e botoes 12, cartoes 14, folhas 24, pilulas redondas */
+  --raio-campo: 12px;
+  --raio-cartao: 14px;
+  --raio-folha: 24px;
 }
 
 /* troca de telas (withViewTransitions no app.config): a tela antiga some e a nova entra subindo de leve */
@@ -30,6 +62,16 @@
 ::view-transition-group(rodape) {
   animation-duration: var(--dur-media);
   animation-timing-function: var(--ease-suave);
+}
+
+/* o rodape novo ja nasce com a pilula onde estava e desliza ate a aba certa: mostra so ele, sem o velho apagando por baixo */
+::view-transition-old(rodape) {
+  animation: none;
+  opacity: 0;
+}
+
+::view-transition-new(rodape) {
+  animation: none;
 }
 
 @keyframes tela-sair {
@@ -93,7 +135,8 @@
     border-color var(--dur-media) var(--ease-suave),
     box-shadow var(--dur-media) var(--ease-suave),
     opacity var(--dur-media) var(--ease-suave),
-    transform var(--dur-rapida) ease;
+    transform var(--dur-rapida) ease,
+    scale 160ms var(--ease-out);
 }
 
 button {
@@ -118,6 +161,95 @@ button i {
   }
 }
 
+/* ---------- acabamento (vale pro app todo) ---------- */
+
+/* app no celular: sem o flash cinza do toque, sem o atraso de toque duplo e sem selecionar texto de botao ao segurar */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+a,
+label,
+[role='button'],
+[role='tab'] {
+  touch-action: manipulation;
+}
+
+button {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* apertar responde na hora: o botao afunda de leve (usa `scale`, que nao briga com o transform de cada tela).
+   a barra de abas da Glisse tem a propria resposta */
+button:not(:disabled):active {
+  scale: 0.97;
+}
+
+app-glisse-tab-bar button:active {
+  scale: none;
+}
+
+/* o que e clicavel mas nao e <button> (cartoes, chip do perfil, sino, item de conversa) afunda igual.
+   cartao grande afunda menos, senao parece que a tela inteira pulou */
+:is([role='button'], .user-info, .user-name, .role-info, .sino-clicavel, .chat-user-info, .upload-card, .pessoa.clicavel) {
+  transition: scale 160ms var(--ease-out);
+}
+
+:is([role='button'], .user-info, .user-name, .role-info, .sino-clicavel, .chat-user-info, .upload-card, .pessoa.clicavel):active {
+  scale: 0.97;
+}
+
+:is(.conversa-item, .upload-card):active {
+  scale: 0.985;
+}
+
+/* teclado: anel azul so quando navega com Tab (clique e toque nao mostram) */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid #0c66db;
+  outline-offset: 2px;
+}
+
+/* titulos sem palavra sozinha na ultima linha; paragrafos com quebra mais bonita */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+  letter-spacing: -0.011em;
+}
+
+p,
+small,
+li {
+  text-wrap: pretty;
+}
+
+/* numeros que mudam (hora, valor, contagem) nao fazem o texto pular de largura */
+time,
+.valor,
+.contador,
+.numero {
+  font-variant-numeric: tabular-nums;
+}
+
+/* no celular, campo com letra menor que 16px faz o iOS dar zoom na tela ao tocar */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
 /* ---------- select (estilo unico do app) ---------- */
 
 select {
@@ -133,7 +265,7 @@ select {
   background-position: right 16px center;
   color: #1f2937;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: 16px;
   outline: none;
   cursor: pointer;
   appearance: none;
@@ -144,9 +276,11 @@ select {
     background-color var(--dur-rapida) ease;
 }
 
-select:hover:not(:disabled) {
-  border-color: #cbd5e1;
-  background-color: #f8fafc;
+@media (hover: hover) and (pointer: fine) {
+  select:hover:not(:disabled) {
+    border-color: #cbd5e1;
+    background-color: #f8fafc;
+  }
 }
 
 select:focus,
@@ -204,8 +338,8 @@ select option:disabled {
   }
 
   ::picker(select) {
-    margin-top: 6px;
-    padding: 6px;
+    margin-top: 8px;
+    padding: 8px;
     border: 1px solid #e2e8f0;
     border-radius: 14px;
     background: #ffffff;
@@ -234,10 +368,10 @@ select option:disabled {
   select option {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 11px 12px;
+    gap: 12px;
+    padding: 12px 12px;
     border-radius: 9px;
-    font-size: 0.95rem;
+    font-size: 16px;
     cursor: pointer;
     transition: background-color var(--dur-rapida) ease, color var(--dur-rapida) ease;
   }
@@ -302,15 +436,17 @@ select option:disabled {
   background: transparent;
   box-shadow: none;
   color: #64748b;
-  font-size: 1.15rem;
+  font-size: 18px;
   cursor: pointer;
   translate: 0 -50%;
   transition: color var(--dur-rapida) ease, background-color var(--dur-rapida) ease;
 }
 
-.senha-wrap > .senha-olho:hover {
-  color: #1565d8;
-  background-color: rgba(21, 101, 216, 0.08);
+@media (hover: hover) and (pointer: fine) {
+  .senha-wrap > .senha-olho:hover {
+    color: #1565d8;
+    background-color: rgba(21, 101, 216, 0.08);
+  }
 }
 
 .senha-wrap > .senha-olho:focus-visible {
@@ -331,4 +467,185 @@ select option:disabled {
 .sino-clicavel:focus-visible {
   outline: 3px solid #1565d8;
   outline-offset: 2px;
+}
+
+/* ---------- confirmacoes (cancelar, apagar, remover, sair, iniciar rota...) ----------
+   pop-up no meio da tela em vez da folha de baixo (pedido em 2026-11-10).
+   a tela so poe a classe "confirmacao" no .fundo; a .folha de dentro continua com o conteudo dela.
+   "div." e "> .folha" so pra ganhar do .fundo/.folha de cada tela */
+div.fundo.confirmacao {
+  align-items: center;
+  padding: 16px;
+}
+
+div.fundo.confirmacao > .folha {
+  width: 100%;
+  max-width: 360px;
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: 24px 20px 20px;
+  border-radius: 24px;
+  box-shadow: 0 20px 40px rgba(15, 23, 41, 0.18);
+  animation: confirmacao-entrar 220ms var(--ease-out) both;
+}
+
+@keyframes confirmacao-entrar {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  div.fundo.confirmacao > .folha {
+    animation: none;
+  }
+}
+
+/* ---------- folhas: saida suave e puxar pra baixo pra fechar ----------
+   animate.leave="fundo-sair" em todo .fundo: o fundo clareia e a folha desce (ou o pop-up encolhe).
+   a saida e mais rapida que a entrada: quem fechou ja decidiu */
+div.fundo.fundo-sair {
+  animation: fundo-sair 200ms ease both;
+  pointer-events: none;
+}
+
+div.fundo.fundo-sair > .folha {
+  animation: folha-descer 200ms var(--ease-out) both;
+}
+
+div.fundo.confirmacao.fundo-sair > .folha {
+  animation: confirmacao-sair 150ms ease both;
+}
+
+@keyframes fundo-sair {
+  to { background-color: rgba(15, 23, 42, 0); }
+}
+
+/* sem "from": sai de onde esta (inclusive do meio do arrasto) */
+@keyframes folha-descer {
+  to { transform: translateY(100%); }
+}
+
+@keyframes confirmacao-sair {
+  to { opacity: 0; transform: scale(0.97); }
+}
+
+/* alca no topo da folha de baixo: mostra que da pra puxar */
+div.fundo:not(.confirmacao) > .folha {
+  position: relative;
+  overscroll-behavior: contain;
+}
+
+div.fundo:not(.confirmacao) > .folha::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 36px;
+  height: 4px;
+  margin-left: -20px;
+  border-radius: 2px;
+  background: #cbd5e1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  div.fundo.fundo-sair,
+  div.fundo.fundo-sair > .folha {
+    animation-duration: 0.01ms;
+  }
+}
+
+/* ---------- area de toque minima (44x44, regra da Apple e do WCAG) ----------
+   botoes de icone, links pequenos e chips continuam com o mesmo desenho, mas a area que recebe o toque
+   cresce pra 44px com uma camada invisivel. :where = sem especificidade: quem ja e absolute/fixed continua */
+:where(.voltar, .back-button, .sino, .migalha-link, .trocar, .mais, .chip, .popup-close, .link, .redondo, .localizar, .recolher, .btn-voltar, .btn-ler-todas, .aba, .btn-estado, .filtrar, .ocorrencias) {
+  position: relative;
+}
+
+:is(.voltar, .back-button, .sino, .migalha-link, .trocar, .mais, .chip, .popup-close, .link, .redondo, .localizar, .recolher, .btn-voltar, .btn-ler-todas, .aba, .btn-estado, .filtrar, .ocorrencias)::after {
+  content: '';
+  position: absolute;
+  top: min(0px, calc((100% - 44px) / 2));
+  bottom: min(0px, calc((100% - 44px) / 2));
+  left: min(0px, calc((100% - 44px) / 2));
+  right: min(0px, calc((100% - 44px) / 2));
+}
+
+/* ---------- selo de status: um so no app todo (ponto + texto, cor pelo estado) ---------- */
+.selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: var(--texto-2);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+/* o ponto: so quando o selo nao traz o proprio icone ou ponto */
+.selo:not(:has(i, .ponto))::before,
+.selo .ponto {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.selo:is(.agendado, .embarcou, .selo-aberta, .selo-admin) { background: #eff6ff; color: var(--azul-escuro); }
+.selo:is(.ativo, .ativa, .em-dia, .entregue, .paga) { background: #ecfdf5; color: #047857; }
+.selo:is(.pendente, .aguardando, .manutencao) { background: #fffbeb; color: #b45309; }
+.selo:is(.cancelado, .atrasada) { background: #fef2f2; color: var(--vermelho-texto); }
+.selo:is(.inativo, .inativa, .ausente, .dispensada, .selo-feita) { background: #f1f5f9; color: var(--texto-2); }
+
+/* viagem rodando: o ponto pisca devagar */
+.selo-aberta .ponto {
+  animation: selo-ao-vivo 1.6s ease-in-out infinite;
+}
+
+@keyframes selo-ao-vivo {
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selo-aberta .ponto { animation: none; }
+}
+
+/* ---------- tela vazia: um so no app todo (icone, titulo, frase, acao) ---------- */
+.vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.vazio > i {
+  margin-bottom: 4px;
+  font-size: 32px;
+  color: #94a3b8;
+}
+
+.vazio h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.vazio p {
+  max-width: 32ch;
+  font-size: 14px;
+  color: var(--texto-2);
+}
+
+.vazio .btn,
+.vazio .btn-estado {
+  margin-top: 8px;
+  min-width: 200px;
 }

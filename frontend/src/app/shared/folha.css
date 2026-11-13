@@ -1,0 +1,114 @@
+/* pecas comuns das telas da etapa "Motorista preparado" (vans e Pix): pagina, botoes, folha de baixo */
+:host {
+  display: block;
+  background: #ffffff;
+}
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 12px 120px;
+  gap: 16px;
+}
+
+.conteudo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.btn {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transicao-botao);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-azul { border: none; background: var(--azul); color: #ffffff; }
+@media (hover: hover) and (pointer: fine) {
+  .btn-azul:hover:not(:disabled) { background: var(--azul-escuro); }
+}
+.btn-vermelho { border: none; background: var(--vermelho); color: #ffffff; }
+@media (hover: hover) and (pointer: fine) {
+  .btn-vermelho:hover:not(:disabled) { background: var(--vermelho-texto); }
+}
+.btn-perigo { border: 1px solid #fecaca; background: #ffffff; color: var(--vermelho-texto); }
+@media (hover: hover) and (pointer: fine) {
+  .btn-perigo:hover:not(:disabled) { background: #fef2f2; }
+}
+.btn-contorno { border: 1px solid #cbd5e1; background: #ffffff; color: var(--texto); }
+
+.aviso {
+  text-align: center;
+  font-size: 14px;
+  color: var(--texto-3);
+  padding: 24px 8px;
+}
+
+.aviso.erro { color: var(--vermelho-texto); }
+
+.link {
+  margin-top: 8px;
+  border: none;
+  background: transparent;
+  color: var(--azul);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.35);
+  animation: fundo-entrar 200ms ease both;
+}
+
+@keyframes fundo-entrar {
+  from { background-color: rgba(15, 23, 42, 0); }
+}
+
+.folha {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 480px;
+  padding: 20px 24px 28px;
+  border-radius: 24px 24px 0 0;
+  background: #ffffff;
+  animation: folha-subir 320ms var(--ease-folha, cubic-bezier(0.32, 0.72, 0, 1)) both;
+}
+
+.folha h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.folha p {
+  font-size: 14px;
+  color: var(--texto-2);
+}
+
+@keyframes folha-subir {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}

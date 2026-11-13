@@ -1,0 +1,279 @@
+<div class="pagina">
+  <app-header [titulo]="nome() || 'Dependente'" (voltarEvent)="voltar()" />
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <app-esqueleto tipo="perfil" [quantos]="2" texto="Carregando..." />
+    } @else if (erroCarregar()) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar os dados.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else {
+      <!-- Figma 1054:675 / 1054:735: foto + papel do admin -->
+      <app-student-photo
+        [studentId]="studentId"
+        [nome]="nome()"
+        [photoUrl]="photoUrl()"
+        [admin]="souAdmin()"
+        [texto]="souAdmin()
+          ? 'Você é o admin: só você adiciona ou tira endereços e cuida dos responsáveis.'
+          : 'Quem cuida dos endereços e dos responsáveis é o admin.'"
+        (fotoMudou)="fotoMudou($event)"
+      />
+
+      <!-- Endereços -->
+      <section class="secao" animate.enter="entrar-fade">
+        <div class="titulo-secao">
+          <h2>Endereços</h2>
+          @if (souAdmin()) {
+            <button type="button" class="acao-titulo" (click)="abrirNovoEndereco()">Adicionar</button>
+          }
+        </div>
+        @for (lugar of enderecos(); track lugar.id) {
+          <div class="cartao">
+            <div class="textos">
+              <strong>{{ lugar.label || 'Endereço' }}</strong>
+              <small>{{ enderecoEmLinha(lugar.address) }}</small>
+            </div>
+            @if (souAdmin()) {
+              <button type="button" class="lixeira" [attr.aria-label]="'Tirar o endereço ' + (lugar.label || '')" (click)="confirmar({ tipo: 'tirar-endereco', lugar })">
+                <i class="bi bi-trash3-fill" aria-hidden="true"></i>
+              </button>
+            }
+          </div>
+        } @empty {
+          <p class="ajuda">Nenhum endereço cadastrado.</p>
+        }
+      </section>
+
+      <!-- Responsáveis -->
+      <section class="secao" animate.enter="entrar-fade">
+        <div class="titulo-secao">
+          <h2>Responsáveis</h2>
+          @if (souAdmin()) {
+            <button type="button" class="acao-titulo" (click)="abrirConvite()">Convidar</button>
+          }
+        </div>
+        @for (pessoa of responsaveis(); track pessoa.responsibleId) {
+          <div class="cartao coluna">
+            <div class="linha">
+              <div class="textos">
+                <strong>{{ pessoa.name }}{{ souEu(pessoa) ? ' (você)' : '' }}</strong>
+                <small>{{ rotuloRelacao[pessoa.relationType] || pessoa.relationType }}</small>
+              </div>
+              @if (pessoa.admin) {
+                <span class="selo selo-admin">Admin</span>
+              }
+            </div>
+            @if (souAdmin() && !souEu(pessoa)) {
+              <div class="links">
+                <button type="button" class="link-azul" (click)="confirmar({ tipo: 'passar-admin', pessoa })">Passar o admin</button>
+                <button type="button" class="link-vermelho" (click)="confirmar({ tipo: 'remover', pessoa })">Remover</button>
+              </div>
+            }
+          </div>
+        }
+        @if (!souAdmin()) {
+          <button type="button" class="btn btn-perigo" (click)="confirmar({ tipo: 'sair' })">Deixar de ser responsável</button>
+        }
+      </section>
+
+      <!-- Rotas e faltas (Figma 1039:1425 / 1039:1463) -->
+      @if (rotas().length) {
+        <section class="secao" animate.enter="entrar-fade">
+          <div class="titulo-secao">
+            <h2>Rotas</h2>
+          </div>
+          <p class="ajuda">Quem monta as rotas e os pontos é o motorista.</p>
+          @for (rota of rotas(); track rota.id) {
+            <div class="cartao">
+              <strong class="nome-rota">{{ rota.name }}</strong>
+              <button type="button" class="acao-titulo" (click)="abrirFalta(rota.id)">Não vai</button>
+            </div>
+          }
+        </section>
+
+        @if (faltas().length) {
+          <section class="secao" animate.enter="entrar-fade">
+            <div class="titulo-secao">
+              <h2>Faltas avisadas</h2>
+            </div>
+            @for (falta of faltas(); track falta.id) {
+              <div class="cartao falta">
+                <div class="textos">
+                  <strong>{{ diaEMes(falta.date) }} · {{ falta.routeName }}</strong>
+                  <small>Antes de a viagem do dia começar, dá para desfazer.</small>
+                </div>
+                <button type="button" class="acao-titulo" [disabled]="desfazendo() === falta.id" (click)="eleVaiSim(falta)">
+                  {{ desfazendo() === falta.id ? 'Desfazendo...' : primeiroNome() + ' vai sim' }}
+                </button>
+              </div>
+            }
+          </section>
+        }
+      } @else {
+        <section class="sem-rotas" animate.enter="entrar-fade">
+          <h2>{{ primeiroNome() }} ainda não está em nenhuma rota</h2>
+          <p>O motorista coloca o aluno na rota depois que o contrato fica ativo. Se tiver dúvida, fale com ele.</p>
+          <button type="button" class="btn btn-contorno" (click)="abrirConversas()">Abrir conversas</button>
+        </section>
+      }
+
+      <button type="button" class="cartao linha-historico" (click)="abrirHistorico()">
+        <strong class="nome-rota">Histórico de viagens</strong>
+        <i class="bi bi-chevron-right" aria-hidden="true"></i>
+      </button>
+    }
+  </main>
+
+  <app-footer tipoUsuario="responsavel" />
+</div>
+
+<!-- confirmações: tirar endereço, remover, passar o admin, sair -->
+@if (confirmacao(); as c) {
+  <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharConfirmacao()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="confirmar-titulo" (click)="$event.stopPropagation()">
+      @switch (c.tipo) {
+        @case ('tirar-endereco') {
+          <h2 id="confirmar-titulo">Tirar o endereço {{ c.lugar.label || '' }}?</h2>
+          <p class="sub">{{ primeiroNome() }} sai dos pontos de casa com este endereço e o motorista é avisado.</p>
+          <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="executar()">{{ enviando() ? 'Tirando...' : 'Tirar endereço' }}</button>
+        }
+        @case ('remover') {
+          <h2 id="confirmar-titulo">Remover {{ c.pessoa.name }}?</h2>
+          <p class="sub">Perde na hora o acesso às rotas, às viagens, à localização e ao histórico de {{ primeiroNome() }}.</p>
+          <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="executar()">{{ enviando() ? 'Removendo...' : 'Remover' }}</button>
+        }
+        @case ('passar-admin') {
+          <h2 id="confirmar-titulo">Passar o admin para {{ c.pessoa.name }}?</h2>
+          <p class="sub">As parcelas continuam com quem assinou o contrato. As próximas propostas do motorista vão para o novo admin.</p>
+          <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="executar()">{{ enviando() ? 'Passando...' : 'Passar o admin' }}</button>
+        }
+        @case ('sair') {
+          <h2 id="confirmar-titulo">Deixar de ser responsável de {{ primeiroNome() }}?</h2>
+          <p class="sub">Você perde na hora o acesso às rotas, às viagens, à localização e ao histórico de {{ primeiroNome() }}.</p>
+          <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="executar()">{{ enviando() ? 'Saindo...' : 'Deixar de ser responsável' }}</button>
+        }
+      }
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharConfirmacao()">Voltar</button>
+    </div>
+  </div>
+}
+
+<!-- Figma 1039:1491 "Avisar falta" -->
+@if (avisandoFalta()) {
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharFalta()">
+    <form class="folha" role="dialog" aria-modal="true" aria-labelledby="falta-titulo" (click)="$event.stopPropagation()" (ngSubmit)="avisarFalta()">
+      <h2 id="falta-titulo">Avisar falta</h2>
+      <p class="sub">{{ primeiroNome() }} não vai nessa rota nesse dia. O motorista é avisado na conversa.</p>
+
+      <p class="rotulo">Rota</p>
+      <div class="opcoes">
+        @for (rota of rotas(); track rota.id) {
+          <button type="button" class="opcao" [class.marcada]="rotaDaFalta() === rota.id" [attr.aria-pressed]="rotaDaFalta() === rota.id" (click)="rotaDaFalta.set(rota.id)">
+            <span class="marca" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+            <span class="textos"><strong>{{ rota.name }}</strong></span>
+          </button>
+        }
+      </div>
+
+      <div class="campo">
+        <label for="data-falta">Data</label>
+        <input id="data-falta" name="dataFalta" type="date" [min]="hoje()" [(ngModel)]="dataDaFalta" />
+      </div>
+
+      <button type="submit" class="btn btn-azul" [disabled]="enviando()">{{ enviando() ? 'Avisando...' : 'Confirmar falta' }}</button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharFalta()">Cancelar</button>
+    </form>
+  </div>
+}
+
+<!-- convidar outro responsável: código de 15 min -->
+@if (convidando()) {
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharConvite()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="convite-titulo" (click)="$event.stopPropagation()">
+      <h2 id="convite-titulo">Convidar responsável</h2>
+      @if (codigoConvite(); as codigo) {
+        <p class="sub">Passe o código para a pessoa usar em "Vincular dependente". Ele vale 15 minutos.</p>
+        <p class="codigo">{{ codigo }}</p>
+        <button type="button" class="btn btn-azul" (click)="copiarCodigo()">{{ copiado() ? 'Copiado' : 'Copiar código' }}</button>
+        <button type="button" class="btn btn-contorno" (click)="fecharConvite()">Fechar</button>
+      } @else {
+        <p class="sub">Qual vai ser o papel da pessoa com {{ primeiroNome() }}?</p>
+        <div class="chips">
+          @for (rel of relacoes; track rel) {
+            <button type="button" class="chip" [class.ativo]="relacaoConvite() === rel" [attr.aria-pressed]="relacaoConvite() === rel" (click)="relacaoConvite.set(rel)">{{ rotuloRelacao[rel] }}</button>
+          }
+        </div>
+        <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="gerarCodigo()">{{ enviando() ? 'Gerando...' : 'Gerar código' }}</button>
+        <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharConvite()">Voltar</button>
+      }
+    </div>
+  </div>
+}
+
+<!-- Figma 1054:790 / 1054:828 "Novo endereço" -->
+@if (novoEndereco()) {
+  <form class="tela-cheia" role="dialog" aria-modal="true" aria-labelledby="novo-endereco-titulo" animate.enter="entrar-fade" (ngSubmit)="adicionarEndereco()">
+    <div class="cabecalho">
+      <button type="button" class="voltar" aria-label="Voltar" (click)="fecharNovoEndereco()"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+      <h1 id="novo-endereco-titulo">Novo endereço</h1>
+    </div>
+
+    <div class="campo">
+      <label for="apelido">Apelido</label>
+      <input id="apelido" name="apelido" maxlength="60" placeholder="Casa da avó" [(ngModel)]="apelido" />
+    </div>
+
+    @if (daFamilia().length) {
+      <p class="rotulo">Usar um endereço da família</p>
+      <div class="opcoes">
+        @for (e of daFamilia(); track e.addressId) {
+          <button type="button" class="opcao" [class.marcada]="!digitando() && familiaEscolhida() === e.addressId" (click)="escolherDaFamilia(e.addressId)">
+            <span class="marca" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+            <span class="textos"><strong>{{ e.titulo }}</strong><small>{{ e.linha }}</small></span>
+          </button>
+        }
+      </div>
+      @if (!digitando()) {
+        <button type="button" class="btn btn-contorno" (click)="digitarOutro()">Digitar outro endereço</button>
+      }
+    }
+
+    @if (digitando()) {
+      <div class="campo">
+        <label for="cep">CEP</label>
+        <input id="cep" name="cep" inputmode="numeric" placeholder="00000-000" [(ngModel)]="cep" appCepMask appCepBusca (enderecoCep)="preencherEndereco($event)" />
+      </div>
+      <div class="campo">
+        <label for="rua">Rua</label>
+        <input id="rua" name="rua" placeholder="Nome da rua" [(ngModel)]="rua" />
+      </div>
+      <div class="dupla">
+        <div class="campo">
+          <label for="numero">Número (opcional)</label>
+          <input id="numero" name="numero" inputmode="numeric" placeholder="1000" [(ngModel)]="numero" />
+        </div>
+        <div class="campo">
+          <label for="bairro">Bairro (opcional)</label>
+          <input id="bairro" name="bairro" placeholder="Bela Vista" [(ngModel)]="bairro" />
+        </div>
+      </div>
+      <div class="dupla">
+        <div class="campo">
+          <label for="cidade">Cidade</label>
+          <input id="cidade" name="cidade" placeholder="São Paulo" [(ngModel)]="cidade" />
+        </div>
+        <div class="campo">
+          <label for="estado">Estado (opcional)</label>
+          <input id="estado" name="estado" maxlength="50" placeholder="SP" [(ngModel)]="estado" />
+        </div>
+      </div>
+    }
+
+    <div class="acoes">
+      <button type="submit" class="btn btn-azul" [disabled]="enviando()">{{ enviando() ? 'Adicionando...' : 'Adicionar endereço' }}</button>
+    </div>
+  </form>
+}

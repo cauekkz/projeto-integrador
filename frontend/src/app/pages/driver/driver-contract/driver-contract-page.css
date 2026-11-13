@@ -1,0 +1,186 @@
+:host {
+  display: block;
+  background: #ffffff;
+}
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 12px 8px;
+  gap: 36px;
+}
+
+/* ---------- indicador de etapas ---------- */
+
+.progresso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 20px 16px 16px 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+.voltar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--texto-3);
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .voltar:hover:not(:disabled) {
+    background: #f1f5f9;
+  }
+}
+
+.voltar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.trilha {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* trilha sempre numa linha: a etapa atual encolhe com reticencias em vez de quebrar */
+.migalhas {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  min-width: 0;
+  list-style: none;
+  font-size: clamp(0.75rem, 3.4vw, 0.85rem);
+  color: var(--texto-3);
+}
+
+.migalhas li {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.migalhas li.atual {
+  display: block;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* itens da trilha que levam pra pagina deles (igual ao trail-header) */
+.migalha-link {
+  padding: 2px 4px;
+  margin: -2px -4px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition: var(--transicao-botao);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .migalha-link:hover:not(:disabled) {
+    color: var(--azul);
+    background: #eff6ff;
+  }
+}
+
+.migalha-link:disabled {
+  cursor: default;
+}
+
+.migalhas i {
+  font-size: 11px;
+  margin: 0 clamp(4px, 2vw, 12px);
+}
+
+/* tela bem estreita: some o "Motorista" pra sobrar espaco pra etapa */
+@media (max-width: 360px) {
+  .migalhas li:first-child {
+    display: none;
+  }
+}
+
+.migalhas .atual {
+  color: #1e293b;
+}
+
+.barra {
+  height: 3px;
+  border-radius: 2px;
+  background: #c4c4c4;
+  overflow: hidden;
+}
+
+.barra-preenchida {
+  height: 100%;
+  background: #1d6fe0;
+  transform-origin: left;
+  transition: transform 300ms var(--ease-out, ease-out),
+    scale 160ms var(--ease-out, ease-out);
+}
+
+/* ---------- conteudo ---------- */
+
+.conteudo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.aviso {
+  text-align: center;
+  font-size: 14px;
+  color: var(--texto-3);
+  padding: 24px 8px;
+}
+
+.aviso.erro {
+  color: var(--vermelho-texto);
+  padding: 8px;
+}
+
+.aviso.erro p {
+  margin-bottom: 8px;
+}
+
+.tentar-novamente {
+  border: 1px solid var(--azul);
+  background: transparent;
+  color: var(--azul);
+  border-radius: 12px;
+  padding: 8px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* botao no fim da pagina, no fluxo normal: nunca cobre o conteudo */
+.rodape {
+  padding: 0 12px env(safe-area-inset-bottom);
+}
+
+@media (min-width: 768px) {
+  .pagina {
+    padding-top: 40px;
+  }
+}

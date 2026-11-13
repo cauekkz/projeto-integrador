@@ -1,0 +1,221 @@
+/* pagina, botoes e folha de baixo vem de shared/folha.css */
+
+/* dentro da pasta do filho: a pagina de fora ja tem o cabecalho e o espaco */
+.pagina.embutido {
+  min-height: 0;
+  padding: 0;
+}
+
+/* abas + "Filtrar" numa linha so, rolando de lado (sem barra de rolagem) */
+.abas {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  /* o chip encosta na borda da tela ao rolar, sem cortar a sombra/borda */
+  margin: 0 -12px;
+  padding: 0 12px;
+  scroll-padding: 0 12px;
+}
+
+.abas::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  flex-shrink: 0;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--texto-2);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.chip.ativo {
+  border-color: #93c5fd;
+  background: #eff8fe;
+  color: var(--azul-escuro);
+}
+
+.lista {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.topo strong {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.parte {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.valor-linha {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.valor {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.data {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.data.atrasada {
+  color: var(--vermelho-texto);
+  font-weight: 600;
+}
+
+.pix {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.pix span {
+  font-size: 12px;
+  color: var(--texto-3);
+}
+
+.pix strong {
+  font-size: 14px;
+  color: var(--texto);
+  overflow-wrap: anywhere;
+}
+
+.sem-pix {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fffbeb;
+  font-size: 13px;
+  color: #92400e;
+}
+
+.botoes {
+  display: flex;
+  gap: 8px;
+}
+
+.botoes .btn {
+  flex: 1;
+}
+
+.btn-contorno.azul {
+  color: var(--azul);
+}
+
+.fim-lista {
+  min-height: 32px;
+  padding: 12px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+/* folhas: metodo do recebimento e filtro */
+.rotulo,
+.folha label {
+  font-size: 14px;
+  color: var(--texto-2);
+}
+
+.metodos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metodo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--texto);
+  cursor: pointer;
+}
+
+.metodo i {
+  font-size: 20px;
+  color: #94a3b8;
+}
+
+.metodo.ativo {
+  border-color: var(--azul);
+  background: #eff8fe;
+}
+
+.metodo.ativo i {
+  color: var(--azul);
+}
+
+.folha select,
+.folha input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 14px;
+}
+
+.periodo {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.periodo div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
