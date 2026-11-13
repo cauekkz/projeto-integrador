@@ -1,0 +1,36 @@
+/* pagina vem de shared/folha.css */
+
+/* Contratos | Parcelas: controle segmentado no topo da pasta */
+.secoes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: #f1f5f9;
+}
+
+.secao {
+  min-height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--texto-2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 160ms ease-out, color 160ms ease-out;
+}
+
+.secao.ativa {
+  background: #ffffff;
+  color: var(--azul-escuro);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+app-contracts,
+app-payments {
+  display: block;
+}

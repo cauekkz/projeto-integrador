@@ -1,0 +1,160 @@
+<div class="profile-container">
+  <app-header titulo="Informações do perfil" (voltarEvent)="voltar()" />
+
+  <div class="profile-wrapper">
+    <div class="avatar-container">
+      <input
+        #fotoInput
+        type="file"
+        accept="image/png, image/jpeg, image/webp"
+        hidden
+        (change)="selecionarFoto($event)"
+      >
+      <button
+        type="button"
+        class="avatar-botao"
+        [class.enviando]="enviandoFoto"
+        [disabled]="enviandoFoto"
+        [attr.aria-label]="enviandoFoto ? 'Enviando foto...' : 'Trocar foto de perfil'"
+        (click)="fotoInput.click()"
+      >
+        <img [src]="fotoPreview || usuario.photoUrl || '/testee.jpg'" class="avatar-grande" alt="Foto do usuário">
+        @if (enviandoFoto) {
+          <span class="avatar-carregando" aria-hidden="true"></span>
+        }
+        <span class="avatar-camera" aria-hidden="true"><i class="bi bi-camera-fill"></i></span>
+      </button>
+    </div>
+
+    <div class="hero">
+      <h2 class="hero-label">{{ usuario.name || 'Informações pessoais' }}</h2>
+    </div>
+
+    <div class="body-white">
+      <div class="info-card">
+        @if (!modoEdicao) {
+          <span class="rotulo-campo" aria-hidden="true">Nome</span>
+          <div class="field">
+            <input aria-label="Nome" type="text" [(ngModel)]="usuario.name" placeholder="Nome completo" name="name" readonly>
+          </div>
+
+          <span class="rotulo-campo" aria-hidden="true">CPF</span>
+          <div class="field">
+            <input aria-label="CPF" type="text" [(ngModel)]="usuario.cpf" placeholder="CPF/Documento" name="cpf" readonly>
+          </div>
+
+
+          <span class="rotulo-campo" aria-hidden="true">E-mail</span>
+          <div class="field">
+            <input aria-label="E-mail" type="email" [(ngModel)]="usuario.email" placeholder="E-mail" name="email" readonly>
+          </div>
+
+          <span class="rotulo-campo" aria-hidden="true">Telefone</span>
+          <div class="field">
+            <input aria-label="Telefone" type="text" [(ngModel)]="usuario.phone" placeholder="Telefone" name="phone" readonly>
+          </div>
+        }
+
+        @if (modoEdicao) {
+          <span class="rotulo-campo" aria-hidden="true">E-mail</span>
+          <div class="field">
+            <input aria-label="E-mail" type="email" [(ngModel)]="enteredEmail" placeholder="E-mail" name="email">
+          </div>
+
+          <span class="rotulo-campo" aria-hidden="true">Telefone</span>
+          <div class="field">
+            <input aria-label="Telefone" type="text" [(ngModel)]="enteredPhone" placeholder="Telefone" name="phone" appPhoneMask>
+          </div>
+
+          <div class="field">
+            <input
+              type="text"
+              [(ngModel)]="enteredCode"
+              placeholder="Código de verificação"
+              name="verificationCode"
+              autocomplete="one-time-code"
+            >
+          </div>
+
+          <button
+            class="btn-secondary"
+            type="button"
+            (click)="solicitarCodigo()"
+            [disabled]="salvando"
+          >
+            Enviar código por e-mail
+          </button>
+        }
+
+        <section class="password-section" aria-labelledby="password-title">
+          <h2 id="password-title">Alterar senha</h2>
+          <p>Solicite um código enviado para o seu e-mail e informe a nova senha.</p>
+
+          <div class="field">
+            <input
+              type="password"
+              [(ngModel)]="enteredPassword"
+              placeholder="Nova senha"
+              name="newPassword"
+              autocomplete="new-password"
+            >
+          </div>
+
+          <div class="field">
+            <input
+              type="password"
+              [(ngModel)]="enteredConfirmPassword"
+              placeholder="Repita a nova senha"
+              name="confirmNewPassword"
+              autocomplete="new-password"
+            >
+          </div>
+
+          <div class="field">
+            <input
+              type="text"
+              [(ngModel)]="enteredPasswordCode"
+              placeholder="Código de verificação"
+              name="passwordVerificationCode"
+              autocomplete="one-time-code"
+            >
+          </div>
+
+          <button
+            class="btn-secondary"
+            type="button"
+            (click)="solicitarCodigoSenha()"
+            [disabled]="salvando"
+          >
+            Enviar código por e-mail
+          </button>
+          <button
+            class="btn-primary"
+            type="button"
+            (click)="alterarSenha()"
+            [disabled]="salvando"
+          >
+            {{ salvando ? 'Salvando...' : 'Atualizar senha' }}
+          </button>
+        </section>
+
+        @if (mensagem) {
+          <p class="status-message" role="status">{{ mensagem }}</p>
+        }
+      </div>
+
+      <div class="btn-area">
+        @if (!modoEdicao) {
+          <button class="btn-primary" (click)="editar()">Editar</button>
+        }
+
+        @if (modoEdicao) {
+          <button class="btn-primary" (click)="salvar()" [disabled]="salvando">
+            {{ salvando ? 'Salvando...' : 'Salvar dados' }}
+          </button>
+          <button class="btn-secondary" (click)="cancelar()" [disabled]="salvando">Cancelar</button>
+        }
+      </div>
+    </div>
+  </div>
+</div>

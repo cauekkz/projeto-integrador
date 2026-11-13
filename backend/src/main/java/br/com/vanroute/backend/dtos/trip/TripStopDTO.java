@@ -12,6 +12,8 @@ public record TripStopDTO(
         AddressResponseDTO address,
         List<TripStudentDTO> students,
         List<UUID> schoolIds,
-        boolean done
+        boolean done,
+        // nomes das escolas desse ponto (na mesma ordem dos schoolIds)
+        List<String> schoolNames
 ) {
 }

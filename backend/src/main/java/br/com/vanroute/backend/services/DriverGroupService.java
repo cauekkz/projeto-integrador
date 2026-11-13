@@ -152,7 +152,7 @@ public class DriverGroupService {
     private static DriverGroupResponseDTO toResponse(DriverGroup group) {
         return new DriverGroupResponseDTO(group.getId(), group.getName(), group.getStudents().stream()
                 .sorted(Comparator.comparing(Student::getName))
-                .map(student -> new DriverGroupResponseDTO.Member(student.getId(), student.getName()))
+                .map(student -> new DriverGroupResponseDTO.Member(student.getId(), student.getName(), student.getPhotoKey()))
                 .toList());
     }
 }

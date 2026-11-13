@@ -84,6 +84,7 @@ public class AccountDeletionService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Há parcelas atrasadas. Elas precisam ser quitadas antes de excluir a conta");
         }
 
+        List<UUID> orphans = new java.util.ArrayList<>();
         LocalDate today = LocalDate.now(TripService.ZONE);
         driverRepository.findById(userId).ifPresent(driver -> {
             // o codigo de conversa antigo para de funcionar e a chave Pix sai
@@ -98,7 +99,7 @@ public class AccountDeletionService {
         if (entityManager.find(br.com.vanroute.backend.models.user.Responsible.class, userId) != null) {
             // endereco de cobranca e pessoal
             native_("UPDATE responsibles SET address_id = NULL WHERE user_id = :id", userId, null);
-            leaveChildren(userId);
+            orphans.addAll(leaveChildren(userId));
         }
         native_("DELETE FROM notifications WHERE user_id = :id", userId, null);
         // os arquivos somem do storage: as mensagens ficam sem o anexo (mensagem so de anexo vira "[arquivo removido]")
@@ -120,6 +121,7 @@ public class AccountDeletionService {
             public void afterCommit() {
                 storageService.deleteFolder(StorageService.UPLOAD_PREFIX + userId + "/");
                 storageService.deleteFolder(StorageService.PROFILE_PREFIX + userId + "/");
+                orphans.forEach(studentId -> storageService.deleteFolder(StorageService.STUDENT_PREFIX + studentId + "/"));
                 redisTemplate.convertAndSend(WebSocketSessionRegistry.REVOKE_CHANNEL, userId.toString());
             }
         });
@@ -127,7 +129,9 @@ public class AccountDeletionService {
 
     // sai dos filhos: se tem outro responsavel, ele continua (e vira admin se quem saiu era o admin);
     // se era o unico, o aluno fica anonimo e sem enderecos (o historico de contrato e viagem continua apontando pra ele)
-    private void leaveChildren(UUID userId) {
+    // devolve os alunos que ficaram anonimos (a pessoa era o unico responsavel): a foto deles e apagada no commit
+    private List<UUID> leaveChildren(UUID userId) {
+        List<UUID> orphanStudents = new java.util.ArrayList<>();
         List<StudentResponsible> mine = entityManager.createQuery(
                         "SELECT sr FROM StudentResponsible sr WHERE sr.responsible.userId = :id", StudentResponsible.class)
                 .setParameter("id", userId).getResultList();
@@ -138,12 +142,16 @@ public class AccountDeletionService {
                     .toList();
             if (others.isEmpty()) {
                 link.getStudent().setName(REMOVED_STUDENT_NAME);
+                // a foto do aluno sai junto (o arquivo e apagado depois do commit, com os da pessoa)
+                link.getStudent().setPhotoKey(null);
+                orphanStudents.add(studentId);
                 native_("DELETE FROM student_addresses WHERE student_id = :id", studentId, null);
             } else if (link.isAdmin() && others.stream().noneMatch(StudentResponsible::isAdmin)) {
                 others.get(0).setAdmin(true);
             }
             studentResponsibleRepository.delete(link);
         }
+        return orphanStudents;
     }
 
     private String newLinkCode() {

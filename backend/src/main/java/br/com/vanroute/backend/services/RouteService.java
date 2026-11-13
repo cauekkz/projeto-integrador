@@ -97,7 +97,8 @@ public class RouteService {
         return new RouteResponse(
                 routeSaved.getId(),
                 routeSaved.getName(),
-                driver.getUser().getName()
+                driver.getUser().getName(),
+                null
         );
     }
 
@@ -285,7 +286,8 @@ public class RouteService {
             throw new BadRequestException("Essa van não está vinculada a você");
         }
         route.setVehicle(vehicleRepository.getReferenceById(vehicleId));
-        return new RouteResponse(route.getId(), route.getName(), driver.getUser().getName());
+        return new RouteResponse(route.getId(), route.getName(), driver.getUser().getName(),
+                RouteVehicleResponse.of(route.getVehicle()));
     }
 
     public RouteResponse findById(UUID id, Authentication authentication) {
@@ -297,7 +299,8 @@ public class RouteService {
         return new RouteResponse(
                 route.getId(),
                 route.getName(),
-                driver.getUser().getName()
+                driver.getUser().getName(),
+                RouteVehicleResponse.of(route.getVehicle())
         );
     }
     public List<RouteStopResponse> findAllRouteStops(
@@ -328,6 +331,7 @@ public class RouteService {
                         link.getRoute().getId(),
                         link.getRoute().getName(),
                         driver.getUser().getName(),
+                        RouteVehicleResponse.of(link.getRoute().getVehicle()),
                         routeStopRepository.findByRouteIdOrderByOrderIndexAsc(link.getRoute().getId()).stream()
                                 .map(this::toResponse)
                                 .toList()));

@@ -43,7 +43,7 @@ class CnhParserTest {
         assertEquals(LocalDate.of(2033, 1, 1), cnh.expiryDate());
         assertEquals("AD", cnh.category());
         assertTrue(cnh.complete());
-        assertDoesNotThrow(() -> CnhParser.check(cnh, "João da Silva", TODAY));
+        assertDoesNotThrow(() -> CnhParser.check(cnh, TODAY));
     }
 
     @Test
@@ -53,7 +53,7 @@ class CnhParserTest {
 
         assertNull(cnh.birthDate());
         assertNull(cnh.expiryDate());
-        assertThrows(InvalidDocumentException.class, () -> CnhParser.check(cnh, "Joao Silva", TODAY));
+        assertThrows(InvalidDocumentException.class, () -> CnhParser.check(cnh, TODAY));
     }
 
     @Test
@@ -66,31 +66,36 @@ class CnhParserTest {
     @Test
     void rulesOfTheSchoolDriver() {
         String name = "JOAO<<SILVA<<<<<<<<<<<<<<<<<<<";
-        // nome diferente do da CNH
-        assertThrows(InvalidDocumentException.class,
-                () -> CnhParser.check(CnhParser.parse(ocr("D", name, mrzDates("900514", "330101"))), "Pedro Souza", TODAY));
         // vencida
         assertThrows(InvalidDocumentException.class,
-                () -> CnhParser.check(CnhParser.parse(ocr("D", name, mrzDates("900514", "260101"))), "Joao Silva", TODAY));
-        // 20 anos
+                () -> CnhParser.check(CnhParser.parse(ocr("D", name, mrzDates("900514", "260101"))), TODAY));
+        // 17 anos
         assertThrows(InvalidDocumentException.class,
-                () -> CnhParser.check(CnhParser.parse(ocr("D", name, mrzDates("060514", "330101"))), "Joao Silva", TODAY));
+                () -> CnhParser.check(CnhParser.parse(ocr("D", name, mrzDates("090514", "330101"))), TODAY));
+        // 18 anos ja pode
+        assertDoesNotThrow(() -> CnhParser.check(CnhParser.parse(ocr("D", name, mrzDates("080514", "330101"))), TODAY));
         // categoria B
         assertThrows(InvalidDocumentException.class,
-                () -> CnhParser.check(CnhParser.parse(ocr("AB", name, mrzDates("900514", "330101"))), "Joao Silva", TODAY));
+                () -> CnhParser.check(CnhParser.parse(ocr("AB", name, mrzDates("900514", "330101"))), TODAY));
         // E tambem serve (inclui a D)
-        assertDoesNotThrow(() -> CnhParser.check(CnhParser.parse(ocr("E", name, mrzDates("900514", "330101"))), "Joao Silva", TODAY));
+        assertDoesNotThrow(() -> CnhParser.check(CnhParser.parse(ocr("E", name, mrzDates("900514", "330101"))), TODAY));
     }
 
     @Test
-    void longNameCutInTheMachineZoneStillMatches() {
-        // a linha do nome tem 30 caracteres: o ultimo nome vem pela metade
-        String cut = "MARIA<<APARECIDA<DOS<SANTOS<OL";
-        CnhParser.CnhData cnh = CnhParser.parse(ocr("D", cut, mrzDates("900514", "330101")));
+    void theNameComesFromTheCnh() {
+        CnhParser.CnhData cnh = CnhParser.parse(ocr("D", "JOAO<<DA<SILVA<<<<<<<<<<<<<<<<", mrzDates("900514", "330101")));
+
+        assertEquals("Joao da Silva", CnhParser.nameToSave(cnh));
+    }
+
+    @Test
+    void longNameIsKeptCutAsTheCnhHasIt() {
+        // a linha do nome tem 30 caracteres: o ultimo nome vem pela metade, e fica assim
+        CnhParser.CnhData cnh = CnhParser.parse(ocr("D", "MARIA<<APARECIDA<DOS<SANTOS<OL", mrzDates("900514", "330101")));
 
         assertTrue(cnh.nameTruncated());
-        assertTrue(CnhParser.sameName(cnh.name(), true, "Maria Aparecida dos Santos Oliveira"));
-        assertFalse(CnhParser.sameName(cnh.name(), true, "Maria Aparecida dos Santos Pereira"));
+        assertDoesNotThrow(() -> CnhParser.check(cnh, TODAY));
+        assertEquals("Maria Aparecida dos Santos Ol", CnhParser.nameToSave(cnh));
     }
 
     @Test

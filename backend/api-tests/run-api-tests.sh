@@ -171,11 +171,11 @@ req "login motorista D2" 200 POST /api/auth/login "" "{\"cpf\":\"$D2_CPF\",\"pas
 printf '%%PDF-1.4\nCNH DIGITAL ficticia sem assinatura\n%%%%EOF\n' > /tmp/vr_fake.pdf
 CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/driver/auth/verify-CNH" -F "documentPdf=@/tmp/vr_fake.pdf;type=application/pdf"); BODY=$(cat /tmp/vr_body)
 check "verify-CNH PDF sem assinatura ICP" 422 "$CODE"
-CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/driver/auth/signup" -F "documentPdf=@/tmp/vr_fake.pdf;type=application/pdf" -F name=X -F email=z$RUN@teste.local -F password=Senha@123 -F confirmPassword=Senha@123 -F phone=9$RUN -F acceptedTermsVersion=$TERMS_V); BODY=$(cat /tmp/vr_body)
+CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/driver/auth/signup" -F "documentPdf=@/tmp/vr_fake.pdf;type=application/pdf" -F email=z$RUN@teste.local -F password=Senha@123 -F confirmPassword=Senha@123 -F phone=9$RUN -F acceptedTermsVersion=$TERMS_V); BODY=$(cat /tmp/vr_body)
 check "driver signup CNH invalida" 422 "$CODE"
-CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/driver/auth/signup" -F "documentPdf=@/tmp/vr_fake.pdf;type=application/pdf" -F name=X -F email=z$RUN@teste.local -F password=Senha@123 -F confirmPassword=Senha@123 -F phone=9$RUN); BODY=$(cat /tmp/vr_body)
+CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/driver/auth/signup" -F "documentPdf=@/tmp/vr_fake.pdf;type=application/pdf" -F email=z$RUN@teste.local -F password=Senha@123 -F confirmPassword=Senha@123 -F phone=9$RUN); BODY=$(cat /tmp/vr_body)
 check "driver signup sem aceitar os termos" 400 "$CODE"
-CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/driver/auth/signup" -F name=X); BODY=$(cat /tmp/vr_body)
+CODE=$(curl -s -o /tmp/vr_body -w '%{http_code}' -X POST "$BASE/api/driver/auth/signup" -F phone=1); BODY=$(cat /tmp/vr_body)
 check "driver signup campos ausentes" 400 "$CODE"
 
 echo "== 4. Escolas (motorista)"
@@ -306,7 +306,7 @@ echo "== 8. Contratos (proposta no chat, aceite e recusa)"
 req "D1 lista chats (outro usuario = R1)" 200 GET /api/chats "$D1"
 assert "otherUserId do chat e o id do R1" "echo \"\$BODY\" | jq -e '.content[] | select(.id==\"$CHAT\" and .otherUserId==\"$R1_ID\")' >/dev/null"
 req "D1 ve os filhos do pai do chat" 200 GET "/api/chats/$CHAT/students" "$D1"
-assert "filhos do pai: so id e nome" "echo \"\$BODY\" | jq -e '.[] | select(.id==\"$STUDENT\" and .name==\"Aluno Ficticio\" and (keys == [\"id\",\"name\"]))' >/dev/null"
+assert "filhos do pai: so id, nome e foto" "echo \"\$BODY\" | jq -e '.[] | select(.id==\"$STUDENT\" and .name==\"Aluno Ficticio\" and (keys == [\"id\",\"name\",\"photoKey\"]))' >/dev/null"
 req "R1 (responsavel) tenta ver filhos pelo chat" 403 GET "/api/chats/$CHAT/students" "$R1"
 req "D2 (fora do chat) tenta ver filhos" 403 GET "/api/chats/$CHAT/students" "$D2"
 # datas relativas a hoje: o contrato nao pode comecar no passado. Comecando hoje, o aceite ja deixa ACTIVE
@@ -702,6 +702,7 @@ assert "trip: so 1 trip ativa hoje no banco" "[ \"\$(psql_db -c \"SELECT count(*
 echo "   trip do filho (o pai pega o tripId e abre o WebSocket)"
 req "today-trips: R1 acha a trip do filho" 200 GET "/api/student/$STUDENT/today-trips" "$R1"
 assert "today-trips: tripId e status do filho" "echo \"\$BODY\" | jq -e '.[] | select(.tripId==\"$TRIP\" and .boardingStatus==\"PENDING\")' >/dev/null"
+assert "today-trips: motorista e van da viagem pro card do acompanhamento" "echo \"\$BODY\" | jq -e '.[] | select(.tripId==\"$TRIP\" and .driverId==\"$D1_ID\" and (.driverName|length>0) and (.vehiclePlate|length>0))' >/dev/null"
 req "today-trips: D1 nao usa" 403 GET "/api/student/$STUDENT/today-trips" "$D1"
 
 echo "   falta durante a trip"
@@ -1008,6 +1009,49 @@ PHOTO2=$(echo "$BODY" | jq -r .fileKey)
 check "foto nova: upload" 200 "$(curl -s -o /dev/null -w '%{http_code}' -X PUT -H 'Content-Type: image/jpeg' --data-binary @"$IMG" "$(echo "$BODY" | jq -r .uploadUrl)")"
 req "foto: troca pela nova" 200 PUT /api/users/update-photo "$R1" "{\"fileKey\":\"$PHOTO2\"}"
 assert "foto antiga apagada do bucket" "! docker exec vanroute-minio sh -c 'ls /data/$BUCKET/$PHOTO' >/dev/null 2>&1 && docker exec vanroute-minio sh -c 'ls /data/$BUCKET/$PHOTO2' >/dev/null 2>&1"
+# foto do aluno: so o admin troca; veem os responsaveis do aluno e o motorista com contrato
+req "foto do aluno: R2 (nao admin) pede URL" 403 GET "/api/student/$STUDENT/photo-upload-url?fileName=a.jpeg&contentType=image/jpeg" "$R2"
+req "foto do aluno: PDF como foto" 400 GET "/api/student/$STUDENT/photo-upload-url?fileName=a.pdf&contentType=application/pdf" "$R1"
+req "foto do aluno: R1 (admin) pede URL" 200 GET "/api/student/$STUDENT/photo-upload-url?fileName=aluno.jpeg&contentType=image/jpeg" "$R1"
+SPHOTO=$(echo "$BODY" | jq -r .fileKey)
+assert "foto do aluno fica em students/{id}/" "[[ \"$SPHOTO\" == students/$STUDENT/* ]]"
+check "foto do aluno: upload" 200 "$(curl -s -o /dev/null -w '%{http_code}' -X PUT -H 'Content-Type: image/jpeg' --data-binary @"$IMG" "$(echo "$BODY" | jq -r .uploadUrl)")"
+req "foto do aluno: foto de perfil do pai no lugar" 400 PUT "/api/student/$STUDENT/photo" "$R1" "{\"fileKey\":\"$PHOTO2\"}"
+req "foto do aluno: arquivo nao enviado" 400 PUT "/api/student/$STUDENT/photo" "$R1" "{\"fileKey\":\"students/$STUDENT/naoexiste.jpeg\"}"
+req "foto do aluno: R2 (nao admin) troca" 403 PUT "/api/student/$STUDENT/photo" "$R2" "{\"fileKey\":\"$SPHOTO\"}"
+req "foto do aluno: R1 grava" 200 PUT "/api/student/$STUDENT/photo" "$R1" "{\"fileKey\":\"$SPHOTO\"}"
+assert "foto do aluno devolvida" "[ \"\$(echo \"\$BODY\" | jq -r .photoKey)\" = \"$SPHOTO\" ]"
+req "my-children traz a foto" 200 GET /api/student/my-children "$R1"
+assert "my-children: photoKey do aluno" "echo \"\$BODY\" | jq -e '.content[] | select(.id==\"$STUDENT\" and .photoKey==\"$SPHOTO\")' >/dev/null"
+req "D1 ve a foto nos filhos do chat" 200 GET "/api/chats/$CHAT/students" "$D1"
+assert "filhos do chat: photoKey" "echo \"\$BODY\" | jq -e '.[] | select(.id==\"$STUDENT\" and .photoKey==\"$SPHOTO\")' >/dev/null"
+req "R2 (responsavel do aluno) baixa a foto" 200 GET "/api/storage/download-url?fileKey=$SPHOTO" "$R2"
+req "D1 (motorista com contrato) baixa a foto" 200 GET "/api/storage/download-url?fileKey=$SPHOTO" "$D1"
+check "foto do aluno baixada identica" 0 "$(curl -s "$(echo "$BODY" | jq -r .downloadUrl)" | cmp -s - "$IMG"; echo $?)"
+req "D2 (sem contrato) baixa a foto do aluno" 403 GET "/api/storage/download-url?fileKey=$SPHOTO" "$D2"
+req "foto do aluno: nova URL" 200 GET "/api/student/$STUDENT/photo-upload-url?fileName=nova.jpeg&contentType=image/jpeg" "$R1"
+SPHOTO2=$(echo "$BODY" | jq -r .fileKey)
+curl -s -o /dev/null -X PUT -H 'Content-Type: image/jpeg' --data-binary @"$IMG" "$(echo "$BODY" | jq -r .uploadUrl)"
+req "foto do aluno: troca" 200 PUT "/api/student/$STUDENT/photo" "$R1" "{\"fileKey\":\"$SPHOTO2\"}"
+assert "foto antiga do aluno apagada do bucket" "! docker exec vanroute-minio sh -c 'ls /data/$BUCKET/$SPHOTO' >/dev/null 2>&1 && docker exec vanroute-minio sh -c 'ls /data/$BUCKET/$SPHOTO2' >/dev/null 2>&1"
+req "foto do aluno: R2 remove" 403 DELETE "/api/student/$STUDENT/photo" "$R2"
+req "foto do aluno: R1 remove" 204 DELETE "/api/student/$STUDENT/photo" "$R1"
+assert "foto do aluno removida do banco e do bucket" "[ -z \"\$(psql_db -c \"SELECT photo_key FROM students WHERE id='$STUDENT'\")\" ] && ! docker exec vanroute-minio sh -c 'ls /data/$BUCKET/$SPHOTO2' >/dev/null 2>&1"
+
+# mensagens lidas (chat_messages.read_at)
+req "D1 marca o chat como lido" 204 PUT "/api/chats/$CHAT/read" "$D1"
+req "D2 (fora do chat) marca como lido" 403 PUT "/api/chats/$CHAT/read" "$D2"
+req "R1 manda mensagem nova" 201 POST "/api/chats/$CHAT/messages" "$R1" '{"content":"Chegou?"}'
+assert "mensagem nova sai sem readAt (um tique)" "echo \"\$BODY\" | jq -e '.readAt == null' >/dev/null"
+req "D1 lista chats (nao lida)" 200 GET /api/chats "$D1"
+assert "D1 tem 1 mensagem nao lida" "echo \"\$BODY\" | jq -e '.content[] | select(.id==\"$CHAT\" and .unreadCount==1)' >/dev/null"
+req "R1 lista chats" 200 GET /api/chats "$R1"
+assert "R1 sem nao lidas (as do D1 ja foram lidas ao responder)" "echo \"\$BODY\" | jq -e '.content[] | select(.id==\"$CHAT\" and .unreadCount==0)' >/dev/null"
+req "D1 abre o chat e marca como lido" 204 PUT "/api/chats/$CHAT/read" "$D1"
+req "D1 lista chats (tudo lido)" 200 GET /api/chats "$D1"
+assert "D1 sem nao lidas" "echo \"\$BODY\" | jq -e '.content[] | select(.id==\"$CHAT\" and .unreadCount==0)' >/dev/null"
+req "R1 le as mensagens" 200 GET "/api/chats/$CHAT/messages?size=200" "$R1"
+assert "a mensagem do R1 tem readAt (dois tiques)" "echo \"\$BODY\" | jq -e '[.content[] | select(.content==\"Chegou?\")][0].readAt != null' >/dev/null"
 req "GET /users/{id} removido (expunha CPF, e-mail e telefone)" "40[0-9]" GET "/api/users/$R1_ID" "$R1"
 req "me" 200 GET /api/users/me "$R1"
 assert "me nao expoe passwordHash" "! echo \"\$BODY\" | grep -qi 'passwordHash\|argon2\|\\\$2a\\\$'"

@@ -28,6 +28,7 @@ import jakarta.validation.Valid;
 import br.com.vanroute.backend.dtos.contract.ContractProposalRequestDTO;
 
 import br.com.vanroute.backend.services.ContractChatService;
+import br.com.vanroute.backend.services.ChatReadService;
 
 @RestController
 @RequestMapping("/api/chats")
@@ -37,9 +38,11 @@ public class ChatController {
     private final ChatService chatService;
     private final StudentService studentService;
     private final ContractChatService contractChatService;
+    private final ChatReadService chatReadService;
 
     public ChatController(ChatMessageService chatMessageService, ChatService chatService, StudentService studentService,
-                          ContractChatService contractChatService) {
+                          ContractChatService contractChatService, ChatReadService chatReadService) {
+        this.chatReadService = chatReadService;
         this.chatMessageService = chatMessageService;
         this.chatService = chatService;
         this.studentService = studentService;
@@ -56,6 +59,14 @@ public class ChatController {
     public ResponseEntity<Page<ChatMessageResponseDTO>> getMessages(@PathVariable UUID chatId,
             @PageableDefault(size = 30) Pageable pageable, Authentication authentication) {
         return ResponseEntity.ok(chatMessageService.getMessages(chatId, AuthenticatedUser.id(authentication), pageable));
+    }
+
+    // marca a conversa como lida ate agora (chame ao abrir a conversa e ao receber mensagem com ela aberta).
+    // marca as mensagens do outro como lidas; ele recebe {"type":"read",...} no WebSocket do chat
+    @PutMapping("/{chatId}/read")
+    public ResponseEntity<Void> markRead(@PathVariable UUID chatId, Authentication authentication) {
+        chatReadService.markRead(chatId, AuthenticatedUser.id(authentication));
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{chatId}/messages")

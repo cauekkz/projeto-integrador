@@ -1,0 +1,446 @@
+:host {
+  display: block;
+  background: #ffffff;
+}
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  /* espaco pro footer flutuante */
+  padding: 24px 12px 120px;
+  gap: 16px;
+}
+
+/* dentro da pasta do filho: a pagina de fora ja tem o cabecalho e o espaco */
+.pagina.embutido {
+  min-height: 0;
+  padding: 0;
+}
+
+/* ---------- pastas dos filhos (responsavel) ---------- */
+
+.titulo-pastas {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.pastas {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* folga em cima de cada linha pras folhas que saem da pasta */
+  gap: 40px 12px;
+  padding-top: 40px;
+}
+
+.pasta {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  /* saida (mouse sai): um pouco mais rapida que a entrada */
+  --abre: 200ms;
+  --curva: cubic-bezier(0.22, 1, 0.36, 1);
+  /* faixa das folhas: a cor do status da pasta (mesma familia dos selos) */
+  --faixa: #10b981;
+}
+
+.pasta[data-status='atrasada'] {
+  --faixa: var(--vermelho);
+}
+
+.pasta[data-status='pendente'] {
+  --faixa: #f59e0b;
+}
+
+.pasta[data-status='inativo'] {
+  --faixa: #94a3b8;
+}
+
+.pasta-icone {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1000 / 770;
+  transition: transform var(--abre) var(--curva);
+}
+
+/* fundo com a aba: cinza-azulado neutro */
+.pasta-tras {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.12));
+}
+
+/* folhas guardadas: atras do vidro, com a ponta um pouco acima da borda de cima da frente;
+   ao abrir crescem e saem em leque */
+.papel {
+  position: absolute;
+  left: 14%;
+  top: 4%;
+  width: 72%;
+  height: 76%;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  background:
+    linear-gradient(var(--faixa), var(--faixa)) 18% 12% / 40% 3px no-repeat,
+    repeating-linear-gradient(to bottom, transparent 0 7px, #cbd5e1 7px 8px) 50% 70% / 64% 50% no-repeat,
+    #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.16);
+  transform-origin: 50% 100%;
+  /* fechada: menor, so a ponta aparece acima da frente */
+  transform: scale(0.92);
+  transition: transform var(--abre) var(--curva);
+}
+
+.papel-1 {
+  transform: translate(-7%, 4%) rotate(-5deg) scale(0.9);
+}
+
+.papel-3 {
+  transform: translate(7%, 4%) rotate(5deg) scale(0.9);
+}
+
+/* frente de vidro fosco: deixa ver as folhas atras, borrado */
+.pasta-frente {
+  position: absolute;
+  inset: 16.2% 0 0 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  border-radius: 7.5% / 11.6%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(241, 245, 249, 0.38) 100%);
+  -webkit-backdrop-filter: blur(2.5px) saturate(1.4);
+  backdrop-filter: blur(2.5px) saturate(1.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 8px 18px -10px rgba(15, 23, 42, 0.35),
+    0 0 0 1px rgba(148, 163, 184, 0.25);
+  transform-origin: 50% 100%;
+  transition: transform var(--abre) var(--curva);
+}
+
+.pasta-nome {
+  max-width: 100%;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--texto);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* selo dentro da pasta: menor, cabe na coluna de 1/3. Quebra em 2 linhas em vez de cortar o texto */
+.pasta .selo {
+  max-width: 100%;
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  border-radius: 8px;
+}
+
+/* ---------- abrir: as folhas crescem e saem em leque, o vidro abaixa ----------
+   PC: com o mouse em cima (ou foco do teclado). Celular: no toque (.abrindo), antes de abrir a pasta */
+
+.pasta:is(:hover, :focus-visible),
+.pasta.abrindo {
+  --abre: 320ms;
+}
+
+@media (hover: hover) {
+  .pasta:is(:hover, :focus-visible) .pasta-icone {
+    transform: translateY(-3px);
+  }
+
+  .pasta:is(:hover, :focus-visible) .papel-1 {
+    transform: translate(-22%, -34%) rotate(-14deg) scale(1);
+  }
+
+  .pasta:is(:hover, :focus-visible) .papel-2 {
+    transform: translateY(-46%) scale(1);
+    transition-delay: 30ms;
+  }
+
+  .pasta:is(:hover, :focus-visible) .papel-3 {
+    transform: translate(22%, -34%) rotate(14deg) scale(1);
+    transition-delay: 60ms;
+  }
+
+  .pasta:is(:hover, :focus-visible) .pasta-frente {
+    transform: perspective(500px) rotateX(-18deg) scaleY(0.95);
+  }
+}
+
+/* mesma abertura no toque (sem depender de hover) */
+.pasta.abrindo .pasta-icone {
+  transform: translateY(-3px);
+}
+
+.pasta.abrindo .papel-1 {
+  transform: translate(-22%, -34%) rotate(-14deg) scale(1);
+}
+
+.pasta.abrindo .papel-2 {
+  transform: translateY(-46%) scale(1);
+  transition-delay: 30ms;
+}
+
+.pasta.abrindo .papel-3 {
+  transform: translate(22%, -34%) rotate(14deg) scale(1);
+  transition-delay: 60ms;
+}
+
+.pasta.abrindo .pasta-frente {
+  transform: perspective(500px) rotateX(-18deg) scaleY(0.95);
+}
+
+.pasta:focus-visible {
+  outline: none;
+}
+
+.pasta:focus-visible .pasta-frente {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pasta-icone,
+  .papel,
+  .pasta-frente {
+    transition: none;
+  }
+}
+
+/* ---------- abas (Figma: 45px, uma por status, rola na horizontal) ---------- */
+
+.abas {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.abas::-webkit-scrollbar {
+  display: none;
+}
+
+.aba {
+  flex-shrink: 0;
+  height: 45px;
+  padding: 0 12px;
+  border: none;
+  border-bottom: 2px solid #cbd5e1;
+  border-radius: 10px 10px 0 0;
+  background: transparent;
+  color: var(--texto-3);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--dur-media) ease, color var(--dur-media) ease,
+    scale 160ms var(--ease-out, ease-out);
+}
+
+.aba.ativa {
+  border-bottom-color: var(--azul);
+  background: #d5dfeb;
+  color: var(--azul-escuro);
+  font-weight: 600;
+}
+
+/* ---------- lista ---------- */
+
+.conteudo {
+  flex: 1;
+}
+
+.grade {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+/* cartao de contrato: borda clara, raio 14, sem sombra parado */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.selos {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px;
+}
+
+.periodicidade {
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: #225303;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 13px;
+}
+
+.resumo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 8px 4px;
+}
+
+.resumo h2 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.parte {
+  font-size: 11px;
+  color: var(--texto-3);
+  overflow-wrap: anywhere;
+}
+
+.divisor {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 0;
+}
+
+.aluno {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.iniciais {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 1px solid #afd9f7;
+  border-radius: 50%;
+  background: #eff8fe;
+  color: var(--azul-escuro);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.foto-aluno {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.aluno div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.aluno strong {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--texto);
+  overflow-wrap: anywhere;
+}
+
+.aluno span {
+  font-size: 11px;
+  color: var(--texto-3);
+  overflow-wrap: anywhere;
+}
+
+.linha {
+  font-size: 11px;
+}
+
+.linha.info {
+  color: var(--azul-escuro);
+  font-weight: 500;
+}
+
+.linha.alerta {
+  color: var(--vermelho-texto);
+  font-weight: 600;
+}
+
+.btn-ver {
+  height: 28px;
+  border: none;
+  border-radius: 12px;
+  background: var(--azul);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transicao-botao);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-ver:hover {
+    background: var(--azul-escuro);
+  }
+}
+
+.fim-lista {
+  min-height: 32px;
+  padding: 12px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.aviso {
+  text-align: center;
+  font-size: 14px;
+  color: var(--texto-3);
+  padding: 24px 8px;
+}
+
+.aviso.erro {
+  color: var(--vermelho-texto);
+}
+
+.link {
+  margin-top: 8px;
+  border: none;
+  background: transparent;
+  color: var(--azul);
+  font-weight: 600;
+  cursor: pointer;
+}

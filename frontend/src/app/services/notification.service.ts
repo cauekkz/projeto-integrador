@@ -6,7 +6,7 @@ import { catchError } from 'rxjs/operators';
 import { SKIP_ERROR_POPUP } from '../interceptor/http-context';
 import { AuthService } from './auth.service';
 import { ChatWebSocketService } from './chat.service';
-import { ChatPage } from '../models/chat-message';
+import { Page } from './dto/page.dto';
 import { API_URL, wsUrl } from './api';
 
 // NotificationResponseDTO do backend (GET /api/notifications)
@@ -84,7 +84,7 @@ export class NotificationService {
   }
 
   listar(pagina = 0) {
-    return this.http.get<ChatPage<Notificacao>>(`${this.apiUrl}?page=${pagina}&size=20`, this.semPopup());
+    return this.http.get<Page<Notificacao>>(`${this.apiUrl}?page=${pagina}&size=20`, this.semPopup());
   }
 
   marcarLida(notificacao: Notificacao) {

@@ -47,7 +47,7 @@ public class DataExportService {
                 SELECT a.street, a.number, a.neighborhood, a.city, a.state, a.zip_code
                 FROM responsibles r JOIN addresses a ON a.id = r.address_id WHERE r.user_id = ?""", userId));
         List<Map<String, Object>> children = list("""
-                SELECT s.id, s.name, s.birth_date, sr.relation_type, sr.is_admin
+                SELECT s.id, s.name, s.birth_date, s.photo_key, sr.relation_type, sr.is_admin
                 FROM student_responsibles sr JOIN students s ON s.id = sr.student_id
                 WHERE sr.responsible_id = ? ORDER BY s.name""", userId);
         for (Map<String, Object> child : children) {

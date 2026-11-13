@@ -24,6 +24,9 @@ public interface StudentAddressRepository extends JpaRepository<StudentAddress, 
 
     boolean existsByStudentIdAndAddressId(UUID studentId, UUID addressId);
 
+    // o vinculo do aluno com um endereco (o apelido dele, na viagem)
+    Optional<StudentAddress> findFirstByStudentIdAndAddressId(UUID studentId, UUID addressId);
+
     long countByStudentId(UUID studentId);
 
     // o endereco pode ser reaproveitado por esse responsavel? (endereco de algum filho dele)

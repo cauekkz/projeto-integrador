@@ -1,0 +1,157 @@
+.cnh-container {
+  min-height: 100dvh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.header h1 {
+  flex: 1;
+  text-align: center;
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--texto);
+  margin-right: 15%;
+}
+
+.back-button {
+  background: transparent;
+  border: none;
+  font-size: 32px;
+  cursor: pointer;
+}
+
+.upload-card {
+  width: 100%;
+  max-width: 600px;
+  margin: 60px auto 40px;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.upload-content {
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.upload-icon {
+  font-size: 64px;
+  margin-bottom: 12px;
+}
+
+.upload-content p {
+  font-size: 20px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  color: var(--texto-3);
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #cbd5e1;
+}
+
+.divider span {
+  padding: 0 12px;
+}
+
+.form {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.field label {
+  margin-bottom: 8px;
+  color: var(--texto-2);
+  font-size: 16px;
+}
+
+.field input,
+.field select {
+  height: 56px;
+  border: 1px solid #d6dce5;
+  border-radius: 14px;
+  padding: 0 16px;
+  font-size: 16px;
+  outline: none;
+}
+
+.double-field {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.bottom-actions {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  background-color: white;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+
+  width: 100%;
+  max-width: 600px;
+  align-self: center;
+  z-index: 10;
+}
+
+@media (max-width: 480px) {
+  .cnh-container {
+    padding: 24px 16px;
+  }
+
+  .header h1 {
+    font-size: 28px;
+  }
+
+  .upload-card {
+    margin-top: 52px;
+  }
+
+  .upload-content {
+    min-height: 200px;
+  }
+
+  .upload-icon {
+    font-size: 48px;
+  }
+
+  .double-field {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .field input,
+  .field select {
+    height: 52px;
+  }
+}

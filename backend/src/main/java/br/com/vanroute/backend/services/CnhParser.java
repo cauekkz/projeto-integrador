@@ -2,11 +2,8 @@ package br.com.vanroute.backend.services;
 
 import br.com.vanroute.backend.exceptions.InvalidDocumentException;
 
-import java.text.Normalizer;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -19,8 +16,8 @@ import java.util.regex.Pattern;
 // O curso de condutor de escolar e a autorizacao do municipio nao estao na CNH: nao da pra conferir por aqui
 public final class CnhParser {
 
-    // CTB art. 138: condutor de escolar tem 21 anos ou mais e categoria D (a E inclui a D)
-    static final int MIN_AGE = 21;
+    // idade minima do motorista: 18 anos (regra do app). Categoria D (a E inclui a D)
+    static final int MIN_AGE = 18;
 
     public record CnhData(String cpf, String name, boolean nameTruncated, LocalDate birthDate, LocalDate expiryDate,
                           String category) {
@@ -78,15 +75,12 @@ public final class CnhParser {
     }
 
     // regras do motorista de escolar; erro com mensagem pra tela de cadastro
-    public static void check(CnhData cnh, String typedName, LocalDate today) {
+    public static void check(CnhData cnh, LocalDate today) {
         if (cnh.cpf() == null) {
             throw new InvalidDocumentException("Não foi possível ler o CPF da CNH. Envie o PDF original da CNH digital");
         }
         if (cnh.name() == null || cnh.birthDate() == null || cnh.expiryDate() == null) {
             throw new InvalidDocumentException("Não foi possível ler o nome e as datas da CNH. Envie o PDF original da CNH digital");
-        }
-        if (!sameName(cnh.name(), cnh.nameTruncated(), typedName)) {
-            throw new InvalidDocumentException("O nome informado não é o mesmo da CNH. Use o nome completo como está na CNH");
         }
         if (cnh.expiryDate().isBefore(today)) {
             throw new InvalidDocumentException("A CNH está vencida");
@@ -102,39 +96,15 @@ public final class CnhParser {
         }
     }
 
-    // compara sem acento, maiuscula/minuscula e ordem das palavras. A MRZ corta nomes longos (30 caracteres):
-    // nesse caso a ultima palavra lida pode estar pela metade
-    static boolean sameName(String cnhName, boolean truncated, String typedName) {
-        if (typedName == null) {
-            return false;
+    // nome do cadastro: o da CNH (vem em maiusculas e sem acento; nome longo vem cortado) com as iniciais maiusculas
+    public static String nameToSave(CnhData cnh) {
+        StringBuilder out = new StringBuilder();
+        for (String word : cnh.name().toLowerCase(Locale.ROOT).split("\\s+")) {
+            if (out.length() > 0) out.append(' ');
+            out.append(List.of("da", "de", "do", "das", "dos", "e").contains(word) && out.length() > 0
+                    ? word : Character.toUpperCase(word.charAt(0)) + word.substring(1));
         }
-        List<String> cnh = words(cnhName);
-        List<String> typed = words(typedName);
-        if (!truncated) {
-            return sorted(cnh).equals(sorted(typed));
-        }
-        if (cnh.isEmpty()) {
-            return false;
-        }
-        List<String> whole = cnh.subList(0, cnh.size() - 1);
-        String partial = cnh.get(cnh.size() - 1);
-        List<String> rest = new ArrayList<>(typed);
-        for (String word : whole) {
-            if (!rest.remove(word)) {
-                return false;
-            }
-        }
-        return rest.stream().anyMatch(word -> word.startsWith(partial));
-    }
-
-    private static List<String> words(String name) {
-        String plain = Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{M}", "")
-                .toUpperCase(Locale.ROOT).replaceAll("[^A-Z ]", " ").trim();
-        return plain.isEmpty() ? List.of() : Arrays.asList(plain.split("\\s+"));
-    }
-
-    private static List<String> sorted(List<String> words) {
-        return words.stream().sorted().toList();
+        return out.toString();
     }
 
     private static String cpf(String text) {

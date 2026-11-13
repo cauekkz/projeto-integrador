@@ -14,6 +14,11 @@ public record TripLiveStopDTO(
         List<UUID> schoolIds,
         boolean done,
         Integer pathIndex,
-        Double etaSeconds
+        Double etaSeconds,
+        // endereco do ponto e nomes das escolas, pra tela ("Casa · R. Libertadores, 2026", "Fatec Ipiranga")
+        String street,
+        Integer number,
+        String neighborhood,
+        List<String> schoolNames
 ) {
 }

@@ -1,0 +1,171 @@
+@let c = contrato();
+
+<div class="pagina">
+  <app-trail-header [trilha]="['Contrato', 'Análise contrato']" [mostrarVoltar]="false" [mostrarSino]="true" />
+
+  <main class="conteudo">
+    @if (carregando() && !c) {
+      <app-esqueleto tipo="perfil" [quantos]="2" texto="Carregando contrato..." />
+    } @else if (erroCarregar() || !c) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar o contrato.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else {
+      <section class="titulo" animate.enter="entrar-subindo">
+        <div class="titulo-linha">
+          <h1>Transporte escolar</h1>
+          @if (statusInfo(); as info) {
+            <span [class]="'selo ' + info.classe">{{ info.texto }}</span>
+          }
+        </div>
+        @if (c.status === 'SCHEDULED' && !pedidoPendente()) {
+          <p class="agendado">Agendado — começa em {{ diaMes(c.startDate) }}.</p>
+        }
+      </section>
+
+      <section class="card" animate.enter="entrar-subindo" style="--i: 1">
+        <!-- a outra pessoa do contrato: o motorista ve o responsavel, o responsavel ve o motorista; tocar abre o perfil -->
+        @let outroNome = ehMotorista ? c.responsibleName : c.driverName;
+        <div class="pessoa clicavel" role="link" tabindex="0" (click)="abrirPerfil(c)" (keydown.enter)="abrirPerfil(c)">
+          <span class="iniciais" aria-hidden="true">{{ iniciais(outroNome) }}</span>
+          <div>
+            <span class="rotulo">{{ ehMotorista ? 'Responsável' : 'Motorista' }}</span>
+            <strong>{{ outroNome }}</strong>
+          </div>
+          <i class="bi bi-chevron-right seta-perfil" aria-hidden="true"></i>
+        </div>
+        <hr class="divisor">
+        <div class="pessoa">
+          <span class="iniciais" aria-hidden="true">{{ iniciais(c.studentName) }}</span>
+          <div>
+            <span class="rotulo">Dependente</span>
+            <strong>{{ c.studentName }}</strong>
+          </div>
+        </div>
+        <hr class="divisor">
+        <div>
+          <span class="rotulo">Escola</span>
+          <strong>{{ c.schoolName }}{{ enderecoEscola() ? ' · ' + enderecoEscola() : '' }}</strong>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="dados-titulo" animate.enter="entrar-subindo" style="--i: 2">
+        <h2 id="dados-titulo">Dados do contrato</h2>
+        <dl class="grade">
+          <div><dt>Periodicidade</dt><dd>{{ periodicidade() }}</dd></div>
+          <div><dt>Valor</dt><dd>{{ valor(c.value) }}</dd></div>
+        </dl>
+        <hr class="divisor">
+        <dl class="grade">
+          <div><dt>Data de início</dt><dd>{{ data(c.startDate) }}</dd></div>
+          <div><dt>Data de término</dt><dd>{{ data(c.endDate) }}</dd></div>
+        </dl>
+      </section>
+
+      @if (c.documentFileKey) {
+        <section class="pdf" animate.enter="entrar-subindo" style="--i: 3">
+          <div>
+            <strong>Contrato em PDF</strong>
+            <span>O link vale por 15 minutos.</span>
+          </div>
+          @if (linkPdf(); as link) {
+            <a class="abrir" [href]="link" target="_blank" rel="noopener noreferrer">Abrir</a>
+          } @else if (carregandoPdf()) {
+            <span class="abrir carregando">Carregando...</span>
+          } @else {
+            <button type="button" class="abrir" (click)="carregar()">Tentar de novo</button>
+          }
+        </section>
+      }
+
+      @if (c.signatures.length) {
+        <section class="card lista" aria-labelledby="assinaturas-titulo">
+          <h2 id="assinaturas-titulo">Assinaturas</h2>
+          @for (a of c.signatures; track a.userId) {
+            <p>{{ a.name }} assinou em {{ diaMes(a.signedAt) }}</p>
+          }
+          @if (assinaturaInvalida()) {
+            <p class="alerta">Termos alterados depois da assinatura</p>
+          }
+        </section>
+      }
+
+      @if (c.studentResponsibles.length) {
+        <section class="card lista" aria-labelledby="responsaveis-titulo">
+          <h2 id="responsaveis-titulo">Responsáveis do aluno</h2>
+          @for (r of c.studentResponsibles; track r.responsibleId) {
+            <p>{{ r.name }} · {{ vinculo(r.relationType) }}{{ r.admin ? ' · Admin' : '' }}</p>
+          }
+        </section>
+      }
+
+      @let historico = c.cancellations;
+      @if (historico.length) {
+        <section class="card lista" aria-labelledby="cancelamentos-titulo">
+          <h2 id="cancelamentos-titulo">Histórico de cancelamentos</h2>
+          @for (h of historico; track h.id) {
+            <div class="pedido">
+              <p>Pedido por {{ h.requestedByName }} em {{ diaMes(h.requestedAt) }}</p>
+              @if (h.reason) {
+                <span>Motivo: {{ h.reason }}</span>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      <div class="acoes">
+        @if (c.status !== 'PENDING') {
+          <button type="button" class="btn btn-azul" (click)="parcelas()">Parcelas</button>
+        }
+
+        @if (pedidoPendente()) {
+          @if (pedidoMeu()) {
+            <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="desistirCancelamento()">
+              {{ enviando() ? 'Enviando...' : 'Desistir do cancelamento' }}
+            </button>
+          } @else {
+            <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="aceitarCancelamento()">
+              {{ enviando() ? 'Enviando...' : 'Aceitar e cancelar agora' }}
+            </button>
+          }
+        } @else {
+          @if (podeRenovar()) {
+            <button type="button" class="btn btn-contorno" [disabled]="renovando()" (click)="renovar()">
+              {{ renovando() ? 'Abrindo...' : 'Renovar' }}
+            </button>
+          }
+          @if (podeCancelar()) {
+            <button type="button" class="btn btn-perigo" (click)="abrirCancelamento()">Cancelar contrato</button>
+          }
+        }
+
+        <button type="button" class="btn btn-contorno" (click)="voltar()">
+          {{ chatId ? 'Voltar à conversa' : 'Voltar' }}
+        </button>
+      </div>
+    }
+  </main>
+</div>
+
+@if (cancelamentoAberto()) {
+  <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharCancelamento()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="cancelar-titulo" (click)="$event.stopPropagation()">
+      <h2 id="cancelar-titulo">Cancelar contrato</h2>
+      <label for="motivo">Motivo (obrigatório)</label>
+      <textarea
+        id="motivo"
+        rows="4"
+        [maxlength]="motivoMaximo"
+        placeholder="Conte o motivo do cancelamento"
+        [(ngModel)]="motivo"
+      ></textarea>
+      <span class="contador">{{ motivo.length }}/{{ motivoMaximo }}</span>
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="pedirCancelamento()">
+        {{ enviando() ? 'Enviando...' : 'Pedir cancelamento' }}
+      </button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharCancelamento()">Voltar</button>
+    </div>
+  </div>
+}

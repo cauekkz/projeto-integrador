@@ -139,7 +139,8 @@ export class AuthService {
   getHomeRoute(): string | null {
     const roles = this.getRolesFromToken();
     if (roles.includes('ROLE_DRIVER')) return '/driver-home';
-    if (roles.includes('ROLE_RESPONSIBLE') || roles.includes('ROLE_ADMIN')) return '/responsible-home';
+    // responsavel: a home e o acompanhamento (procura a viagem em andamento e abre o mapa)
+    if (roles.includes('ROLE_RESPONSIBLE') || roles.includes('ROLE_ADMIN')) return '/responsible-route';
     return null;
   }
 
@@ -166,20 +167,21 @@ export class AuthService {
 
   createDriver(data: {
     documentPdf: File;
-    name: string;
     email: string;
     password: string;
     confirmPassword: string;
     phone: string;
+    acceptedTermsVersion: string;
   }) {
+    // sem nome: o backend tira o nome e o CPF da CNH
     const formData = new FormData();
 
     formData.append('documentPdf', data.documentPdf);
-    formData.append('name', data.name);
     formData.append('email', data.email);
     formData.append('password', data.password);
     formData.append('confirmPassword', data.confirmPassword);
     formData.append('phone', limparMascara(data.phone));
+    formData.append('acceptedTermsVersion', data.acceptedTermsVersion);
 
     return this.http.post(`${this.apiUrl}/driver/auth/signup`, formData, {
       responseType: 'text',
@@ -237,8 +239,15 @@ export class AuthService {
     return firstValueFrom(this.storageService.getDownloadUrl(upload.fileKey));
   }
 
-  deleteUser(id: string) {
-    return this.http.delete(`${this.apiUrl}/users/${id}`);
+  // exclui a conta do usuario logado (LGPD): confirma com a senha; 204.
+  // 400 senha incorreta; 409 com contrato ativo, proposta pendente ou parcela atrasada (a tela de privacidade mostra)
+  deleteMyAccount(password: string) {
+    return this.http.delete<void>(`${this.apiUrl}/users/me`, { body: { password } });
+  }
+
+  // tudo que o app guarda sobre o usuario (LGPD), em JSON; 429 se pedir de novo antes de 5 minutos
+  exportMyData() {
+    return this.http.get<unknown>(`${this.apiUrl}/users/me/export`);
   }
 
   verifyCNH(data: { documentPDF: File }) {
@@ -248,10 +257,12 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/driver/auth/verify-CNH`, formData);
   }
 
+  // o backend responde em texto puro: sem o responseType o sucesso virava erro de parse
   sendCode(email: string) {
     return this.http.post(
       `${this.apiUrl}/auth/send-verification-code?email=${encodeURIComponent(email)}`,
       {},
+      { responseType: 'text' },
     );
   }
 

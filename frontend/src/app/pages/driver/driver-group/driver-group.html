@@ -1,0 +1,109 @@
+<div class="pagina">
+  <app-trail-header [trilha]="['Grupos', nome() || 'Grupo']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <app-esqueleto tipo="perfil" [quantos]="1" texto="Carregando grupo..." />
+    } @else {
+      <div class="links">
+        <button type="button" class="link-azul" (click)="abrir('renomear')">Renomear</button>
+        <button type="button" class="link-vermelho" (click)="abrir('apagar')">Apagar grupo</button>
+      </div>
+
+      <div class="titulo-secao">
+        <h2>Alunos ({{ alunos().length }})</h2>
+        @if (alunos().length) {
+          <button type="button" class="link-azul" (click)="abrir('adicionar')">Adicionar</button>
+        }
+      </div>
+
+      @for (aluno of alunos(); track aluno.studentId; let i = $index) {
+        <div class="cartao-aluno" animate.enter="entrar-subindo" [style.--i]="i">
+          @if (aluno.photoUrl) {
+            <img class="foto" [src]="aluno.photoUrl" alt="" />
+          } @else {
+            <span class="foto iniciais" aria-hidden="true">{{ iniciais(aluno.studentName) }}</span>
+          }
+          <span class="nome">{{ aluno.studentName }}</span>
+          <button type="button" class="lixeira" [attr.aria-label]="'Tirar ' + aluno.studentName + ' do grupo'" (click)="abrir({ tirar: aluno })">
+            <i class="bi bi-trash3-fill" aria-hidden="true"></i>
+          </button>
+        </div>
+      } @empty {
+        <p class="ajuda">Adicione alunos para poder avisar o grupo.</p>
+        <button type="button" class="btn btn-azul" (click)="abrir('adicionar')">Adicionar aluno</button>
+      }
+
+      @if (alunos().length) {
+        <div class="rodape-acao">
+          <button type="button" class="btn btn-azul" (click)="abrir('avisar')">Avisar que não vou buscar hoje</button>
+        </div>
+      }
+    }
+  </main>
+
+  <app-footer tipoUsuario="motorista" />
+</div>
+
+@if (folha(); as f) {
+  <!-- apagar o grupo e tirar aluno sao confirmacoes: pop-up no meio; o resto e folha de baixo -->
+  <div class="fundo" [class.confirmacao]="f === 'apagar' || !!tirando()" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fechar()">
+    @if (f === 'renomear') {
+      <form class="folha" role="dialog" aria-modal="true" aria-labelledby="folha-titulo" (click)="$event.stopPropagation()" (ngSubmit)="renomear()">
+        <h2 id="folha-titulo">Renomear grupo</h2>
+        <div class="campo">
+          <label for="nome-grupo">Nome do grupo (até 60 caracteres)</label>
+          <input id="nome-grupo" name="nome" maxlength="60" placeholder="Fatec manhã" [(ngModel)]="nomeNovo" />
+        </div>
+        <button type="submit" class="btn btn-azul" [disabled]="enviando()">{{ enviando() ? 'Salvando...' : 'Salvar' }}</button>
+        <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fechar()">Voltar</button>
+      </form>
+    } @else if (f === 'apagar') {
+      <div class="folha" role="dialog" aria-modal="true" aria-labelledby="folha-titulo" (click)="$event.stopPropagation()">
+        <h2 id="folha-titulo">Apagar o grupo {{ nome() }}?</h2>
+        <p class="sub">Só o grupo é apagado. Os contratos dos alunos não mudam.</p>
+        <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="apagar()">{{ enviando() ? 'Apagando...' : 'Apagar grupo' }}</button>
+        <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fechar()">Voltar</button>
+      </div>
+    } @else if (f === 'avisar') {
+      <form class="folha" role="dialog" aria-modal="true" aria-labelledby="folha-titulo" (click)="$event.stopPropagation()" (ngSubmit)="avisar()">
+        <h2 id="folha-titulo">Não vou buscar hoje</h2>
+        <p class="sub">Os responsáveis dos alunos deste grupo recebem o aviso de que você não vai buscar os filhos <strong>hoje</strong>. Para outros recados, use a conversa.</p>
+        <div class="campo">
+          <label for="motivo">Motivo (opcional, até 300 caracteres)</label>
+          <input id="motivo" name="motivo" maxlength="300" placeholder="Van em manutenção" [(ngModel)]="motivo" />
+        </div>
+        <button type="submit" class="btn btn-azul" [disabled]="enviando()">{{ enviando() ? 'Enviando...' : 'Enviar aviso' }}</button>
+        <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fechar()">Voltar</button>
+      </form>
+    } @else if (f === 'adicionar') {
+      <div class="folha" role="dialog" aria-modal="true" aria-labelledby="folha-titulo" (click)="$event.stopPropagation()">
+        <h2 id="folha-titulo">Adicionar aluno</h2>
+        <p class="sub">Só aparecem os alunos com contrato ativo com você.</p>
+        @if (candidatos() === null) {
+          <app-esqueleto tipo="lista" [quantos]="2" texto="Carregando alunos..." />
+        } @else if (!candidatos()!.length) {
+          <p class="ajuda">Todos os alunos com contrato ativo já estão no grupo.</p>
+        } @else {
+          <div class="opcoes">
+            @for (a of candidatos(); track a.id) {
+              <button type="button" class="opcao" [class.marcada]="escolhido() === a.id" [attr.aria-pressed]="escolhido() === a.id" (click)="escolhido.set(a.id)">
+                <span class="marca" aria-hidden="true"><i class="bi bi-check-lg"></i></span>
+                <span class="textos"><strong>{{ a.nome }}</strong></span>
+              </button>
+            }
+          </div>
+          <button type="button" class="btn btn-azul" [disabled]="enviando() || !escolhido()" (click)="adicionar()">{{ enviando() ? 'Adicionando...' : 'Adicionar ao grupo' }}</button>
+        }
+        <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fechar()">Voltar</button>
+      </div>
+    } @else if (tirando(); as aluno) {
+      <div class="folha" role="dialog" aria-modal="true" aria-labelledby="folha-titulo" (click)="$event.stopPropagation()">
+        <h2 id="folha-titulo">Tirar {{ aluno.studentName }} do grupo?</h2>
+        <p class="sub">Só sai do grupo. O contrato do aluno não muda.</p>
+        <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="tirar(aluno)">{{ enviando() ? 'Tirando...' : 'Tirar do grupo' }}</button>
+        <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fechar()">Voltar</button>
+      </div>
+    }
+  </div>
+}

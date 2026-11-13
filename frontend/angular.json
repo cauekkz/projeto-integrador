@@ -26,6 +26,7 @@
               }
             ],
             "styles": [
+              "node_modules/glisse/dist/styles.css",
               "src/styles.css"
             ]
           },
@@ -69,7 +70,10 @@
           }
         },
         "test": {
-          "builder": "@angular/build:unit-test"
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "setupFiles": ["src/test-setup.ts"]
+          }
         }
       }
     }

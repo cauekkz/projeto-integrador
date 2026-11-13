@@ -53,6 +53,12 @@ public class StorageServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private br.com.vanroute.backend.repositories.StudentResponsibleRepository studentResponsibleRepository;
+
+    @Mock
+    private br.com.vanroute.backend.repositories.UserDriverContractRepository userDriverContractRepository;
+
     @InjectMocks
     private StorageService storageService;
 
@@ -174,5 +180,35 @@ public class StorageServiceTest {
         assertThrows(br.com.vanroute.backend.exceptions.BadRequestException.class,
                 () -> storageService.freezeContractPdf("uploads/d/grande.pdf", UUID.randomUUID()));
         verify(s3Client, never()).copyObject(any(software.amazon.awssdk.services.s3.model.CopyObjectRequest.class));
+    }
+
+    @Test
+    void studentPhotoIsSeenByItsResponsiblesAndDriversWithContract() {
+        UUID studentId = UUID.randomUUID();
+        UUID parent = UUID.randomUUID();
+        UUID driver = UUID.randomUUID();
+        UUID stranger = UUID.randomUUID();
+        String key = "students/" + studentId + "/foto.jpg";
+        when(studentResponsibleRepository.existsByResponsible_UserIdAndStudent_Id(parent, studentId)).thenReturn(true);
+        when(userDriverContractRepository.existsByDriverUserIdAndStudentId(driver, studentId)).thenReturn(true);
+        PresignedGetObjectRequest presigned = mock(PresignedGetObjectRequest.class);
+        try {
+            when(presigned.url()).thenReturn(URI.create("http://localhost:9000/test-bucket/" + key).toURL());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presigned);
+
+        assertNotNull(storageService.generateDownloadUrl(key, parent));
+        assertNotNull(storageService.generateDownloadUrl(key, driver));
+        assertThrows(AccessDeniedException.class, () -> storageService.generateDownloadUrl(key, stranger));
+    }
+
+    @Test
+    void studentOfPhotoReadsTheIdFromThePath() {
+        UUID id = UUID.randomUUID();
+        assertEquals(id, StorageService.studentOfPhoto("students/" + id + "/x.jpg"));
+        assertEquals(null, StorageService.studentOfPhoto("uploads/" + id + "/x.jpg"));
+        assertEquals(null, StorageService.studentOfPhoto("students/nao-e-uuid/x.jpg"));
     }
 }

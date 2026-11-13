@@ -1,0 +1,39 @@
+<div class="pagina">
+  <app-header titulo="Termos de Uso" (voltarEvent)="voltar()" />
+
+  @if (recusou()) {
+    <main class="conteudo recusa" animate.enter="entrar-fade">
+      <h2>Sem aceitar, não dá para usar o app</h2>
+      <p>O VanRoute precisa do seu aceite na versão atual dos termos para liberar as telas. Você pode voltar e aceitar, sair da conta ou excluir a conta.</p>
+    </main>
+
+    <div class="acoes">
+      <button type="button" class="btn btn-azul" (click)="lerDeNovo()">Voltar e ler os termos</button>
+      <button type="button" class="btn btn-contorno" (click)="sair()">Sair da conta</button>
+      <button type="button" class="btn btn-perigo" (click)="abrirExcluir()">Excluir minha conta</button>
+    </div>
+  } @else {
+    <main class="conteudo">
+      @if (termos(); as t) {
+        <div class="texto" [class.cheio]="leitura">
+          <app-markdown-text [conteudo]="t.content" />
+        </div>
+      } @else {
+        <app-esqueleto tipo="texto" [quantos]="4" texto="Carregando os termos..." />
+      }
+    </main>
+
+    @if (!leitura) {
+      <div class="acoes">
+        <button type="button" class="btn btn-azul" [disabled]="!termos() || enviando()" (click)="aceitar()">
+          {{ enviando() ? 'Enviando...' : 'Aceito' }}
+        </button>
+        <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="naoAceitar()">Não aceito</button>
+      </div>
+    }
+  }
+</div>
+
+@if (excluirAberto()) {
+  <app-delete-account [pularAviso]="true" (fecharEvent)="fecharExcluir()" />
+}

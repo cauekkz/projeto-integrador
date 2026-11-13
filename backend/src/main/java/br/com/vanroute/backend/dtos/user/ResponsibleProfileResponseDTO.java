@@ -21,6 +21,6 @@ public record ResponsibleProfileResponseDTO(
 ) {
     // filho com contrato com esse motorista; relationType e o rotulo do vinculo (FINANCIAL, LEGAL, WITHDRAWAL)
     public record StudentItem(UUID studentId, String studentName, UUID contractId, ContractStatus contractStatus,
-                              RelationType relationType, boolean admin) {
+                              RelationType relationType, boolean admin, String photoKey) {
     }
 }

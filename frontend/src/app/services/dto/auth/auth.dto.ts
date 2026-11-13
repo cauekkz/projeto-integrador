@@ -28,6 +28,8 @@ export interface createUserRequest {
   cpf: string;
   phone: string;
   address: addressRequest;
+  // versao dos Termos de Uso aceita na tela (GET /api/terms); o backend so aceita a atual
+  acceptedTermsVersion: string;
 }
 
 export interface verifyEmailRequest {

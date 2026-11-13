@@ -1,0 +1,173 @@
+.screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.content {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 12px calc(112px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+/* Figma "Card do filho" */
+.filhos {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+}
+
+.cartao {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.quem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quem strong {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.foto {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.foto.iniciais {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #afd9f7;
+  background: #eff8fe;
+  color: var(--azul-escuro);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.linha {
+  margin: 0;
+  font-size: 14px;
+  color: var(--texto-2);
+}
+
+.falta {
+  margin: 0;
+  font-size: 14px;
+  color: #b45309;
+}
+
+.viagem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Figma "Selo" */
+.botoes {
+  display: flex;
+  gap: 8px;
+}
+
+.botoes .btn {
+  flex: 1;
+  min-height: 36px;
+  font-size: 14px;
+}
+
+.folha .sub {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.campo input[type='date'] {
+  width: 100%;
+  min-height: 43px;
+  padding: 0 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--texto);
+  box-sizing: border-box;
+}
+
+@media (max-width: 500px) {
+  .rota-footer {
+    width: calc(100% - 16px);
+    height: 177px;
+    margin: -12px auto 8px;
+    padding: 44px 20px 0;
+  }
+
+  .van-card {
+    left: 16px;
+    right: 16px;
+    bottom: 25px;
+    height: 75px;
+  }
+}
+
+/* "Nao vai hoje" / "Nao vai outro dia": discretas, lado a lado */
+.faltas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.acao-falta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--texto-2);
+  cursor: pointer;
+  transition: var(--transicao-botao);
+}
+
+.acao-falta i {
+  font-size: 14px;
+  color: var(--texto-3);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .acao-falta:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+}
+
+.acao-falta:focus-visible {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+}

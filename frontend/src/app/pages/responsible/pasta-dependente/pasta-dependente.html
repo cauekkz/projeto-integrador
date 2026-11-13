@@ -1,0 +1,40 @@
+<div class="pagina">
+  <app-trail-header [trilha]="['Contratos', nome]" (voltarEvent)="voltar()" />
+
+  <!-- Contratos | Parcelas: controle segmentado de vidro da Glisse -->
+  @if (!glisseFalhou()) {
+    <app-glisse-segmentado
+      ariaLabel="Contratos ou parcelas"
+      [opcoes]="secoes"
+      [valor]="secao()"
+      (escolheu)="trocar($event)"
+      (falhou)="glisseFalhou.set(true)" />
+  } @else {
+  <div class="secoes" role="tablist" aria-label="Contratos ou parcelas">
+    <button
+      type="button"
+      role="tab"
+      class="secao"
+      [class.ativa]="secao() === 'contratos'"
+      [attr.aria-selected]="secao() === 'contratos'"
+      (click)="trocar('contratos')">
+      Contratos
+    </button>
+    <button
+      type="button"
+      role="tab"
+      class="secao"
+      [class.ativa]="secao() === 'parcelas'"
+      [attr.aria-selected]="secao() === 'parcelas'"
+      (click)="trocar('parcelas')">
+      Parcelas
+    </button>
+  </div>
+  }
+
+  @if (secao() === 'contratos') {
+    <app-contracts [alunoId]="alunoId" [embutido]="true" />
+  } @else {
+    <app-payments [alunoId]="alunoId" [embutido]="true" />
+  }
+</div>

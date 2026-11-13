@@ -4,6 +4,8 @@ import java.util.UUID;
 
 public record ChildSummaryResponseDTO(
         UUID id,
-        String name
+        String name,
+        // foto do aluno (fileKey) ou null
+        String photoKey
 ) {
 }

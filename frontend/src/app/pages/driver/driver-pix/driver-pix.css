@@ -1,0 +1,104 @@
+/* pagina, botoes e folha de baixo vem de shared/folha.css */
+
+.formulario {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 12px;
+}
+
+fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+legend,
+label {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--texto-2);
+}
+
+.tipos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tipo {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--texto-2);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.tipo.ativo {
+  border-color: #93c5fd;
+  background: #eff8fe;
+  color: var(--azul-escuro);
+}
+
+input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 16px;
+}
+
+input:focus {
+  outline: 2px solid var(--azul);
+  outline-offset: -1px;
+}
+
+.chave {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 12px;
+  padding: 16px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.chave span {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.chave strong {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
+  overflow-wrap: anywhere;
+}
+
+.info {
+  margin: 0 12px;
+  font-size: 14px;
+  color: var(--texto-3);
+}
+
+/* botoes no fim da tela, acima do footer */
+.rodape {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+  padding: 0 12px;
+}
+
+.explica {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--texto-3);
+}

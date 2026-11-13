@@ -1,0 +1,123 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(1px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 100;
+}
+
+.sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-radius: 24px 24px 0 0;
+  padding: 12px 24px 40px;
+  z-index: 101;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.sheet-handle {
+  width: 40px;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  margin: 0 auto 24px;
+}
+
+.perfil-topo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
+  margin-bottom: 8px;
+}
+
+.avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.perfil-nome {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.perfil-email {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.menu-lista {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 4px;
+  border: none;
+  background: white;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--texto);
+  cursor: pointer;
+  border-bottom: 1px solid #f1f5f9;
+  font-family: inherit;
+}
+
+.menu-item i {
+  font-size: 18px;
+  color: var(--texto-3);
+  width: 22px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .menu-item:hover {
+    background: #f8fafc;
+  }
+}
+
+.menu-item.danger {
+  color: var(--vermelho);
+  border-bottom: none;
+}
+
+.menu-item.danger i {
+  color: var(--vermelho);
+}
+
+/* ---------- abrir / fechar ---------- */
+
+/* display block pra opacidade do animate.leave (classe sair-perfil vem da pagina) valer pro conteudo */
+:host {
+  display: block;
+}
+
+.sheet-entrar {
+  animation: sheet-subir 320ms var(--ease-folha, cubic-bezier(0.32, 0.72, 0, 1)) both;
+}
+
+:host(.sair-perfil) {
+  animation: fade-sair 200ms ease both;
+}
+
+:host(.sair-perfil) .sheet {
+  animation: sheet-descer 200ms var(--ease-out) both;
+}
+
+@keyframes sheet-subir {
+  from { transform: translateY(100%); }
+}
+
+@keyframes sheet-descer {
+  to { transform: translateY(100%); }
+}

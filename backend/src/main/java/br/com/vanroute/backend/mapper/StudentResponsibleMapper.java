@@ -41,7 +41,8 @@ public class StudentResponsibleMapper {
                 student.getName(),
                 student.getNotes(),
                 student.getBirthDate(),
-                addressResponse
+                addressResponse,
+                student.getPhotoKey()
         );
     }
 

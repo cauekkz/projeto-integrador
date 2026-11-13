@@ -1,0 +1,177 @@
+<div class="pagina">
+  <app-header titulo="Motorista" (voltarEvent)="voltar()" />
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <app-esqueleto tipo="perfil" [quantos]="2" texto="Carregando perfil..." />
+    } @else if (perfil(); as p) {
+      <section class="quem" animate.enter="entrar-fade">
+        @if (foto()) {
+          <img class="foto" [src]="foto()" alt="" />
+        } @else {
+          <span class="foto iniciais" aria-hidden="true">{{ iniciais(p.name) }}</span>
+        }
+        <div>
+          <h1>{{ p.name }}</h1>
+          @if (p.memberSince) {
+            <p class="desde">No VanRoute desde {{ dataBr(p.memberSince) }}</p>
+          }
+        </div>
+      </section>
+
+      <section class="cartao nota-geral" animate.enter="entrar-fade">
+        @if (p.ratingCount) {
+          <strong class="media">{{ notaBr(p.ratingAverage) }}</strong>
+          <div>
+            <div class="estrelas grandes" [attr.aria-label]="'Nota ' + notaBr(p.ratingAverage) + ' de 5'">
+              @for (i of estrelas; track i) {
+                <i class="bi bi-star-fill" [class.cheia]="cheia(i, p.ratingAverage)" aria-hidden="true"></i>
+              }
+            </div>
+            <small>{{ p.ratingCount }} {{ p.ratingCount === 1 ? 'avaliação' : 'avaliações' }}</small>
+          </div>
+        } @else {
+          <div>
+            <div class="estrelas grandes" aria-hidden="true">
+              @for (i of estrelas; track i) {
+                <i class="bi bi-star-fill"></i>
+              }
+            </div>
+            <small>Ainda sem avaliações</small>
+          </div>
+        }
+      </section>
+
+      @if (p.schools.length) {
+        <section class="secao">
+          <h2>Escolas</h2>
+          <ul class="cartao lista">
+            @for (escola of p.schools; track escola.schoolId) {
+              <li>{{ escola.name }}</li>
+            }
+          </ul>
+        </section>
+      }
+
+      @if (p.vehicles.length) {
+        <section class="secao">
+          <h2>Vans</h2>
+          @for (van of p.vehicles; track van.plate) {
+            <div class="cartao van">
+              <div>
+                <strong>{{ van.model }}</strong>
+                <small>{{ van.color }}</small>
+              </div>
+              <span class="placa">{{ van.plate }}</span>
+            </div>
+          }
+        </section>
+      }
+
+      @if (p.myRating; as minha) {
+        <section class="secao">
+          <h2>Sua avaliação</h2>
+          <div class="cartao avaliacao minha">
+            <div class="topo-avaliacao">
+              <strong>Você</strong>
+              <span class="estrelas" [attr.aria-label]="'Nota ' + minha.score">
+                @for (i of estrelas; track i) {
+                  <i class="bi bi-star-fill" [class.cheia]="i <= minha.score" aria-hidden="true"></i>
+                }
+              </span>
+            </div>
+            @if (minha.comment) {
+              <p>{{ minha.comment }}</p>
+            }
+            <small>{{ dataBr(minha.date) }}</small>
+          </div>
+        </section>
+      }
+
+      @if (recentes(p).length) {
+        <section class="secao">
+          <h2>Avaliações recentes</h2>
+          @for (r of recentes(p); track $index) {
+            <div class="cartao avaliacao">
+              <div class="topo-avaliacao">
+                <strong>{{ r.responsibleName }}</strong>
+                <span class="estrelas" [attr.aria-label]="'Nota ' + r.score">
+                  @for (i of estrelas; track i) {
+                    <i class="bi bi-star-fill" [class.cheia]="i <= r.score" aria-hidden="true"></i>
+                  }
+                </span>
+              </div>
+              @if (r.comment) {
+                <p>{{ r.comment }}</p>
+              }
+              <small>{{ dataBr(r.date) }}</small>
+            </div>
+          }
+        </section>
+      }
+
+      <div class="rodape-acao">
+        <button type="button" class="btn btn-azul" (click)="abrirAvaliar()">{{ p.myRating ? 'Editar avaliação' : 'Avaliar motorista' }}</button>
+      </div>
+    } @else if (indisponivel()) {
+      <div class="rodape-acao fixo">
+        <button type="button" class="btn btn-azul" (click)="voltar()">Voltar</button>
+      </div>
+    }
+  </main>
+</div>
+
+<!-- Figma 1057:823 / 1057:904 "Avaliar motorista" -->
+@if (avaliando() && perfil(); as p) {
+  <form class="tela-cheia" role="dialog" aria-modal="true" aria-labelledby="avaliar-titulo" animate.enter="entrar-fade" (ngSubmit)="enviar()">
+    <div class="cabecalho">
+      <button type="button" class="voltar" aria-label="Voltar" (click)="fecharAvaliar()"><i class="bi bi-chevron-left" aria-hidden="true"></i></button>
+      <h1 id="avaliar-titulo">Avaliar motorista</h1>
+    </div>
+
+    <div class="quem pequeno">
+      @if (foto()) {
+        <img class="foto" [src]="foto()" alt="" />
+      } @else {
+        <span class="foto iniciais" aria-hidden="true">{{ iniciais(p.name) }}</span>
+      }
+      <strong>{{ p.name }}</strong>
+    </div>
+
+    <p class="rotulo">Sua nota</p>
+    <div class="escolher-nota" role="radiogroup" aria-label="Sua nota">
+      @for (i of estrelas; track i) {
+        <button type="button" role="radio" [attr.aria-checked]="nota() === i" [attr.aria-label]="i + (i === 1 ? ' estrela' : ' estrelas')" [class.cheia]="i <= nota()" (click)="nota.set(i)">
+          <i class="bi bi-star-fill" aria-hidden="true"></i>
+        </button>
+      }
+    </div>
+
+    <div class="campo">
+      <label for="comentario">Comentário (opcional)</label>
+      <input id="comentario" name="comentario" maxlength="500" placeholder="Conte como foi" [(ngModel)]="comentario" />
+    </div>
+    <p class="ajuda">Até 500 caracteres.</p>
+
+    <div class="acoes">
+      <button type="submit" class="btn btn-azul" [disabled]="enviando()">
+        {{ enviando() ? 'Enviando...' : p.myRating ? 'Salvar avaliação' : 'Enviar avaliação' }}
+      </button>
+      @if (p.myRating) {
+        <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="confirmandoApagar.set(true)">Apagar avaliação</button>
+      }
+    </div>
+  </form>
+}
+
+<!-- Figma 1057:945 -->
+@if (confirmandoApagar()) {
+  <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharApagar()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="apagar-titulo" (click)="$event.stopPropagation()">
+      <h2 id="apagar-titulo">Apagar sua avaliação?</h2>
+      <p class="sub">Sua nota e seu comentário saem do perfil do motorista.</p>
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="apagar()">{{ enviando() ? 'Apagando...' : 'Apagar avaliação' }}</button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharApagar()">Voltar</button>
+    </div>
+  </div>
+}

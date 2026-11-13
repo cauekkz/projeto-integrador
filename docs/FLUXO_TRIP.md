@@ -169,8 +169,9 @@ Saída **201** (o mesmo formato do `GET /api/trip/{tripId}` e do `today`):
       "routeStopId": "...", "orderIndex": 1, "done": false,
       "address": { "id": "...", "street": "Rua Augusta", "number": 500, "neighborhood": "Consolacao",
                    "city": "Sao Paulo", "state": "SP", "zipCode": "01304-000", "latitude": -23.55, "longitude": -46.65 },
-      "schoolIds": [],
-      "students": [ { "studentId": "...", "studentName": "Ana", "action": "BOARDING", "locationType": "HOME", "status": "PENDING" } ]
+      "schoolIds": [], "schoolNames": [],
+      "students": [ { "studentId": "...", "studentName": "Ana", "action": "BOARDING", "locationType": "HOME", "status": "PENDING",
+                      "boardedAt": null, "deliveredAt": null, "addressLabel": "Casa", "photoKey": null } ]
     }
   ],
   "path": { "distance": 4210.5, "duration": 890.2, "coordinates": [[-46.6559, -23.5614], [-46.6551, -23.5609]] }
@@ -178,7 +179,9 @@ Saída **201** (o mesmo formato do `GET /api/trip/{tripId}` e do `today`):
 ```
 - `id` é o **tripId**, usado pra abrir o WebSocket.
 - `stops` traz só os pontos com aluno hoje, em ordem. Entra na viagem só o aluno com **contrato `ACTIVE` com esse motorista**: contrato agendado que ainda não começou, encerrado ou cancelado fica de fora, mesmo que o aluno ainda esteja na rota (ex.: férias entre um contrato e a renovação).
-- `schoolIds` só vem preenchido no ponto da escola.
+- `schoolIds` e `schoolNames` (os nomes, na mesma ordem) só vêm preenchidos no ponto da escola.
+- `students[].addressLabel`: o apelido do endereço do aluno nesse ponto ("Casa", "Natação"); `null` no ponto da escola.
+- `students[].photoKey`: a foto do aluno (`null` sem foto); exiba pelo `download-url`.
 - `path`: `distance` em metros e `duration` em segundos até o fim. `coordinates` vem como `[longitude, latitude]`. O `path` inteiro vem `null` se a API falhou.
 
 Erros:
@@ -213,9 +216,18 @@ Define a van padrão da rota.
 
 ### 4.8 `GET /api/student/{studentId}/today-trips` (pai)
 ```json
-[ { "tripId": "3e72e65c-...", "routeId": "...", "routeName": "Ida Manha", "tripStatus": "STARTED", "boardingStatus": "PENDING" } ]
+[ { "tripId": "3e72e65c-...", "routeId": "...", "routeName": "Ida Manha", "tripStatus": "STARTED", "boardingStatus": "PENDING",
+    "driverId": "...", "driverName": "Gustavo Gómez", "driverPhotoKey": "profile/...", "driverRating": 4.6,
+    "vehiclePlate": "ABC1D23", "vehicleModel": "M.BENZ/SPRINTER", "vehicleColor": "PRATA" } ]
 ```
 Lista vazia: o motorista ainda não iniciou. **403**: não é responsável desse aluno.
+
+Motorista e van **dessa viagem**, pro card do acompanhamento ("Gustavo Gómez · ★ 4,6 · Sprinter prata · ABC1D23"):
+- `driverPhotoKey` vai no `GET /api/storage/download-url`;
+- `driverRating` é a média com 1 casa (`null` sem avaliações);
+- `vehicleColor` vem como está no CRLV (maiúsculas).
+
+Pro botão de chat, ache a conversa em `GET /api/chats` pelo `otherUserId === driverId`.
 
 ### 4.8.1 `GET /api/trip/history` (pai e motorista)
 Histórico por aluno, uma linha por aluno por viagem, da mais recente pra mais antiga (paginado: `page`, `size`, padrão 20). O pai vê as viagens dos filhos; o motorista, as que ele dirigiu.
@@ -293,9 +305,11 @@ Se outra pessoa mandar, recebe `{"type":"error","message":"Só o motorista envia
   "path": [[-46.661, -23.559], [-46.660, -23.558]],
   "students": [ { "studentId": "...", "studentName": "Ana", "action": "BOARDING", "locationType": "HOME", "status": "BOARDED" } ],
   "stops": [ { "routeStopId": "...", "orderIndex": 1, "latitude": -23.55, "longitude": -46.65,
-               "students": [], "schoolIds": [], "done": true, "pathIndex": null, "etaSeconds": null } ]
+               "street": "R. Libertadores", "number": 2026, "neighborhood": "Ipiranga",
+               "students": [], "schoolIds": [], "schoolNames": [], "done": true, "pathIndex": null, "etaSeconds": null } ]
 }
 ```
+Cada ponto traz o endereço (`street`, `number`, `neighborhood`) e o nome das escolas (`schoolNames`). Cada aluno traz o `addressLabel` ("Casa"). Com isso, o pai monta "Próxima parada de Lucas: Casa · R. Libertadores, 2026" e o pino "Fatec Ipiranga" sem outra chamada.
 - `positionAt`: quando a posição chegou (ms desde 1970).
 - `targetStopId` e `etaSeconds`: o próximo ponto e os segundos até ele.
 - `path`: a linha até o fim. No mapa, inverta pra `[latitude, longitude]` (Leaflet).
@@ -344,7 +358,7 @@ Se outra pessoa mandar, recebe `{"type":"error","message":"Só o motorista envia
 | `PAYMENT` | o motorista confirma ou cancela uma parcela | o responsável do contrato | "Pagamento confirmado" / "Parcela cancelada" | `paymentId`, `contractId` |
 | `DRIVER_NOTICE` | o motorista avisa um grupo (`POST /api/driver/groups/{id}/notice`) | os pais dos alunos do grupo | "Aviso do motorista" / "Carlos avisou que não vai buscar Ana hoje. Motivo: ..." | `groupId`, `driverId`, `date`, `studentIds` |
 
-- "Pais" são **todos os responsáveis** do aluno, não só o principal. Quem o admin remove do aluno (ou sai sozinho) deixa de receber na hora e perde o acesso às viagens, à localização e ao histórico (`docs/FLUXO_FRONT.md`, seção 6.3.3).
+- "Pais" são **todos os responsáveis** do aluno, não só o principal. Quem o admin remove do aluno (ou sai sozinho) deixa de receber na hora e perde o acesso às viagens, à localização e ao histórico.
 - **Irmãos viram uma notificação só:** "A van está indo buscar Ana e Caio".
 - O `payload` serve pro app abrir a tela certa: com `tripId`, abre o acompanhamento; com `contractId`, o contrato.
 

@@ -1,0 +1,72 @@
+/* pagina, botoes e folha de baixo vem de shared/folha.css */
+.pagina {
+  padding-bottom: 32px;
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 16px;
+  border: none;
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: var(--transicao-botao);
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .item:hover:not(:disabled) {
+    background: #f8fafc;
+  }
+}
+
+.item:disabled {
+  cursor: default;
+}
+
+.textos {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.textos strong {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.textos span {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.item i {
+  color: #94a3b8;
+}
+
+.item.perigo strong {
+  color: var(--vermelho-texto);
+}
+
+.item.desligado strong,
+.item.desligado span {
+  color: #94a3b8;
+}

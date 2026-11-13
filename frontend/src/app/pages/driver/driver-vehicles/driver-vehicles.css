@@ -1,0 +1,112 @@
+/* pagina, botoes e folha de baixo vem de shared/folha.css */
+
+.lista {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icone {
+  font-size: 20px;
+  color: var(--azul);
+}
+
+.placa {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.resumo {
+  font-size: 14px;
+  color: var(--texto-2);
+}
+
+.detalhes {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+/* "Adicionar van": tela inteira por cima da lista */
+.tela-cheia {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px 24px 32px;
+  background: #ffffff;
+}
+
+.cabecalho {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin-bottom: 24px;
+}
+
+.cabecalho h1 {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.voltar {
+  position: absolute;
+  left: 0;
+  border: none;
+  background: none;
+  font-size: 24px;
+  color: var(--texto);
+  cursor: pointer;
+}
+
+.upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  font: inherit;
+  color: var(--texto);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.upload i {
+  font-size: 48px;
+}
+
+.ajuda {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.enviar {
+  margin-top: auto;
+}

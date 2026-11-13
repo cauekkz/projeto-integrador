@@ -18,6 +18,11 @@ function is401(error: unknown): boolean {
   return error instanceof HttpErrorResponse && error.status === 401;
 }
 
+// termos novos ainda nao aceitos: o backend barra quase tudo com 403 { code: 'TERMS_NOT_ACCEPTED', version }
+function isTermosPendentes(error: unknown): boolean {
+  return error instanceof HttpErrorResponse && error.status === 403 && error.error?.code === 'TERMS_NOT_ACCEPTED';
+}
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const popUpService = inject(PopUpService);
   const authService = inject(AuthService);
@@ -56,6 +61,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           authService.clearTokens();
           popUpService.show('Sua sessão expirou. Entre novamente.', 'warning', 'Sessão expirada');
           router.navigate(['/']);
+        }
+        return throwError(() => error);
+      }
+      // sem popup: leva pra tela de aceite (uma vez so, mesmo com varias chamadas barradas juntas)
+      if (isTermosPendentes(error)) {
+        if (!(router.url ?? '').startsWith('/terms')) {
+          router.navigate(['/terms']);
         }
         return throwError(() => error);
       }

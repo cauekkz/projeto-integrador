@@ -1,5 +1,6 @@
 <div [ngClass]="['btn-wrapper', 'pos-' + posicao]">
   <button
+    [type]="type"
     [ngClass]="['btn', 'btn-' + tipo]"
     [disabled]="disabled"
     (click)="onClick()">

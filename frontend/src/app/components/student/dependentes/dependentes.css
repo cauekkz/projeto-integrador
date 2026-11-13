@@ -4,7 +4,7 @@
   background: white;
   z-index: 101;
   overflow-y: auto;
-  padding: 24px;
+  padding: 24px 12px 120px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -18,22 +18,27 @@
   gap: 12px;
 }
 
-.estado-vazio {
-  text-align: center;
-  color: #94a3b8;
-  margin-top: 24px;
-}
-
 .dependente-card {
+  width: 100%;
   border: 1px solid #e2e8f0;
   border-radius: 14px;
-  overflow: hidden;
+  background: #ffffff;
+  font: inherit;
+  text-align: left;
+  color: var(--texto-3);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .dependente-card:hover {
+    background: #f8fafc;
+  }
 }
 
 .dependente-linha {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-height: 60px;
   padding: 12px 16px;
   cursor: pointer;
 }
@@ -54,17 +59,18 @@
 
 .dependente-nome {
   flex: 1;
-  font-weight: 600;
-  color: #1f2937;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--texto);
 }
 
 .dependente-detalhes {
   padding: 0 16px 16px 64px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  color: #334155;
-  font-size: 0.9rem;
+  gap: 8px;
+  color: var(--texto-2);
+  font-size: 14px;
 }
 
 .responsavel-linha {
@@ -74,3 +80,15 @@
 }
 
 /* select: estilo global em src/styles.css */
+
+/* sem foto: iniciais no lugar */
+.dependente-iniciais {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #afd9f7;
+  background: #eff8fe;
+  color: var(--azul-escuro);
+  font-size: 13px;
+  font-weight: 600;
+}

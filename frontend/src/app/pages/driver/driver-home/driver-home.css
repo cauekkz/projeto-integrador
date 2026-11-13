@@ -1,0 +1,174 @@
+/* pagina, botoes e avisos vem de shared/folha.css */
+
+.pagina {
+  padding-top: 16px;
+}
+
+.cabeca {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.titulo {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.data {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.lista {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* cartao de partida (diferente do cartao de rota da home) */
+.partida {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.partida.aberta {
+  border-color: #bfdbfe;
+  background: #f5f9ff;
+}
+
+.linha-nome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.linha-nome {
+  align-items: flex-start;
+}
+
+.linha-nome h2 {
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+/* trajeto: igual a linha do app (shared/trajeto). ponta ● - - o - - o - - ● ponta, nomes embaixo */
+.trajeto {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.linha {
+  display: flex;
+  align-items: center;
+  height: 16px;
+}
+
+.ponta {
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border: 2px solid #94a3b8;
+  border-radius: 50%;
+  background: #ffffff;
+}
+
+.trilho {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  height: 2px;
+  margin: 0 4px;
+  background: repeating-linear-gradient(90deg, #cbd5e1 0 6px, transparent 6px 10px);
+}
+
+.parada {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #94a3b8;
+}
+
+/* viagem feita hoje: o caminho todo fica azul */
+.feita .trilho { background: var(--azul); }
+.feita .ponta { border-color: var(--azul); background: var(--azul); }
+.feita .parada { background: var(--azul); box-shadow: 0 0 0 2px #ffffff; }
+
+.lugares {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--texto-2);
+}
+
+.lugar {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.lugar.fim {
+  text-align: right;
+}
+
+.dados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 13px;
+  color: var(--texto-2);
+}
+
+.dados span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dados .sem-alunos {
+  color: #94a3b8;
+}
+
+.partida .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.partida .btn i {
+  font-size: 18px;
+}
+
+@keyframes piscar {
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .selo-aberta .ponto {
+    animation: none;
+  }
+}
+

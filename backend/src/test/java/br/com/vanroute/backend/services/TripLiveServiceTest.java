@@ -45,6 +45,7 @@ class TripLiveServiceTest {
     @Mock private StudentStopRepository studentStopRepository;
     @Mock private SchoolStopRepository schoolStopRepository;
     @Mock private StudentResponsibleRepository studentResponsibleRepository;
+    @Mock private StudentAddressRepository studentAddressRepository;
     @Mock private MapService mapService;
     @Mock private RedisTemplate<String, String> redisTemplate;
     @Mock private ValueOperations<String, String> valueOperations;
@@ -66,7 +67,7 @@ class TripLiveServiceTest {
     @BeforeEach
     void setUp() {
         live = new TripLiveService(tripRepository, boardingRepository, routeStopRepository, studentStopRepository,
-                schoolStopRepository, studentResponsibleRepository, mapService, redisTemplate, objectMapper);
+                schoolStopRepository, studentResponsibleRepository, mapService, redisTemplate, objectMapper, studentAddressRepository);
         ReflectionTestUtils.setField(live, "etaRefreshSeconds", 60L);
         ReflectionTestUtils.setField(live, "offRouteMeters", 150.0);
         ReflectionTestUtils.setField(live, "offRouteMinSeconds", 30L);
@@ -299,5 +300,34 @@ class TripLiveServiceTest {
         UUID stranger = UUID.randomUUID();
 
         assertThrows(org.springframework.security.access.AccessDeniedException.class, () -> live.access(trip.getId(), stranger));
+    }
+
+    @Test
+    void stopsCarryTheAddressTheLabelAndTheSchoolName() {
+        anaHome.getAddress().setId(UUID.randomUUID());
+        anaHome.getAddress().setStreet("R. Libertadores");
+        anaHome.getAddress().setNumber(2026);
+        anaHome.getAddress().setNeighborhood("Ipiranga");
+        br.com.vanroute.backend.models.student.StudentAddress casa = new br.com.vanroute.backend.models.student.StudentAddress();
+        casa.setLabel("Casa");
+        when(studentAddressRepository.findFirstByStudentIdAndAddressId(ana.getId(), anaHome.getAddress().getId()))
+                .thenReturn(Optional.of(casa));
+        br.com.vanroute.backend.models.school.School fatec = new br.com.vanroute.backend.models.school.School();
+        fatec.setId(UUID.randomUUID());
+        fatec.setName("Fatec Ipiranga");
+        br.com.vanroute.backend.models.school.SchoolStop schoolStop = new br.com.vanroute.backend.models.school.SchoolStop();
+        schoolStop.setSchool(fatec);
+        when(schoolStopRepository.findByStopId(school.getId())).thenReturn(List.of(schoolStop));
+
+        TripLiveStateDTO state = live.refresh(trip, false);
+
+        TripLiveStopDTO home = state.stops().get(0);
+        assertEquals("R. Libertadores", home.street());
+        assertEquals(2026, home.number());
+        assertEquals("Ipiranga", home.neighborhood());
+        assertEquals("Casa", home.students().get(0).addressLabel());
+        TripLiveStopDTO atSchool = state.stops().get(2);
+        assertEquals(List.of("Fatec Ipiranga"), atSchool.schoolNames());
+        assertNull(atSchool.students().get(0).addressLabel());
     }
 }

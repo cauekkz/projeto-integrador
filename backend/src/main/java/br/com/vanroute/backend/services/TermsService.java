@@ -18,7 +18,7 @@ import java.util.UUID;
 @Service
 public class TermsService {
 
-    public static final String CURRENT_VERSION = "2";
+    public static final String CURRENT_VERSION = "3";
 
     private final TermsAcceptanceRepository termsAcceptanceRepository;
     private final String currentText;

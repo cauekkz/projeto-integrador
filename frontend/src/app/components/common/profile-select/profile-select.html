@@ -1,0 +1,79 @@
+<div class="backdrop" animate.enter="entrar-fade" (click)="fechar()"></div>
+
+<div class="sheet" animate.enter="sheet-entrar">
+  <div class="sheet-handle"></div>
+
+  <div class="perfil-topo">
+    <img [src]="usuario?.photoUrl || '/testee.jpg'" class="avatar" alt="">
+    <div class="perfil-info">
+      <p class="perfil-nome">{{ usuario?.name || '' }}</p>
+      <p class="perfil-email">{{ usuario?.email || '' }}</p>
+    </div>
+  </div>
+
+  <div class="menu-lista">
+    <button class="menu-item" (click)="irParaPerfil()">
+      <i class="bi bi-person-gear"></i>
+      <span>Configurar perfil</span>
+    </button>
+
+    @if (tipoUsuario === 'motorista') {
+      <button class="menu-item" (click)="irParaCodigoConversa()">
+        <i class="bi bi-key"></i>
+        <span>Código de conversa</span>
+      </button>
+
+      <button class="menu-item" (click)="irParaEscolas()">
+        <i class="bi bi-mortarboard"></i>
+        <span>Adicionar escola</span>
+      </button>
+
+      <button class="menu-item" (click)="irPara('/driver-home')">
+        <i class="bi bi-signpost-split"></i>
+        <span>Minhas rotas</span>
+      </button>
+
+      <button class="menu-item" (click)="irPara('/driver-vehicles')">
+        <i class="bi bi-bus-front"></i>
+        <span>Minhas vans</span>
+      </button>
+
+      <button class="menu-item" (click)="irPara('/driver-pix')">
+        <i class="bi bi-qr-code"></i>
+        <span>Chave Pix</span>
+      </button>
+
+      <button class="menu-item" (click)="irPara('/driver-groups')">
+        <i class="bi bi-people"></i>
+        <span>Grupos</span>
+      </button>
+    }
+
+    @if (tipoUsuario === 'responsavel') {
+      <button class="menu-item" (click)="irParaVincularMotorista()">
+        <i class="bi bi-person-plus"></i>
+        <span>Vincular motorista</span>
+      </button>
+    }
+
+    <button class="menu-item" (click)="irParaContratos()">
+      <i class="bi bi-file-text"></i>
+      <span>Contratos</span>
+    </button>
+
+    <button class="menu-item" (click)="irPara('/trip-history')">
+      <i class="bi bi-clock-history"></i>
+      <span>Histórico de viagens</span>
+    </button>
+
+    <button class="menu-item" (click)="irPara('/privacy')">
+      <i class="bi bi-shield-lock"></i>
+      <span>Privacidade e dados</span>
+    </button>
+
+    <button class="menu-item danger" (click)="sairDaConta()">
+      <i class="bi bi-box-arrow-right"></i>
+      <span>Sair da conta</span>
+    </button>
+  </div>
+</div>

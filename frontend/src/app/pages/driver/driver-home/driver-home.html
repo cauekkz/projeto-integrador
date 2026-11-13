@@ -1,0 +1,80 @@
+<div class="pagina">
+  <app-trail-header [trilha]="['Motorista', 'Viagem']" [mostrarSino]="true" (voltarEvent)="irParaRotas()" />
+  <main class="conteudo">
+    @if (carregando()) {
+      <app-esqueleto tipo="lista" [quantos]="3" texto="Carregando rotas..." />
+    } @else if (erroCarregar()) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar as rotas.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else if (!rotas().length) {
+      <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-signpost-split" aria-hidden="true"></i>
+        <h2>Você ainda não tem rotas</h2>
+        <p>Crie uma rota para cada trajeto e monte com os seus alunos.</p>
+        <button type="button" class="btn btn-azul" (click)="irParaRotas()">Criar rota</button>
+      </section>
+    } @else {
+      <header class="cabeca">
+        <h1 class="titulo">Qual rota você vai fazer agora?</h1>
+        <p class="data">{{ data }}</p>
+      </header>
+      <ul class="lista">
+        @for (rota of rotas(); track rota.id; let i = $index) {
+          @let s = situacao(rota);
+          <!-- cartao de partida: trajeto, alunos de hoje, van e o botao da viagem -->
+          <li class="partida" [class.aberta]="s === 'aberta'" [class.feita]="s === 'feita'" animate.enter="entrar-subindo" [style.--i]="i">
+            <div class="linha-nome">
+              <h2 [title]="rota.name">{{ rota.name }}</h2>
+              @if (s === 'aberta') {
+                <span class="selo selo-aberta"><span class="ponto" aria-hidden="true"></span>Em andamento</span>
+              } @else if (s === 'feita') {
+                <span class="selo selo-feita"><i class="bi bi-check2" aria-hidden="true"></i>Feita hoje</span>
+              }
+            </div>
+
+            @if (trajeto(rota); as t) {
+              <!-- mesma linha de trajeto do app (shared/trajeto): pontas, paradas no meio, nomes embaixo -->
+              <div class="trajeto" [class.feita]="s === 'feita'" role="img" [attr.aria-label]="'De ' + t.de + ' até ' + t.ate">
+                <span class="linha" aria-hidden="true">
+                  <span class="ponta"></span>
+                  <span class="trilho">
+                    @for (n of t.meio; track n) {
+                      <span class="parada"></span>
+                    }
+                  </span>
+                  <span class="ponta"></span>
+                </span>
+                <span class="lugares" aria-hidden="true">
+                  <span class="lugar" [title]="t.de">{{ t.de }}</span>
+                  <span class="lugar fim" [title]="t.ate">{{ t.ate }}</span>
+                </span>
+              </div>
+            }
+
+            <p class="dados">
+              <span [class.sem-alunos]="!alunosHoje(rota)"><i class="bi bi-people" aria-hidden="true"></i>{{ textoAlunos(rota) }}</span>
+              <span><i class="bi bi-geo-alt" aria-hidden="true"></i>{{ textoPontos(rota) }}</span>
+              @if (van(rota); as v) {
+                <span><i class="bi bi-truck" aria-hidden="true"></i>{{ v }}</span>
+              }
+            </p>
+
+            <button type="button" class="btn" [class.btn-azul]="s !== 'feita'" [class.btn-contorno]="s === 'feita'" (click)="abrirRota(rota)">
+              @if (s === 'aberta') {
+                <i class="bi bi-arrow-right-circle" aria-hidden="true"></i>Continuar viagem
+              } @else if (s === 'feita') {
+                Ver viagem de hoje
+              } @else {
+                <i class="bi bi-play-fill" aria-hidden="true"></i>Iniciar viagem
+              }
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </main>
+
+  <app-footer tipoUsuario="motorista" />
+</div>

@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { authInterceptor } from './auth.interceptor';
 import { PopUpService } from '../shared/pop-up';
 
-const API = 'http://localhost:9090/api';
+const API = '/api';
 
 // jwt fake so com payload (assinatura nao importa pro jwt-decode)
 function fakeToken(payload: object) {
@@ -131,6 +131,32 @@ describe('authInterceptor (token de 15 min + refreshToken)', () => {
     login.flush({ message: 'Credenciais inválidas.' }, { status: 401, statusText: 'Unauthorized' });
 
     httpMock.expectNone(`${API}/auth/refresh`);
+    expect(popUp.showError).toHaveBeenCalled();
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('403 TERMS_NOT_ACCEPTED leva pra /terms sem popup', () => {
+    localStorage.setItem('token', tokenValido());
+
+    http.get(`${API}/users/me`).subscribe({ error: () => {} });
+
+    httpMock
+      .expectOne(`${API}/users/me`)
+      .flush({ code: 'TERMS_NOT_ACCEPTED', version: '3' }, { status: 403, statusText: 'Forbidden' });
+
+    expect(router.navigate).toHaveBeenCalledWith(['/terms']);
+    expect(popUp.showError).not.toHaveBeenCalled();
+  });
+
+  it('403 comum continua mostrando o popup', () => {
+    localStorage.setItem('token', tokenValido());
+
+    http.get(`${API}/users/me`).subscribe({ error: () => {} });
+
+    httpMock
+      .expectOne(`${API}/users/me`)
+      .flush({ message: 'Sem permissão' }, { status: 403, statusText: 'Forbidden' });
+
     expect(popUp.showError).toHaveBeenCalled();
     expect(router.navigate).not.toHaveBeenCalled();
   });

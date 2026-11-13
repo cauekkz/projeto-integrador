@@ -1,0 +1,276 @@
+/* topo de perfil do responsavel (veio da home): sino, chip do usuario e os dependentes */
+:host {
+  display: block;
+}
+
+.topbar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.notif-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 0.8px solid #e2e8f0;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.avatar1{
+  width: 100px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 0.8px solid #e2e8f0;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+
+.avatar img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.notification i {
+  font-size: 20px;
+  color: var(--texto-3);
+}
+
+.badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  background: #ef1111;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  box-sizing: border-box;
+}
+
+.user-name {
+  width: 70%;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 16px 4px 4px;
+  border-radius: 999px;
+  border: 0.8px solid #e2e8f0;
+  background: #ffffff;
+  box-sizing: border-box;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto-2);
+  cursor: pointer;
+  transition: var(--transicao-botao);
+  overflow: hidden;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .user-name:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+  }
+}
+
+.user-name img {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-name span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.role-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.avatar1 {
+  width: 50px;
+  height: 50px;
+}
+
+.avatar1 img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.role {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto-2);
+  white-space: nowrap;
+}
+
+/* botao com os dependentes: fotos sobrepostas. .avatar1 junto pra ganhar das larguras fixas
+   do .avatar1 nos @media de tela pequena (senao as fotos vazam da pilula) */
+.avatar1.dependentes-pilha {
+  width: auto;
+  min-width: 50px;
+  padding: 0 8px;
+}
+
+.dep-foto {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+}
+
+.avatar .dep-foto {
+  width: 34px;
+  height: 34px;
+  object-fit: cover;
+}
+
+.dep-foto + .dep-foto {
+  margin-left: -12px;
+}
+
+.dep-iniciais,
+.dep-mais {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--azul);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.dep-mais {
+  background: #e2e8f0;
+  color: var(--texto-2);
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    padding: 12px 16px;
+  }
+
+  .user-name {
+    width: 70%;
+  }
+
+  .avatar1{
+    width: 100px;
+    height: 46px;
+  }
+}
+
+@media (max-width: 500px) {
+  .topbar {
+    padding: 12px 12px;
+  }
+
+  .user-info {
+    width: 100vw;
+    gap: 8px;
+  }
+
+  .avatar {
+    width: 46px;
+    height: 46px;
+  }
+
+
+  .notification i {
+    font-size: 18px;
+  }
+
+  .user-name {
+    width: 70%;
+    height: 46px;
+    font-size: 13px;
+    gap: 8px;
+    padding-right: 12px;
+  }
+
+  .user-name img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .role-info {
+    gap: 8px;
+  }
+
+  .avatar1 {
+    width: 80px;
+    height: 46px;
+
+  }
+
+  .avatar1 img {
+    width: 27px;
+    height: 27px;
+  }
+
+  .role {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 500px) {
+  .badge {
+    top: -6px;
+    right: -6px;
+    min-width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 380px) {
+  .role {
+    display: none;
+  }
+}

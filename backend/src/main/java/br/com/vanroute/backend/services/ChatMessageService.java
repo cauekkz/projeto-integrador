@@ -24,9 +24,12 @@ public class ChatMessageService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ObjectMapper objectMapper;
     private final StorageService storageService;
+    private final ChatReadService chatReadService;
 
     public ChatMessageService(ChatMessageRepository chatMessageRepository, ChatService chatService, UserService userService,
-                              RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper, StorageService storageService) {
+                              RedisTemplate<String, String> redisTemplate, ObjectMapper objectMapper, StorageService storageService,
+                              ChatReadService chatReadService) {
+        this.chatReadService = chatReadService;
         this.storageService = storageService;
         this.chatMessageRepository = chatMessageRepository;
         this.chatService = chatService;
@@ -98,6 +101,8 @@ public class ChatMessageService {
         message.setMessageType(type);
         message.setPayload(payload);
         message = chatMessageRepository.save(message);
+        // quem responde leu o que o outro mandou (as do sistema tambem contam: quem aceitou ja viu a proposta)
+        chatReadService.readAll(chatId, userId);
         return ChatMessageResponseDTO.from(message);
     }
     

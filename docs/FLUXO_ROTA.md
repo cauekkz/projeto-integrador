@@ -98,9 +98,9 @@ Todo endereço novo (do pai, do aluno ou da escola) passa por `AddressService.fi
 
 ### Passo 5: o motorista cria a rota
 `POST /api/route/create-route`, com o DTO `CreateRouteRequestDTO`: `{ "name": "Ida manhã" }`
-→ **201** `{ id, name, driverName }`. **A ida e a volta são rotas diferentes.**
+→ **201** `{ id, name, driverName, vehicle: null }`. **A ida e a volta são rotas diferentes.**
 
-Van padrão (opcional): `PUT /api/route/{routeId}/set-vehicle/{vehicleId}`.
+Van padrão (opcional): `PUT /api/route/{routeId}/set-vehicle/{vehicleId}`. A rota devolve a van em `vehicle` (`{ id, plate, model, color, capacity }`, ou `null` sem van), no `GET /api/route/{id}` e na lista.
 
 ### Passo 6: o motorista põe o aluno na rota
 Antes, `GET /api/route/stop-options` mostra o que ele pode escolher (DTO `RouteStopOptionsDTO`):

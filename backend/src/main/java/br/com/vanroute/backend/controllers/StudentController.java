@@ -1,5 +1,10 @@
 package br.com.vanroute.backend.controllers;
 
+import br.com.vanroute.backend.services.StorageService;
+import br.com.vanroute.backend.services.StudentPhotoService;
+import java.util.Map;
+import org.springframework.web.bind.annotation.RequestParam;
+
 import br.com.vanroute.backend.dtos.student.StudentResponsibleLinkDTO;
 import br.com.vanroute.backend.services.StudentResponsibleService;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -49,10 +54,13 @@ public class StudentController {
     private final TripService tripService;
     private final StudentAddressService studentAddressService;
     private final StudentResponsibleService studentResponsibleService;
+    private final StudentPhotoService studentPhotoService;
 
     public StudentController(StudentService studentService, StudentLinkService studentLinkService,
                              StudentAbsenceService studentAbsenceService, TripService tripService,
-                             StudentAddressService studentAddressService, StudentResponsibleService studentResponsibleService) {
+                             StudentAddressService studentAddressService, StudentResponsibleService studentResponsibleService,
+                             StudentPhotoService studentPhotoService) {
+        this.studentPhotoService = studentPhotoService;
         this.studentResponsibleService = studentResponsibleService;
         this.studentService = studentService;
         this.studentLinkService = studentLinkService;
@@ -121,6 +129,26 @@ public class StudentController {
     public ResponseEntity<Void> transferAdmin(@PathVariable UUID studentId, @PathVariable UUID responsibleId,
                                               Authentication authentication) {
         studentResponsibleService.transferAdmin(studentId, responsibleId, AuthenticatedUser.id(authentication));
+        return ResponseEntity.noContent().build();
+    }
+
+    // foto do aluno (so o admin): 1) URL de upload  2) PUT da imagem direto no MinIO  3) grava o fileKey
+    @GetMapping("/{studentId}/photo-upload-url")
+    public ResponseEntity<StorageService.PresignedUrlResponse> photoUploadUrl(@PathVariable UUID studentId, @RequestParam String fileName,
+                                                                              @RequestParam String contentType, Authentication authentication) {
+        return ResponseEntity.ok(studentPhotoService.uploadUrl(studentId, AuthenticatedUser.id(authentication), fileName, contentType));
+    }
+
+    @PutMapping("/{studentId}/photo")
+    public ResponseEntity<Map<String, String>> setPhoto(@PathVariable UUID studentId, @RequestBody Map<String, String> body,
+                                                        Authentication authentication) {
+        String photoKey = studentPhotoService.setPhoto(studentId, AuthenticatedUser.id(authentication), body == null ? null : body.get("fileKey"));
+        return ResponseEntity.ok(Map.of("photoKey", photoKey));
+    }
+
+    @DeleteMapping("/{studentId}/photo")
+    public ResponseEntity<Void> removePhoto(@PathVariable UUID studentId, Authentication authentication) {
+        studentPhotoService.removePhoto(studentId, AuthenticatedUser.id(authentication));
         return ResponseEntity.noContent().build();
     }
 

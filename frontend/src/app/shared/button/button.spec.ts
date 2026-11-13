@@ -19,4 +19,15 @@ describe('Button', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('fica type="button" por padrão (dentro de form não envia o form junto com o clique)', () => {
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('button').type).toBe('button');
+  });
+
+  it('vira submit quando pedido', () => {
+    fixture.componentRef.setInput('type', 'submit');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('button').type).toBe('submit');
+  });
 });

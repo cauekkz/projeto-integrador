@@ -1,0 +1,156 @@
+<div class="pagina">
+  <!-- topo de sempre da home do motorista: sino, foto e nome (abre o perfil) e "Motorista" -->
+  <div class="topbar">
+    <div class="notif-wrapper sino-clicavel" role="button" tabindex="0" aria-label="Abrir notificações" (click)="notificacoes.abrirTela()" (keydown.enter)="notificacoes.abrirTela()">
+      <div class="bell-btn">
+        <i class="bi bi-bell"></i>
+      </div>
+      @if (notificacoes.naoLidas()) {
+        <span class="badge" [attr.aria-label]="notificacoes.naoLidas() + ' notificações não lidas'">{{ notificacoes.rotulo() }}</span>
+      }
+    </div>
+
+    <div class="user-info" role="button" tabindex="0" (click)="mostrarPerfil.set(true)" (keydown.enter)="mostrarPerfil.set(true)">
+      <img [src]="usuarioLogado()?.photoUrl || '/testee.jpg'" class="avatar" alt="Foto do motorista" />
+      <span class="name">{{ usuarioLogado()?.name || '' }}</span>
+    </div>
+
+    <span class="role">Motorista</span>
+  </div>
+
+
+  <main class="conteudo">
+    <!-- titulo da tela (a lista das rotas) e o "Nova rota" -->
+    <header class="cabecalho-rotas">
+      <h1>Suas rotas</h1>
+      <button type="button" class="nova" (click)="abrirNova()">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i> Nova rota
+      </button>
+    </header>
+
+    @if (emRota(); as v) {
+      <!-- ja esta em rota: aviso no topo e o atalho pro mapa da viagem -->
+      <section class="em-rota" role="status" animate.enter="entrar-subindo">
+        <div class="em-rota-linha">
+          <span class="em-rota-icone" aria-hidden="true"><i class="bi bi-truck-front-fill"></i></span>
+          <div class="em-rota-texto">
+            <span class="em-rota-selo"><span class="ao-vivo" aria-hidden="true"></span>Em rota agora</span>
+            <strong>{{ v.nome }}</strong>
+          </div>
+        </div>
+        <!-- a faixa da estrada correndo: a van esta andando -->
+        <span class="em-rota-estrada" aria-hidden="true"></span>
+        <button type="button" class="btn em-rota-abrir" (click)="abrirViagem()">
+          <i class="bi bi-map" aria-hidden="true"></i> Abrir mapa
+        </button>
+      </section>
+    }
+
+    @if (carregando()) {
+      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando rotas..." />
+    } @else if (erroCarregar()) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar as rotas.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else if (!rotas().length && ativas()) {
+      <!-- Figma "Motorista · /driver-routes · sem rotas" -->
+      <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-signpost-split" aria-hidden="true"></i>
+        <h2>Você ainda não tem rotas</h2>
+        <p>Crie uma rota para cada trajeto. A ida e a volta são rotas diferentes.</p>
+        <button type="button" class="btn btn-azul" (click)="abrirNova()">Nova rota</button>
+      </section>
+    } @else {
+      <div class="filtros">
+        <div class="chips" role="tablist" aria-label="Filtrar rotas">
+          <button type="button" role="tab" class="chip" [class.ativo]="ativas()" [attr.aria-selected]="ativas()" (click)="trocarFiltro(true)">Ativas</button>
+          <button type="button" role="tab" class="chip" [class.ativo]="!ativas()" [attr.aria-selected]="!ativas()" (click)="trocarFiltro(false)">Todas</button>
+        </div>
+        @if (rotas().length) {
+          <p class="resumo">
+            <span><i class="bi bi-signpost-2" aria-hidden="true"></i>{{ resumo().paradas }} {{ resumo().paradas === 1 ? 'parada' : 'paradas' }}</span>
+            <span><i class="bi bi-people" aria-hidden="true"></i>{{ resumo().alunos }} {{ resumo().alunos === 1 ? 'aluno' : 'alunos' }}</span>
+          </p>
+        }
+      </div>
+
+      @if (!rotas().length) {
+        <section class="vazio">
+          <i class="bi bi-signpost-split" aria-hidden="true"></i>
+          <h2>Nenhuma rota por aqui</h2>
+        </section>
+      }
+
+      <ul class="lista">
+        @for (rota of rotas(); track rota.id; let i = $index) {
+          <!-- Figma "Cartão de rota" 1038:648 -->
+          <li animate.enter="entrar-subindo" [style.--i]="i">
+            <button type="button" class="rota" (click)="abrir(rota)">
+              <span class="rota-topo">
+                <strong [title]="rota.name">{{ rota.name }}</strong>
+                <i class="bi bi-chevron-right" aria-hidden="true"></i>
+              </span>
+              <span class="rota-meta">
+                <span>{{ rota.stops.length === 1 ? '1 ponto' : rota.stops.length + ' pontos' }}</span>
+                <span>{{ alunosDa(rota) === 1 ? '1 aluno' : alunosDa(rota) + ' alunos' }}</span>
+                @if (rota.vehicle) {
+                  <span class="placa">{{ rota.vehicle.plate }}</span>
+                }
+              </span>
+              @if (rota.stops.length) {
+                <!-- o caminho da rota em miniatura: uma bolinha por parada, como no editor -->
+                <span class="mini-estrada" aria-hidden="true">
+                  @for (p of rota.stops; track p.id) {
+                    <span class="mini-parada"></span>
+                  }
+                </span>
+                <span class="rota-trajeto">
+                  <span>{{ ruaENumero(rota.stops[0].address) }}</span>
+                  @if (rota.stops.length > 1) {
+                    <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                    <span>{{ ruaENumero(rota.stops[rota.stops.length - 1].address) }}</span>
+                  }
+                </span>
+              } @else {
+                <span class="rota-vazia">Sem paradas ainda. Toque para adicionar alunos.</span>
+              }
+            </button>
+          </li>
+        }
+      </ul>
+
+      @if (temMais()) {
+        <div #fimDaLista class="fim-da-lista">
+          @if (carregandoMais()) {
+            <p class="aviso" role="status">Carregando...</p>
+          }
+        </div>
+      }
+    }
+  </main>
+
+  <app-footer tipoUsuario="motorista" />
+</div>
+
+@if (mostrarPerfil()) {
+  <app-profile-select animate.leave="sair-perfil" tipoUsuario="motorista" [usuario]="usuarioLogado()" (fecharEvent)="fecharPerfil()" />
+}
+
+<!-- Figma "Motorista · Nova rota · nome" -->
+@if (criando()) {
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharNova()">
+    <form class="folha" role="dialog" aria-modal="true" aria-labelledby="nova-titulo" (click)="$event.stopPropagation()" (ngSubmit)="criar()">
+      <h2 id="nova-titulo">Nova rota</h2>
+      <p class="sub">A ida e a volta são rotas diferentes.</p>
+      <div class="campo">
+        <label for="nome-rota">Nome da rota</label>
+        <input id="nome-rota" name="nome" [(ngModel)]="nome" placeholder="Ex.: Ida manhã" maxlength="80" autocomplete="off" />
+      </div>
+      <button type="submit" class="btn btn-azul" [disabled]="enviando()">
+        {{ enviando() ? 'Criando...' : 'Criar rota' }}
+      </button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharNova()">Cancelar</button>
+    </form>
+  </div>
+}

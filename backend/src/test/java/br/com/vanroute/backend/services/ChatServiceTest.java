@@ -30,6 +30,9 @@ public class ChatServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private ChatReadService chatReadService;
+
     @InjectMocks
     private ChatService chatService;
 

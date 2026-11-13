@@ -1,0 +1,83 @@
+:host {
+  display: block;
+}
+
+.esqueleto {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.so-leitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.cartao {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--raio-cartao, 14px);
+  background: #ffffff;
+}
+
+.cartao.linha {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.linhas {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bloco {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: #e2e8f0;
+  animation: respirar 1.4s ease-in-out infinite;
+}
+
+.redondo {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.redondo.pequeno {
+  width: 40px;
+  height: 40px;
+}
+
+.l30 { width: 30%; }
+.l40 { width: 40%; }
+.l60 { width: 60%; height: 14px; }
+.l70 { width: 70%; }
+.l90 { width: 90%; }
+
+/* sobe e desce a opacidade devagar: mostra que ainda esta vindo, sem brilho correndo */
+@keyframes respirar {
+  50% { opacity: 0.5; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bloco { animation: none; }
+}

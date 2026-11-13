@@ -1,0 +1,187 @@
+<div class="pagina" [class.embutido]="embutido">
+  @if (!embutido) {
+    <app-trail-header [trilha]="[ehMotorista ? 'Motorista' : 'Responsável', 'Parcelas']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+  }
+
+  @if (!contractId) {
+    <div class="abas" role="tablist" aria-label="Filtrar parcelas">
+      @for (aba of abas; track aba.id) {
+        <button
+          type="button"
+          role="tab"
+          class="chip"
+          [class.ativo]="abaAtiva() === aba.id"
+          [attr.aria-selected]="abaAtiva() === aba.id"
+          (click)="trocarAba(aba.id); mostrarChip($event)"
+        >
+          {{ aba.label }}
+        </button>
+      }
+      <button type="button" class="chip" [class.ativo]="filtroAtivo()" (click)="abrirFiltro()">Filtrar</button>
+    </div>
+  }
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando parcelas..." />
+    } @else if (erroCarregar()) {
+      <div class="aviso erro" role="alert">
+        <p>Não foi possível carregar as parcelas.</p>
+        <button type="button" class="link" (click)="carregar()">Tentar novamente</button>
+      </div>
+    } @else if (!parcelas().length) {
+      <section class="vazio" animate.enter="entrar-fade">
+        <i class="bi bi-receipt" aria-hidden="true"></i>
+        <h2>Nenhuma parcela aqui</h2>
+        <p>
+          {{ ehMotorista ? 'As parcelas nascem quando o responsável aceita o contrato.' : 'Só quem assinou o contrato vê as parcelas dele.' }}
+        </p>
+      </section>
+    } @else {
+      <!-- sem chave Pix: um aviso so, em cima, em vez de repetir em cada parcela -->
+      @if (semPix()) {
+        <p class="sem-pix" role="note">
+          <i class="bi bi-info-circle" aria-hidden="true"></i>
+          O motorista ainda não cadastrou a chave Pix.
+        </p>
+      }
+      <ul class="lista">
+        @for (p of parcelas(); track p.id; let i = $index) {
+          @let s = statusInfo[p.status];
+          <li class="card" animate.enter="entrar-subindo" [style.--i]="i % 20">
+            <div class="topo">
+              <strong>{{ p.studentName }}</strong>
+              <span [class]="'selo ' + s.classe">{{ s.texto }}</span>
+            </div>
+            <p class="parte">{{ ehMotorista ? 'Responsável: ' + p.responsibleName : 'Motorista: ' + p.driverName }}</p>
+            <div class="valor-linha">
+              <span class="valor">{{ valor(p.value) }}</span>
+              <span class="data" [class.atrasada]="p.status === 'OVERDUE'">{{ linhaData(p) }}</span>
+            </div>
+
+            @if (aberta(p)) {
+              @if (ehMotorista) {
+                <div class="botoes">
+                  <button type="button" class="btn btn-contorno azul" (click)="abrirRecebi(p)">Recebi</button>
+                  <button type="button" class="btn btn-contorno" (click)="abrirDispensar(p)">Dispensar</button>
+                </div>
+              } @else {
+                @if (p.driverPixKey) {
+                  <div class="pix">
+                    <span>Chave Pix · {{ tipoPix(p.driverPixKeyType) }}</span>
+                    <strong>{{ chavePix(p.driverPixKeyType, p.driverPixKey) }}</strong>
+                  </div>
+                }
+                <div class="botoes">
+                  @if (p.driverPixKey) {
+                    <button type="button" class="btn btn-azul" (click)="copiarChave(p)">Copiar chave Pix</button>
+                  }
+                  <button type="button" class="btn btn-contorno" [disabled]="abrindoChat() === p.id" (click)="avisarNoChat(p)">
+                    {{ abrindoChat() === p.id ? 'Abrindo...' : 'Avisar no chat' }}
+                  </button>
+                </div>
+              }
+            }
+          </li>
+        }
+      </ul>
+
+      @if (temMais()) {
+        <div #fimDaLista class="fim-lista" role="status">
+          @if (carregandoMais()) {
+            Carregando mais...
+          }
+        </div>
+      }
+    }
+  </main>
+
+  @if (!embutido) {
+    <app-footer [tipoUsuario]="ehMotorista ? 'motorista' : 'responsavel'" tipo="mapa" />
+  }
+</div>
+
+<!-- Figma "Motorista · Recebi · método" -->
+@if (recebendo(); as p) {
+  <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharRecebi()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="recebi-titulo" (click)="$event.stopPropagation()">
+      <h2 id="recebi-titulo">Recebi este pagamento?</h2>
+      <p>{{ p.studentName }} · {{ valor(p.value) }}. Confira no banco antes: a baixa não tem volta.</p>
+      <span class="rotulo" id="metodo-rotulo">Como você recebeu?</span>
+      <div class="metodos" role="radiogroup" aria-labelledby="metodo-rotulo">
+        @for (m of metodos; track m.value) {
+          <button
+            type="button"
+            role="radio"
+            class="metodo"
+            [class.ativo]="metodo() === m.value"
+            [attr.aria-checked]="metodo() === m.value"
+            (click)="metodo.set(m.value)"
+          >
+            <i class="bi" [class.bi-check-circle-fill]="metodo() === m.value" [class.bi-circle]="metodo() !== m.value" aria-hidden="true"></i>
+            {{ m.label }}
+          </button>
+        }
+      </div>
+      <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="confirmarRecebimento()">
+        {{ enviando() ? 'Enviando...' : 'Confirmar recebimento' }}
+      </button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharRecebi()">Voltar</button>
+    </div>
+  </div>
+}
+
+<!-- Figma "Motorista · Dispensar parcela" -->
+@if (dispensando(); as p) {
+  <div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharDispensar()">
+    <div class="folha" role="dialog" aria-modal="true" aria-labelledby="dispensar-titulo" (click)="$event.stopPropagation()">
+      <h2 id="dispensar-titulo">Dispensar esta parcela?</h2>
+      <p>{{ p.studentName }} · {{ valor(p.value) }}. O responsável é avisado e isso não tem volta.</p>
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="confirmarDispensa()">
+        {{ enviando() ? 'Enviando...' : 'Dispensar parcela' }}
+      </button>
+      <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharDispensar()">Voltar</button>
+    </div>
+  </div>
+}
+
+<!-- Figma "Filtrar" (motorista: aluno e responsável; responsável: filho e motorista) -->
+@if (filtroAberto()) {
+  <div class="fundo" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fecharFiltro()">
+    <form class="folha" role="dialog" aria-modal="true" aria-labelledby="filtro-titulo" (click)="$event.stopPropagation()" (ngSubmit)="aplicarFiltro()">
+      <h2 id="filtro-titulo">Filtrar parcelas</h2>
+
+      @if (!alunoId) {
+        <label for="filtro-aluno">{{ ehMotorista ? 'Aluno' : 'Filho' }}</label>
+        <select id="filtro-aluno" name="aluno" [(ngModel)]="rascunho.studentId">
+          <option value="">{{ ehMotorista ? 'Todos os alunos' : 'Todos os filhos' }}</option>
+          @for (a of alunos(); track a.id) {
+            <option [value]="a.id">{{ a.nome }}</option>
+          }
+        </select>
+      }
+
+      <label for="filtro-pessoa">{{ ehMotorista ? 'Responsável' : 'Motorista' }}</label>
+      <select id="filtro-pessoa" name="pessoa" [(ngModel)]="rascunho.pessoaId">
+        <option value="">{{ ehMotorista ? 'Todos os responsáveis' : 'Todos os motoristas' }}</option>
+        @for (pessoa of pessoas(); track pessoa.id) {
+          <option [value]="pessoa.id">{{ pessoa.nome }}</option>
+        }
+      </select>
+
+      <div class="periodo">
+        <div>
+          <label for="filtro-de">Vencimento de</label>
+          <input id="filtro-de" name="de" type="date" [(ngModel)]="rascunho.from" />
+        </div>
+        <div>
+          <label for="filtro-ate">até</label>
+          <input id="filtro-ate" name="ate" type="date" [(ngModel)]="rascunho.to" />
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-azul">Aplicar filtros</button>
+      <button type="button" class="btn btn-contorno" (click)="limparFiltro()">Limpar</button>
+    </form>
+  </div>
+}

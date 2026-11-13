@@ -1,0 +1,28 @@
+<div class="fundo confirmacao" animate.enter="entrar-fade" animate.leave="fundo-sair" (click)="fechar()">
+  <div class="folha" role="dialog" aria-modal="true" aria-labelledby="excluir-titulo" (click)="$event.stopPropagation()">
+    @if (passo() === 'aviso') {
+      <h2 id="excluir-titulo">Excluir sua conta?</h2>
+      <p>Seus dados pessoais e os arquivos enviados somem. Contratos, parcelas e mensagens ficam no histórico das outras partes, sem o seu nome.</p>
+      <button type="button" class="btn btn-perigo" (click)="continuar()">Continuar</button>
+      <button type="button" class="btn btn-contorno" (click)="fechar()">Voltar</button>
+    } @else {
+      <form class="senha" (ngSubmit)="excluir()">
+        <h2 id="excluir-titulo">Confirme com sua senha</h2>
+        <p>Depois disso, sua conta não pode ser recuperada.</p>
+        <label for="senha-excluir">Senha</label>
+        <input
+          id="senha-excluir"
+          name="senha"
+          type="password"
+          [(ngModel)]="senha"
+          placeholder="Digite sua senha"
+          autocomplete="current-password"
+        />
+        <button type="submit" class="btn btn-perigo" [disabled]="enviando()">
+          {{ enviando() ? 'Excluindo...' : 'Excluir minha conta' }}
+        </button>
+        <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fechar()">Voltar</button>
+      </form>
+    }
+  </div>
+</div>

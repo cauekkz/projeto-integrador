@@ -24,6 +24,7 @@ public record DriverProfileResponseDTO(
     public record SchoolItem(UUID schoolId, String name) {
     }
 
-    public record VehicleItem(String model, String color, String plate, Integer capacity) {
+    // pro responsavel, so o que identifica a van na rua; os dados completos do CRLV ficam em GET /api/vehicle/my-vehicles (do motorista)
+    public record VehicleItem(String model, String color, String plate) {
     }
 }

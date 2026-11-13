@@ -1,0 +1,354 @@
+/* pagina, botoes e folha vem de shared/folha.css; chip, campo e rotulo de shared/rota.css */
+
+.conteudo {
+  gap: 12px;
+}
+
+.campo select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  font: inherit;
+  font-size: 14px;
+  color: var(--texto);
+}
+
+/* iniciar / viagem aberta nao tem rodape: sem a folga de 120px dele, os botoes descem pro fim da tela */
+.pagina.sem-rodape {
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+}
+
+/* viagem feita hoje: passageiros abertos pela seta do cartao */
+.passageiros {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.passageiros h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+/* botoes no fim da tela (Iniciar, Continuar, Finalizar) */
+.acoes-fim {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+  padding: 16px 24px 0;
+}
+
+/* "Iniciar rota": a acao da tela, maior e mais facil de tocar */
+.btn.iniciar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 58px;
+  border-radius: 14px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.btn.iniciar i {
+  font-size: 24px;
+}
+
+/* ---------- mapa ---------- */
+
+.mapa {
+  position: relative;
+  height: 180px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.mapa app-trip-map {
+  height: 100%;
+}
+
+.mapa.expandido {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  height: auto;
+  border-radius: 0;
+}
+
+.pilula {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 500;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: var(--azul);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.redondo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  /* branco translucido: o vidro da Glisse (app-glisse-vidro) desfoca o mapa atras */
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--texto);
+  font-size: 16px;
+  box-shadow: 0 2px 8px rgba(15, 23, 41, 0.2);
+  cursor: pointer;
+}
+
+.redondo app-glisse-vidro {
+  --lg-glass: transparent;
+  --glisse-vidro-sombra: none;
+}
+
+.redondo > i {
+  position: relative;
+  z-index: 1;
+}
+
+.expandir {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 500;
+}
+
+/* por cima do mapa expandido */
+.sobre-mapa {
+  position: fixed;
+  top: 16px;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.botoes-mapa {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(110px + env(safe-area-inset-bottom));
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  max-width: 402px;
+  margin: 0 auto;
+  pointer-events: none;
+}
+
+.botoes-mapa .redondo {
+  pointer-events: auto;
+}
+
+.redondo.recolher {
+  position: absolute;
+  right: 24px;
+  bottom: 8px;
+}
+
+/* ---------- ponto e alunos (Figma "Cabeçalho do ponto" e "Aluno na viagem") ---------- */
+
+.cabecalho-ponto {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ordem {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 14px;
+  background: var(--azul);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ordem.pequena {
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+}
+
+.endereco,
+.dados {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.endereco strong,
+.dados strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.endereco small,
+.dados small {
+  font-size: 12px;
+  color: var(--texto-3);
+}
+
+.alunos {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aluno {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
+.cabeca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.foto {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.foto.iniciais {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #afd9f7;
+  background: #eff8fe;
+  color: var(--azul-escuro);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Figma "Selo" */
+.botoes {
+  display: flex;
+  gap: 8px;
+}
+
+.botoes .btn {
+  flex: 1;
+  min-height: 48px;
+  font-size: 16px;
+}
+
+/* ---------- listas fechadas ---------- */
+
+.lista-fechada {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.topo-lista {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 16px;
+  border: none;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.topo-lista span {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--texto-2);
+}
+
+.topo-lista strong {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.topo-lista i {
+  font-size: 14px;
+  color: var(--texto-3);
+  transition: transform var(--dur-media, 0.25s) ease,
+    scale 160ms var(--ease-out, ease-out);
+}
+
+.topo-lista i.aberta {
+  transform: rotate(180deg);
+}
+
+.itens {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px 16px;
+}
+
+.itens li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vazio-lista {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+.folha .sub {
+  font-size: 13px;
+  color: var(--texto-3);
+}
+
+/* botao "ver a rota inteira" do mapa expandido: acima do recolher */
+.mapa.expandido app-trip-map {
+  --localizar-baixo: calc(170px + env(safe-area-inset-bottom));
+  --localizar-direita: 24px;
+}
+
+/* Ocorrência e Encerrar rota lado a lado durante a viagem */
+.acoes-viagem {
+  display: flex;
+  gap: 8px;
+}
+
+.acoes-viagem .btn {
+  flex: 1;
+  min-height: 52px;
+}

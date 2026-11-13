@@ -1,0 +1,29 @@
+<div class="pagina">
+  <app-header titulo="Responsável" (voltarEvent)="voltar()" />
+
+  <main class="conteudo">
+    @if (carregando()) {
+      <app-esqueleto tipo="perfil" [quantos]="2" texto="Carregando perfil..." />
+    } @else if (perfil(); as p) {
+      <section class="quem" animate.enter="entrar-fade">
+        @if (foto()) {
+          <img class="foto" [src]="foto()" alt="" />
+        } @else {
+          <span class="foto iniciais" aria-hidden="true">{{ iniciais(p.name) }}</span>
+        }
+        <div>
+          <h1>{{ p.name }}</h1>
+          @if (p.phone) {
+            <p class="desde">{{ formatarTelefone(p.phone) }}</p>
+          }
+        </div>
+      </section>
+
+      <app-responsible-situation [perfil]="p" modo="motorista" />
+    } @else if (indisponivel()) {
+      <div class="rodape-acao fixo">
+        <button type="button" class="btn btn-azul" (click)="voltar()">Voltar</button>
+      </div>
+    }
+  </main>
+</div>
