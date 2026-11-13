@@ -104,11 +104,26 @@
   flex-shrink: 0;
 }
 
-.ponto-nao-lida {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+/* numero de mensagens nao lidas, como no WhatsApp: pilula na cor da marca embaixo da hora */
+.contador-nao-lidas {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
   background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* com mensagem nova, a hora fica na cor da marca */
+.conversa-hora.nao-lida {
+  color: var(--cor-primaria-texto);
+  font-weight: 600;
 }
 
 .conversa-nome.nao-lida,

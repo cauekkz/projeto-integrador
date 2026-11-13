@@ -31,15 +31,15 @@
         tabindex="0"
         (click)="abrirConversa(conversa)"
         (keydown.enter)="abrirConversa(conversa)">
-        <img [src]="conversa.foto" class="conversa-avatar" alt="" (error)="conversa.foto = '/testee.jpg'">
+        <img [src]="conversa.foto" class="conversa-avatar" alt="" (error)="conversa.foto = '/avatar-padrao.svg'">
         <div class="conversa-info">
-          <span class="conversa-nome" [class.nao-lida]="conversa.naoLida">{{ conversa.nome }}</span>
-          <span class="conversa-msg" [class.nao-lida]="conversa.naoLida">{{ conversa.ultimaMensagem }}</span>
+          <span class="conversa-nome" [class.nao-lida]="conversa.naoLidas > 0">{{ conversa.nome }}</span>
+          <span class="conversa-msg" [class.nao-lida]="conversa.naoLidas > 0">{{ conversa.ultimaMensagem }}</span>
         </div>
         <div class="conversa-lado">
-          <span class="conversa-hora">{{ conversa.hora }}</span>
-          @if (conversa.naoLida) {
-            <span class="ponto-nao-lida" aria-label="Mensagem nova"></span>
+          <span class="conversa-hora" [class.nao-lida]="conversa.naoLidas > 0">{{ conversa.hora }}</span>
+          @if (conversa.naoLidas > 0) {
+            <span class="contador-nao-lidas" [attr.aria-label]="conversa.naoLidas + (conversa.naoLidas === 1 ? ' mensagem não lida' : ' mensagens não lidas')">{{ rotuloNaoLidas(conversa.naoLidas) }}</span>
           }
         </div>
       </div>
