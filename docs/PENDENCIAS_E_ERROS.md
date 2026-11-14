@@ -34,7 +34,7 @@ Falta:
 - **CNH no cadastro** ([CnhParser](../backend/src/main/java/br/com/vanroute/backend/services/CnhParser.java)):
   - confere a assinatura ICP-Brasil;
   - lê do OCR o CPF (com dígito verificador), o nome, o nascimento e a validade (da zona de leitura de máquina, com dígito verificador) e a categoria;
-  - grava o nome e o CPF lidos da CNH (sem campo de nome no cadastro); exige que a CNH esteja válida, que seja categoria **D ou E** e que o motorista tenha **18 anos ou mais**.
+  - grava o nome e o CPF lidos da CNH (sem campo de nome no cadastro); exige que a CNH esteja válida, que seja categoria **D ou E** e que o motorista tenha **21 anos ou mais**.
 - **CRLV:** confere a assinatura e recusa licenciamento de mais de um ano atrás.
 - **Os PDFs não são guardados.**
 - **Falta (não está na CNH nem no CRLV):** curso de condutor de escolares, autorização do município para transporte escolar, vistoria semestral da van e seguro. Para isso é preciso voltar os tipos de documento do motorista e da van (`DocumentType`/`DocumentEntityType`, hoje comentados) e criar um fluxo de aprovação.
@@ -73,7 +73,7 @@ Problemas de publicação do front (Nginx, links do MinIO, mapa e HTTPS): [`DEPL
   - Assim o Swagger (`/swagger-ui`, `/v3/api-docs`) e o log de SQL ficam **desligados**: eles só ligam no perfil `local` ([application-local.yml](../backend/src/main/resources/application-local.yml)).
   - O perfil `local` é o padrão do `application.properties`, por isso no desenvolvimento tudo continua igual.
 - **Segredos:**
-  - `JWT_KEY`, `DATABASE_PASSWORD`, `MINIO_ACCESS_KEY` e `MINIO_SECRET_KEY` não têm valor padrão: em produção vêm das variáveis de ambiente (sem elas o backend não sobe); em desenvolvimento, do `application-local.properties`.
+  - `DATABASE_PASSWORD`, `JWT_KEY`, `MINIO_ACCESS_KEY` e `MINIO_SECRET_KEY` não têm valor padrão: vêm das variáveis de ambiente (Docker, CI, servidor) ou do `.env` da raiz. Sem elas o backend não sobe.
   - O worker também exige `DATABASE_PASSWORD` (e `DATABASE_SSLMODE=require` com o banco em outra máquina).
 - **Senhas:** Argon2id (parâmetros mínimos da OWASP).
 - **Login:**
@@ -98,7 +98,7 @@ Problemas de publicação do front (Nginx, links do MinIO, mapa e HTTPS): [`DEPL
 - **Migration que já rodou não se edita nem se renumera.** Mudança de banco sempre numa migration nova, com o próximo número (a próxima livre é a **V38**).
 - Banco local com erro do Flyway: zere com `docker compose down -v` (ou `DROP DATABASE vanroute_db; CREATE DATABASE vanroute_db;`) e suba o backend; as migrations rodam do zero. Dados de exemplo: `backend/api-tests/demo/seed.sh`.
 - Depois de puxar a branch, rode `./mvnw clean test` (classes apagadas podem ficar no `target/`).
-- **Arquivo local obrigatório:** copie `backend/src/main/resources/application-local.properties.example` para `application-local.properties` (fica fora do git) e preencha. Sem ele o backend não sobe, porque a senha do banco, a `JWT_KEY` e as chaves do MinIO não têm valor padrão.
+- **Arquivo local obrigatório:** copie o `.env.example` da raiz para `.env` (fica fora do git) e preencha. Ele vale para o Docker e para o backend rodando na máquina; sem ele o backend não sobe.
 - **Termos v3:** quem só aceitou uma versão anterior (contas do banco local antigo) precisa aceitar de novo no app, ou a API responde 403 `TERMS_NOT_ACCEPTED`. O seed já cria tudo com o aceite da versão atual.
 - **Perfis nas rotas** (`SecurityConfig`): rota só de motorista chamada por responsável (ou o contrário) dá **403** antes de chegar no service.
 - **Documentos reais nunca vão pro git** (CNH, CRLV): o `.gitignore` bloqueia. Os testes de assinatura ICP usam `backend/src/test/resources/documents/validCNH.pdf` e `invalidCNH.pdf`, que cada um coloca na própria máquina; sem eles, esses 2 testes são pulados (no Actions também). O teste da leitura da CNH ([CnhParserTest](../backend/src/test/java/br/com/vanroute/backend/services/CnhParserTest.java)) usa texto inventado.

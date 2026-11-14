@@ -8,7 +8,7 @@ Coisas que **funcionam hoje**, mas que valem uma decisão depois. Nada aqui é b
 
 | Onde | Situação hoje | Sugestão |
 |---|---|---|
-| `drivers.approval_status` | sempre `APPROVED`: a CNH já é validada no cadastro (assinatura ICP-Brasil, nome, validade, categoria D/E e 18 anos). Ninguém lê a coluna | usar quando existir a aprovação dos documentos que a CNH não tem (curso de escolar, autorização do município, vistoria): `docs/PENDENCIAS_E_ERROS.md`, 1.3 |
+| `drivers.approval_status` | sempre `APPROVED`: a CNH já é validada no cadastro (assinatura ICP-Brasil, nome, validade, categoria D/E e 21 anos). Ninguém lê a coluna | usar quando existir a aprovação dos documentos que a CNH não tem (curso de escolar, autorização do município, vistoria): `docs/PENDENCIAS_E_ERROS.md`, 1.3 |
 | `contracts.status`: `SUSPENDED`, `OVERDUE` | comentados no enum | entram se um dia existir suspensão de contrato |
 | `trips.status`: `SCHEDULED`, `PAUSED`, `FAILED` | a viagem só usa `STARTED`, `IN_PROGRESS`, `FINISHED` e `CANCELED` | apagar do enum, ou usar se surgir "pausar viagem" |
 | `vehicles.status`: `INACTIVE`, `UNDER_MAINTENANCE`, `BLOCKED`, `PENDING_DOCUMENTATION` | só `ACTIVE` é usado | útil se o motorista puder marcar a van "em manutenção" |

@@ -32,7 +32,7 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 | 403 | sem permissão (inclusive rota de outro perfil). Com `{"code":"TERMS_NOT_ACCEPTED","version":"2"}`: o usuário ainda não aceitou a versão atual dos termos (só ver/aceitar os termos, `/me`, sair, exportar e excluir a conta funcionam) |
 | 404 | não existe |
 | 409 | conflito (duplicado ou estado errado) |
-| 422 | documento (CNH, CRLV) não passou na validação: assinatura, nome diferente do da CNH, CNH vencida, categoria sem D/E, menos de 18 anos, licenciamento da van vencido |
+| 422 | documento (CNH, CRLV) não passou na validação: assinatura, nome diferente do da CNH, CNH vencida, categoria sem D/E, menos de 21 anos, licenciamento da van vencido |
 | 429 | muitas tentativas: código de e-mail, outro código antes de 1 minuto, ou login bloqueado (5 senhas erradas no CPF ou 30 no IP: 15 minutos) |
 | 500 | erro interno: a mensagem é sempre "Erro interno no servidor" (o detalhe fica só no log) |
 
@@ -49,8 +49,8 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 
 | Fonte | Onde | Pra quê |
 |---|---|---|
-| variáveis de ambiente | no servidor: `.env` na raiz (fora do git; modelo em `/.env.example`), lido pelo `docker compose` | produção: banco, Redis, MinIO, `JWT_KEY`, `ALLOWED_ORIGINS` (endereço do front), e-mail e mapas |
-| `src/main/resources/application-local.properties` | na sua máquina (fora do git; modelo em `application-local.properties.example`) | desenvolvimento: senha do banco, `JWT_KEY`, MinIO, e-mail e a chave do OpenRouteService |
+| variáveis de ambiente | Docker, CI e servidor | ganham de tudo. No Docker vêm do `.env` da raiz, lido pelo `docker compose` |
+| `.env` na raiz do projeto | na sua máquina (fora do git; modelo em `/.env.example`) | o backend rodando fora do Docker também lê ele (`spring.config.import` no `application.properties`): senha do banco, `JWT_KEY`, MinIO, e-mail e a chave do OpenRouteService |
 | `application.yml` / `application.properties` | no git | os padrões. Segredos **não** têm padrão: sem eles o backend não sobe |
 
 **Perfil:** no desenvolvimento o perfil é `local` (padrão do `application.properties`), que liga o Swagger (`/swagger-ui.html`, `/v3/api-docs`) e o log de SQL ([application-local.yml](src/main/resources/application-local.yml)). Em produção, suba com `SPRING_PROFILES_ACTIVE=prod`: o Swagger e o log de SQL ficam desligados.
@@ -509,14 +509,14 @@ Quem pode baixar:
 - **Cadastro de motorista** (`POST /api/driver/auth/signup`, multipart com a CNH digital em `documentPdf`):
   - confere a assinatura ICP-Brasil da CNH e lê por OCR o CPF, o nome, o nascimento, a validade e a categoria;
   - o nome sai da CNH, como o CPF (não existe campo `name`): fica sem acento, com as iniciais maiúsculas e, se for longo, cortado como a CNH traz (a linha do nome tem 30 caracteres);
-  - a CNH tem que estar válida, ser **D ou E**, e o motorista ter **18 anos ou mais**: senão `422` com a mensagem;
+  - a CNH tem que estar válida, ser **D ou E**, e o motorista ter **21 anos ou mais**: senão `422` com a mensagem;
   - o PDF da CNH não é guardado.
 - **Login** (`POST /api/auth/login`): CPF inexistente e senha errada dão o mesmo `401`; "Verifique seu e-mail" (`400`) só aparece com a senha certa. 5 senhas erradas no mesmo CPF (ou 30 no mesmo IP) bloqueiam por 15 minutos (`429`).
 - **Responsáveis do aluno:** `GET /api/student/{studentId}/responsibles` (qualquer responsável do aluno), `DELETE /api/student/{studentId}/responsibles/{responsibleId}` (o admin remove outro, ou a pessoa sai; o admin passa o admin antes) e `PUT /api/student/{studentId}/responsibles/{responsibleId}/admin` (o admin passa o admin). Quem tem contrato ou proposta em andamento com o aluno não sai (`409`).
 - **Termos:** quando sai uma versão nova, o resto da API responde `403` `TERMS_NOT_ACCEPTED` até a pessoa aceitar (`POST /api/terms/accept`).
 - **Papel do usuário:** cada usuário tem **um** papel (`ROLE_DRIVER`, `ROLE_RESPONSIBLE` ou `ROLE_ADMIN`), na coluna `users.role`. Ele vai no JWT, na claim `roles` (ex.: `["ROLE_DRIVER"]`), e no `GET /api/users/me`.
 - **Escola** (`POST /api/school/add-school`): se a escola (nome + rua) já existe, o motorista é **vinculado** a ela. `409` se já estiver vinculado.
-- **JWT:** expira (`JWT_EXPIRATION`, padrão 15 min), e token vencido dá `401`. O `sub` é o **id do usuário**. A chave vem de `JWT_KEY`, que não tem valor padrão (em desenvolvimento fica no `application-local.properties`).
+- **JWT:** expira (`JWT_EXPIRATION`, padrão 15 min), e token vencido dá `401`. O `sub` é o **id do usuário**. A chave vem de `JWT_KEY`, que não tem valor padrão (fica no `.env` da raiz).
 - **Renovar o token sem senha:** o login também devolve `refreshToken` (30 dias, `JWT_REFRESH_EXPIRATION`). Com token vencido (`401`), o front chama `POST /api/auth/refresh` `{"refreshToken"}`, recebe um par novo (o usado deixa de valer) e repete a chamada. `POST /api/auth/logout` `{"refreshToken"}` apaga. No Redis fica só o hash do refreshToken. Passo a passo pro front em `docs/FLUXO_TRIP.md`, seção 4.10.
 - **Notificações:** `GET /api/notifications`, `GET /api/notifications/unread-count`, `PUT /api/notifications/{id}/read`, `PUT /api/notifications/read-all` e o WebSocket `ws://<host>/notifications?token=<jwt>` (veja `docs/FLUXO_TRIP.md`, seção 6).
 - **No backend**, o `authentication.getName()` devolve o **id** do usuário. Use `AuthenticatedUser.id(authentication)` (um `UUID`, sem ir ao banco). Os services recebem `UUID userId`, e o CPF só é usado no login e na checagem de cadastro duplicado.
@@ -545,7 +545,7 @@ docker compose up -d db redis minio    # o banco é o vanroute_db; para zerar: d
 cd backend && ./mvnw clean package     # compila e roda os testes unitários (no vanroute_db)
 java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
-Para a trip, o servidor também precisa de `ORS_DIRECTIONS_URL` (nos testes aponta para o simulador do `stubs.py`) e, nos testes, `TRIP_ETA_REFRESH_SECONDS=3`. O teste do WebSocket da trip é o `backend/api-tests/trip-ws-test.mjs`. Para ver a execução da rota e as notificações funcionando sem front: `bash backend/api-tests/demo/run-demo.sh` e abra http://localhost:8090 (motorista e 2 pais na mesma tela). Fluxo completo, entradas e saídas de todas as rotas e dos WebSockets (`/trip/{tripId}` e `/notifications`): `docs/FLUXO_TRIP.md`. Para testar contra a API real do OpenRouteService, suba o backend sem `ORS_GEOCODE_URL`/`ORS_DIRECTIONS_URL` (com a chave em `openrouteservice.api-key` no `application-local.properties`, que fica fora do git) e rode com `REAL_MAPS=1`: as contagens de chamadas, que só existem no simulador, aparecem como SKIP. 
+Para a trip, o servidor também precisa de `ORS_DIRECTIONS_URL` (nos testes aponta para o simulador do `stubs.py`) e, nos testes, `TRIP_ETA_REFRESH_SECONDS=3`. O teste do WebSocket da trip é o `backend/api-tests/trip-ws-test.mjs`. Para ver a execução da rota e as notificações funcionando sem front: `bash backend/api-tests/demo/run-demo.sh` e abra http://localhost:8090 (motorista e 2 pais na mesma tela). Fluxo completo, entradas e saídas de todas as rotas e dos WebSockets (`/trip/{tripId}` e `/notifications`): `docs/FLUXO_TRIP.md`. Para testar contra a API real do OpenRouteService, suba o backend sem `ORS_GEOCODE_URL`/`ORS_DIRECTIONS_URL` (com a `ORS_API_KEY` no `.env` da raiz, que fica fora do git) e rode com `REAL_MAPS=1`: as contagens de chamadas, que só existem no simulador, aparecem como SKIP. 
 
 **Testes de API ponta a ponta** (servidor real, dados fictícios, sem serviços externos), em `backend/api-tests/`:
 ```bash
