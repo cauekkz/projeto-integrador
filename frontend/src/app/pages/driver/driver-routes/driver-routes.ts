@@ -13,6 +13,7 @@ import { TripService } from '../../../services/trip.service';
 import { routeWithStops, ruaENumero } from '../../../services/dto/route/route.dto';
 
 import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
+import { CenaChegada } from '../../../components/driver/cena-chegada/cena-chegada';
 import { CenaEmRota } from '../../../components/driver/cena-em-rota/cena-em-rota';
 const TAMANHO_PAGINA = 10;
 
@@ -21,7 +22,7 @@ const TAMANHO_PAGINA = 10;
 @Component({
   selector: 'app-driver-routes',
   standalone: true,
-  imports: [BotaoCarregandoDirective, Skeleton, Footer, FormsModule, ProfileSelect, CenaEmRota],
+  imports: [BotaoCarregandoDirective, Skeleton, Footer, FormsModule, ProfileSelect, CenaEmRota, CenaChegada],
   templateUrl: './driver-routes.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-routes.css'],
 })
@@ -68,6 +69,9 @@ export class DriverRoutes implements OnInit {
   });
   // viagem rodando agora: aparece o card "Em rota" no topo, com o botao pro mapa
   protected emRota = signal<{ routeId: string; nome: string } | null>(null);
+  // acabou de finalizar (vem da tela da viagem): o card mostra a van andando, depois a chegada na escola/casa, e some
+  protected chegada = signal<'escola' | 'casa' | null>(null);
+  protected chegou = signal(false);
   protected rotas = signal<routeWithStops[]>([]);
   protected carregando = signal(true);
   protected carregandoMais = signal(false);
@@ -106,7 +110,35 @@ export class DriverRoutes implements OnInit {
       error: (err) => console.error('Erro ao buscar motorista:', err),
     });
     this.carregar();
-    this.tripService.viagemAberta().subscribe((v) => this.emRota.set(v));
+    const chegada = (history.state as { chegada?: { routeId: string; nome: string; destino: 'escola' | 'casa' } })?.chegada;
+    if (chegada) {
+      // nao repete a animacao ao recarregar a pagina
+      history.replaceState({ ...history.state, chegada: null }, '');
+      this.tocarChegada(chegada);
+    }
+    this.tripService.viagemAberta().subscribe((v) => {
+      if (this.chegada()) this.depoisDaChegada = v;
+      else this.emRota.set(v);
+    });
+  }
+
+  // a viagem que ainda estiver aberta (se tiver) aparece no card quando a chegada terminar
+  private depoisDaChegada: { routeId: string; nome: string } | null = null;
+
+  private tocarChegada(c: { routeId: string; nome: string; destino: 'escola' | 'casa' }) {
+    this.emRota.set({ routeId: c.routeId, nome: c.nome });
+    this.chegada.set(c.destino);
+    // ~3s da van andando normal, ~4,6s chegando e freando, ~2,4s parada com o check; depois o card some
+    const t1 = setTimeout(() => this.chegou.set(true), 3000);
+    const t2 = setTimeout(() => {
+      this.chegada.set(null);
+      this.chegou.set(false);
+      this.emRota.set(this.depoisDaChegada);
+    }, 10000);
+    this.destroyRef.onDestroy(() => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    });
   }
 
   abrirViagem() {
