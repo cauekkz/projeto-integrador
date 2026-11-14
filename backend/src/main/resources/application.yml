@@ -14,7 +14,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:vanroute_db}
     username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:123456}
+    password: ${DATABASE_PASSWORD}
 
   jpa:
     hibernate:
@@ -29,8 +29,8 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
-  # segredos sem valor padrao: em producao vem das variaveis de ambiente; em desenvolvimento,
-  # do application-local.properties (fora do git). Sem eles o backend nao sobe
+  # segredos sem valor padrao: vem das variaveis de ambiente (Docker, CI, servidor) ou do .env da raiz
+  # (spring.config.import no application.properties). Sem eles o backend nao sobe
   jwt:
     expiration: ${JWT_EXPIRATION:900000}
     # refreshToken: 30 dias (o app renova o JWT de 15 min sem pedir a senha)

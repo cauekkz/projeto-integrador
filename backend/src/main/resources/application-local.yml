@@ -1,5 +1,5 @@
 # perfil de desenvolvimento (spring.profiles.active=local no application.properties). Sem segredo nenhum:
-# os segredos de desenvolvimento ficam no application-local.properties (fora do git).
+# os segredos ficam no .env da raiz do projeto (fora do git).
 # Em producao o perfil e outro (SPRING_PROFILES_ACTIVE=prod) e nada daqui vale
 spring:
   jpa:
