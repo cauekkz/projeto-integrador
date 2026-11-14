@@ -30,7 +30,7 @@
 
     @if (emRota(); as v) {
       <!-- ja esta em rota: aviso no topo e o atalho pro mapa da viagem -->
-      <section class="em-rota" role="status" animate.enter="entrar-subindo">
+      <section class="em-rota" role="status" animate.enter="entrar-subindo" animate.leave="em-rota-sumindo">
         <!-- pela hora (nao pelo tema): de noite a lua no canto do card -->
         @if (noite()) {
           <svg class="em-rota-astro em-rota-lua" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
@@ -57,14 +57,25 @@
           </svg>
         }
         <div class="em-rota-texto">
-          <span class="em-rota-selo"><span class="ao-vivo" aria-hidden="true"></span>Em rota agora</span>
+          @if (chegou()) {
+            <span class="em-rota-selo"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Rota finalizada</span>
+          } @else {
+            <span class="em-rota-selo"><span class="ao-vivo" aria-hidden="true"></span>Em rota agora</span>
+          }
           <strong>{{ v.nome }}</strong>
         </div>
         <!-- a van de perfil andando: a faixa da estrada corre pra tras e as rodas giram -->
-        <app-cena-em-rota aria-hidden="true" [noite]="noite()" />
-        <button type="button" class="btn em-rota-abrir" (click)="abrirViagem()">
-          <i class="bi bi-geo-alt-fill" aria-hidden="true"></i> Abrir mapa
-        </button>
+        <!-- acabou de finalizar: depois da van andando, ela chega na escola ou em casa (sem o "Abrir mapa": a viagem ja acabou) -->
+        @if (chegou() && chegada(); as destino) {
+          <app-cena-chegada animate.enter="entrar-fade" aria-hidden="true" [destino]="destino" [noite]="noite()" />
+        } @else {
+          <app-cena-em-rota aria-hidden="true" [noite]="noite()" />
+        }
+        @if (!chegada()) {
+          <button type="button" class="btn em-rota-abrir" (click)="abrirViagem()">
+            <i class="bi bi-geo-alt-fill" aria-hidden="true"></i> Abrir mapa
+          </button>
+        }
       </section>
     }
 

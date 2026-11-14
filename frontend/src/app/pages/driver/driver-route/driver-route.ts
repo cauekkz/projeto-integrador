@@ -300,7 +300,8 @@ export class DriverRoute implements OnInit {
     if (atualizacao.tripId !== this.tripId()) return;
     if (atualizacao.status === 'FINISHED') {
       this.encerrarConexao();
-      this.mostrarFinalizada();
+      // fui eu que finalizei (o pedido ainda esta voltando): a resposta mostra a chegada, sem o aviso antigo
+      if (!this.enviando()) this.mostrarFinalizada();
       return;
     }
     if (atualizacao.status === 'CANCELED') {
@@ -493,7 +494,15 @@ export class DriverRoute implements OnInit {
     this.tripService.finish(tripId).subscribe({
       next: () => {
         this.enviando.set(false);
+        const destino = this.destinoFinal();
         this.encerrarConexao();
+        // chegou no ultimo desembarque: volta pra "Suas rotas" (/driver-home) e o card "Em rota agora" mostra a chegada
+        if (destino) {
+          this.router.navigate(['/driver-home'], {
+            state: { chegada: { routeId: this.rota()?.id, nome: this.rota()?.name ?? '', destino } },
+          });
+          return;
+        }
         this.mostrarFinalizada();
       },
       error: () => this.enviando.set(false),
@@ -501,6 +510,18 @@ export class DriverRoute implements OnInit {
   }
 
   // volta pra escolha da viagem (aba do meio)
+  // o ultimo ponto com desembarque: escola ou casa. So anima se ele foi feito (quem encerra no meio nao "chegou")
+  private destinoFinal(): 'escola' | 'casa' | null {
+    const comDesembarque = [...this.pontos()]
+      .sort((a, b) => a.orderIndex - b.orderIndex)
+      .filter((p) => p.students.some((a) => a.action === 'ALIGHTING'));
+    const ultimo = comDesembarque.at(-1);
+    if (!ultimo?.done) return null;
+    const naEscola = ultimo.schoolIds?.length > 0 || ultimo.students.some((a) => a.action === 'ALIGHTING' && a.locationType === 'SCHOOL');
+    return naEscola ? 'escola' : 'casa';
+  }
+
+
   fecharEncerrar() {
     if (!this.enviando()) this.confirmandoEncerrar.set(false);
   }
