@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { Subject } from 'rxjs';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ActivatedRoute, ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, convertToParamMap } from '@angular/router';
@@ -25,7 +26,14 @@ const esperar = () => new Promise((resolve) => setTimeout(resolve));
 
 describe('Criação de contrato pelo motorista', () => {
   let http: HttpTestingController;
-  let router: { navigate: ReturnType<typeof vi.fn>; createUrlTree: ReturnType<typeof vi.fn>; getCurrentNavigation: () => null };
+  // o routerLink da tela tambem usa serializeUrl (monta o href) e escuta events
+  let router: {
+    navigate: ReturnType<typeof vi.fn>;
+    createUrlTree: ReturnType<typeof vi.fn>;
+    serializeUrl: ReturnType<typeof vi.fn>;
+    events: Subject<unknown>;
+    getCurrentNavigation: () => null;
+  };
   let popUp: { show: ReturnType<typeof vi.fn>; showError: ReturnType<typeof vi.fn> };
 
   function setup(role: string, paramMap: Record<string, string> = { chatId: 'chat-1' }) {
@@ -33,6 +41,8 @@ describe('Criação de contrato pelo motorista', () => {
     router = {
       navigate: vi.fn(),
       createUrlTree: vi.fn((commands: string[]) => ({ commands }) as unknown as UrlTree),
+      serializeUrl: vi.fn((arvore: { commands?: unknown[] }) => '/' + (arvore?.commands ?? []).join('/')),
+      events: new Subject<unknown>(),
       getCurrentNavigation: () => null,
     };
     popUp = { show: vi.fn(), showError: vi.fn() };
