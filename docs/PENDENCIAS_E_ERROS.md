@@ -84,7 +84,7 @@ Problemas de publicação do front (Nginx, links do MinIO, mapa e HTTPS): [`DEPL
 - **Origens:** defina `ALLOWED_ORIGINS` com o domínio do front (vale pro CORS e pros WebSockets).
 - **WebSocket:** o token vai na URL (`?token=`), porque o navegador não manda cabeçalho no WebSocket. Configure o proxy para **não** logar a query string dessas rotas.
 - **Push com o app fechado** (Firebase Cloud Messaging, issue #150): hoje a notificação só aparece com o app aberto. Para "a van chegou", isso é essencial.
-- **Dockerfile do backend, HTTPS, backup do banco, logs e monitoramento** (issue #187).
+- **HTTPS, backup do banco, logs e monitoramento** (issue #187). O Docker de tudo já existe (`docs/DOCKER.md`).
 - **Serviços pagos (decidido):**
   - Fica no plano grátis do OpenRouteService e no Gmail (cerca de 500 e-mails por dia).
   - Reavaliar quando hospedar: um provedor de e-mail transacional e um plano pago de mapas.

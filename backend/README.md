@@ -542,7 +542,7 @@ As migrations ficam em `src/main/resources/db/migration` e o Flyway aplica sozin
 
 ```bash
 docker compose up -d db redis minio    # o banco é o vanroute_db; para zerar: docker compose down -v
-cd backend && ./mvnw clean package     # compila e roda os testes unitários (no vanroute_db)
+cd backend && ./mvnw clean package     # compila e roda os testes unitários (no vanroute_test)
 java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
 Para a trip, o servidor também precisa de `ORS_DIRECTIONS_URL` (nos testes aponta para o simulador do `stubs.py`) e, nos testes, `TRIP_ETA_REFRESH_SECONDS=3`. O teste do WebSocket da trip é o `backend/api-tests/trip-ws-test.mjs`. Para ver a execução da rota e as notificações funcionando sem front: `bash backend/api-tests/demo/run-demo.sh` e abra http://localhost:8090 (motorista e 2 pais na mesma tela). Fluxo completo, entradas e saídas de todas as rotas e dos WebSockets (`/trip/{tripId}` e `/notifications`): `docs/FLUXO_TRIP.md`. Para testar contra a API real do OpenRouteService, suba o backend sem `ORS_GEOCODE_URL`/`ORS_DIRECTIONS_URL` (com a `ORS_API_KEY` no `.env` da raiz, que fica fora do git) e rode com `REAL_MAPS=1`: as contagens de chamadas, que só existem no simulador, aparecem como SKIP. 
@@ -559,4 +559,4 @@ cd backend && \
 ```
 - Cada execução cria dados fictícios novos (CPFs válidos aleatórios), então pode ser repetida. Os dados ficam no `vanroute_db`.
 - Os motoristas são inseridos via SQL, porque o cadastro real exige uma CNH digital assinada ICP-Brasil, que não dá para gerar com dados fictícios.
-- Os testes unitários (`./mvnw test`) usam Mockito; o `BackendApplicationTests` sobe o contexto completo e roda o Flyway no `vanroute_db`.
+- Os testes unitários (`./mvnw test`) usam Mockito; o `BackendApplicationTests` sobe o contexto completo e roda o Flyway no `vanroute_test`.

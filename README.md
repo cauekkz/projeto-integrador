@@ -14,7 +14,7 @@ Tem dois jeitos de rodar. Os dois usam **um único arquivo de configuração**, 
 
 | Quero... | Jeito | Precisa instalar | Site em |
 |---|---|---|---|
-| **ver o app funcionando** (ou publicar) | [Tudo no Docker](#-rodar-tudo-no-docker) | só o Docker | http://localhost:8080 |
+| **ver o app funcionando** | [Tudo no Docker](#-rodar-tudo-no-docker) | só o Docker | http://localhost:8080 |
 | **programar** (recarrega ao salvar) | [Na sua máquina](#️-como-rodar-o-projeto-na-sua-máquina) | Docker, Java 21 e Node 22 | http://localhost:4200 |
 
 O caminho completo, do zero:
@@ -136,7 +136,6 @@ Os detalhes de cada fluxo, chamada por chamada, estão em [`docs/`](docs/):
 | [`FLUXO_PAGAMENTO.md`](docs/FLUXO_PAGAMENTO.md) | chave Pix e parcelas |
 | [`WORKER.md`](docs/WORKER.md) | as tarefas diárias |
 | [`FLUXO_FRONT.md`](docs/FLUXO_FRONT.md) | o que ainda falta no front |
-| [`DEPLOY.md`](docs/DEPLOY.md) | produção |
 
 ---
 
@@ -178,7 +177,7 @@ projeto-integrador/
 ├── docker/              script que cria o banco de testes
 ├── docker-compose.yml   Postgres, Redis, MinIO; com --profile app, também backend, front e worker
 ├── scripts/run.bat      sobe tudo no Windows
-├── docs/                fluxos, pendências e deploy
+├── docs/                fluxos, pendências e explicações (Docker, worker)
 └── .env.example         senhas e chaves do modo Docker (copie para .env)
 ```
 
@@ -197,14 +196,19 @@ O jeito mais rápido de ver o app funcionando: **não precisa instalar Java, Nod
 | `worker` | [`worker/Dockerfile`](worker/Dockerfile) | tarefas diárias, todo dia às `WORKER_RUN_AT` |
 | `db`, `redis`, `minio` | imagens prontas (Postgres 15, Redis 7, MinIO) | banco, cache/tempo real e arquivos |
 
-- Cada **Dockerfile** diz como montar a imagem de um serviço. Na hora de publicar, cada imagem pode rodar num lugar diferente (ex.: o banco num serviço gerenciado), com as mesmas variáveis de ambiente.
-- O [`docker-compose.yml`](docker-compose.yml) só diz **como rodar todos juntos** numa máquina: num PC ou num servidor (VPS). O backend, o front e o worker ficam no perfil `app`, então o `docker compose up -d` normal continua subindo só o banco, o Redis e o MinIO pro desenvolvimento.
+- Cada **Dockerfile** diz como montar a imagem de um serviço: de onde parte, o que copia, como compila e que comando roda. Cada serviço vira um container separado.
+- O [`docker-compose.yml`](docker-compose.yml) só diz **como rodar todos juntos** na sua máquina. O backend, o front e o worker ficam no perfil `app`, então o `docker compose up -d` normal continua subindo só o banco, o Redis e o MinIO pro desenvolvimento.
 
 ## Passo a passo
 
 **1. Instale o Docker:** Docker Desktop no Windows/macOS (https://www.docker.com/products/docker-desktop), ou Docker Engine + Compose no Linux. Confira com `docker compose version`.
 
-**2. Clone o repositório** (passo 2 da seção de baixo).
+**2. Clone o repositório:**
+
+```bash
+git clone https://github.com/cauekkz/projeto-integrador
+cd projeto-integrador
+```
 
 **3. Crie o `.env`** na raiz, a partir do modelo:
 
@@ -222,7 +226,7 @@ cp .env.example .env        # Windows (PowerShell): Copy-Item .env.example .env
 | `DATABASE_PASSWORD` | senha do Postgres (o container do banco e o backend usam a mesma) | você inventa |
 | `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY` | usuário e senha do MinIO (o MinIO e o backend usam os mesmos) | você inventa (a senha com 8+ caracteres) |
 | `APP_PORT` | porta do site | padrão `8080` |
-| `ALLOWED_ORIGINS` | endereço do site, que pode chamar a API | `http://localhost:8080` no PC; o seu domínio com `https://` num servidor |
+| `ALLOWED_ORIGINS` | endereço do site, que pode chamar a API | `http://localhost:8080` (troque junto se mudar o `APP_PORT`) |
 | `WORKER_RUN_AT` | horário das tarefas diárias (São Paulo) | padrão `00:05` |
 
 > As senhas do banco e do MinIO valem **quando o volume é criado**. Se você já tinha rodado o projeto antes com as senhas de desenvolvimento (`123456` / `vanroute123456`), ou usa as mesmas no `.env`, ou apaga os volumes antes (`docker compose --profile app down -v`, que **apaga os dados**).
@@ -272,7 +276,6 @@ Pra testar a viagem:
 
 > O cadastro dos pais manda um código por e-mail (o script pega o código direto do Redis). Com o Gmail de verdade no `.env`, esses e-mails vão pra endereços `@teste.local`, que não existem, e voltam. Não atrapalha nada.
 
-**Num servidor:** o mesmo `.env` e o mesmo comando. Falta só o HTTPS na frente (obrigatório pro GPS do motorista): veja [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ---
 
@@ -514,7 +517,7 @@ Detalhes em [`docs/WORKER.md`](docs/WORKER.md).
 | Front abre, mas toda chamada dá erro | backend parado ou em outra porta | o backend tem que estar em `http://localhost:9090` |
 | Testes do backend falham com "database vanroute_test does not exist" | volume antigo do Postgres | `docker exec vanroute-db createdb -U postgres vanroute_test` |
 
-Mais documentação em [`docs/`](docs/): fluxos de rota, viagem, contrato e pagamento, pendências e deploy.
+Mais documentação em [`docs/`](docs/): fluxos de rota, viagem, contrato e pagamento e pendências.
 
 ---
 
