@@ -94,20 +94,14 @@ h1 {
   font-size: 14px;
 }
 
-/* botoes fixos embaixo, igual ao code-input; posicao="top" no app-button da 16px entre eles */
+/* botoes no fim do formulario, logo depois do conteudo (nao flutuam); posicao="top" no app-button da 16px entre eles */
 .botoes {
-  position: fixed;
-  left: 50%;
-  bottom: 8px;
-  transform: translateX(-50%);
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 480px;
-  padding: 0 16px;
+  margin: 32px auto 0;
   box-sizing: border-box;
-  background: var(--cor-superficie);
-  z-index: 10;
 }
 
 @media (prefers-reduced-motion: reduce) {

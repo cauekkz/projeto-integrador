@@ -14,7 +14,7 @@ export class Header {
   @Input() tipo: 'geral' | 'driver' | 'chat' = 'geral';
   @Input() titulo: string = '';
   @Input() nomeUsuario: string = '';
-  @Input() fotoUrl: string = '/testee.jpg';
+  @Input() fotoUrl: string = '/avatar-padrao.svg';
   @Input() role: string = 'Motorista';
   @Input() temNotificacao: boolean = false;
   @Input() qtdNotificacoes: number = 0;

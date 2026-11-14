@@ -37,7 +37,7 @@ export class ChatDetails implements OnInit, OnDestroy {
   nomeContato = 'Contato';
   // id do outro (perfil dele ao tocar no nome)
   idContato: string | null = null;
-  fotoContato = '/testee.jpg';
+  fotoContato = '/avatar-padrao.svg';
   origem = 'responsible-home';
   usuarioLogadoId = '';
   enviando = false;
@@ -137,7 +137,7 @@ export class ChatDetails implements OnInit, OnDestroy {
 
     // entrou sem passar pela lista (ou a foto ainda nao tinha carregado la): busca nome e foto do contato
     // sem o id do contato o toque no nome nao abre o perfil: busca tambem nesse caso
-    if (!state?.nomeContato || this.fotoContato === '/testee.jpg' || !this.idContato) {
+    if (!state?.nomeContato || this.fotoContato === '/avatar-padrao.svg' || !this.idContato) {
       this.carregarNomeContato();
     }
 

@@ -1,5 +1,5 @@
 import { Skeleton } from '../../../../shared/skeleton/skeleton';
-import { ChangeDetectorRef, Component, HostListener, Input, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, Input, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, forkJoin, of } from 'rxjs';
 import { Header } from '../../../../shared/header/header';
@@ -7,6 +7,8 @@ import { Footer } from '../../../../shared/footer/footer';
 import { ChatWebSocketService } from '../../../../services/chat.service';
 import { AuthService } from '../../../../services/auth.service';
 import { StorageService } from '../../../../services/storage.service';
+import { wsUrl } from '../../../../services/api';
+import { ChatMessage } from '../../../../models/chat-message';
 
 @Component({
   selector: 'app-chat-list',
@@ -15,12 +17,18 @@ import { StorageService } from '../../../../services/storage.service';
   templateUrl: './chat-list.html',
   styleUrl: './chat-list.css',
 })
-export class ChatList implements OnInit {
+export class ChatList implements OnInit, OnDestroy {
   @Input() from = 'responsible-home';
   origem = 'responsible-home';
 
-  // naoLida: o backend conta as mensagens do outro que eu nao li (unreadCount); a tela mostra so um ponto
-  conversas: Array<{ id: string; idContato: string; nome: string; ultimaMensagem: string; hora: string; foto: string; naoLida: boolean }> = [];
+  // naoLidas: o backend conta as mensagens do outro que eu nao li (unreadCount); a tela mostra o numero, como no WhatsApp
+  conversas: Array<{ id: string; idContato: string; nome: string; ultimaMensagem: string; hora: string; foto: string; naoLidas: number }> = [];
+
+  // enquanto a lista esta aberta, escuta cada conversa: mensagem nova do outro atualiza a previa, a hora e o numero
+  // e sobe a conversa pro topo (abrir o socket da conversa nao marca nada como lido)
+  private sockets = new Map<string, WebSocket>();
+  private meuId: string | null = null;
+  private saiu = false;
   private pagina = 0;
   private temMais = true;
   private carregando = false;
@@ -40,7 +48,64 @@ export class ChatList implements OnInit {
     // a origem vem da role do token, nao do ?from (que aceitava qualquer rota)
     const home = this.authService.getHomeRoute();
     this.origem = home ? home.replace('/', '') : this.route.snapshot.queryParamMap.get('from') || this.from;
+    this.meuId = this.authService.getUserIdFromToken();
     this.carregarConversas();
+  }
+
+  ngOnDestroy() {
+    this.saiu = true;
+    this.sockets.forEach((socket) => socket.close());
+    this.sockets.clear();
+  }
+
+  private escutar(chatIds: string[]) {
+    const novos = chatIds.filter((id) => !this.sockets.has(id));
+    if (!novos.length) return;
+    this.authService.getValidToken().subscribe((token) => {
+      if (!token || this.saiu) return;
+      novos.forEach((chatId) => {
+        if (this.sockets.has(chatId)) return;
+        const socket = new WebSocket(`${wsUrl('/chat/' + chatId)}?token=${encodeURIComponent(token)}`);
+        socket.onmessage = (event: MessageEvent) => {
+          try {
+            const dados = JSON.parse(event.data);
+            if (dados?.type === 'read' || !dados?.id) return;
+            this.chegouMensagem(chatId, dados as ChatMessage);
+          } catch {
+            // mensagem que nao e do chat: ignora
+          }
+        };
+        // caiu: tira do mapa pra poder escutar de novo na proxima vez que a lista carregar
+        socket.onclose = () => {
+          if (this.sockets.get(chatId) === socket) this.sockets.delete(chatId);
+        };
+        this.sockets.set(chatId, socket);
+      });
+    });
+  }
+
+  private chegouMensagem(chatId: string, mensagem: ChatMessage) {
+    const conversa = this.conversas.find((c) => c.id === chatId);
+    if (!conversa) return;
+    conversa.ultimaMensagem = this.previa(mensagem);
+    conversa.hora = this.horaDe(mensagem.sentAt);
+    if (mensagem.senderId !== this.meuId) conversa.naoLidas++;
+    // a conversa com mensagem nova vai pro topo
+    this.conversas = [conversa, ...this.conversas.filter((c) => c.id !== chatId)];
+    this.cdr.markForCheck();
+  }
+
+  private previa(mensagem: ChatMessage): string {
+    return mensagem.content?.trim() || (mensagem.attachmentType === 'IMAGE' ? 'Imagem' : 'Anexo');
+  }
+
+  private horaDe(data: string): string {
+    return new Date(data).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // ate 99 aparece o numero; passou disso, "99+"
+  rotuloNaoLidas(n: number): string {
+    return n > 99 ? '99+' : String(n);
   }
 
   private carregarConversas() {
@@ -60,8 +125,8 @@ export class ChatList implements OnInit {
             hour: '2-digit',
             minute: '2-digit',
           }) : '',
-          foto: '/testee.jpg',
-          naoLida: (chat.unreadCount ?? 0) > 0,
+          foto: '/avatar-padrao.svg',
+          naoLidas: chat.unreadCount ?? 0,
         }));
         this.conversas = [...this.conversas, ...novasConversas];
         this.pagina = response.number + 1;
@@ -71,6 +136,7 @@ export class ChatList implements OnInit {
         this.erroAoCarregar = false;
         this.cdr.markForCheck();
         this.carregarFotos(response.content ?? []);
+        this.escutar(novasConversas.map((c) => c.id));
 
         if (novasConversas.length) {
           forkJoin(
@@ -89,15 +155,10 @@ export class ChatList implements OnInit {
                 return;
               }
 
-              const preview = ultimaMensagem.content?.trim()
-                || (ultimaMensagem.attachmentType === 'IMAGE' ? 'Imagem' : 'Anexo');
               const conversaAtual = this.conversas.find((item) => item.id === conversa.id);
               if (conversaAtual) {
-                conversaAtual.ultimaMensagem = preview;
-                conversaAtual.hora = new Date(ultimaMensagem.sentAt).toLocaleTimeString('pt-BR', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                });
+                conversaAtual.ultimaMensagem = this.previa(ultimaMensagem);
+                conversaAtual.hora = this.horaDe(ultimaMensagem.sentAt);
               }
             });
             this.cdr.markForCheck();

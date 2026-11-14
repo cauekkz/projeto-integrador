@@ -83,11 +83,8 @@
   width: 100%;
   max-width: 340px;
   align-items: center;
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0 16px;
+  /* no fim do formulario, logo depois dos campos (nao flutua) */
+  margin: 32px auto 0;
   box-sizing: border-box;
 }
 
