@@ -1,10 +1,10 @@
 <div class="pagina" [class.sem-rodape]="estado() === 'antes' || estado() === 'aberta'">
-  <app-trail-header [trilha]="['Motorista', 'Viagem']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+  <app-trail-header [trilha]="['Motorista', 'Viagem']" [mostrarSino]="true" />
 
   <main class="conteudo">
     @switch (estado()) {
       @case ('carregando') {
-        <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando..." />
+        <div class="sk-tela" role="status" aria-label="Carregando..."><app-skeleton variante="card"><app-skeleton variante="title" largura="50%" /><app-skeleton variante="rect" largura="100%" altura="10px" /><div class="sk-linha"><app-skeleton variante="text" largura="35%" /><app-skeleton variante="text" largura="35%" /></div></app-skeleton><app-skeleton variante="text" largura="30%" altura="14px" /><app-skeleton variante="rect" largura="100%" altura="52px" /><app-skeleton variante="rect" largura="100%" altura="48px" class="sk-botao" /></div>
       }
       @case ('erro') {
         <div class="aviso erro" role="alert">
@@ -35,7 +35,7 @@
           }
         </div>
         <div class="acoes-fim">
-          <button type="button" class="btn btn-azul iniciar" [disabled]="enviando()" (click)="iniciar()">
+          <button type="button" class="btn btn-azul iniciar" [disabled]="enviando()" (click)="iniciar()" [appCarregando]="enviando()">
             @if (!enviando()) {
               <i class="bi bi-play-fill" aria-hidden="true"></i>
             }
@@ -106,7 +106,7 @@
             }
           </ul>
           <div class="acoes-fim">
-            <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="finalizar()">
+            <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="finalizar()" [appCarregando]="enviando()">
               {{ enviando() ? 'Finalizando...' : 'Finalizar rota' }}
             </button>
           </div>
@@ -238,7 +238,7 @@
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="recomecar-titulo" (click)="$event.stopPropagation()">
       <h2 id="recomecar-titulo">Recomeçar do zero?</h2>
       <p class="sub">Todos os alunos voltam para aguardando e os responsáveis são avisados de que a rota foi reiniciada.</p>
-      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="iniciar(true)">
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="iniciar(true)" [appCarregando]="enviando()">
         {{ enviando() ? 'Recomeçando...' : 'Recomeçar do zero' }}
       </button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharRecomeco()">Voltar</button>
@@ -252,7 +252,7 @@
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="encerrar-titulo" (click)="$event.stopPropagation()">
       <h2 id="encerrar-titulo">Encerrar a rota agora?</h2>
       <p class="sub">A viagem de hoje termina e não pode ser iniciada de novo. Quem ainda não foi atendido fica como está.</p>
-      <button type="button" class="btn btn-vermelho" [disabled]="enviando()" (click)="encerrar()">
+      <button type="button" class="btn btn-vermelho" [disabled]="enviando()" (click)="encerrar()" [appCarregando]="enviando()">
         {{ enviando() ? 'Encerrando...' : 'Encerrar rota' }}
       </button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharEncerrar()">Voltar</button>
@@ -272,11 +272,11 @@
           <button type="button" class="chip" [class.ativo]="tipoOcorrencia() === t.tipo" [attr.aria-pressed]="tipoOcorrencia() === t.tipo" (click)="tipoOcorrencia.set(t.tipo)">{{ t.texto }}</button>
         }
       </div>
-      <div class="campo">
+      <div class="campo flutua">
         <label for="descricao">Descrição (obrigatória)</label>
         <input id="descricao" name="descricao" [(ngModel)]="descricao" placeholder="Conte o que aconteceu" maxlength="1000" autocomplete="off" />
       </div>
-      <button type="submit" class="btn btn-azul" [disabled]="enviando()">{{ enviando() ? 'Registrando...' : 'Registrar' }}</button>
+      <button type="submit" class="btn btn-azul" [disabled]="enviando()" [appCarregando]="enviando()">{{ enviando() ? 'Registrando...' : 'Registrar' }}</button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharOcorrencia()">Voltar</button>
     </form>
   </div>

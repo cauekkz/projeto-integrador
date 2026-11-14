@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -8,6 +8,7 @@ import { limparMascara } from '../../../shared/utils';
 import { SchoolService } from '../../../services/school.service';
 import { schoolResponse } from '../../../services/dto/school/school.dto';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function formularioVazio() {
@@ -28,7 +29,7 @@ function formularioVazio() {
 @Component({
   selector: 'app-driver-schools',
   standalone: true,
-  imports: [Esqueleto, FormsModule, CepMaskDirective, CepBuscaDirective, PhoneMaskDirective],
+  imports: [BotaoCarregandoDirective, Skeleton, FormsModule, CepMaskDirective, CepBuscaDirective, PhoneMaskDirective],
   templateUrl: './driver-schools.html',
   styleUrl: './driver-schools.css',
 })

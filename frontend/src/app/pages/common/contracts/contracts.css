@@ -1,6 +1,6 @@
 :host {
   display: block;
-  background: #ffffff;
+  background: var(--cor-fundo);
 }
 
 .pagina {
@@ -26,7 +26,7 @@
 .titulo-pastas {
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .pastas {
@@ -80,7 +80,7 @@
   inset: 0;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 1px 2px rgba(15, 23, 42, 0.12));
+  filter: drop-shadow(0 1px 2px rgb(var(--sombra-rgb) / calc(0.12 * var(--sombra-forca))));
 }
 
 /* folhas guardadas: atras do vidro, com a ponta um pouco acima da borda de cima da frente;
@@ -91,13 +91,13 @@
   top: 4%;
   width: 72%;
   height: 76%;
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--cor-primaria-borda);
   border-radius: 6px;
   background:
     linear-gradient(var(--faixa), var(--faixa)) 18% 12% / 40% 3px no-repeat,
-    repeating-linear-gradient(to bottom, transparent 0 7px, #cbd5e1 7px 8px) 50% 70% / 64% 50% no-repeat,
-    #ffffff;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.16);
+    repeating-linear-gradient(to bottom, transparent 0 7px, var(--cor-borda-forte) 7px 8px) 50% 70% / 64% 50% no-repeat,
+    var(--cor-superficie);
+  box-shadow: 0 2px 6px rgb(var(--sombra-rgb) / calc(0.16 * var(--sombra-forca)));
   transform-origin: 50% 100%;
   /* fechada: menor, so a ponta aparece acima da frente */
   transform: scale(0.92);
@@ -122,14 +122,14 @@
   justify-content: center;
   gap: 5px;
   padding: 6px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  border: 1px solid rgb(255 255 255 / calc(0.75 * var(--brilho-forca)));
   border-radius: 7.5% / 11.6%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(241, 245, 249, 0.38) 100%);
+  background: linear-gradient(180deg, rgb(var(--vidro-rgb) / 0.55) 0%, rgb(var(--vidro-2-rgb) / 0.38) 100%);
   -webkit-backdrop-filter: blur(2.5px) saturate(1.4);
   backdrop-filter: blur(2.5px) saturate(1.4);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    0 8px 18px -10px rgba(15, 23, 42, 0.35),
+    inset 0 1px 0 rgb(255 255 255 / calc(0.9 * var(--brilho-forca))),
+    0 8px 18px -10px rgb(var(--sombra-rgb) / calc(0.35 * var(--sombra-forca))),
     0 0 0 1px rgba(148, 163, 184, 0.25);
   transform-origin: 50% 100%;
   transition: transform var(--abre) var(--curva);
@@ -141,7 +141,7 @@
   font-size: 13px;
   font-weight: 600;
   line-height: 1.2;
-  color: var(--texto);
+  color: var(--cor-texto);
   overflow-wrap: anywhere;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -220,7 +220,7 @@
 }
 
 .pasta:focus-visible .pasta-frente {
-  outline: 2px solid var(--azul);
+  outline: 2px solid var(--cor-primaria-texto);
   outline-offset: 2px;
 }
 
@@ -250,10 +250,10 @@
   height: 45px;
   padding: 0 12px;
   border: none;
-  border-bottom: 2px solid #cbd5e1;
+  border-bottom: 2px solid var(--cor-borda-forte);
   border-radius: 10px 10px 0 0;
   background: transparent;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   font-size: 14px;
   font-weight: 500;
   white-space: nowrap;
@@ -263,9 +263,9 @@
 }
 
 .aba.ativa {
-  border-bottom-color: var(--azul);
-  background: #d5dfeb;
-  color: var(--azul-escuro);
+  border-bottom-color: var(--cor-primaria-texto);
+  background: var(--cor-borda-forte);
+  color: var(--cor-primaria-texto-forte);
   font-weight: 600;
 }
 
@@ -289,9 +289,9 @@
   flex-direction: column;
   gap: 8px;
   padding: 8px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--cor-superficie);
 }
 
 .selos {
@@ -305,7 +305,7 @@
   padding: 4px 8px;
   border-radius: 12px;
   background: #225303;
-  color: #ffffff;
+  color: var(--cor-sobre-primaria);
   font-size: 11px;
   font-weight: 600;
   line-height: 13px;
@@ -321,18 +321,18 @@
 .resumo h2 {
   font-size: 14px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .parte {
   font-size: 11px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   overflow-wrap: anywhere;
 }
 
 .divisor {
   border: none;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--cor-borda);
   margin: 0;
 }
 
@@ -350,10 +350,10 @@
   width: 28px;
   height: 28px;
   flex-shrink: 0;
-  border: 1px solid #afd9f7;
+  border: 1px solid var(--cor-primaria-borda);
   border-radius: 50%;
-  background: #eff8fe;
-  color: var(--azul-escuro);
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto-forte);
   font-size: 11px;
   font-weight: 600;
 }
@@ -375,13 +375,13 @@
 .aluno strong {
   font-size: 12px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   overflow-wrap: anywhere;
 }
 
 .aluno span {
   font-size: 11px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   overflow-wrap: anywhere;
 }
 
@@ -390,12 +390,12 @@
 }
 
 .linha.info {
-  color: var(--azul-escuro);
+  color: var(--cor-primaria-texto-forte);
   font-weight: 500;
 }
 
 .linha.alerta {
-  color: var(--vermelho-texto);
+  color: var(--cor-perigo-texto);
   font-weight: 600;
 }
 
@@ -403,8 +403,8 @@
   height: 28px;
   border: none;
   border-radius: 12px;
-  background: var(--azul);
-  color: #ffffff;
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
   font-size: 11px;
   font-weight: 500;
   cursor: pointer;
@@ -413,7 +413,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .btn-ver:hover {
-    background: var(--azul-escuro);
+    background: var(--cor-primaria-hover);
   }
 }
 
@@ -422,25 +422,25 @@
   padding: 12px 0;
   text-align: center;
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .aviso {
   text-align: center;
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   padding: 24px 8px;
 }
 
 .aviso.erro {
-  color: var(--vermelho-texto);
+  color: var(--cor-perigo-texto);
 }
 
 .link {
   margin-top: 8px;
   border: none;
   background: transparent;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
   font-weight: 600;
   cursor: pointer;
 }

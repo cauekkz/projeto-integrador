@@ -23,7 +23,11 @@
     </button>
 
     @if (momento() === 'conectando') {
-      <p class="aviso" role="status">Conectando à viagem...</p>
+      <div class="sk-tela" role="status" aria-label="Conectando à viagem...">
+        <app-skeleton variante="text" largura="45%" />
+        <app-skeleton variante="title" largura="60%" altura="26px" />
+        <app-skeleton variante="rect" altura="10px" />
+      </div>
     } @else {
       <p class="quem">{{ primeiroNome() }} · {{ viagem()?.routeName }}</p>
       @switch (momento()) {

@@ -29,17 +29,17 @@
   align-items: center;
   justify-content: center;
   font-size: 18px;
-  color: var(--texto);
-  border: 0.8px solid #e2e8f0;
-  background: #ffffff;
+  color: var(--cor-texto);
+  border: 0.8px solid var(--cor-borda);
+  background: var(--cor-superficie);
 }
 
 .badge {
   position: absolute;
   top: -4px;
   right: -4px;
-  background: var(--vermelho);
-  color: #ffffff;
+  background: var(--cor-perigo-fundo);
+  color: var(--cor-sobre-primaria);
   font-size: 11px;
   font-weight: 600;
   border-radius: 999px;
@@ -54,8 +54,8 @@
   align-items: center;
   gap: 8px;
   border-radius: 999px;
-  border: 0.8px solid #e2e8f0;
-  background: #ffffff;
+  border: 0.8px solid var(--cor-borda);
+  background: var(--cor-superficie);
   box-sizing: border-box;
   cursor: pointer;
 }
@@ -70,7 +70,7 @@
 .name {
   font-size: 14px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -78,7 +78,7 @@
 
 .role {
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 
@@ -91,7 +91,7 @@
 
 .folha .sub {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .fim-da-lista {
@@ -108,31 +108,13 @@
   padding: 16px;
   border-radius: 20px;
   overflow: hidden;
-  color: #ffffff;
-  background: radial-gradient(120% 140% at 100% 0%, #2b86f0 0%, var(--azul) 45%, var(--azul-escuro) 100%);
-  box-shadow: 0 14px 28px -14px rgba(10, 84, 181, 0.7);
-}
-
-.em-rota-linha {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.em-rota-icone {
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.16);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.22);
-  font-size: 22px;
+  color: var(--cor-sobre-primaria);
+  /* azul solido da marca e a sombra padrao dos cartoes (sem brilho/gradiente) */
+  background: var(--cor-primaria);
+  box-shadow: 0 6px 16px -8px rgb(var(--sombra-rgb) / calc(0.35 * var(--sombra-forca)));
 }
 
 .em-rota-texto {
-  flex: 1;
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -140,8 +122,9 @@
 }
 
 .em-rota-texto strong {
-  font-size: 17px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -185,26 +168,70 @@
   }
 }
 
-/* a faixa tracejada da estrada correndo pra tras: a van esta andando */
-.em-rota-estrada {
-  height: 6px;
-  border-radius: 3px;
-  background:
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.85) 0 14px, transparent 14px 28px) 0 50% / 28px 2px repeat-x,
-    rgba(255, 255, 255, 0.14);
-  animation: estrada-correndo 0.9s linear infinite;
+/* lua (de noite) no canto de cima do card; a hora decide, nao o tema.
+   cores quentes/claras que funcionam no card azul (claro) e na superficie escura */
+.em-rota-astro {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  overflow: visible;
 }
 
-@keyframes estrada-correndo {
-  to {
-    background-position: -28px 50%, 0 0;
+/* lua: crescente marfim com brilho frio, crateras discretas e estrelinhas piscando */
+.em-rota-lua {
+  filter: drop-shadow(0 0 7px rgb(255 248 220 / 0.45));
+}
+
+.em-rota-lua .lua-cratera {
+  fill: rgb(180 165 120 / 0.35);
+}
+
+.em-rota-lua .lua-estrela {
+  fill: #fffdf2;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: estrela-piscando 3s ease-in-out infinite;
+}
+
+.em-rota-lua .lua-estrela-2 {
+  animation-delay: 1.5s;
+}
+
+@keyframes estrela-piscando {
+  50% {
+    opacity: 0.3;
+    transform: scale(0.7);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ao-vivo::after,
-  .em-rota-estrada {
+  .em-rota-lua .lua-estrela {
     animation: none;
+  }
+}
+
+/* ---------- modo escuro: o card vira uma cena de noite ----------
+   mesmo fundo dos outros cartoes do tema escuro (superficie + borda), sem o azul chapado;
+   o azul da marca fica so no botao, como o "Nova rota" */
+:host-context([data-theme='dark']) .em-rota {
+  background: var(--cor-superficie);
+  box-shadow: inset 0 0 0 1px var(--cor-borda), 0 6px 16px -8px rgb(var(--sombra-rgb) / 0.6);
+  color: var(--cor-texto);
+}
+
+:host-context([data-theme='dark']) .em-rota-selo {
+  color: #86efac;
+}
+
+:host-context([data-theme='dark']) .em-rota-abrir {
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :host-context([data-theme='dark']) .em-rota-abrir:hover {
+    background: var(--cor-primaria-hover);
   }
 }
 
@@ -214,14 +241,14 @@
   justify-content: center;
   gap: 8px;
   border: none;
-  background: #ffffff;
-  color: var(--azul-escuro);
+  background: var(--cor-superficie);
+  color: var(--cor-primaria-texto-forte);
   font-weight: 600;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .em-rota-abrir:hover {
-    background: #eff6ff;
+    background: var(--cor-primaria-suave);
   }
 }
 
@@ -240,7 +267,7 @@
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.02em;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 /* "Nova rota" compacto, ao lado do titulo */
@@ -252,8 +279,8 @@
   padding: 0 16px;
   border: none;
   border-radius: 999px;
-  background: var(--azul);
-  color: #ffffff;
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
   font: inherit;
   font-size: 14px;
   font-weight: 600;
@@ -264,13 +291,13 @@
 
 @media (hover: hover) and (pointer: fine) {
   .nova:hover {
-    background: var(--azul-escuro);
+    background: var(--cor-primaria-hover);
   }
 }
 
 .nova:focus-visible,
 .rota:focus-visible {
-  outline: 2px solid var(--azul);
+  outline: 2px solid var(--cor-primaria-texto);
   outline-offset: 2px;
 }
 
@@ -286,7 +313,7 @@
   display: flex;
   gap: 12px;
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   font-variant-numeric: tabular-nums;
 }
 
@@ -304,20 +331,20 @@
   gap: 10px;
   width: 100%;
   padding: 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 16px;
-  background: #ffffff;
+  background: var(--cor-superficie);
   font: inherit;
   text-align: left;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 1px 2px rgb(var(--sombra-rgb) / calc(0.04 * var(--sombra-forca)));
   transition: var(--transicao-botao), box-shadow 200ms var(--ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .rota:hover {
-    border-color: #cbd5e1;
-    box-shadow: 0 8px 20px -12px rgba(15, 23, 42, 0.25);
+    border-color: var(--cor-borda-forte);
+    box-shadow: 0 8px 20px -12px rgb(var(--sombra-rgb) / calc(0.25 * var(--sombra-forca)));
   }
 }
 
@@ -336,7 +363,7 @@
   min-width: 0;
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -348,7 +375,7 @@
 .rota-topo i {
   flex-shrink: 0;
   font-size: 14px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .rota-meta {
@@ -357,19 +384,19 @@
   align-items: center;
   gap: 4px 12px;
   font-size: 13px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
   font-variant-numeric: tabular-nums;
 }
 
 /* placa da van padrao, como uma plaquinha */
 .placa {
   padding: 1px 6px;
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--cor-borda-forte);
   border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 /* a estradinha: asfalto com a faixa tracejada e uma bolinha por parada */
@@ -388,8 +415,8 @@
   inset: 3px 4px;
   border-radius: 4px;
   background:
-    repeating-linear-gradient(90deg, #ffffff 0 6px, transparent 6px 12px) 0 50% / 100% 1.5px no-repeat,
-    #dbe3ec;
+    repeating-linear-gradient(90deg, var(--cor-superficie) 0 6px, transparent 6px 12px) 0 50% / 100% 1.5px no-repeat,
+    var(--cor-estrada);
 }
 
 .mini-parada {
@@ -397,15 +424,15 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--azul);
-  box-shadow: 0 0 0 2px #ffffff;
+  background: var(--cor-primaria);
+  box-shadow: 0 0 0 2px var(--cor-superficie);
 }
 
 .mini-parada:first-child,
 .mini-parada:last-child {
   width: 12px;
   height: 12px;
-  background: var(--azul-escuro);
+  background: var(--cor-primaria-hover);
 }
 
 /* uma parada so: a bolinha fica no comeco */
@@ -419,7 +446,7 @@
   gap: 6px;
   min-width: 0;
   font-size: 12px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .rota-trajeto span {
@@ -442,5 +469,41 @@
 
 .rota-vazia {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
+}
+
+/* card sumindo no fim da chegada: desbota e encolhe um pouco, depois fecha a altura devagar pra lista subir sem pulo
+   (a margem negativa come o gap de 12px da coluna, que sumiria de uma vez) */
+.em-rota.em-rota-sumindo {
+  animation: em-rota-sumir 1200ms cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes em-rota-sumir {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    max-height: 420px;
+  }
+  45% {
+    opacity: 0;
+    transform: scale(0.96);
+    max-height: 420px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 0;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.96);
+    max-height: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-bottom: -12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .em-rota.em-rota-sumindo {
+    animation-duration: 1ms;
+  }
 }

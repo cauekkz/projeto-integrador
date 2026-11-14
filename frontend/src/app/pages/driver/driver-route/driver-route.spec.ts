@@ -314,10 +314,15 @@ describe('Viagem do motorista', () => {
       });
       fixture.detectChanges();
       expect(fixture.nativeElement.textContent).toContain('Entregue às 07:32');
+      const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
       fixture.componentInstance.finalizar();
       http.expectOne('/api/trip/t-1/finish').flush({ id: 't-1', status: 'FINISHED' });
       expect(socket.fechar).toHaveBeenCalled();
-      expect(popUp.show).toHaveBeenCalledWith(expect.any(String), 'success', 'Rota de hoje finalizada');
+      // chegou no ultimo desembarque: volta pra "Suas rotas" e o card mostra a chegada (sem o aviso antigo)
+      expect(navegar).toHaveBeenCalledWith(['/driver-home'], {
+        state: { chegada: expect.objectContaining({ destino: expect.stringMatching(/^(escola|casa)$/) }) },
+      });
+      expect(popUp.show).not.toHaveBeenCalledWith(expect.any(String), 'success', 'Rota de hoje finalizada');
     });
 
     it('registrar ocorrência', () => {

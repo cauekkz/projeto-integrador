@@ -140,13 +140,14 @@ class VehicleServiceTest {
     void unlinkSetsEndDateKeepingHistory() {
         UUID vehicleId = UUID.randomUUID();
         DriverVehicle link = new DriverVehicle();
-        link.setStartDate(LocalDate.now().minusDays(10));
+        link.setStartDate(LocalDate.now(TripService.ZONE).minusDays(10));
         when(driverVehicleRepository.findFirstByDriverUserIdAndVehicleIdAndEndDateIsNull(driver.getUserId(), vehicleId))
                 .thenReturn(Optional.of(link));
 
         vehicleService.unlinkVehicle(vehicleId, driver.getUserId());
 
-        assertEquals(LocalDate.now(), link.getEndDate());
+        // o service usa a data de Sao Paulo: comparar com o relogio do servidor (UTC no CI) falhava depois das 21h
+        assertEquals(LocalDate.now(TripService.ZONE), link.getEndDate());
         verify(driverVehicleRepository, never()).delete(any());
     }
 

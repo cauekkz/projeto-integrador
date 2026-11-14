@@ -1,7 +1,7 @@
 .add-container {
     position: fixed;
     inset: 0;
-    background: white;
+    background: var(--cor-fundo);
     z-index: 101;
     overflow-y: auto;
     padding: 24px;
@@ -21,7 +21,7 @@
     text-align: center;
     font-size: 20px;
     font-weight: 600;
-    color: var(--texto);
+    color: var(--cor-texto);
     margin-right: 10%;
 }
 
@@ -38,9 +38,9 @@
     align-items: center;
     gap: 16px;
     padding: 28px 20px 24px;
-    border: 1px solid #dbe6f5;
+    border: 1px solid var(--cor-primaria-borda-suave);
     border-radius: 24px;
-    background: #f8fafc;
+    background: var(--cor-superficie-2);
     text-align: center;
 }
 
@@ -50,9 +50,9 @@
     width: 116px;
     height: 116px;
     padding: 0;
-    border: 2px dashed #9dbdea;
+    border: 2px dashed var(--cor-primaria-borda-forte);
     border-radius: 50%;
-    background: #eaf2fd;
+    background: var(--cor-primaria-suave);
     cursor: pointer;
     transition:
         transform var(--dur-rapida) ease,
@@ -63,7 +63,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .photo-avatar:hover {
-      border-color: var(--azul);
+      border-color: var(--cor-primaria-texto);
       box-shadow: 0 0 0 6px rgba(12, 102, 219, 0.1);
   }
 }
@@ -73,18 +73,18 @@
 }
 
 .photo-avatar:focus-visible {
-    outline: 3px solid var(--azul);
+    outline: 3px solid var(--cor-primaria-texto);
     outline-offset: 4px;
 }
 
 .com-foto .photo-avatar {
-    border: 4px solid #ffffff;
-    box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+    border: 4px solid var(--cor-superficie);
+    box-shadow: 0 6px 18px rgb(var(--sombra-rgb) / calc(0.18 * var(--sombra-forca)));
 }
 
 .photo-vazio {
     font-size: 48px;
-    color: #9dbdea;
+    color: var(--cor-primaria-texto);
     line-height: 1;
 }
 
@@ -105,12 +105,12 @@
     justify-content: center;
     width: 36px;
     height: 36px;
-    border: 3px solid #ffffff;
+    border: 3px solid var(--cor-superficie);
     border-radius: 50%;
-    background: var(--azul);
-    color: #ffffff;
+    background: var(--cor-primaria);
+    color: var(--cor-sobre-primaria);
     font-size: 14px;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.18);
+    box-shadow: 0 1px 3px rgb(var(--sombra-rgb) / calc(0.18 * var(--sombra-forca)));
 }
 
 .photo-texto {
@@ -122,17 +122,17 @@
 .photo-texto strong {
     font-size: 16px;
     font-weight: 600;
-    color: var(--texto);
+    color: var(--cor-texto);
 }
 
 .photo-texto span {
     font-size: 14px;
-    color: var(--texto-2);
+    color: var(--cor-texto-2);
 }
 
 .photo-texto small {
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--cor-texto-4);
 }
 
 .photo-remover {
@@ -140,10 +140,10 @@
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
-    border: 1px solid #fecaca;
+    border: 1px solid var(--cor-perigo-borda);
     border-radius: 999px;
-    background: #ffffff;
-    color: var(--vermelho);
+    background: var(--cor-superficie);
+    color: var(--cor-perigo);
     font: inherit;
     font-size: 13px;
     font-weight: 500;
@@ -155,7 +155,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .photo-remover:hover {
-      background: #fef2f2;
+      background: var(--cor-perigo-suave);
   }
 }
 
@@ -173,13 +173,13 @@
 
 .field label {
     font-size: 14px;
-    color: var(--texto-2);
+    color: var(--cor-texto-2);
     font-weight: 500;
 }
 
 .field input {
     height: 52px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--cor-borda);
     border-radius: 12px;
     padding: 0 16px;
     font-size: 16px;
@@ -187,7 +187,7 @@
 }
 
 .field textarea {
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--cor-borda);
     border-radius: 12px;
     padding: 16px 16px;
     font-size: 16px;
@@ -200,7 +200,7 @@
 .counter {
     text-align: right;
     font-size: 13px;
-    color: #94a3b8;
+    color: var(--cor-texto-4);
 }
 
 
@@ -211,32 +211,27 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  /* bloco centraliza no espaco acima dos botoes fixos: fica um pouco acima do meio da tela */
+  /* bloco do codigo, com os botoes logo depois */
   gap: 20px;
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
-  padding-bottom: 200px;
+  padding-bottom: 32px;
 }
 
-/* botoes fixos embaixo, igual ao code-input; posicao="top" no app-button da 16px entre eles */
+/* botoes no fim do formulario, logo depois do conteudo (nao flutuam); posicao="top" no app-button da 16px entre eles */
 .botoes {
-  position: fixed;
-  left: 50%;
-  bottom: 8px;
-  transform: translateX(-50%);
+  margin: 32px auto 0;
   display: flex;
   flex-direction: column;
   width: 100%;
   max-width: 480px;
   padding: 0 16px;
   box-sizing: border-box;
-  background: white;
-  z-index: 10;
 }
 
 .code-instrucao {
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
   font-size: 16px;
   text-align: center;
   line-height: 1.4;
@@ -246,13 +241,13 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px dashed var(--azul);
+  border: 1px dashed var(--cor-primaria-texto);
   border-radius: 12px;
   padding: 16px 20px;
-  background: #eff6ff;
+  background: var(--cor-primaria-suave);
   font-size: 18px;
   font-weight: 600;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
   letter-spacing: 1px;
   word-break: break-all;
   gap: 12px;
@@ -264,8 +259,8 @@
 .btn-copy {
   flex-shrink: 0;
   border: none;
-  background: var(--azul);
-  color: white;
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
   font-size: 14px;
   font-weight: 600;
   padding: 8px 16px;
@@ -275,14 +270,14 @@
 
 @media (hover: hover) and (pointer: fine) {
   .btn-copy:hover {
-    background: #0052a3;
+    background: var(--cor-primaria-hover);
   }
 }
 
 /* no fim do formulario (nao fica preso por cima dos campos ao rolar) */
 .bottom-actions {
   margin-top: auto;
-  background-color: white;
+  background-color: var(--cor-fundo);
   padding: 16px 0;
   display: flex;
   flex-direction: column;

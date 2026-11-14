@@ -10,6 +10,7 @@ import {
   signal,
   ViewEncapsulation,
 } from '@angular/core';
+import { ThemeService } from '../../services/theme.service';
 import type { OpcaoSegmentada, SegmentadoMontado } from './segmentado.react';
 
 export type { OpcaoSegmentada } from './segmentado.react';
@@ -38,8 +39,9 @@ export class GlisseSegmentado {
     const host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
     const el = document.createElement('div');
     el.className = 'glisse-segmentado';
-    // tema claro da Glisse fixo aqui (mesmo com o celular no modo escuro)
-    el.dataset['theme'] = 'light';
+    // tema da Glisse = tema do app (no escuro usa o dark da propria Glisse)
+    const tema = inject(ThemeService);
+    effect(() => (el.dataset['theme'] = tema.aplicado()));
     host.appendChild(el);
     let vivo = true;
 

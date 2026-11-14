@@ -1,9 +1,9 @@
 <div class="pagina">
-  <app-trail-header [trilha]="['Grupos', nome() || 'Grupo']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+  <app-trail-header [trilha]="['Grupos', nome() || 'Grupo']" [mostrarSino]="true" />
 
   <main class="conteudo">
     @if (carregando()) {
-      <app-esqueleto tipo="perfil" [quantos]="1" texto="Carregando grupo..." />
+      <div class="sk-tela" role="status" aria-label="Carregando grupo..."><div class="sk-linha"><app-skeleton variante="text" largura="80px" altura="14px" /><app-skeleton variante="text" largura="90px" altura="14px" /></div><app-skeleton variante="title" largura="35%" />@for (i of [0,1]; track i) {<app-skeleton variante="card"><div class="sk-linha"><app-skeleton variante="circle" largura="44px" altura="44px" /><div class="sk-col"><app-skeleton variante="text" largura="50%" altura="14px" /></div></div></app-skeleton>}</div>
     } @else {
       <div class="links">
         <button type="button" class="link-azul" (click)="abrir('renomear')">Renomear</button>
@@ -51,29 +51,29 @@
     @if (f === 'renomear') {
       <form class="folha" role="dialog" aria-modal="true" aria-labelledby="folha-titulo" (click)="$event.stopPropagation()" (ngSubmit)="renomear()">
         <h2 id="folha-titulo">Renomear grupo</h2>
-        <div class="campo">
+        <div class="campo flutua">
           <label for="nome-grupo">Nome do grupo (até 60 caracteres)</label>
           <input id="nome-grupo" name="nome" maxlength="60" placeholder="Fatec manhã" [(ngModel)]="nomeNovo" />
         </div>
-        <button type="submit" class="btn btn-azul" [disabled]="enviando()">{{ enviando() ? 'Salvando...' : 'Salvar' }}</button>
+        <button type="submit" class="btn btn-azul" [disabled]="enviando()" [appCarregando]="enviando()">{{ enviando() ? 'Salvando...' : 'Salvar' }}</button>
         <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fechar()">Voltar</button>
       </form>
     } @else if (f === 'apagar') {
       <div class="folha" role="dialog" aria-modal="true" aria-labelledby="folha-titulo" (click)="$event.stopPropagation()">
         <h2 id="folha-titulo">Apagar o grupo {{ nome() }}?</h2>
         <p class="sub">Só o grupo é apagado. Os contratos dos alunos não mudam.</p>
-        <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="apagar()">{{ enviando() ? 'Apagando...' : 'Apagar grupo' }}</button>
+        <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="apagar()" [appCarregando]="enviando()">{{ enviando() ? 'Apagando...' : 'Apagar grupo' }}</button>
         <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fechar()">Voltar</button>
       </div>
     } @else if (f === 'avisar') {
       <form class="folha" role="dialog" aria-modal="true" aria-labelledby="folha-titulo" (click)="$event.stopPropagation()" (ngSubmit)="avisar()">
         <h2 id="folha-titulo">Não vou buscar hoje</h2>
         <p class="sub">Os responsáveis dos alunos deste grupo recebem o aviso de que você não vai buscar os filhos <strong>hoje</strong>. Para outros recados, use a conversa.</p>
-        <div class="campo">
+        <div class="campo flutua">
           <label for="motivo">Motivo (opcional, até 300 caracteres)</label>
           <input id="motivo" name="motivo" maxlength="300" placeholder="Van em manutenção" [(ngModel)]="motivo" />
         </div>
-        <button type="submit" class="btn btn-azul" [disabled]="enviando()">{{ enviando() ? 'Enviando...' : 'Enviar aviso' }}</button>
+        <button type="submit" class="btn btn-azul" [disabled]="enviando()" [appCarregando]="enviando()">{{ enviando() ? 'Enviando...' : 'Enviar aviso' }}</button>
         <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fechar()">Voltar</button>
       </form>
     } @else if (f === 'adicionar') {
@@ -81,7 +81,7 @@
         <h2 id="folha-titulo">Adicionar aluno</h2>
         <p class="sub">Só aparecem os alunos com contrato ativo com você.</p>
         @if (candidatos() === null) {
-          <app-esqueleto tipo="lista" [quantos]="2" texto="Carregando alunos..." />
+          <div class="sk-tela" role="status" aria-label="Carregando alunos...">@for (i of [0,1]; track i) {<div class="sk-linha"><app-skeleton variante="rect" largura="24px" altura="24px" /><div class="sk-col"><app-skeleton variante="text" largura="55%" altura="14px" /></div></div>}</div>
         } @else if (!candidatos()!.length) {
           <p class="ajuda">Todos os alunos com contrato ativo já estão no grupo.</p>
         } @else {
@@ -93,7 +93,7 @@
               </button>
             }
           </div>
-          <button type="button" class="btn btn-azul" [disabled]="enviando() || !escolhido()" (click)="adicionar()">{{ enviando() ? 'Adicionando...' : 'Adicionar ao grupo' }}</button>
+          <button type="button" class="btn btn-azul" [disabled]="enviando() || !escolhido()" (click)="adicionar()" [appCarregando]="enviando()">{{ enviando() ? 'Adicionando...' : 'Adicionar ao grupo' }}</button>
         }
         <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fechar()">Voltar</button>
       </div>
@@ -101,7 +101,7 @@
       <div class="folha" role="dialog" aria-modal="true" aria-labelledby="folha-titulo" (click)="$event.stopPropagation()">
         <h2 id="folha-titulo">Tirar {{ aluno.studentName }} do grupo?</h2>
         <p class="sub">Só sai do grupo. O contrato do aluno não muda.</p>
-        <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="tirar(aluno)">{{ enviando() ? 'Tirando...' : 'Tirar do grupo' }}</button>
+        <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="tirar(aluno)" [appCarregando]="enviando()">{{ enviando() ? 'Tirando...' : 'Tirar do grupo' }}</button>
         <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fechar()">Voltar</button>
       </div>
     }

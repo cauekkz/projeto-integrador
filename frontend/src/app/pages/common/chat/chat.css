@@ -2,7 +2,7 @@
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--cor-fundo);
 }
 
 .lista {
@@ -18,12 +18,12 @@
   gap: 12px;
   padding: 16px 20px;
   cursor: pointer;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--cor-borda-suave);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .conversa-item:hover {
-    background: #f8fafc;
+    background: var(--cor-superficie-2);
   }
 }
 
@@ -46,12 +46,12 @@
 .conversa-nome {
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .conversa-msg {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -59,6 +59,6 @@
 
 .conversa-hora {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--cor-texto-4);
   flex-shrink: 0;
 }

@@ -1,5 +1,16 @@
-/* TabBar da Glisse no rodape do VanRoute (Figma 1072:5168), sempre no tema claro
-   (data-theme="light" so na barra). CSS global (o HTML e do React), mas tudo preso dentro de .glisse-tab-bar */
+/* TabBar da Glisse no rodape do VanRoute (Figma 1072:5168). O data-theme da barra segue o app (ThemeService):
+   no claro, as cores do VanRoute (abaixo, como sempre foi); no escuro, o tema dark da propria Glisse.
+   CSS global (o HTML e do React), mas tudo preso dentro de .glisse-tab-bar */
+.glisse-tab-bar[data-theme='light'] .lg-tab-bar[data-icons] {
+  --lg-foreground: #475569;
+  --lg-muted: #475569;
+  --lg-tab-selected: #0066cc;
+  --lg-selection: rgba(12, 102, 219, 0.15);
+  --lg-glass: rgba(29, 95, 161, 0.1);
+  --lg-lens: rgba(12, 102, 219, 0.06);
+  --lg-ring: rgba(12, 102, 219, 0.5);
+  --lg-rim-shine: 0.48; /* rim */
+}
 app-glisse-tab-bar {
   display: block;
   flex: 1;
@@ -19,19 +30,10 @@ app-glisse-tab-bar {
   --lg-tab-inset: 4px;
   --lg-tab-height: 60px;
   --lg-tab-width: calc((100cqw - 2 * var(--lg-tab-inset)) / 3);
-  /* cores do VanRoute */
-  --lg-foreground: var(--texto-2);
-  --lg-muted: var(--texto-2);
-  --lg-tab-selected: var(--azul);
-  --lg-selection: rgba(12, 102, 219, 0.15);
-  --lg-glass: rgba(29, 95, 161, 0.1);
-  --lg-lens: rgba(12, 102, 219, 0.06);
-  --lg-ring: rgba(12, 102, 219, 0.5);
   /* ajustes do vidro (os controles "Glass" do site da Glisse) */
   --lg-glass-bend: 0.04; /* bend */
   --lg-glass-dispersion: 0.9; /* dispersion */
   --lg-blur: 6.5px; /* frost */
-  --lg-rim-shine: 0.48; /* rim */
   display: flex;
   box-sizing: border-box;
   width: 100%;
@@ -41,9 +43,9 @@ app-glisse-tab-bar {
 /* vidro da barra: mesma sombra e brilho do rodape antigo */
 .glisse-tab-bar .lg-tab-bar-glass.lg-glass {
   box-shadow:
-    0 6px 18px rgba(15, 23, 41, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+    0 6px 18px rgb(var(--sombra-rgb) / calc(0.12 * var(--sombra-forca))),
+    inset 0 1px 0 rgb(255 255 255 / calc(0.7 * var(--brilho-forca))),
+    inset 0 -1px 0 rgb(255 255 255 / calc(0.25 * var(--brilho-forca)));
 }
 
 .glisse-tab-bar .lg-tab-icon .bi {

@@ -16,7 +16,7 @@
 
 .instrucao {
   text-align: center;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   font-size: 16px;
   max-width: 280px;
 
@@ -40,17 +40,17 @@
   padding: 0;
   height: 52px;
   border: none;
-  border-bottom: 2px solid #cbd5e1;
+  border-bottom: 2px solid var(--cor-borda-forte);
   text-align: center;
   font-size: 24px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   outline: none;
   background: transparent;
 }
 
 .code-input:focus {
-  border-bottom-color: var(--azul);
+  border-bottom-color: var(--cor-primaria-texto);
 }
 
 @keyframes slideUp {
@@ -65,13 +65,13 @@
 .separador {
   font-size: 20px;
   font-weight: 600;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
   user-select: none;
   flex-shrink: 0;
 }
 
 .error-message {
-  color: var(--vermelho);
+  color: var(--cor-perigo);
   font-size: 14px;
   margin: 0;
 }
@@ -83,11 +83,8 @@
   width: 100%;
   max-width: 340px;
   align-items: center;
-  position: fixed;
-  bottom: 24px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0 16px;
+  /* no fim do formulario, logo depois dos campos (nao flutua) */
+  margin: 32px auto 0;
   box-sizing: border-box;
 }
 
@@ -103,28 +100,28 @@
 
 .btn-verificar {
   border: none;
-  background: var(--azul);
-  color: white;
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
   font-weight: 600;
   box-shadow: none;
 }
 
 .btn-reenviar {
-  border: 1px solid var(--azul);
-  background: white;
-  color: var(--azul);
+  border: 1px solid var(--cor-primaria-texto);
+  background: var(--cor-superficie);
+  color: var(--cor-primaria-texto);
   font-weight: 500;
 }
 
 @media (hover: hover) and (pointer: fine) {
   .btn-verificar:hover:not(:disabled) {
-    background: #0052a3;
+    background: var(--cor-primaria-hover);
   }
 }
 
 @media (hover: hover) and (pointer: fine) {
   .btn-reenviar:hover:not(:disabled) {
-    background: #eff6ff;
+    background: var(--cor-primaria-suave);
   }
 }
 

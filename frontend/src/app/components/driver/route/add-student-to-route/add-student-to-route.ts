@@ -17,6 +17,7 @@ import {
   stopOptionStudent,
 } from '../../../../services/dto/route/route.dto';
 
+import { BotaoCarregandoDirective } from '../../../../shared/botao-carregando/botao-carregando.directive';
 type Local = StopLocationType;
 
 // Figma "Motorista · Adicionar aluno" 1 a 3: aluno -> acao, local, endereco e dias -> ponto (novo ou que ja existe)
@@ -25,7 +26,7 @@ type Local = StopLocationType;
 @Component({
   selector: 'app-add-student-to-route',
   standalone: true,
-  imports: [FormsModule],
+  imports: [BotaoCarregandoDirective, FormsModule],
   templateUrl: './add-student-to-route.html',
   styleUrls: ['../../../../shared/folha.css', '../../../../shared/rota.css', './add-student-to-route.css'],
 })

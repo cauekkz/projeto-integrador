@@ -1,23 +1,25 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../../services/auth.service';
 import { Header } from '../../../../shared/header/header';
-import { Button } from '../../../../shared/button/button';
 import { CommonModule } from '@angular/common';
 import { CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective, CepBuscaDirective, EnderecoCep, PasswordToggleDirective } from '../../../../shared/directives';
 import { PopUpService } from '../../../../shared/pop-up';
 import { limparMascara } from '../../../../shared/utils';
 import { TermsAccept } from '../terms-accept/terms-accept';
 
+import { BotaoCarregandoDirective } from '../../../../shared/botao-carregando/botao-carregando.directive';
 @Component({
   selector: 'app-signup-responsible',
   standalone: true,
-  imports: [FormsModule, Header, Button, CommonModule, CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective, CepBuscaDirective, PasswordToggleDirective, TermsAccept],
+  imports: [BotaoCarregandoDirective, FormsModule, Header, CommonModule, CpfMaskDirective, PhoneMaskDirective, NameFormatDirective, CepMaskDirective, CepBuscaDirective, PasswordToggleDirective, TermsAccept],
   templateUrl: './signup-responsible.html',
-  styleUrl: './signup-responsible.css',
+  styleUrls: ['../../../../shared/cadastro.css', './signup-responsible.css'],
 })
 export class SignupResponsible {
+  // so pra tela: barra no botao enquanto o cadastro responde
+  protected cadastrando = signal(false);
   @Output() voltarEvent = new EventEmitter<void>();
   @Output() cadastroConcluidoEvent = new EventEmitter<{
     email: string;
@@ -130,14 +132,17 @@ export class SignupResponsible {
       acceptedTermsVersion: this.versaoTermos,
     };
 
+    if (this.cadastrando()) return;
+    this.cadastrando.set(true);
     this.authService.createUser(data).subscribe({
       next: () => {
+        this.cadastrando.set(false);
         this.cadastroConcluidoEvent.emit({
           email: this.enteredEmail,
         });
       },
       // o popup global mostra a mensagem do backend (CPF invalido, e-mail em uso, senha fraca...)
-      error: () => {},
+      error: () => this.cadastrando.set(false),
     });
   }
 }

@@ -17,9 +17,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #afd9f7;
-  background: #eff8fe;
-  color: var(--azul-escuro);
+  border: 1px solid var(--cor-primaria-borda);
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto-forte);
   font-size: 18px;
   font-weight: 600;
 }
@@ -35,7 +35,7 @@
   margin: 0;
   font-size: 13px;
   line-height: 1.4;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 .acoes {
@@ -47,7 +47,7 @@
   padding: 0;
   border: none;
   background: none;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
   font: inherit;
   font-size: 13px;
   font-weight: 500;
@@ -55,7 +55,7 @@
 }
 
 .link.perigo {
-  color: var(--vermelho);
+  color: var(--cor-perigo);
 }
 
 .link:disabled {

@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
@@ -25,6 +25,7 @@ import {
 import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 // mesmos selos da lista /contracts (Figma 1036:698)
 const STATUS: Record<ContractStatus, { texto: string; classe: string }> = {
   PENDING: { texto: 'Pendente', classe: 'pendente' },
@@ -42,7 +43,7 @@ export const MOTIVO_MAXIMO = 500;
 @Component({
   selector: 'app-contract-view',
   standalone: true,
-  imports: [Esqueleto, TrailHeader, FormsModule],
+  imports: [BotaoCarregandoDirective, Skeleton, TrailHeader, FormsModule],
   templateUrl: './contract-view.html',
   styleUrl: './contract-view.css',
 })

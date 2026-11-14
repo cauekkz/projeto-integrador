@@ -22,6 +22,14 @@ export class ChatWebSocketService {
   // {"type":"read"} chega pelo mesmo socket: nao e mensagem
   private readSubject = new Subject<ChatReadEvent>();
   public reads$ = this.readSubject.asObservable();
+  // a conexao caiu e voltou: a tela busca as mensagens que chegaram enquanto estava fora
+  private reconectouSubject = new Subject<string>();
+  public reconectou$ = this.reconectouSubject.asObservable();
+
+  private tentativas = 0;
+  private esperaReconexao?: ReturnType<typeof setTimeout>;
+  private batimento?: ReturnType<typeof setInterval>;
+  private vigiando = false;
 
   constructor(
     private http: HttpClient,
@@ -76,13 +84,22 @@ export class ChatWebSocketService {
     );
   }
 
-  // o WebSocket so confere o token na abertura: pega um valido (renovando se venceu) antes de conectar
+  // o WebSocket so confere o token na abertura: pega um valido (renovando se venceu) antes de conectar.
+  // No celular a conexao cai sozinha (tela apagada, troca de rede, tunel): enquanto a conversa estiver aberta,
+  // ela volta sozinha (com espera crescente) e avisa em reconectou$ pra tela buscar o que chegou no meio-tempo
   connect(chatId: string): void {
-    if (this.socket?.readyState === WebSocket.OPEN) {
+    if (this.chatAlvo === chatId && this.socket && this.socket.readyState <= WebSocket.OPEN) {
       return;
     }
-
+    if (this.chatAlvo !== chatId) {
+      this.fecharSocket();
+    }
     this.chatAlvo = chatId;
+    this.vigiarAparelho();
+    this.pedirToken(chatId);
+  }
+
+  private pedirToken(chatId: string): void {
     this.authService.getValidToken().subscribe({
       next: (token) => {
         if (this.chatAlvo !== chatId) {
@@ -94,17 +111,31 @@ export class ChatWebSocketService {
         }
         this.abrirSocket(chatId, token);
       },
-      error: (error) => console.error('Não foi possível renovar a sessão para abrir o chat:', error),
+      error: (error) => {
+        console.error('Não foi possível renovar a sessão para abrir o chat:', error);
+        this.agendarReconexao(chatId);
+      },
     });
   }
 
   private abrirSocket(chatId: string, token: string): void {
     const url = `${wsUrl('/chat/' + chatId)}?token=${encodeURIComponent(token)}`;
-    this.socket = new WebSocket(url);
+    const socket = new WebSocket(url);
+    this.socket = socket;
 
-    this.socket.onopen = () => {};
+    socket.onopen = () => {
+      if (this.tentativas > 0) {
+        this.reconectouSubject.next(chatId);
+      }
+      this.tentativas = 0;
+      // mantem a conexao viva: tunel e proxy derrubam socket parado (o backend ignora o texto)
+      clearInterval(this.batimento);
+      this.batimento = setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) socket.send('ping');
+      }, 25000);
+    };
 
-    this.socket.onmessage = (event: MessageEvent) => {
+    socket.onmessage = (event: MessageEvent) => {
       try {
         const dados = JSON.parse(event.data);
         if (dados?.type === 'read') {
@@ -117,19 +148,70 @@ export class ChatWebSocketService {
       }
     };
 
-    this.socket.onerror = (error) => {
+    socket.onerror = (error) => {
       console.error('Erro no WebSocket do chat:', error);
     };
 
-    this.socket.onclose = () => {
+    socket.onclose = () => {
+      // um socket velho fechando depois nao apaga o novo
+      if (this.socket !== socket) {
+        return;
+      }
       this.socket = undefined;
+      clearInterval(this.batimento);
+      this.agendarReconexao(chatId);
     };
+  }
+
+  // 1s, 2s, 4s... ate 15s; so enquanto a conversa estiver aberta
+  private agendarReconexao(chatId: string): void {
+    if (this.chatAlvo !== chatId) {
+      return;
+    }
+    clearTimeout(this.esperaReconexao);
+    const espera = Math.min(15000, 1000 * 2 ** this.tentativas);
+    this.tentativas++;
+    this.esperaReconexao = setTimeout(() => {
+      if (this.chatAlvo === chatId && !this.socket) {
+        this.pedirToken(chatId);
+      }
+    }, espera);
+  }
+
+  // voltou pro app (tela acesa) ou a internet voltou: reconecta na hora, sem esperar a contagem
+  private vigiarAparelho(): void {
+    if (this.vigiando || typeof document === 'undefined') {
+      return;
+    }
+    this.vigiando = true;
+    const acordar = () => {
+      const chatId = this.chatAlvo;
+      if (!chatId || document.visibilityState !== 'visible') {
+        return;
+      }
+      if (!this.socket || this.socket.readyState > WebSocket.OPEN) {
+        clearTimeout(this.esperaReconexao);
+        this.socket = undefined;
+        this.tentativas = Math.max(this.tentativas, 1);
+        this.pedirToken(chatId);
+      }
+    };
+    document.addEventListener('visibilitychange', acordar);
+    window.addEventListener('online', acordar);
+  }
+
+  private fecharSocket(): void {
+    clearTimeout(this.esperaReconexao);
+    clearInterval(this.batimento);
+    this.tentativas = 0;
+    const socket = this.socket;
+    this.socket = undefined;
+    socket?.close();
   }
 
   disconnect(): void {
     this.chatAlvo = undefined;
-    this.socket?.close();
-    this.socket = undefined;
+    this.fecharSocket();
   }
 
   // marca as mensagens do outro como lidas (zera o unreadCount); o outro recebe o evento read no socket. 204

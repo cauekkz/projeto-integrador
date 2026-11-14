@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
 import { AuthService } from '../../../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { CodeInput } from '../../../../shared/code-input/code-input';
@@ -13,6 +13,8 @@ import { Router } from '@angular/router';
   styleUrl: './email-code.css',
 })
 export class EmailCode {
+  // so pra tela: barra no botao Verificar enquanto o codigo e conferido
+  protected verificando = signal(false);
   @Output() verificadoEvent = new EventEmitter<void>();
   @Output() voltarEvent = new EventEmitter<void>();
   @Input() email: string = '';
@@ -32,9 +34,17 @@ export class EmailCode {
 
 
   onSend(codigo: string) {
+    if (this.verificando()) return;
+    this.verificando.set(true);
     this.authService.verifyEmail({ email: this.email, code: codigo }).subscribe({
-      next: () => this.verificadoEvent.emit(),
-      error: (err: any) => console.error(err),
+      next: () => {
+        this.verificando.set(false);
+        this.verificadoEvent.emit();
+      },
+      error: (err: any) => {
+        this.verificando.set(false);
+        console.error(err);
+      },
     });
   }
 

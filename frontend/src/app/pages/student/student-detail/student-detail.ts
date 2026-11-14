@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -21,6 +21,7 @@ import { dataLocal, diaEMes, studentAbsence, studentRoute } from '../../../servi
 import { RELATION_LABEL } from '../../../services/dto/contract/contract.dto';
 import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 // endereco de outro filho que pode ser reaproveitado (addressId)
 interface EnderecoDaFamilia {
   addressId: string;
@@ -41,7 +42,7 @@ const RELACOES = ['LEGAL', 'FINANCIAL', 'WITHDRAWAL'] as const;
 @Component({
   selector: 'app-student-detail',
   standalone: true,
-  imports: [Esqueleto, FormsModule, Header, Footer, StudentPhoto, CepMaskDirective, CepBuscaDirective],
+  imports: [BotaoCarregandoDirective, Skeleton, FormsModule, Header, Footer, StudentPhoto, CepMaskDirective, CepBuscaDirective],
   templateUrl: './student-detail.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './student-detail.css'],
 })

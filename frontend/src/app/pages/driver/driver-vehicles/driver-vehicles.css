@@ -12,7 +12,7 @@
   flex-direction: column;
   gap: 8px;
   padding: 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
 }
 
@@ -24,24 +24,24 @@
 
 .icone {
   font-size: 20px;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
 }
 
 .placa {
   flex: 1;
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .resumo {
   font-size: 14px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 .detalhes {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 /* "Adicionar van": tela inteira por cima da lista */
@@ -55,7 +55,7 @@
   max-width: 480px;
   margin: 0 auto;
   padding: 24px 24px 32px;
-  background: #ffffff;
+  background: var(--cor-superficie);
 }
 
 .cabecalho {
@@ -70,7 +70,7 @@
 .cabecalho h1 {
   font-size: 20px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .voltar {
@@ -79,7 +79,7 @@
   border: none;
   background: none;
   font-size: 24px;
-  color: var(--texto);
+  color: var(--cor-texto);
   cursor: pointer;
 }
 
@@ -89,11 +89,11 @@
   align-items: center;
   gap: 12px;
   padding: 28px 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--cor-superficie);
   font: inherit;
-  color: var(--texto);
+  color: var(--cor-texto);
   cursor: pointer;
   overflow-wrap: anywhere;
 }
@@ -104,7 +104,7 @@
 
 .ajuda {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .enviar {

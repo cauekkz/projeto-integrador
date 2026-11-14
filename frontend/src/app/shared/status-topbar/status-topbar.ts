@@ -15,7 +15,7 @@ import { GlisseVidro } from '../glisse-vidro/glisse-vidro';
         <app-glisse-vidro (falhou)="glisseFalhou.set(true)" />
       }
       <button type="button" class="foto" aria-label="Abrir perfil" (click)="perfil.emit()">
-        <img [src]="foto() || '/testee.jpg'" alt="" />
+        <img [src]="foto() || '/avatar-padrao.svg'" alt="" />
       </button>
       <span class="status" [class.ativo]="emPercurso()" role="status">
         <span class="ponto" aria-hidden="true"></span>

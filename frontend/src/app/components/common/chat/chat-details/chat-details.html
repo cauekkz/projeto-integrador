@@ -5,7 +5,7 @@
       <i class="bi bi-chevron-left"></i>
     </button>
     <button type="button" class="contato" [disabled]="!idContato" [attr.aria-label]="'Ver o perfil de ' + nomeContato" (click)="abrirPerfilContato()">
-      <img [src]="fotoContato" class="contato-avatar" alt="" (error)="fotoContato = '/testee.jpg'">
+      <img [src]="fotoContato" class="contato-avatar" alt="" (error)="fotoContato = '/avatar-padrao.svg'">
       <span class="contato-nome">{{ nomeContato }}</span>
     </button>
     <button class="contrato-btn" type="button" aria-label="Ver contratos" (click)="abrirContratos()">
@@ -16,6 +16,14 @@
   <div #messagesContainer class="mensagens" (scroll)="carregarMensagensAnteriores($event)">
     @if (erroCarregar) {
       <p class="chat-aviso" role="alert">{{ erroCarregar }}</p>
+    } @else if (carregandoMensagens && mensagens.length === 0) {
+      <div class="sk-tela sk-chat" role="status" aria-label="Carregando mensagens...">
+        <app-skeleton variante="rect" largura="55%" altura="40px" class="sk-balao" />
+        <app-skeleton variante="rect" largura="40%" altura="40px" class="sk-balao minha" />
+        <app-skeleton variante="rect" largura="65%" altura="58px" class="sk-balao" />
+        <app-skeleton variante="rect" largura="35%" altura="40px" class="sk-balao minha" />
+        <app-skeleton variante="rect" largura="50%" altura="40px" class="sk-balao" />
+      </div>
     } @else if (!carregandoMensagens && mensagens.length === 0) {
       <p class="chat-aviso">Nenhuma mensagem ainda. Envie a primeira.</p>
     }

@@ -1,7 +1,190 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-/* mapa da viagem (Leaflet): sem este CSS os quadrados do mapa ficam soltos e a linha/pinos somem */
-@import 'leaflet/dist/leaflet.css';
+/* mapa da viagem (mapcn / MapLibre): sem este CSS os controles e marcadores do mapa ficam soltos */
 @import 'maplibre-gl/dist/maplibre-gl.css';
+
+/* ---------- cores (tokens) ----------
+   claro = valores de antes; escuro = :root[data-theme='dark'] (ThemeService + script do index.html).
+   regra do azul: --cor-primaria pra preenchimento (botao, bloco azul), --cor-primaria-texto pra texto/icone/borda */
+:root {
+  --cor-fundo: #ffffff;
+  --cor-superficie: #ffffff;
+  --cor-superficie-2: #f8fafc;
+  --cor-superficie-3: #f1f5f9;
+  --cor-borda-suave: #f1f5f9;
+  --cor-borda: #e2e8f0;
+  --cor-borda-forte: #cbd5e1;
+  /* esqueleto de carregamento (app-skeleton): bloco e brilho */
+  --cor-esqueleto: #e9eef4;
+  --cor-esqueleto-brilho: #f7f9fc;
+  --cor-texto: #0f172a;
+  --cor-texto-2: #475569;
+  --cor-texto-3: #64748b;
+  --cor-texto-4: #94a3b8;
+
+  --cor-primaria: #0066cc;
+  --cor-primaria-hover: #0052a3;
+  --cor-primaria-forte: #0056c6;
+  --cor-primaria-texto: #0066cc;
+  --cor-primaria-texto-forte: #0a54b5;
+  --cor-primaria-suave: #eff6ff;
+  --cor-primaria-suave-2: #d2deef;
+  --cor-primaria-borda: #afd9f7;
+  --cor-primaria-borda-suave: #dbe6f5;
+  --cor-primaria-borda-forte: #93c5fd;
+  --cor-sobre-primaria: #ffffff;
+  --cor-foco: rgba(21, 101, 216, 0.15);
+
+  --cor-perigo: #dc2626;
+  --cor-perigo-texto: #b91c1c;
+  --cor-perigo-fundo: #dc2626;
+  --cor-perigo-suave: #fef2f2;
+  --cor-perigo-borda: #fecaca;
+  --cor-sucesso: #16a34a;
+  --cor-sucesso-texto: #047857;
+  --cor-sucesso-suave: #ecfdf5;
+  --cor-sucesso-borda: #bbf7d0;
+  --cor-aviso: #b45309;
+  --cor-aviso-texto: #92400e;
+  --cor-aviso-suave: #fffbeb;
+  --cor-aviso-borda: #fde68a;
+  --cor-aviso-suave-2: #fef3c7;
+  --cor-pasta-2: #c3cfdd;
+  --cor-estrada: #dbe3ec;
+  --cor-hover-neutro: rgba(0, 0, 0, 0.06);
+  /* avisos (pop-up) em vidro: cor de fundo em "r g b" pra usar com transparencia */
+  --toast-erro-rgb: 254 242 242;
+  --toast-aviso-rgb: 255 251 235;
+  --toast-sucesso-rgb: 240 253 244;
+  --toast-info-rgb: 239 246 255;
+  --vidro-ceu-rgb: 239 248 254;
+
+  /* sombras: mesma cor de antes no claro; no escuro preto e mais forte (a sombra quase some sobre fundo escuro) */
+  --sombra-rgb: 15 23 42;
+  --sombra-forca: 1;
+  --brilho-forca: 1;
+  --sombra-card: 0 10px 25px rgba(0, 0, 0, 0.05);
+  --sombra-flutuante: 0 12px 32px rgba(15, 23, 42, 0.14);
+  --overlay: rgba(15, 23, 42, 0.35);
+  /* vidro (fundo branco translucido) */
+  --vidro-rgb: 255 255 255;
+  --fundo-rgb: 255 255 255;
+  --vidro-2-rgb: 241 245 249;
+
+  /* nomes antigos: continuam valendo (telas do motorista ainda usam) */
+  --azul: var(--cor-primaria);
+  --azul-escuro: var(--cor-primaria-texto-forte);
+  --vermelho: var(--cor-perigo);
+  --vermelho-texto: var(--cor-perigo-texto);
+  --texto: var(--cor-texto);
+  --texto-2: var(--cor-texto-2);
+  --texto-3: var(--cor-texto-3);
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --cor-fundo: #282828;
+  --cor-superficie: #323232;
+  --cor-superficie-2: #3a3a3a;
+  --cor-superficie-3: #444444;
+  --cor-borda-suave: #363636;
+  --cor-borda: #454545;
+  --cor-borda-forte: #5a5a5a;
+  --cor-esqueleto: #3e3e3e;
+  --cor-esqueleto-brilho: #4a4a4a;
+  --cor-texto: #f2f2f2;
+  --cor-texto-2: #cccccc;
+  --cor-texto-3: #b8b8b8;
+  --cor-texto-4: #adadad;
+
+  --cor-primaria: #0066cc;
+  --cor-primaria-hover: #0a72d9;
+  --cor-primaria-forte: #0056c6;
+  --cor-primaria-texto: #7cb8ff;
+  --cor-primaria-texto-forte: #a3cdff;
+  --cor-primaria-suave: #263a55;
+  --cor-primaria-suave-2: #2c4262;
+  --cor-primaria-borda: #355a8c;
+  --cor-primaria-borda-suave: #2f4a6e;
+  --cor-primaria-borda-forte: #3d6aa8;
+  --cor-sobre-primaria: #ffffff;
+  --cor-foco: rgba(124, 184, 255, 0.3);
+
+  --cor-perigo: #f87171;
+  --cor-perigo-texto: #fca5a5;
+  --cor-perigo-fundo: #dc2626;
+  --cor-perigo-suave: rgba(248, 113, 113, 0.12);
+  --cor-perigo-borda: rgba(248, 113, 113, 0.35);
+  --cor-sucesso: #4ade80;
+  --cor-sucesso-texto: #6ee7b7;
+  --cor-sucesso-suave: rgba(52, 211, 153, 0.12);
+  --cor-sucesso-borda: rgba(52, 211, 153, 0.35);
+  --cor-aviso: #fbbf24;
+  --cor-aviso-texto: #fcd34d;
+  --cor-aviso-suave: rgba(251, 191, 36, 0.12);
+  --cor-aviso-borda: rgba(251, 191, 36, 0.35);
+  --cor-aviso-suave-2: rgba(251, 191, 36, 0.18);
+  --cor-pasta-2: #4a4a4a;
+  --cor-estrada: #4a4a4a;
+  --cor-hover-neutro: rgba(255, 255, 255, 0.08);
+  --toast-erro-rgb: 66 38 38;
+  --toast-aviso-rgb: 62 52 30;
+  --toast-sucesso-rgb: 32 58 44;
+  --toast-info-rgb: 38 58 85;
+  --vidro-ceu-rgb: 38 58 85;
+
+  --sombra-rgb: 0 0 0;
+  --sombra-forca: 3;
+  --brilho-forca: 0.2;
+  --sombra-card: 0 10px 25px rgba(0, 0, 0, 0.35);
+  --sombra-flutuante: 0 12px 32px rgba(0, 0, 0, 0.5);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --vidro-rgb: 50 50 50;
+  --fundo-rgb: 40 40 40;
+  --vidro-2-rgb: 58 58 58;
+
+  color-scheme: dark;
+}
+
+body {
+  background: var(--cor-fundo);
+}
+
+/* no claro o texto sem cor propria continua o padrao do navegador (como era) */
+:root[data-theme='dark'] body {
+  color: var(--cor-texto);
+}
+
+/* seta do select (SVG em data URI nao le variavel): versao clara no escuro */
+:root[data-theme='dark'] select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23adadad' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 16 16'%3E%3Cpath d='M3 6l5 5 5-5'/%3E%3C/svg%3E");
+}
+
+@supports (appearance: base-select) {
+  :root[data-theme='dark'] select {
+    background-image: none;
+  }
+
+  :root[data-theme='dark'] select::picker-icon {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%23adadad' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 16 16'%3E%3Cpath d='M3 6l5 5 5-5'/%3E%3C/svg%3E");
+  }
+}
+
+/* autocompletar do navegador nao pinta o campo de amarelo/branco */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--cor-texto);
+  box-shadow: 0 0 0 1000px var(--cor-superficie) inset;
+  caret-color: var(--cor-texto);
+}
+
+/* foto do mapa (placeholder) um pouco mais apagada no escuro; avatares e fotos nao mudam */
+:root[data-theme='dark'] .mapa-img {
+  filter: brightness(0.8) contrast(1.05);
+}
 
 /* sem o cursor de digitar piscando ao clicar em texto comum (ex.: navegacao por cursor do Chrome, tecla F7); nos campos ele continua */
 html {
@@ -34,15 +217,6 @@ select,
   --dur-rapida: 150ms;
   --dur-media: 250ms;
 
-  /* cores do app: um azul da marca, um vermelho, tres papeis de texto */
-  --azul: #0c66db;
-  --azul-escuro: #0a54b5;
-  --vermelho: #dc2626;
-  --vermelho-texto: #b91c1c;
-  --texto: #0f172a;
-  --texto-2: #475569;
-  --texto-3: #64748b;
-
   /* cantos: campos e botoes 12, cartoes 14, folhas 24, pilulas redondas */
   --raio-campo: 12px;
   --raio-cartao: 14px;
@@ -72,6 +246,23 @@ select,
 
 ::view-transition-new(rodape) {
   animation: none;
+}
+
+/* troca de tema (ThemeService): um fade so da tela toda, sem ela subir e sem cada botao animar a cor */
+html.troca-tema *,
+html.troca-tema *::before,
+html.troca-tema *::after {
+  transition: none !important;
+}
+
+html.troca-tema::view-transition-old(root),
+html.troca-tema::view-transition-old(rodape) {
+  animation: none;
+}
+
+html.troca-tema::view-transition-new(root),
+html.troca-tema::view-transition-new(rodape) {
+  animation: fade-entrar 200ms ease both;
 }
 
 @keyframes tela-sair {
@@ -215,7 +406,7 @@ app-glisse-tab-bar button:active {
 
 /* teclado: anel azul so quando navega com Tab (clique e toque nao mostram) */
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
-  outline: 2px solid #0c66db;
+  outline: 2px solid var(--cor-primaria-texto);
   outline-offset: 2px;
 }
 
@@ -256,14 +447,14 @@ select {
   width: 100%;
   height: 52px;
   padding: 0 44px 0 16px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--cor-borda);
   border-radius: 12px;
-  background-color: #ffffff;
+  background-color: var(--cor-superficie);
   /* chevron-down do bootstrap icons */
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' viewBox='0 0 16 16'%3E%3Cpath d='M3 6l5 5 5-5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 16px center;
-  color: #1f2937;
+  color: var(--cor-texto);
   font: inherit;
   font-size: 16px;
   outline: none;
@@ -278,35 +469,35 @@ select {
 
 @media (hover: hover) and (pointer: fine) {
   select:hover:not(:disabled) {
-    border-color: #cbd5e1;
-    background-color: #f8fafc;
+    border-color: var(--cor-borda-forte);
+    background-color: var(--cor-superficie-2);
   }
 }
 
 select:focus,
 select:focus-visible {
-  border-color: #1565d8;
-  background-color: #ffffff;
-  box-shadow: 0 0 0 4px rgba(21, 101, 216, 0.15);
+  border-color: var(--cor-primaria-texto);
+  background-color: var(--cor-superficie);
+  box-shadow: 0 0 0 4px var(--cor-foco);
 }
 
 /* required ainda no "Selecione...": texto apagado como placeholder */
 select:invalid {
-  color: #94a3b8;
+  color: var(--cor-texto-4);
 }
 
 select:disabled {
-  background-color: #f1f5f9;
-  color: #94a3b8;
+  background-color: var(--cor-superficie-3);
+  color: var(--cor-texto-4);
   cursor: not-allowed;
 }
 
 select option {
-  color: #1f2937;
+  color: var(--cor-texto);
 }
 
 select option:disabled {
-  color: #94a3b8;
+  color: var(--cor-texto-4);
 }
 
 /* navegadores com select customizavel (Chrome/Edge 135+): a lista de opcoes tambem fica no estilo do app;
@@ -340,10 +531,10 @@ select option:disabled {
   ::picker(select) {
     margin-top: 8px;
     padding: 8px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--cor-borda);
     border-radius: 14px;
-    background: #ffffff;
-    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+    background: var(--cor-superficie);
+    box-shadow: 0 12px 32px rgb(var(--sombra-rgb) / calc(0.14 * var(--sombra-forca)));
     opacity: 0;
     translate: 0 -6px;
     transition:
@@ -378,13 +569,13 @@ select option:disabled {
 
   select option:not(:disabled):hover,
   select option:not(:disabled):focus-visible {
-    background-color: #eaf2fd;
-    color: #0b66d8;
+    background-color: var(--cor-primaria-suave);
+    color: var(--cor-primaria-texto);
     outline: none;
   }
 
   select option:checked {
-    color: #0b66d8;
+    color: var(--cor-primaria-texto);
     font-weight: 600;
   }
 
@@ -398,7 +589,119 @@ select option:disabled {
     order: 1;
     margin-left: auto;
     content: '✓';
-    color: #0b66d8;
+    color: var(--cor-primaria-texto);
+  }
+}
+
+/* fundo padrao dos campos de digitar: no claro e o branco de sempre; no escuro o Chrome poria o cinza dele (#3b3b3b).
+   :where = sem especificidade, quem estiliza o campo continua mandando */
+:where(input:not([type='checkbox'], [type='radio'], [type='range'], [type='file'], [type='color']), textarea) {
+  background-color: var(--cor-superficie);
+}
+
+:root[data-theme='dark'] :where(input, textarea) {
+  color: var(--cor-texto);
+}
+
+/* ---------- campo com rotulo flutuante (base: Uiverse/Maximinodotpy, adaptado) ----------
+   uso: <div class="flutua"><label>Nome</label><input placeholder="..."></div>
+   o rotulo fica dentro do campo e sobe pra borda quando o campo tem foco ou texto.
+   rotulo e campo dividem a mesma celula do grid: o rotulo centraliza na altura do campo sozinho,
+   e translate -50% leva o centro dele pra linha da borda (funciona com qualquer altura).
+   o arredondamento, a altura e o padding continuam os de cada tela.
+   ":root .flutua.flutua" so pra ganhar do CSS de label/input de cada componente */
+:root .flutua.flutua {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 6px;
+  column-gap: 0;
+  align-items: stretch;
+}
+
+:root .flutua.flutua > :is(input, textarea, .senha-wrap, .caixa) {
+  grid-area: 1 / 1;
+  min-width: 0;
+  margin: 0;
+}
+
+/* o campo de senha fica dentro do .senha-wrap (olhinho): a margem dele tambem sai */
+:root .flutua.flutua > .senha-wrap > input {
+  margin: 0;
+}
+
+/* foco: borda azul mais grossa por dentro (o anel de fora passava por tras do rotulo);
+   a segunda sombra repinta o fundo quando o navegador preenche sozinho */
+:root .flutua.flutua > :is(input, textarea):focus,
+:root .flutua.flutua > .senha-wrap > input:focus {
+  /* o contorno global de foco ficava por fora e cortava o rotulo; a borda azul dupla ja marca o foco */
+  outline: none;
+  border-color: var(--cor-primaria-texto);
+  box-shadow:
+    inset 0 0 0 1px var(--cor-primaria-texto),
+    inset 0 0 0 1000px var(--flutua-fundo, var(--cor-superficie));
+}
+
+:root .flutua.flutua > :is(label, .rotulo-campo) {
+  grid-area: 1 / 1;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-self: start;
+  max-width: calc(100% - 56px);
+  margin: 0 0 0 10px;
+  padding: 0 6px;
+  overflow: hidden;
+  /* metade de cima transparente (mostra o fundo da tela), metade de baixo da cor do campo:
+     quando o rotulo sobe, a linha da borda some atras dele sem pintar faixa por cima do texto */
+  /* parado, sem fundo: o rotulo ocupa a altura toda do campo e cobriria a borda de baixo */
+  background: none;
+  color: var(--cor-texto-3);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  transform-origin: left center;
+  transition:
+    translate var(--dur-media) var(--ease-suave),
+    scale var(--dur-media) var(--ease-suave),
+    color var(--dur-rapida) ease;
+}
+
+/* textarea: o rotulo fica na primeira linha (nao no meio da caixa alta) */
+:root .flutua.flutua:has(> textarea) > :is(label, .rotulo-campo) {
+  align-self: start;
+  padding-block: 14px;
+}
+
+/* com foco ou com texto: o rotulo sobe pra borda e diminui */
+:root .flutua.flutua:has(:is(input, textarea):focus, :is(input, textarea):not(:placeholder-shown), input:autofill) > :is(label, .rotulo-campo) {
+  translate: 0 -50%;
+  scale: 0.8;
+  font-weight: 500;
+  /* so quando sobe: uma faixa fina da cor do campo, so em cima da linha da borda, esconde a linha atras do texto
+     (o rotulo ocupa a altura toda do campo; faixa larga cobriria o texto digitado ou a borda de baixo) */
+  background: linear-gradient(to bottom,
+    transparent calc(50% - 2px),
+    var(--flutua-fundo, var(--cor-superficie)) calc(50% - 2px),
+    var(--flutua-fundo, var(--cor-superficie)) calc(50% + 3px),
+    transparent calc(50% + 3px));
+}
+
+:root .flutua.flutua:has(:is(input, textarea):focus) > :is(label, .rotulo-campo) {
+  color: var(--cor-primaria-texto);
+}
+
+/* o exemplo (placeholder) so aparece com o campo em foco, senao briga com o rotulo */
+:root .flutua.flutua :is(input, textarea):not(:focus)::placeholder {
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root .flutua.flutua > :is(label, .rotulo-campo) {
+    transition: none;
   }
 }
 
@@ -435,7 +738,7 @@ select option:disabled {
   border-radius: 50%;
   background: transparent;
   box-shadow: none;
-  color: #64748b;
+  color: var(--cor-texto-3);
   font-size: 18px;
   cursor: pointer;
   translate: 0 -50%;
@@ -444,13 +747,13 @@ select option:disabled {
 
 @media (hover: hover) and (pointer: fine) {
   .senha-wrap > .senha-olho:hover {
-    color: #1565d8;
+    color: var(--cor-primaria-texto);
     background-color: rgba(21, 101, 216, 0.08);
   }
 }
 
 .senha-wrap > .senha-olho:focus-visible {
-  outline: 2px solid #1565d8;
+  outline: 2px solid var(--cor-primaria-texto);
   outline-offset: 1px;
 }
 
@@ -465,7 +768,7 @@ select option:disabled {
 }
 
 .sino-clicavel:focus-visible {
-  outline: 3px solid #1565d8;
+  outline: 3px solid var(--cor-primaria-texto);
   outline-offset: 2px;
 }
 
@@ -485,7 +788,7 @@ div.fundo.confirmacao > .folha {
   overflow-y: auto;
   padding: 24px 20px 20px;
   border-radius: 24px;
-  box-shadow: 0 20px 40px rgba(15, 23, 41, 0.18);
+  box-shadow: 0 20px 40px rgb(var(--sombra-rgb) / calc(0.18 * var(--sombra-forca)));
   animation: confirmacao-entrar 220ms var(--ease-out) both;
 }
 
@@ -544,7 +847,7 @@ div.fundo:not(.confirmacao) > .folha::before {
   height: 4px;
   margin-left: -20px;
   border-radius: 2px;
-  background: #cbd5e1;
+  background: var(--cor-borda-forte);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -578,8 +881,8 @@ div.fundo:not(.confirmacao) > .folha::before {
   flex-shrink: 0;
   padding: 4px 8px;
   border-radius: 999px;
-  background: #f1f5f9;
-  color: var(--texto-2);
+  background: var(--cor-superficie-3);
+  color: var(--cor-texto-2);
   font-size: 12px;
   font-weight: 500;
   line-height: 16px;
@@ -597,11 +900,11 @@ div.fundo:not(.confirmacao) > .folha::before {
   background: currentColor;
 }
 
-.selo:is(.agendado, .embarcou, .selo-aberta, .selo-admin) { background: #eff6ff; color: var(--azul-escuro); }
-.selo:is(.ativo, .ativa, .em-dia, .entregue, .paga) { background: #ecfdf5; color: #047857; }
-.selo:is(.pendente, .aguardando, .manutencao) { background: #fffbeb; color: #b45309; }
-.selo:is(.cancelado, .atrasada) { background: #fef2f2; color: var(--vermelho-texto); }
-.selo:is(.inativo, .inativa, .ausente, .dispensada, .selo-feita) { background: #f1f5f9; color: var(--texto-2); }
+.selo:is(.agendado, .embarcou, .selo-aberta, .selo-admin) { background: var(--cor-primaria-suave); color: var(--cor-primaria-texto-forte); }
+.selo:is(.ativo, .ativa, .em-dia, .entregue, .paga) { background: var(--cor-sucesso-suave); color: var(--cor-sucesso-texto); }
+.selo:is(.pendente, .aguardando, .manutencao) { background: var(--cor-aviso-suave); color: var(--cor-aviso); }
+.selo:is(.cancelado, .atrasada) { background: var(--cor-perigo-suave); color: var(--cor-perigo-texto); }
+.selo:is(.inativo, .inativa, .ausente, .dispensada, .selo-feita) { background: var(--cor-superficie-3); color: var(--cor-texto-2); }
 
 /* viagem rodando: o ponto pisca devagar */
 .selo-aberta .ponto {
@@ -629,23 +932,163 @@ div.fundo:not(.confirmacao) > .folha::before {
 .vazio > i {
   margin-bottom: 4px;
   font-size: 32px;
-  color: #94a3b8;
+  color: var(--cor-texto-4);
 }
 
 .vazio h2 {
   font-size: 18px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 .vazio p {
   max-width: 32ch;
   font-size: 14px;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
 }
 
 .vazio .btn,
 .vazio .btn-estado {
   margin-top: 8px;
   min-width: 200px;
+}
+
+/* ---------- esqueleto de carregamento: containers usados nas telas ----------
+   <div class="sk-tela" role="status" aria-label="Carregando ..."> com app-skeleton dentro.
+   .sk-linha = itens lado a lado (avatar + textos); .sk-col = coluna que estica */
+.sk-tela {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.sk-linha {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sk-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* centraliza (foto + nome, estados vazios) */
+.sk-centro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.sk-centro > app-skeleton {
+  align-items: center;
+  width: 100%;
+}
+
+/* grade das pastas de contrato (3 por linha, igual a tela) */
+.sk-grade {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* pilula de status e botao: cantos redondos de verdade */
+app-skeleton.sk-pilula .sk,
+app-skeleton.sk-botao .sk {
+  border-radius: 999px;
+}
+
+app-skeleton.sk-pilula {
+  flex-shrink: 0;
+}
+
+/* numa linha, texto e titulo ocupam o espaco que sobra (a largura em % e desse espaco) */
+.sk-linha > app-skeleton.sk-text,
+.sk-linha > app-skeleton.sk-title {
+  flex: 1 1 0;
+}
+
+.sk-linha > app-skeleton.sk-rect {
+  flex-shrink: 0;
+}
+
+/* lista sem cartao (conversas): mesmo recuo das linhas de verdade */
+.sk-recuo {
+  gap: 32px;
+  padding: 16px 20px;
+}
+
+/* dados do perfil: mesmo recuo das linhas da lista */
+.sk-dados {
+  gap: 24px;
+  padding: 16px;
+}
+
+/* chat: baloes dos dois lados */
+.sk-chat {
+  padding: 16px;
+}
+
+.sk-chat > app-skeleton.sk-balao .sk {
+  border-radius: 18px 18px 18px 6px;
+}
+
+.sk-chat > app-skeleton.sk-balao.minha {
+  align-items: flex-end;
+}
+
+.sk-chat > app-skeleton.sk-balao.minha .sk {
+  border-radius: 18px 18px 6px 18px;
+}
+
+/* ---------- botao carregando ([appCarregando], shared/botao-carregando) ----------
+   a barra fica atras do texto (z-index -1 dentro do isolation do botao) e cresce com scaleX(--progresso).
+   cor: azul mais forte que o fundo do botao; nos botoes claros (vidro, contorno) um azul translucido */
+.botao-carregavel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.botao-barra {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--botao-barra-cor, color-mix(in srgb, var(--cor-primaria), #001a33 40%));
+  transform: scaleX(var(--progresso, 0));
+  transform-origin: left center;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.botao-barra.saindo {
+  opacity: 0;
+}
+
+/* carregando: o botao continua com a cor normal (o disabled de cada tela apagaria ele) */
+.botao-carregando:disabled,
+.botao-carregando[disabled] {
+  opacity: 1;
+  cursor: progress;
+}
+
+/* botoes claros (vidro, contorno, secundario): azul translucido */
+:is(.lg-glass, .btn-contorno, .btn-secondary, .botao-vidro, .botao-mini).botao-carregavel {
+  --botao-barra-cor: color-mix(in srgb, var(--cor-primaria) 22%, transparent);
+}
+
+/* botoes de perigo cheios: vermelho mais forte; de vidro: vermelho translucido */
+:is(.btn-vermelho, .btn-danger).botao-carregavel {
+  --botao-barra-cor: color-mix(in srgb, var(--cor-perigo), #000 32%);
+}
+
+.botao-perigo.botao-carregavel {
+  --botao-barra-cor: color-mix(in srgb, var(--cor-perigo) 22%, transparent);
 }

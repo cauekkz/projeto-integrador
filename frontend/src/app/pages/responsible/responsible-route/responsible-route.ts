@@ -15,6 +15,7 @@ import { TripService, TripSocket } from '../../../services/trip.service';
 import { formatarCrlv } from '../../driver/driver-vehicles/driver-vehicles';
 import { UserMe } from '../../../models/user.model';
 import { horaDe, minutosAte, studentTripToday, tripStudent, tripUpdate, viagemAtiva } from '../../../services/dto/trip/trip.dto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 
 // avisos da viagem que viram pop-up nesta tela (Figma "ON_BOARD · pop-up de embarque")
 const AVISOS_DA_VIAGEM = ['VAN_ON_THE_WAY', 'STUDENT_BOARDED', 'STUDENT_DELIVERED', 'STUDENT_ABSENT', 'OCCURRENCE'];
@@ -34,7 +35,7 @@ import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 @Component({
   selector: 'app-responsible-route',
   standalone: true,
-  imports: [StatusTopbar, TripMap, ProfileSelect, Footer, GlisseVidro],
+  imports: [Skeleton, StatusTopbar, TripMap, ProfileSelect, Footer, GlisseVidro],
   templateUrl: './responsible-route.html',
   styleUrl: './responsible-route.css',
 })

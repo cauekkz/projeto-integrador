@@ -1,6 +1,6 @@
 <div class="pagina" [class.embutido]="embutido">
   @if (!embutido) {
-    <app-trail-header [trilha]="[ehMotorista ? 'Motorista' : 'Responsável', 'Parcelas']" [mostrarSino]="true" (voltarEvent)="voltar()" />
+    <app-trail-header [trilha]="[ehMotorista ? 'Motorista' : 'Responsável', 'Parcelas']" [mostrarSino]="true" />
   }
 
   @if (!contractId) {
@@ -23,7 +23,7 @@
 
   <main class="conteudo">
     @if (carregando()) {
-      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando parcelas..." />
+      <div class="sk-tela" role="status" aria-label="Carregando parcelas...">@for (i of [0,1,2,3]; track i) {<app-skeleton variante="card"><div class="sk-linha"><div class="sk-col"><app-skeleton variante="title" largura="45%" /></div><app-skeleton variante="rect" largura="84px" altura="24px" class="sk-pilula" /></div><app-skeleton variante="text" largura="55%" /><div class="sk-linha"><div class="sk-col"><app-skeleton variante="title" largura="30%" altura="22px" /></div><app-skeleton variante="rect" largura="90px" altura="12px" /></div></app-skeleton>}</div>
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar as parcelas.</p>
@@ -123,7 +123,7 @@
           </button>
         }
       </div>
-      <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="confirmarRecebimento()">
+      <button type="button" class="btn btn-azul" [disabled]="enviando()" (click)="confirmarRecebimento()" [appCarregando]="enviando()">
         {{ enviando() ? 'Enviando...' : 'Confirmar recebimento' }}
       </button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharRecebi()">Voltar</button>
@@ -137,7 +137,7 @@
     <div class="folha" role="dialog" aria-modal="true" aria-labelledby="dispensar-titulo" (click)="$event.stopPropagation()">
       <h2 id="dispensar-titulo">Dispensar esta parcela?</h2>
       <p>{{ p.studentName }} · {{ valor(p.value) }}. O responsável é avisado e isso não tem volta.</p>
-      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="confirmarDispensa()">
+      <button type="button" class="btn btn-perigo" [disabled]="enviando()" (click)="confirmarDispensa()" [appCarregando]="enviando()">
         {{ enviando() ? 'Enviando...' : 'Dispensar parcela' }}
       </button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharDispensar()">Voltar</button>

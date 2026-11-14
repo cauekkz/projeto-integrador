@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -12,6 +12,7 @@ import { StudentService } from '../../../services/student.service';
 import { driverGroup } from '../../../services/dto/group/group.dto';
 import { iniciaisDe } from '../../../shared/iniciais/iniciais';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 type Membro = driverGroup['students'][number] & { photoUrl: string | null };
 
 // folhas da tela (Figma 1058:1116 renomear, 1058:1187 apagar, 1058:1255 avisar)
@@ -21,7 +22,7 @@ type Folha = 'renomear' | 'apagar' | 'avisar' | 'adicionar' | { tirar: Membro };
 @Component({
   selector: 'app-driver-group',
   standalone: true,
-  imports: [Esqueleto, FormsModule, TrailHeader, Footer],
+  imports: [BotaoCarregandoDirective, Skeleton, FormsModule, TrailHeader, Footer],
   templateUrl: './driver-group.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-group.css'],
 })

@@ -1,8 +1,9 @@
 <div class="profile-container">
   <app-header titulo="Informações do perfil" (voltarEvent)="voltar()" />
 
-  <div class="profile-wrapper">
-    <div class="avatar-container">
+  <main class="perfil">
+    <!-- capa: foto, nome, perfil e e-mail -->
+    <section class="capa" aria-labelledby="perfil-nome">
       <input
         #fotoInput
         type="file"
@@ -18,143 +19,166 @@
         [attr.aria-label]="enviandoFoto ? 'Enviando foto...' : 'Trocar foto de perfil'"
         (click)="fotoInput.click()"
       >
-        <img [src]="fotoPreview || usuario.photoUrl || '/testee.jpg'" class="avatar-grande" alt="Foto do usuário">
+        @if (carregando) {
+          <app-skeleton variante="circle" largura="112px" altura="112px" />
+        } @else {
+          <img [src]="fotoPreview || usuario.photoUrl || '/avatar-padrao.svg'" class="avatar-grande" alt="Foto do usuário">
+        }
         @if (enviandoFoto) {
           <span class="avatar-carregando" aria-hidden="true"></span>
         }
         <span class="avatar-camera" aria-hidden="true"><i class="bi bi-camera-fill"></i></span>
       </button>
-    </div>
 
-    <div class="hero">
-      <h2 class="hero-label">{{ usuario.name || 'Informações pessoais' }}</h2>
-    </div>
-
-    <div class="body-white">
-      <div class="info-card">
-        @if (!modoEdicao) {
-          <span class="rotulo-campo" aria-hidden="true">Nome</span>
-          <div class="field">
-            <input aria-label="Nome" type="text" [(ngModel)]="usuario.name" placeholder="Nome completo" name="name" readonly>
-          </div>
-
-          <span class="rotulo-campo" aria-hidden="true">CPF</span>
-          <div class="field">
-            <input aria-label="CPF" type="text" [(ngModel)]="usuario.cpf" placeholder="CPF/Documento" name="cpf" readonly>
-          </div>
-
-
-          <span class="rotulo-campo" aria-hidden="true">E-mail</span>
-          <div class="field">
-            <input aria-label="E-mail" type="email" [(ngModel)]="usuario.email" placeholder="E-mail" name="email" readonly>
-          </div>
-
-          <span class="rotulo-campo" aria-hidden="true">Telefone</span>
-          <div class="field">
-            <input aria-label="Telefone" type="text" [(ngModel)]="usuario.phone" placeholder="Telefone" name="phone" readonly>
-          </div>
+      @if (carregando) {
+        <div class="sk-tela sk-centro" role="status" aria-label="Carregando perfil...">
+          <app-skeleton variante="title" largura="45%" altura="24px" />
+          <app-skeleton variante="text" largura="60%" />
+        </div>
+      } @else {
+      <h1 id="perfil-nome" class="capa-nome">{{ usuario.name || 'Informações pessoais' }}</h1>
+      <div class="capa-linha">
+        <span class="capa-papel">
+          <i class="bi" [class.bi-truck-front-fill]="ehMotorista" [class.bi-people-fill]="!ehMotorista" aria-hidden="true"></i>
+          {{ ehMotorista ? 'Motorista' : 'Responsável' }}
+        </span>
+        @if (usuario.email) {
+          <span class="capa-email">{{ usuario.email }}</span>
         }
+      </div>
+      }
+    </section>
 
-        @if (modoEdicao) {
-          <span class="rotulo-campo" aria-hidden="true">E-mail</span>
-          <div class="field">
-            <input aria-label="E-mail" type="email" [(ngModel)]="enteredEmail" placeholder="E-mail" name="email">
-          </div>
-
-          <span class="rotulo-campo" aria-hidden="true">Telefone</span>
-          <div class="field">
-            <input aria-label="Telefone" type="text" [(ngModel)]="enteredPhone" placeholder="Telefone" name="phone" appPhoneMask>
-          </div>
-
-          <div class="field">
-            <input
-              type="text"
-              [(ngModel)]="enteredCode"
-              placeholder="Código de verificação"
-              name="verificationCode"
-              autocomplete="one-time-code"
-            >
-          </div>
-
-          <button
-            class="btn-secondary"
-            type="button"
-            (click)="solicitarCodigo()"
-            [disabled]="salvando"
-          >
-            Enviar código por e-mail
+    <!-- dados pessoais: lista no modo ver, campos no modo editar -->
+    <section class="grupo" aria-labelledby="dados-title">
+      <div class="grupo-cabeca">
+        <h2 id="dados-title">Dados pessoais</h2>
+        @if (!modoEdicao && !carregando) {
+          <button type="button" class="lg-button lg-glass botao-mini" (click)="editar()">
+            <i class="bi bi-pencil" aria-hidden="true"></i>
+            Editar
           </button>
-        }
-
-        <section class="password-section" aria-labelledby="password-title">
-          <h2 id="password-title">Alterar senha</h2>
-          <p>Solicite um código enviado para o seu e-mail e informe a nova senha.</p>
-
-          <div class="field">
-            <input
-              type="password"
-              [(ngModel)]="enteredPassword"
-              placeholder="Nova senha"
-              name="newPassword"
-              autocomplete="new-password"
-            >
-          </div>
-
-          <div class="field">
-            <input
-              type="password"
-              [(ngModel)]="enteredConfirmPassword"
-              placeholder="Repita a nova senha"
-              name="confirmNewPassword"
-              autocomplete="new-password"
-            >
-          </div>
-
-          <div class="field">
-            <input
-              type="text"
-              [(ngModel)]="enteredPasswordCode"
-              placeholder="Código de verificação"
-              name="passwordVerificationCode"
-              autocomplete="one-time-code"
-            >
-          </div>
-
-          <button
-            class="btn-secondary"
-            type="button"
-            (click)="solicitarCodigoSenha()"
-            [disabled]="salvando"
-          >
-            Enviar código por e-mail
-          </button>
-          <button
-            class="btn-primary"
-            type="button"
-            (click)="alterarSenha()"
-            [disabled]="salvando"
-          >
-            {{ salvando ? 'Salvando...' : 'Atualizar senha' }}
-          </button>
-        </section>
-
-        @if (mensagem) {
-          <p class="status-message" role="status">{{ mensagem }}</p>
         }
       </div>
 
-      <div class="btn-area">
-        @if (!modoEdicao) {
-          <button class="btn-primary" (click)="editar()">Editar</button>
-        }
+      <div class="cartao">
+        @if (carregando) {
+          <div class="sk-tela sk-dados" role="status" aria-label="Carregando seus dados...">
+            @for (i of [0, 1, 2, 3]; track i) {
+              <div class="sk-linha">
+                <app-skeleton variante="rect" largura="36px" altura="36px" />
+                <div class="sk-col"><app-skeleton variante="text" largura="25%" altura="10px" /><app-skeleton variante="text" largura="55%" altura="14px" /></div>
+              </div>
+            }
+          </div>
+        } @else if (!modoEdicao) {
+          <dl class="lista">
+            <div class="item">
+              <span class="item-icone" aria-hidden="true"><i class="bi bi-person"></i></span>
+              <dt>Nome</dt>
+              <dd>{{ usuario.name || '—' }}</dd>
+            </div>
+            <div class="item">
+              <span class="item-icone" aria-hidden="true"><i class="bi bi-person-vcard"></i></span>
+              <dt>CPF</dt>
+              <dd class="numero">{{ usuario.cpf || '—' }}</dd>
+            </div>
+            <div class="item">
+              <span class="item-icone" aria-hidden="true"><i class="bi bi-envelope"></i></span>
+              <dt>E-mail</dt>
+              <dd>{{ usuario.email || '—' }}</dd>
+            </div>
+            <div class="item">
+              <span class="item-icone" aria-hidden="true"><i class="bi bi-telephone"></i></span>
+              <dt>Telefone</dt>
+              <dd class="numero">{{ usuario.phone || '—' }}</dd>
+            </div>
+          </dl>
+        } @else {
+          <div class="campos">
+            <label class="campo flutua">
+              <span class="rotulo-campo">E-mail</span>
+              <input type="email" [(ngModel)]="enteredEmail" placeholder="seu@email.com" name="email" autocomplete="email">
+            </label>
 
-        @if (modoEdicao) {
-          <button class="btn-primary" (click)="salvar()" [disabled]="salvando">
+            <label class="campo flutua">
+              <span class="rotulo-campo">Telefone</span>
+              <input type="text" [(ngModel)]="enteredPhone" placeholder="(11) 90000-0000" name="phone" appPhoneMask autocomplete="tel">
+            </label>
+
+            <label class="campo flutua">
+              <span class="rotulo-campo">Código de verificação</span>
+              <input
+                type="text"
+                [(ngModel)]="enteredCode"
+                placeholder="Código enviado por e-mail"
+                name="verificationCode"
+                autocomplete="one-time-code"
+              >
+            </label>
+
+            <button
+              class="lg-button lg-glass botao botao-vidro"
+              type="button"
+              (click)="solicitarCodigo()"
+              [disabled]="salvando"
+            >
+              <i class="bi bi-envelope-paper" aria-hidden="true"></i>
+              Enviar código por e-mail
+            </button>
+          </div>
+        }
+      </div>
+
+      @if (modoEdicao) {
+        <div class="acoes">
+          <button class="lg-button botao botao-cheio" data-variant="filled" type="button" (click)="salvar()" [disabled]="salvando" [appCarregando]="salvando">
             {{ salvando ? 'Salvando...' : 'Salvar dados' }}
           </button>
-          <button class="btn-secondary" (click)="cancelar()" [disabled]="salvando">Cancelar</button>
+          <button class="lg-button lg-glass botao botao-vidro" type="button" (click)="cancelar()" [disabled]="salvando">Cancelar</button>
+        </div>
+      }
+    </section>
+
+
+    <!-- aparencia: controle segmentado de vidro da Glisse (com botoes de reserva se o React nao carregar) -->
+    <section class="grupo" aria-labelledby="aparencia-title">
+      <div class="grupo-cabeca">
+        <h2 id="aparencia-title">Aparência</h2>
+      </div>
+
+      <div class="cartao campos">
+        <p class="grupo-texto">"Sistema" segue o modo claro ou escuro do seu celular.</p>
+
+        @if (!glisseFalhou()) {
+          <app-glisse-segmentado
+            ariaLabel="Tema do app"
+            [opcoes]="opcoesSegmentado"
+            [valor]="tema.tema()"
+            (escolheu)="escolherTema($event)"
+            (falhou)="glisseFalhou.set(true)" />
+        } @else {
+          <div class="segmentado" role="radiogroup" aria-labelledby="aparencia-title" (keydown)="teclaTema($event)">
+            @for (opcao of opcoesTema; track opcao.valor) {
+              <button
+                type="button"
+                role="radio"
+                class="segmento"
+                [attr.aria-checked]="tema.tema() === opcao.valor"
+                [attr.tabindex]="tema.tema() === opcao.valor ? 0 : -1"
+                (click)="tema.escolher(opcao.valor)"
+              >
+                <i class="bi" [class]="opcao.icone" aria-hidden="true"></i>
+                <span>{{ opcao.rotulo }}</span>
+              </button>
+            }
+          </div>
         }
       </div>
-    </div>
-  </div>
+    </section>
+
+    @if (mensagem) {
+      <p class="status-message" role="status">{{ mensagem }}</p>
+    }
+  </main>
 </div>

@@ -9,7 +9,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  background: #ffffff;
+  background: var(--cor-superficie);
   box-sizing: border-box;
 }
 
@@ -35,8 +35,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 0.8px solid #e2e8f0;
-  background: #ffffff;
+  border: 0.8px solid var(--cor-borda);
+  background: var(--cor-superficie);
   box-sizing: border-box;
 }
 
@@ -47,8 +47,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  border: 0.8px solid #e2e8f0;
-  background: #ffffff;
+  border: 0.8px solid var(--cor-borda);
+  background: var(--cor-superficie);
   box-sizing: border-box;
 }
 
@@ -60,7 +60,7 @@
 
 .notification i {
   font-size: 20px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .badge {
@@ -74,7 +74,7 @@
   justify-content: center;
   padding: 0 4px;
   background: #ef1111;
-  color: #ffffff;
+  color: var(--cor-sobre-primaria);
   font-size: 11px;
   font-weight: 600;
   border-radius: 999px;
@@ -89,12 +89,12 @@
   gap: 12px;
   padding: 4px 16px 4px 4px;
   border-radius: 999px;
-  border: 0.8px solid #e2e8f0;
-  background: #ffffff;
+  border: 0.8px solid var(--cor-borda);
+  background: var(--cor-superficie);
   box-sizing: border-box;
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
   cursor: pointer;
   transition: var(--transicao-botao);
   overflow: hidden;
@@ -102,8 +102,8 @@
 
 @media (hover: hover) and (pointer: fine) {
   .user-name:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
+    background: var(--cor-superficie-2);
+    border-color: var(--cor-borda-forte);
   }
 }
 
@@ -143,7 +143,7 @@
 .role {
   font-size: 16px;
   font-weight: 600;
-  color: var(--texto-2);
+  color: var(--cor-texto-2);
   white-space: nowrap;
 }
 
@@ -159,10 +159,10 @@
   width: 34px;
   height: 34px;
   flex-shrink: 0;
-  border: 2px solid #ffffff;
+  border: 2px solid var(--cor-superficie);
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+  box-shadow: 0 1px 3px rgb(var(--sombra-rgb) / calc(0.15 * var(--sombra-forca)));
 }
 
 .avatar .dep-foto {
@@ -180,15 +180,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--azul);
-  color: #ffffff;
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
   font-size: 11px;
   font-weight: 600;
 }
 
 .dep-mais {
-  background: #e2e8f0;
-  color: var(--texto-2);
+  background: var(--cor-borda);
+  color: var(--cor-texto-2);
 }
 
 @media (max-width: 768px) {

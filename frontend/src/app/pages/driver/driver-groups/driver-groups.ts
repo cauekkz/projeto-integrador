@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -9,11 +9,12 @@ import { PopUpService } from '../../../shared/pop-up';
 import { GroupService } from '../../../services/group.service';
 import { driverGroup } from '../../../services/dto/group/group.dto';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 // Figma "Motorista · /driver-groups" (1058:635 lista, 1058:699 vazio, 1058:751 novo grupo, 1058:829 erro 409)
 @Component({
   selector: 'app-driver-groups',
   standalone: true,
-  imports: [Esqueleto, FormsModule, TrailHeader, Footer],
+  imports: [BotaoCarregandoDirective, Skeleton, FormsModule, TrailHeader, Footer],
   templateUrl: './driver-groups.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-groups.css'],
 })

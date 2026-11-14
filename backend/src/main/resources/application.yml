@@ -14,7 +14,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DATABASE_HOST:localhost}:${DATABASE_PORT:5432}/${DATABASE_NAME:vanroute_db}
     username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD}
+    password: ${DATABASE_PASSWORD:123456}
 
   jpa:
     hibernate:

@@ -1,4 +1,5 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { botaoCarregandoInterceptor } from './shared/botao-carregando/botao-carregando.interceptor';
 import { authInterceptor } from './interceptor/auth.interceptor';
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, withViewTransitions } from '@angular/router';
@@ -11,7 +12,7 @@ export const appConfig: ApplicationConfig = {
     // troca de tela com fade suave (View Transitions API; navegador sem suporte so troca direto)
     provideRouter(routes, withViewTransitions({ skipInitialTransition: true })),
     provideHttpClient(
-      withInterceptors([authInterceptor])
+      withInterceptors([botaoCarregandoInterceptor, authInterceptor])
     )
   ]
 };

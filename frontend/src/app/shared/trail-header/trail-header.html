@@ -1,6 +1,6 @@
 <header class="topo">
   @if (mostrarVoltar()) {
-    <button type="button" class="voltar" aria-label="Voltar" (click)="voltarEvent.emit()">
+    <button type="button" class="voltar" aria-label="Ir para o início" (click)="irParaHome()">
       <i class="bi bi-chevron-left" aria-hidden="true"></i>
     </button>
   }
@@ -10,7 +10,7 @@
       @for (item of trilha(); track $index; let ultimo = $last) {
         <li [class.atual]="ultimo" [attr.aria-current]="ultimo ? 'page' : null" [attr.title]="ultimo ? item : null">
           @if (!ultimo && destino($index, item); as url) {
-            <button type="button" class="migalha-link" (click)="irPara(url)">{{ item }}</button>
+            <button type="button" class="migalha-link" (click)="voltarParaAnterior(url)">{{ item }}</button>
           } @else {
             {{ item }}
           }
@@ -21,10 +21,11 @@
       }
     </ol>
 
-    <span class="usuario">
+    <!-- foto e nome: abre o painel do perfil, igual ao topo das homes -->
+    <button type="button" class="usuario" aria-label="Abrir perfil" (click)="mostrarPerfil.set(true)">
       <img [src]="foto()" alt="">
       <span>{{ nome() }}</span>
-    </span>
+    </button>
 
     @if (mostrarSino()) {
       <button type="button" class="sino" aria-label="Notificações" (click)="notificacoes.abrirTela()">
@@ -36,3 +37,7 @@
     }
   </div>
 </header>
+
+@if (mostrarPerfil()) {
+  <app-profile-select animate.leave="sair-perfil" [usuario]="usuario()" (fecharEvent)="mostrarPerfil.set(false)" />
+}

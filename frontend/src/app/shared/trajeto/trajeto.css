@@ -16,9 +16,9 @@
   width: 10px;
   height: 10px;
   flex-shrink: 0;
-  border: 2px solid #94a3b8;
+  border: 2px solid var(--cor-texto-4);
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--cor-superficie);
 }
 
 /* a linha ate onde a van chegou fica azul e cheia; o resto, tracejado cinza */
@@ -27,14 +27,14 @@
   flex: 1;
   height: 2px;
   margin: 0 4px;
-  background: repeating-linear-gradient(90deg, #cbd5e1 0 6px, transparent 6px 10px);
+  background: repeating-linear-gradient(90deg, var(--cor-borda-forte) 0 6px, transparent 6px 10px);
 }
 
 .feito {
   position: absolute;
   inset: 0 auto 0 0;
   width: var(--onde);
-  background: var(--azul);
+  background: var(--cor-primaria);
 }
 
 .van {
@@ -46,8 +46,8 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--azul);
-  color: #ffffff;
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
   font-size: 12px;
   translate: -50% -50%;
 }
@@ -58,8 +58,8 @@
 .meio .comeco,
 .fim .comeco,
 .fim .final {
-  border-color: var(--azul);
-  background: var(--azul);
+  border-color: var(--cor-primaria);
+  background: var(--cor-primaria);
 }
 
 .fora .trilho { opacity: 0.5; }
@@ -69,5 +69,5 @@
   justify-content: space-between;
   margin-top: 4px;
   font-size: 12px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }

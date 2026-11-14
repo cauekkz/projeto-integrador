@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../../shared/skeleton/skeleton';
 import { Component, OnInit, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { ContractService } from '../../../../services/contract.service';
@@ -10,6 +10,7 @@ import {
   periodicidadeLabel,
 } from '../../../../services/dto/contract/contract.dto';
 
+import { BotaoCarregandoDirective } from '../../../../shared/botao-carregando/botao-carregando.directive';
 // WITHDRAWN so existe no front: o backend manda REJECTION "Proposta Retirada" quando o motorista retira
 export type DecisaoContrato = ContractStatus | 'WITHDRAWN';
 
@@ -17,7 +18,7 @@ export type DecisaoContrato = ContractStatus | 'WITHDRAWN';
 // o responsavel decide (aceitar/negar) e o motorista pode retirar enquanto estiver pendente
 @Component({
   selector: 'app-contract-proposal-card',
-  imports: [Esqueleto],
+  imports: [BotaoCarregandoDirective, Skeleton],
   standalone: true,
   templateUrl: './contract-proposal-card.html',
   styleUrl: './contract-proposal-card.css',

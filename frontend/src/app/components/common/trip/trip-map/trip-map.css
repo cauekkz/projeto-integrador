@@ -11,36 +11,74 @@
   background: #f2f3f0;
 }
 
-/* marcadores do Figma: van azul com o onibus, pontos com casa/escola e o rotulo "Próximo ponto" */
-:host ::ng-deep .marcador-van span,
+/* modo escuro: fundo do Dark Matter enquanto carrega */
+:host-context([data-theme='dark']) .mapa {
+  background: #0e0e0e;
+}
+
+/* van vista de cima (VanDeCima no trip-map.react.tsx): o mapa gira o marcador pra direcao do motorista.
+   cores pelos tokens do app, que ja trocam com o tema: lataria = --cor-texto (escura no claro, branca no escuro),
+   vidros = escuro com um toque do azul da marca, lanternas = --cor-perigo, sombra = a mesma dos cartoes */
+:host {
+  --van-corpo: var(--cor-texto);
+  --van-lateral: color-mix(in srgb, var(--cor-texto) 72%, rgb(var(--sombra-rgb)));
+  --van-brilho: color-mix(in srgb, var(--cor-texto) 80%, #ffffff);
+  --van-vidro: color-mix(in srgb, var(--cor-primaria) 42%, #070a10);
+  --van-reflexo: rgb(255 255 255 / 0.18);
+  --van-detalhe: color-mix(in srgb, var(--cor-texto) 80%, rgb(var(--sombra-rgb)));
+  --van-farol: #fff6c9;
+  --van-lanterna: var(--cor-perigo);
+  --van-contorno: rgb(var(--sombra-rgb) / 0.35);
+  --van-sombra-chao: rgb(var(--sombra-rgb) / calc(0.3 * var(--sombra-forca)));
+}
+
+:host ::ng-deep .van-3d {
+  display: block;
+  width: 26px;
+  height: 54px;
+  overflow: visible;
+  pointer-events: none;
+  user-select: none;
+  /* sombra no chao: da o volume de "3D" */
+  filter: drop-shadow(0 3px 4px var(--van-sombra-chao));
+}
+
+:host ::ng-deep .van-3d .van-c-corpo { stop-color: var(--van-corpo); }
+:host ::ng-deep .van-3d .van-c-lateral { stop-color: var(--van-lateral); }
+:host ::ng-deep .van-3d .van-c-brilho { stop-color: var(--van-brilho); }
+:host ::ng-deep .van-3d .van-vidro { fill: var(--van-vidro); }
+:host ::ng-deep .van-3d .van-reflexo { fill: var(--van-reflexo); }
+:host ::ng-deep .van-3d .van-detalhe { fill: var(--van-detalhe); }
+:host ::ng-deep .van-3d .van-farol { fill: var(--van-farol); }
+:host ::ng-deep .van-3d .van-lanterna { fill: var(--van-lanterna); }
+:host ::ng-deep .van-3d .van-contorno { stroke: var(--van-contorno); stroke-width: 0.8; }
+:host ::ng-deep .van-3d .van-contorno-suave { stroke: var(--van-contorno); stroke-width: 0.4; }
+
+/* marcadores do Figma: pontos com casa/escola e o rotulo "Próximo ponto" */
+:host ::ng-deep .marcador-ponto {
+  /* o rotulo "Próximo ponto" se posiciona em relacao ao pino */
+  position: relative;
+}
+
 :host ::ng-deep .marcador-ponto span {
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  box-shadow: 0 2px 8px rgba(15, 23, 41, 0.25);
-}
-
-:host ::ng-deep .marcador-van span {
-  width: 36px;
-  height: 36px;
-  border: 3px solid #ffffff;
-  background: var(--azul);
-  color: #ffffff;
-  font-size: 18px;
+  box-shadow: 0 2px 8px rgb(var(--sombra-rgb) / calc(0.25 * var(--sombra-forca)));
 }
 
 :host ::ng-deep .marcador-ponto span {
   width: 32px;
   height: 32px;
-  background: #ffffff;
-  color: var(--azul);
+  background: var(--cor-superficie);
+  color: var(--cor-primaria-texto);
   font-size: 16px;
 }
 
 :host ::ng-deep .marcador-ponto.alvo span {
-  background: var(--azul);
-  color: #ffffff;
+  background: var(--cor-primaria);
+  color: var(--cor-sobre-primaria);
 }
 
 :host ::ng-deep .marcador-ponto em {
@@ -50,13 +88,13 @@
   transform: translateX(-50%);
   padding: 4px 8px;
   border-radius: 8px;
-  background: #ffffff;
-  color: var(--texto);
+  background: var(--cor-superficie);
+  color: var(--cor-texto);
   font-size: 11px;
   font-style: normal;
   font-weight: 600;
   white-space: nowrap;
-  box-shadow: 0 1px 4px rgba(15, 23, 41, 0.2);
+  box-shadow: 0 1px 4px rgb(var(--sombra-rgb) / calc(0.2 * var(--sombra-forca)));
 }
 
 /* botao "ver a rota inteira"; cada tela acerta a altura com --localizar-baixo (fica acima dos botoes dela) */
@@ -74,9 +112,9 @@
   border-radius: 50%;
   /* branco translucido: o vidro da Glisse (app-glisse-vidro) desfoca o mapa atras */
   background: rgba(255, 255, 255, 0.55);
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
   font-size: 18px;
-  box-shadow: 0 2px 8px rgba(15, 23, 41, 0.2);
+  box-shadow: 0 2px 8px rgb(var(--sombra-rgb) / calc(0.2 * var(--sombra-forca)));
   cursor: pointer;
 }
 
@@ -90,13 +128,22 @@
   z-index: 1;
 }
 
+/* modo escuro: vidro escuro com borda clara sutil (o branco translucido ficava cinza lavado no mapa escuro) */
+:host-context([data-theme='dark']) .localizar {
+  background: rgb(30 30 32 / 0.62);
+  color: #f1f1f1;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.1), 0 2px 10px rgb(0 0 0 / 0.45);
+}
+
+:host-context([data-theme='dark']) .localizar > i {
+  color: var(--cor-primaria-texto);
+}
+
 .localizar:active {
   transform: scale(0.94);
 }
 
-/* creditos discretos, como nos apps */
-:host ::ng-deep .leaflet-control-attribution {
-  background: rgba(255, 255, 255, 0.7);
-  color: var(--texto-3);
+/* creditos discretos, como nos apps (o resto do visual vem do src/tailwind.css, igual ao mapcn) */
+:host ::ng-deep .maplibregl-ctrl-attrib {
   font-size: 11px;
 }

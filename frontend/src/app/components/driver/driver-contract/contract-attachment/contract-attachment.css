@@ -6,10 +6,10 @@
 
 .anexo {
   width: 100%;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--cor-borda);
   border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+  background: var(--cor-superficie);
+  box-shadow: 0 2px 8px rgb(var(--sombra-rgb) / calc(0.06 * var(--sombra-forca)));
 }
 
 .anexo-vazio {
@@ -20,17 +20,17 @@
   padding: 32px 16px 8px;
   cursor: pointer;
   font-family: inherit;
-  color: var(--texto);
+  color: var(--cor-texto);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .anexo-vazio:hover:not(:disabled) {
-    border-color: #c7d2e0;
+    border-color: var(--cor-borda-forte);
   }
 }
 
 .anexo-vazio.invalida {
-  border-color: var(--vermelho);
+  border-color: var(--cor-perigo);
 }
 
 .anexo-vazio:disabled {
@@ -41,7 +41,7 @@
 .icone-adicionar {
   font-size: 64px;
   line-height: 1;
-  color: #111111;
+  color: var(--cor-texto);
   margin-bottom: 8px;
 }
 
@@ -52,7 +52,7 @@
 
 .anexo-opcional {
   font-size: 16px;
-  color: #c4c4c4;
+  color: var(--cor-texto-4);
 }
 
 .anexo-escolhido {
@@ -65,7 +65,7 @@
 
 .icone-pdf {
   font-size: 32px;
-  color: var(--vermelho);
+  color: var(--cor-perigo);
   flex-shrink: 0;
 }
 
@@ -80,7 +80,7 @@
 .anexo-nome {
   font-size: 14px;
   font-weight: 600;
-  color: var(--texto);
+  color: var(--cor-texto);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -88,7 +88,7 @@
 
 .anexo-tamanho {
   font-size: 13px;
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
 }
 
 .anexo-acoes {
@@ -101,7 +101,7 @@
 .acao {
   border: none;
   background: transparent;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
   font-size: 14px;
   font-weight: 600;
   padding: 8px;
@@ -111,7 +111,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .acao:hover:not(:disabled) {
-    background: #f1f5f9;
+    background: var(--cor-superficie-3);
   }
 }
 
@@ -121,11 +121,11 @@
 }
 
 .acao-remover {
-  color: var(--vermelho);
+  color: var(--cor-perigo);
   font-size: 16px;
 }
 
 .erro {
   font-size: 13px;
-  color: var(--vermelho);
+  color: var(--cor-perigo);
 }

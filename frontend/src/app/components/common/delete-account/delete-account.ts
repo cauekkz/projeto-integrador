@@ -5,6 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../services/auth.service';
 import { PopUpService } from '../../../shared/pop-up';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 export type BloqueioExclusao = 'contratos' | 'parcelas';
 
 // Figma "Etapa 10 · Privacidade": folhas "Excluir sua conta?" e "Confirme com sua senha"
@@ -13,7 +14,7 @@ export type BloqueioExclusao = 'contratos' | 'parcelas';
 @Component({
   selector: 'app-delete-account',
   standalone: true,
-  imports: [FormsModule],
+  imports: [BotaoCarregandoDirective, FormsModule],
   templateUrl: './delete-account.html',
   styleUrls: ['../../../shared/folha.css', './delete-account.css'],
 })

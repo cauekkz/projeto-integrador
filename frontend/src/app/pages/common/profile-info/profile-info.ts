@@ -1,13 +1,17 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { Header } from '../../../shared/header/header';
-import { PhoneMaskDirective, PasswordToggleDirective } from '../../../shared/directives';
+import { PhoneMaskDirective } from '../../../shared/directives';
 import { PopUpService } from '../../../shared/pop-up';
 import { formatarCpf, formatarTelefone, limparMascara } from '../../../shared/utils';
+import { Tema, ThemeService } from '../../../services/theme.service';
+import { GlisseSegmentado, OpcaoSegmentada } from '../../../shared/glisse-segmentado/glisse-segmentado';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 // mesma regra do backend: maiuscula, minuscula, numero e caractere especial, 8+ caracteres
 const SENHA_FORTE = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/;
 
@@ -17,7 +21,7 @@ const TAMANHO_MAX_FOTO = 5 * 1024 * 1024;
 @Component({
   selector: 'app-profile-info',
   standalone: true,
-  imports: [Header, FormsModule, PhoneMaskDirective, PasswordToggleDirective],
+  imports: [BotaoCarregandoDirective, Skeleton, Header, FormsModule, PhoneMaskDirective, GlisseSegmentado],
   templateUrl: './profile-info.html',
   styleUrl: './profile-info.css',
 })
@@ -37,6 +41,8 @@ export class ProfileInfo implements OnInit {
   enteredEmail = '';
   enteredPhone = '';
   enteredCode = '';
+  // so pra tela: esqueleto ate os dados do usuario chegarem
+  carregando = true;
   enteredPassword = '';
   enteredConfirmPassword = '';
   enteredPasswordCode = '';
@@ -45,6 +51,19 @@ export class ProfileInfo implements OnInit {
   // foto escolhida aparece na hora (preview local) enquanto sobe pro bucket
   fotoPreview: string | null = null;
   enviandoFoto = false;
+
+  // "Aparencia": sistema / claro / escuro
+  protected readonly tema = inject(ThemeService);
+  protected readonly opcoesTema: { valor: Tema; rotulo: string; icone: string }[] = [
+    { valor: 'sistema', rotulo: 'Sistema', icone: 'bi-circle-half' },
+    { valor: 'claro', rotulo: 'Claro', icone: 'bi-sun' },
+    { valor: 'escuro', rotulo: 'Escuro', icone: 'bi-moon-stars' },
+  ];
+  // mesmo controle de vidro da Glisse do resto do app; se o React nao carregar, cai nos botoes de reserva
+  protected readonly opcoesSegmentado: OpcaoSegmentada[] = this.opcoesTema.map((o) => ({ value: o.valor, label: o.rotulo, icone: o.icone }));
+  protected readonly glisseFalhou = signal(false);
+  // capa mostra o perfil de quem esta logado
+  protected ehMotorista = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -57,8 +76,10 @@ export class ProfileInfo implements OnInit {
 
   ngOnInit() {
     this.tipoUsuario = this.route.snapshot.paramMap.get('tipo') || '';
+    this.ehMotorista = this.authService.getRolesFromToken().includes('ROLE_DRIVER');
     this.authService.getMe().subscribe({
       next: (me) => {
+        this.carregando = false;
         this.usuario = {
           name: me.name ?? '',
           cpf: formatarCpf(me.cpf),
@@ -70,12 +91,35 @@ export class ProfileInfo implements OnInit {
         this.enteredPhone = this.usuario.phone;
         this.cdr.markForCheck();
       },
-      error: (err) => console.error(err),
+      error: (err) => {
+        this.carregando = false;
+        this.cdr.markForCheck();
+        console.error(err);
+      },
     });
   }
 
   voltar() {
     this.location.back();
+  }
+
+  escolherTema(valor: string) {
+    const opcao = this.opcoesTema.find((o) => o.valor === valor);
+    if (opcao) this.tema.escolher(opcao.valor);
+  }
+
+  // radiogroup: setas trocam a opcao e levam o foco junto (padrao WAI-ARIA)
+  teclaTema(evento: KeyboardEvent) {
+    const passo = ({ ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 } as Record<string, number>)[evento.key];
+    const extremo = ({ Home: 0, End: this.opcoesTema.length - 1 } as Record<string, number>)[evento.key];
+    if (passo === undefined && extremo === undefined) return;
+    evento.preventDefault();
+    const atual = this.opcoesTema.findIndex((o) => o.valor === this.tema.tema());
+    const total = this.opcoesTema.length;
+    const novo = extremo ?? (atual + passo! + total) % total;
+    this.tema.escolher(this.opcoesTema[novo].valor);
+    const grupo = evento.currentTarget as HTMLElement;
+    queueMicrotask(() => grupo.querySelectorAll<HTMLElement>('[role="radio"]')[novo]?.focus());
   }
 
   async selecionarFoto(event: Event) {

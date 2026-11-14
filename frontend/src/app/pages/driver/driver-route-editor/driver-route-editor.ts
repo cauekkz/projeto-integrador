@@ -1,4 +1,4 @@
-import { Esqueleto } from '../../../shared/esqueleto/esqueleto';
+import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, DestroyRef, ElementRef, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -30,11 +30,12 @@ import {
 } from '../../../services/dto/route/route.dto';
 import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
 
+import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 // Figma "Rotas · Motorista": editor da rota (vazia, com pendencia, pronta), folhas do aluno, do ponto e da van
 @Component({
   selector: 'app-driver-route-editor',
   standalone: true,
-  imports: [Esqueleto, TrailHeader, Footer, AddStudentToRoute],
+  imports: [BotaoCarregandoDirective, Skeleton, TrailHeader, Footer, AddStudentToRoute],
   templateUrl: './driver-route-editor.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-route-editor.css'],
 })

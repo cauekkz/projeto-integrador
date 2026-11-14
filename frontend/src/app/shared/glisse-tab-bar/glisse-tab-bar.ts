@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { NavigationCancel, NavigationError, Router } from '@angular/router';
 import type { AbaGlisse, TabBarMontada } from './tab-bar.react';
+import { ThemeService } from '../../services/theme.service';
 
 export type { AbaGlisse } from './tab-bar.react';
 
@@ -56,8 +57,8 @@ export class GlisseTabBar {
     } else {
       const el = document.createElement('div');
       el.className = 'glisse-tab-bar';
-      // tema claro da Glisse fixo nesta barra (mesmo com o celular no modo escuro)
-      el.dataset['theme'] = 'light';
+      // tema da Glisse = tema do app (o effect abaixo acompanha a troca)
+      el.dataset['theme'] = inject(ThemeService).aplicado();
       host.appendChild(el);
       compartilhada = { el, barra: null, dono: this };
       const minha = compartilhada;
@@ -74,6 +75,13 @@ export class GlisseTabBar {
           });
       });
     }
+
+    // modo escuro do app: a barra usa o tema dark da propria Glisse
+    const tema = inject(ThemeService);
+    effect(() => {
+      const modo = tema.aplicado();
+      if (compartilhada) compartilhada.el.dataset['theme'] = modo;
+    });
 
     // tocou numa aba e a tela nao mudou (navegacao cancelada ou com erro): a bolha volta pra aba certa
     const navegacao = inject(Router).events.subscribe((e) => {

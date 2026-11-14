@@ -1,91 +1,232 @@
+/* Minhas escolas: cabecalho com icone, lista agrupada em vidro (estilo ajustes do iOS)
+   e botoes da Glisse (lg-button) no azul do VanRoute */
 .escolas {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+  /* botoes da Glisse pintam com --lg-tint: o azul da marca */
+  --lg-tint: var(--cor-primaria);
+  --lg-fill: var(--cor-primaria);
+  /* vidro: superficie translucida + borda fina + brilho no topo */
+  --vidro-fundo: color-mix(in srgb, var(--cor-superficie-2) 85%, transparent);
+  --vidro-borda: color-mix(in srgb, var(--cor-borda) 80%, transparent);
+  --vidro-brilho: rgba(255, 255, 255, 0.9);
+  --vidro-sombra: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 28px -6px rgba(15, 23, 42, 0.08);
+}
+
+:host-context([data-theme='dark']) .escolas {
+  --vidro-fundo: color-mix(in srgb, var(--cor-superficie) 70%, transparent);
+  --vidro-brilho: rgba(255, 255, 255, 0.07);
+  --vidro-sombra: 0 10px 28px -8px rgba(0, 0, 0, 0.35);
+}
+
+.vidro {
+  position: relative;
+  background: var(--vidro-fundo);
+  border: 1px solid var(--vidro-borda);
+  border-radius: 20px;
+  box-shadow: inset 0 1px 0 var(--vidro-brilho), var(--vidro-sombra);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+}
+
+/* ---------- cabecalho ---------- */
+.cabecalho {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+
+.cabecalho-texto {
+  min-width: 0;
 }
 
 .cabecalho h2 {
-  color: var(--texto);
-  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--cor-texto);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.contagem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 11px;
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 .cabecalho p {
-  margin-top: 4px;
-  color: var(--texto-3);
+  margin-top: 2px;
+  color: var(--cor-texto-3);
   font-size: 14px;
+  line-height: 1.4;
 }
 
+/* ---------- lista agrupada ---------- */
 .lista {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  padding: 4px 0;
+  overflow: hidden;
 }
 
 .escola {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border: 1.5px solid #bcd4f7;
-  border-radius: 12px;
+  gap: 14px;
+  padding: 14px 16px;
   min-width: 0;
+  animation: escola-entrar 420ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) both;
+  animation-delay: calc(var(--i, 0) * 50ms);
+}
+
+/* divisor fino comecando depois do icone */
+.escola + .escola::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 68px;
+  right: 16px;
+  height: 1px;
+  background: var(--vidro-borda);
 }
 
 .icone {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
   border-radius: 12px;
-  background: #eaf2fd;
-  color: var(--azul);
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto);
   font-size: 18px;
 }
 
 .escola-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
   min-width: 0;
 }
 
 .escola-info strong {
   font-size: 16px;
-  color: var(--texto);
+  font-weight: 600;
+  color: var(--cor-texto);
   overflow-wrap: anywhere;
 }
 
-.escola-info span {
+.endereco {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
   font-size: 13px;
-  color: var(--texto-3);
+  line-height: 1.35;
+  color: var(--cor-texto-3);
   overflow-wrap: anywhere;
+}
+
+.endereco i {
+  font-size: 12px;
+  margin-top: 1px;
+  color: var(--cor-texto-4);
+}
+
+@keyframes escola-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ---------- vazio ---------- */
+.vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 20px;
+  text-align: center;
+}
+
+.vazio-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 6px;
+  border-radius: 50%;
+  background: var(--cor-primaria-suave);
+  color: var(--cor-primaria-texto);
+  font-size: 24px;
+}
+
+.vazio strong {
+  color: var(--cor-texto);
+  font-size: 16px;
+}
+
+.vazio p {
+  color: var(--cor-texto-3);
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .aviso {
-  color: var(--texto-3);
+  color: var(--cor-texto-3);
   font-size: 14px;
 }
 
 .aviso.erro {
-  color: var(--vermelho-texto);
+  color: var(--cor-perigo-texto);
 }
 
 .link {
   border: none;
   background: transparent;
-  color: var(--azul);
+  color: var(--cor-primaria-texto);
   font-weight: 600;
   cursor: pointer;
   padding: 0 4px;
 }
 
+/* ---------- formulario ---------- */
 .formulario {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  padding: 18px 16px 16px;
+  /* label flutuante corta a borda com a cor do cartao */
+  --flutua-fundo: var(--cor-superficie);
+}
+
+/* campos brancos dentro do cartao tingido (no escuro o cartao ja e a superficie) */
+.formulario .field input {
+  background: var(--cor-superficie);
+}
+
+.formulario-titulo {
+  color: var(--cor-texto);
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 2px;
 }
 
 .linha {
@@ -98,81 +239,41 @@
   width: 100%;
   min-width: 0;
   height: 52px;
-  border: 1.5px solid #bcd4f7;
+  border: 1.5px solid var(--cor-primaria-borda);
   border-radius: 12px;
   padding: 0 16px;
   font-size: 16px;
-  color: var(--texto);
+  color: var(--cor-texto);
   outline: none;
-  background: #ffffff;
+  background: var(--cor-superficie);
   transition: border-color 0.15s ease, box-shadow 0.15s ease,
     scale 160ms var(--ease-out, ease-out);
 }
 
 .field input:focus {
-  border-color: var(--azul);
-  box-shadow: 0 0 0 3px rgba(12, 102, 219, 0.15);
+  border-color: var(--cor-primaria-texto);
+  box-shadow: 0 0 0 3px var(--cor-foco);
 }
 
-.btn-adicionar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* ---------- botoes (Glisse) ---------- */
+.botao.lg-button {
+  width: 100%;
+  height: 50px;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 600;
   gap: 8px;
-  width: 100%;
-  height: 52px;
-  border: 1.5px dashed var(--azul);
-  border-radius: 12px;
-  background: #ffffff;
-  color: var(--azul);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .btn-adicionar:hover {
-    background: #f5f9ff;
+/* vidro com o texto azul (o "tinted" da Glisse) */
+.botao-vidro.lg-button {
+  --lg-glass: var(--cor-primaria-suave);
+  --lg-glass-active: color-mix(in srgb, var(--cor-primaria-suave), var(--cor-primaria) 12%);
+  color: var(--cor-primaria-texto);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .escola {
+    animation: none;
   }
-}
-
-.btn-primary,
-.btn-secondary {
-  width: 100%;
-  height: 52px;
-  border: none;
-  border-radius: 14px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-primary {
-  background: var(--azul);
-  color: #ffffff;
-}
-
-.btn-secondary {
-  background: #ffffff;
-  color: var(--azul);
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .btn-primary:disabled,
-  .btn-primary:hover:not(:disabled) {
-    background: #0052a3;
-  }
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .btn-secondary:hover:not(:disabled) {
-    background: #eff6ff;
-  }
-}
-
-.btn-secondary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }

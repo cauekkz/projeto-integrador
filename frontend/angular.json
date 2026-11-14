@@ -23,11 +23,17 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "maplibre-gl-worker.mjs",
+                "input": "node_modules/maplibre-gl/dist",
+                "output": "/"
               }
             ],
             "styles": [
               "node_modules/glisse/dist/styles.css",
-              "src/styles.css"
+              "src/styles.css",
+              "src/tailwind.css"
             ]
           },
           "configurations": {

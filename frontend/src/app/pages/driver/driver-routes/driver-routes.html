@@ -11,7 +11,7 @@
     </div>
 
     <div class="user-info" role="button" tabindex="0" (click)="mostrarPerfil.set(true)" (keydown.enter)="mostrarPerfil.set(true)">
-      <img [src]="usuarioLogado()?.photoUrl || '/testee.jpg'" class="avatar" alt="Foto do motorista" />
+      <img [src]="usuarioLogado()?.photoUrl || '/avatar-padrao.svg'" class="avatar" alt="Foto do motorista" />
       <span class="name">{{ usuarioLogado()?.name || '' }}</span>
     </div>
 
@@ -30,24 +30,57 @@
 
     @if (emRota(); as v) {
       <!-- ja esta em rota: aviso no topo e o atalho pro mapa da viagem -->
-      <section class="em-rota" role="status" animate.enter="entrar-subindo">
-        <div class="em-rota-linha">
-          <span class="em-rota-icone" aria-hidden="true"><i class="bi bi-truck-front-fill"></i></span>
-          <div class="em-rota-texto">
+      <section class="em-rota" role="status" animate.enter="entrar-subindo" animate.leave="em-rota-sumindo">
+        <!-- pela hora (nao pelo tema): de noite a lua no canto do card -->
+        @if (noite()) {
+          <svg class="em-rota-astro em-rota-lua" viewBox="0 0 40 40" width="34" height="34" aria-hidden="true">
+            <defs>
+              <linearGradient id="em-rota-lua-cor" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#fffdf2" />
+                <stop offset="1" stop-color="#e7dcb8" />
+              </linearGradient>
+            </defs>
+            <mask id="em-rota-lua-recorte">
+              <rect width="40" height="40" fill="#fff" />
+              <circle cx="27" cy="13" r="10" fill="#000" />
+            </mask>
+            <!-- crescente: circulo recortado por outro deslocado pra cima e pra direita -->
+            <g mask="url(#em-rota-lua-recorte)">
+              <circle cx="19" cy="21" r="12" fill="url(#em-rota-lua-cor)" />
+              <circle cx="13.5" cy="22" r="2" class="lua-cratera" />
+              <circle cx="18.5" cy="28.5" r="1.3" class="lua-cratera" />
+              <circle cx="11.5" cy="16.5" r="1" class="lua-cratera" />
+            </g>
+            <!-- estrelinhas de 4 pontas -->
+            <path class="lua-estrela" d="M33 3l1.2 3.3 3.3 1.2-3.3 1.2L33 12l-1.2-3.3-3.3-1.2 3.3-1.2z" />
+            <path class="lua-estrela lua-estrela-2" d="M36 17l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" />
+          </svg>
+        }
+        <div class="em-rota-texto">
+          @if (chegou()) {
+            <span class="em-rota-selo"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Rota finalizada</span>
+          } @else {
             <span class="em-rota-selo"><span class="ao-vivo" aria-hidden="true"></span>Em rota agora</span>
-            <strong>{{ v.nome }}</strong>
-          </div>
+          }
+          <strong>{{ v.nome }}</strong>
         </div>
-        <!-- a faixa da estrada correndo: a van esta andando -->
-        <span class="em-rota-estrada" aria-hidden="true"></span>
-        <button type="button" class="btn em-rota-abrir" (click)="abrirViagem()">
-          <i class="bi bi-map" aria-hidden="true"></i> Abrir mapa
-        </button>
+        <!-- a van de perfil andando: a faixa da estrada corre pra tras e as rodas giram -->
+        <!-- acabou de finalizar: depois da van andando, ela chega na escola ou em casa (sem o "Abrir mapa": a viagem ja acabou) -->
+        @if (chegou() && chegada(); as destino) {
+          <app-cena-chegada animate.enter="entrar-fade" aria-hidden="true" [destino]="destino" [noite]="noite()" />
+        } @else {
+          <app-cena-em-rota aria-hidden="true" [noite]="noite()" />
+        }
+        @if (!chegada()) {
+          <button type="button" class="btn em-rota-abrir" (click)="abrirViagem()">
+            <i class="bi bi-geo-alt-fill" aria-hidden="true"></i> Abrir mapa
+          </button>
+        }
       </section>
     }
 
     @if (carregando()) {
-      <app-esqueleto tipo="lista" [quantos]="4" texto="Carregando rotas..." />
+      <div class="sk-tela" role="status" aria-label="Carregando rotas..."><div class="sk-linha"><app-skeleton variante="rect" largura="72px" altura="34px" /><app-skeleton variante="rect" largura="72px" altura="34px" /></div>@for (i of [0,1,2,3]; track i) {<app-skeleton variante="card"><div class="sk-linha"><div class="sk-col"><app-skeleton variante="title" largura="50%" /></div><app-skeleton variante="rect" largura="12px" altura="12px" /></div><div class="sk-linha"><app-skeleton variante="rect" largura="60px" altura="12px" /><app-skeleton variante="rect" largura="60px" altura="12px" /></div><app-skeleton variante="rect" largura="100%" altura="10px" /></app-skeleton>}</div>
     } @else if (erroCarregar()) {
       <div class="aviso erro" role="alert">
         <p>Não foi possível carregar as rotas.</p>
@@ -143,11 +176,11 @@
     <form class="folha" role="dialog" aria-modal="true" aria-labelledby="nova-titulo" (click)="$event.stopPropagation()" (ngSubmit)="criar()">
       <h2 id="nova-titulo">Nova rota</h2>
       <p class="sub">A ida e a volta são rotas diferentes.</p>
-      <div class="campo">
+      <div class="campo flutua">
         <label for="nome-rota">Nome da rota</label>
         <input id="nome-rota" name="nome" [(ngModel)]="nome" placeholder="Ex.: Ida manhã" maxlength="80" autocomplete="off" />
       </div>
-      <button type="submit" class="btn btn-azul" [disabled]="enviando()">
+      <button type="submit" class="btn btn-azul" [disabled]="enviando()" [appCarregando]="enviando()">
         {{ enviando() ? 'Criando...' : 'Criar rota' }}
       </button>
       <button type="button" class="btn btn-contorno" [disabled]="enviando()" (click)="fecharNova()">Cancelar</button>

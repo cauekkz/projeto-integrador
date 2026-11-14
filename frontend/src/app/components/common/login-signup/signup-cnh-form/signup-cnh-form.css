@@ -1,157 +1,86 @@
-.cnh-container {
-  min-height: 100dvh;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.header h1 {
+/* layout e botoes em shared/cadastro.css; aqui so o cartao de envio da CNH */
+.cnh-container .corpo {
   flex: 1;
-  text-align: center;
-  font-size: 32px;
-  font-weight: 600;
-  color: var(--texto);
-  margin-right: 15%;
-}
-
-.back-button {
-  background: transparent;
-  border: none;
-  font-size: 32px;
-  cursor: pointer;
 }
 
 .upload-card {
-  width: 100%;
-  max-width: 600px;
-  margin: 60px auto 40px;
-  border-radius: 14px;
-  background: white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  cursor: pointer;
-}
-
-.upload-content {
-  min-height: 180px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-  align-items: center;
-}
-
-.upload-icon {
-  font-size: 64px;
-  margin-bottom: 12px;
-}
-
-.upload-content p {
-  font-size: 20px;
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  margin-bottom: 24px;
-  color: var(--texto-3);
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: #cbd5e1;
-}
-
-.divider span {
-  padding: 0 12px;
-}
-
-.form {
+  gap: 6px;
   width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+  min-height: 220px;
+  padding: 24px 16px;
+  border: 1.5px dashed var(--cor-primaria-borda);
+  border-radius: 20px;
+  background: var(--cor-primaria-suave);
+  color: var(--cor-texto);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--dur-rapida) ease, background-color var(--dur-rapida) ease;
 }
 
-.field {
+@media (hover: hover) and (pointer: fine) {
+  .upload-card:hover {
+    border-color: var(--cor-primaria-texto);
+  }
+}
+
+.upload-card:focus-visible {
+  outline: 2px solid var(--cor-primaria-texto);
+  outline-offset: 3px;
+}
+
+/* com arquivo: borda cheia e cartao normal */
+.upload-card.com-arquivo {
+  border-style: solid;
+  border-color: var(--cor-borda);
+  background: var(--cor-superficie);
+}
+
+.upload-icone {
   display: flex;
-  flex-direction: column;
-  margin-bottom: 20px;
-}
-
-.field label {
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
   margin-bottom: 8px;
-  color: var(--texto-2);
+  border-radius: 50%;
+  background: var(--cor-superficie);
+  color: var(--cor-primaria-texto);
+  font-size: 28px;
+  box-shadow: 0 4px 12px rgb(var(--sombra-rgb) / calc(0.08 * var(--sombra-forca)));
+}
+
+.com-arquivo .upload-icone {
+  background: var(--cor-perigo-suave);
+  color: var(--cor-perigo);
+  box-shadow: none;
+}
+
+.upload-titulo {
+  max-width: 100%;
+  overflow: hidden;
   font-size: 16px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.field input,
-.field select {
-  height: 56px;
-  border: 1px solid #d6dce5;
-  border-radius: 14px;
-  padding: 0 16px;
-  font-size: 16px;
-  outline: none;
+.upload-dica {
+  color: var(--cor-texto-3);
+  font-size: 14px;
 }
 
-.double-field {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
+/* botoes no fim do formulario, logo depois dos campos (nao flutuam) */
 .bottom-actions {
-  margin-top: auto;
-  position: sticky;
-  bottom: 0;
-  background-color: white;
-  padding: 16px 0;
   display: flex;
   flex-direction: column;
-
+  gap: 10px;
   width: 100%;
-  max-width: 600px;
-  align-self: center;
-  z-index: 10;
-}
-
-@media (max-width: 480px) {
-  .cnh-container {
-    padding: 24px 16px;
-  }
-
-  .header h1 {
-    font-size: 28px;
-  }
-
-  .upload-card {
-    margin-top: 52px;
-  }
-
-  .upload-content {
-    min-height: 200px;
-  }
-
-  .upload-icon {
-    font-size: 48px;
-  }
-
-  .double-field {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .field input,
-  .field select {
-    height: 52px;
-  }
+  max-width: 500px;
+  margin: 32px auto 0;
+  padding: 0 16px calc(16px + env(safe-area-inset-bottom));
 }
