@@ -1,81 +1,113 @@
 # VanRoute
 
-> Sistema Inteligente de Gestão e Monitoramento de Transporte Escolar
+> Transporte escolar acompanhado de perto: o responsável vê a van chegando, o motorista organiza rotas, contratos e mensalidades num lugar só.
 
-## 📖 Sobre o Projeto
+O **VanRoute** é um site (que funciona como app no celular) que liga **responsáveis** (pais, mães, avós, tutores) e **motoristas de van escolar**. O motorista monta as rotas e conduz a viagem pelo app; o responsável acompanha a van no mapa em tempo real, avisa faltas, conversa com o motorista e cuida do contrato e das parcelas.
 
-O **VanRoute** é uma plataforma Full Stack desenvolvida para modernizar a gestão do transporte escolar. O sistema conecta **pais e responsáveis**, **motoristas**, **empresas de transporte** e futuramente **escolas**, oferecendo monitoramento em tempo real, gestão financeira, comunicação instantânea e otimização de rotas.
-
-## 🎯 Objetivos
-
-- Aumentar a segurança dos alunos.
-- Permitir acompanhamento da van em tempo real.
-- Automatizar processos administrativos e financeiros.
-- Melhorar a comunicação entre responsáveis, motoristas e empresas.
-- Gerar rotas inteligentes para reduzir tempo e custos.
-
-## 🌎 ODS
-
-O projeto está alinhado à **ODS 11 – Cidades e Comunidades Sustentáveis**, especialmente à meta **11.2**, promovendo transporte seguro, acessível e eficiente.
+O projeto está alinhado à **ODS 11 – Cidades e Comunidades Sustentáveis** (meta **11.2**: transporte seguro, acessível e eficiente).
 
 ---
 
-# Funcionalidades
+# 🚐 Como o site funciona
 
-## Área dos Pais
+## Os dois perfis
 
-- Localização da van em tempo real
-- Histórico de viagens
-- Notificações de embarque e desembarque
-- Aviso quando a van estiver próxima
-- Pagamento de mensalidades
-- Histórico financeiro
-- Consulta de presença
-- Comunicação com motorista
-- Recebimento de ocorrências
+| Perfil | O que faz no app |
+|---|---|
+| **Responsável** | cadastra os filhos, encontra o motorista pelo código dele, conversa no chat, aceita o contrato, acompanha a viagem no mapa, avisa faltas e vê as parcelas |
+| **Motorista** | cadastra a van e as escolas, monta as rotas, propõe contratos, conduz a viagem marcando embarque e desembarque, registra ocorrências, organiza grupos de alunos e dá baixa nas parcelas |
 
-## Área do Motorista
+Cada perfil só abre as telas dele: o login devolve um token (JWT) com o papel do usuário, e o front bloqueia as rotas que não são daquele papel.
 
-- Login seguro
-- Dashboard operacional
-- Dashboard financeiro
-- Lista de passageiros
-- Confirmação de embarque e desembarque
-- Rota inteligente
-- Registro de ocorrências
-- Comunicação com responsáveis
-- Gestão de contratos
-
-## Área Administrativa
-
-- Aprovação de motoristas
-- Validação de documentos
-- Gestão de empresas
-- Gestão de pagamentos
-- Avaliações dos responsáveis
-- Relatórios
-- Suspensão/Bloqueio de motoristas
-- Monitoramento das viagens
-
-## Futuramente
-
-- Integração direta com escolas
-- Calendário escolar
-- Vinculação entre escolas, vans e alunos
-
----
-
-# 🏗 Arquitetura
+## A jornada, do cadastro até a van na rua
 
 ```text
-Angular
-   │
-REST API
-   │
-Spring Boot
-   │
-PostgreSQL
+ 1. Cadastro            responsável ou motorista cria a conta e confirma o código que chega no e-mail ("esqueci a senha" usa o mesmo código)
+ 2. Documentos          o motorista envia a CNH digital; a van entra pelo CRLV digital (PDF assinado)
+ 3. Filhos              o responsável cadastra os filhos e os endereços de onde cada um é buscado/deixado
+ 4. Encontro            o motorista passa o código dele (9 caracteres) e o responsável resgata no app → nasce o chat
+ 5. Proposta            no chat, o motorista monta o contrato (filho, escola, valor, período, PDF) e envia
+ 6. Aceite              o responsável aceita ou recusa; aceitando, nascem as parcelas
+ 7. Início              na data de início o contrato fica ativo e o aluno pode entrar nas rotas
+ 8. Rota                o motorista põe o aluno na rota: ponto de embarque, ponto de desembarque e dias da semana
+ 9. Viagem              o motorista inicia a viagem; o GPS dele alimenta o mapa de todos ao vivo
+10. Pagamento           o responsável paga pelo Pix do motorista; o motorista confere e dá baixa
 ```
+
+## Área do responsável
+
+| Tela | Rota | O que tem |
+|---|---|---|
+| **Início** | `/responsible-route` | a viagem de hoje: mapa com a van, o caminho, quanto falta pra chegar e a situação do filho (aguardando, embarcou, entregue, ausente) |
+| **Transporte** | `/responsible-home` | um card por filho com o motorista, a van e o status do dia; botão para acompanhar a viagem e avisar falta |
+| Filhos | `/dependentes`, `/add-student`, `/student/:id` | cadastrar filho com foto, endereços do filho, outros responsáveis da família (vincular por código, tirar, passar o admin) |
+| Motorista | `/driver-code`, `/driver-profile/:id` | resgatar o código do motorista; ver o perfil dele e avaliar de 1 a 5 |
+| Faltas | no card do filho | avisar que o filho não vai num dia, ver as faltas marcadas e desfazer (dentro do horário que o backend permite) |
+
+## Área do motorista
+
+| Tela | Rota | O que tem |
+|---|---|---|
+| **Início** | `/driver-home` | as rotas do motorista, a van, alunos e o card "Em rota agora" quando tem viagem aberta |
+| **Rotas** | `/driver-routes`, `/driver-routes/:id` | editor da rota: pontos em ordem no mapa, arrastar pra mudar a ordem, mover aluno de ponto, dias da semana, pendências |
+| Viagem | `/driver-route/:id` | iniciar, marcar embarque/desembarque/ausência de cada aluno, finalizar; o app manda o GPS enquanto a viagem roda |
+| Histórico | `/trip-history`, `/trip-history/:id/ocorrencias` | viagens passadas e as ocorrências registradas (atraso, pane, trânsito...) |
+| Grupos | `/driver-groups`, `/driver-groups/:id` | juntar alunos em grupos e mandar um aviso pra todos os responsáveis do grupo |
+| Van, escolas e Pix | `/driver-vehicles`, `/driver-schools`, `/driver-pix` | cadastrar a van pelo CRLV, as escolas atendidas e a chave Pix que recebe as parcelas |
+| Código | `/driver-link-code` | o código que o motorista passa pros responsáveis |
+
+## Telas dos dois
+
+| Tela | Rota | O que tem |
+|---|---|---|
+| **Conversas** | `/chat`, `/chat-details/:id` | chat em tempo real; a proposta de contrato aparece como um card dentro da conversa |
+| Contratos | `/contracts`, `/contract/:id` | proposta, aceite, recusa, retirar proposta, pedir e aceitar cancelamento, assinaturas e o PDF |
+| Parcelas | `/payments` | o responsável vê as parcelas e copia a chave Pix; o motorista dá baixa ou dispensa |
+| Notificações | `/notifications` | "a van saiu", "Ana embarcou", "proposta nova", "parcela atrasada"... chegam ao vivo e ficam guardadas |
+| Perfil | `/profile-info/:tipo`, `/profile-select` | foto, dados pessoais e senha (as mudanças pedem um código enviado por e-mail) |
+| Privacidade | `/privacy`, `/terms` | termos de uso (com aceite), exportar meus dados e excluir minha conta (LGPD) |
+
+O rodapé tem 3 botões, **Início**, **Rotas/Transporte** e **Conversas**, e o site tem **modo claro e escuro**.
+
+## Regras que valem pro site todo
+
+- **Contrato manda em tudo:** o aluno só entra na rota e na viagem com contrato **ativo** com aquele motorista.
+- **Cancelamento** tem aviso prévio de 30 dias, ou é na hora se a outra parte aceitar.
+- **O dinheiro não passa pelo app:** o responsável paga no Pix do motorista, e quem confirma o recebimento é o motorista.
+- **Tarefas da madrugada:** um worker em Go roda todo dia às 00:05 (horário de São Paulo) e fecha viagens esquecidas, expira propostas, ativa e encerra contratos e marca parcelas atrasadas.
+- **Endereço é único:** mesmo CEP + número é o mesmo lugar; a coordenada vem sempre da busca no mapa, nunca do app.
+
+## Como as coisas acontecem por baixo
+
+```text
+Navegador / celular (Angular)
+   │  HTTP /api  ·  WebSocket /ws  ·  arquivos /storage
+   ▼
+Backend Spring Boot ──── PostgreSQL   contas, filhos, rotas, contratos, viagens, parcelas, notificações
+   │                ├─── Redis        posição da van ao vivo, chat, códigos de e-mail, refresh token
+   │                ├─── MinIO (S3)   fotos, CNH, CRLV e PDFs dos contratos
+   │                └─── OpenRouteService   endereço → coordenada, trajeto e tempo de chegada
+   ▼
+Worker Go (1x por dia) ── PostgreSQL
+```
+
+**A van no mapa, ao vivo:** o celular do motorista manda a posição pelo WebSocket `/trip/{tripId}` → o backend guarda o estado ao vivo no Redis e publica a mudança → todo mundo conectado naquela viagem recebe a van, o caminho e o tempo até cada ponto. Embarque, desembarque e falta seguem o mesmo caminho, e as notificações chegam pelo WebSocket `/notifications`.
+
+**Arquivos:** o app pede ao backend um link temporário e envia o arquivo direto pro MinIO; o backend só guarda a chave do arquivo.
+
+**Documentos do motorista:** a CNH e o CRLV digitais são PDFs com assinatura ICP-Brasil. O backend confere a assinatura e lê os dados com OCR em português.
+
+Os detalhes de cada fluxo, chamada por chamada, estão em [`docs/`](docs/):
+
+| Documento | Assunto |
+|---|---|
+| [`FLUXO_CONTRATO.md`](docs/FLUXO_CONTRATO.md) | chat, proposta, aceite, cancelamento |
+| [`FLUXO_ROTA.md`](docs/FLUXO_ROTA.md) | endereços, pontos e como o aluno entra na rota |
+| [`FLUXO_TRIP.md`](docs/FLUXO_TRIP.md) | a viagem do dia, WebSocket e notificações |
+| [`FLUXO_PAGAMENTO.md`](docs/FLUXO_PAGAMENTO.md) | chave Pix e parcelas |
+| [`WORKER.md`](docs/WORKER.md) | as tarefas diárias |
+| [`FLUXO_FRONT.md`](docs/FLUXO_FRONT.md) | o que ainda falta no front |
+| [`DEPLOY.md`](docs/DEPLOY.md) | produção |
 
 ---
 
@@ -360,79 +392,28 @@ Mais documentação em [`docs/`](docs/): fluxos de rota, viagem, contrato e paga
 
 ---
 
-# 🤝 Como Contribuir
-
-
-1. Clone seu Fork.
-2. Crie uma branch.
-
-```bash
-git checkout -b feature/nova-funcionalidade
-```
-
-4. Desenvolva.
-5. Commit.
-
-```bash
-git commit -m "feat: adiciona cadastro de motorista"
-```
-
-6. Push.
-
-```bash
-git push origin feature/nova-funcionalidade
-```
-
-7. Abra um Pull Request.
-
----
-
 # 🌳 Fluxo Git
 
-- main → Produção
-- develop → Desenvolvimento
-- feature/* → Novas funcionalidades
-- hotfix/* → Correções urgentes
+- `main` → versão estável
+- `develop` → desenvolvimento; toda branch nova sai daqui
+- `feat/*`, `fix/*` → uma funcionalidade ou correção por branch, com Pull Request para `develop`
+
+## Convenção de commits
+
+`feat`, `fix`, `docs`, `refactor`, `style`, `test`, `chore`, com o escopo quando ajuda: `feat(front): ...`, `fix(back): ...`.
 
 ---
 
-# 📝 Convenção de Commits
+# 📌 O que ainda não existe
 
-- feat
-- fix
-- docs
-- refactor
-- style
-- test
-- chore
+- Notificação **push com o app fechado** (hoje as notificações chegam com o app aberto) — issues #150 e #172
+- **Pagamento automático** pelo Mercado Pago (hoje é Pix direto pro motorista com baixa manual) — issue #192
+- Área administrativa, integração com escolas e apps nativos Android/iOS
 
----
-
-# 📌 Roadmap
-
-- [ ] Aplicativo Android
-- [ ] Aplicativo iOS
-- [ ] IA para previsão de atrasos
-- [ ] Reconhecimento facial
-- [ ] QR Code de embarque
-- [ ] Integração com escolas
-- [ ] Split automático de pagamentos
-- [ ] Notificações Push
+A lista viva fica no [GitHub Project](https://github.com/users/cauekkz/projects/1) e em [`docs/PENDENCIAS_E_ERROS.md`](docs/PENDENCIAS_E_ERROS.md).
 
 ---
 
 # 📄 Licença
 
-Este projeto é destinado para fins acadêmicos e poderá ser licenciado futuramente.
-
----
-
-## 👥 Colaboradores
-
-Antes de iniciar o desenvolvimento:
-
-1. Siga o [passo a passo de como rodar](#️-como-rodar-o-projeto-na-sua-máquina): ferramentas, Docker, chaves (Gmail e OpenRouteService), `application-local.properties`, backend e frontend.
-2. Crie uma branch a partir de `develop`.
-3. Desenvolva e envie um Pull Request.
-
-Bom desenvolvimento! 🚐
+Projeto acadêmico (Projeto Integrador). Poderá ser licenciado futuramente.
