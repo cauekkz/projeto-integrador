@@ -8,8 +8,8 @@ export function wsUrl(caminho: string): string {
   return `${protocolo}//${location.host}/ws${caminho}`;
 }
 
-// os links assinados do MinIO vem com http://localhost:9000; troca pelo /storage do proxy.
-// a assinatura continua valendo porque o proxy manda o Host localhost:9000
+// os links assinados do MinIO vem com http://localhost:9000 (desenvolvimento) ou http://minio:9000 (Docker);
+// troca pelo /storage do proxy. A assinatura continua valendo porque o proxy manda o mesmo Host
 export function urlDoStorage(url: string): string {
-  return url.replace(/^https?:\/\/(localhost|127\.0\.0\.1):9000/, '/storage');
+  return url.replace(/^https?:\/\/(localhost|127\.0\.0\.1|minio):9000/, '/storage');
 }

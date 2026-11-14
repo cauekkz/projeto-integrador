@@ -1,20 +1,22 @@
+# Sem .env, valem as senhas de desenvolvimento abaixo (depois do ":-")
 services:
   db:
     image: postgres:15-alpine
     container_name: vanroute-db
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 123456
-      POSTGRES_DB: vanroute_db
+      POSTGRES_USER: ${DATABASE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-123456}
+      POSTGRES_DB: ${DATABASE_NAME:-vanroute_db}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # cria o vanroute_test (banco dos testes) quando o volume e novo
-      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+      # cria o vanroute_test (banco dos testes) quando o volume e novo. O ":z" e pro SELinux (Fedora);
+      # nos outros sistemas o Docker ignora
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro,z
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USERNAME:-postgres}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -36,18 +38,60 @@ services:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: vanroute
-      MINIO_ROOT_PASSWORD: vanroute123456
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-vanroute}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-vanroute123456}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
 
-  # tarefas diarias (docs/WORKER.md). Fica num perfil: o "docker compose up" normal nao sobe;
-  # pra subir: docker compose --profile worker up -d --build worker
+  # API (backend/Dockerfile). Nao abre porta: o front repassa /api e /ws pra ele
+  backend:
+    build: ./backend
+    container_name: vanroute-backend
+    profiles: ["app"]
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      minio:
+        condition: service_started
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DATABASE_NAME:-vanroute_db}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-123456}
+      REDIS_HOST: redis
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-vanroute-storage}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-vanroute}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-vanroute123456}
+      # sem estas o backend nao sobe (JWT_KEY) ou nao manda e-mail / nao acha endereco
+      JWT_KEY: ${JWT_KEY:-}
+      SENDER_EMAIL: ${SENDER_EMAIL:-}
+      SENDER_PASSWORD: ${SENDER_PASSWORD:-}
+      ORS_API_KEY: ${ORS_API_KEY:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8080}
+
+  # site (frontend/Dockerfile): Nginx com o Angular compilado. E a unica porta que precisa ficar aberta
+  frontend:
+    build: ./frontend
+    container_name: vanroute-frontend
+    profiles: ["app"]
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${APP_PORT:-8080}:80"
+
+  # tarefas diarias (worker/Dockerfile, docs/WORKER.md), todo dia as WORKER_RUN_AT. Sobe com o perfil "app"
+  # ou sozinho: docker compose --profile worker up -d --build worker
   worker:
     build: ./worker
     container_name: vanroute-worker
-    profiles: ["worker"]
+    profiles: ["worker", "app"]
     restart: unless-stopped
     depends_on:
       db:
@@ -55,10 +99,10 @@ services:
     environment:
       DATABASE_HOST: db
       DATABASE_PORT: 5432
-      DATABASE_NAME: vanroute_db
-      DATABASE_USERNAME: postgres
-      DATABASE_PASSWORD: 123456
-      WORKER_INTERVAL: 24h
+      DATABASE_NAME: ${DATABASE_NAME:-vanroute_db}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:-postgres}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-123456}
+      WORKER_RUN_AT: ${WORKER_RUN_AT:-00:05}
 
 volumes:
   postgres_data:
