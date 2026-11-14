@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Cria um cenario pronto pra testar a execucao da rota na pagina demo (dados ficticios, base isolada).
-# Pre-requisitos: os mesmos do run-api-tests.sh (backend no vanroute_db + stubs.py pro e-mail).
+# Pre-requisitos: Docker (banco e Redis) e o backend no ar. Funciona dos dois jeitos:
+#   backend na maquina:  bash backend/api-tests/demo/seed.sh
+#   tudo no Docker:      BASE=http://localhost:8080 bash backend/api-tests/demo/seed.sh
+# O cadastro dos pais manda o codigo por e-mail (o script le o codigo direto do Redis). Com o Gmail real, esses
+# e-mails vao pra enderecos @teste.local que nao existem e voltam; pra nao mandar nada, rode com o stubs.py.
 #
 #   IDA:   1 motorista com van, 1 escola, 2 pais (1 filho cada, contrato ativo); rota "Ida Manha": casa -> casa -> escola
 #   VOLTA: outro motorista, outra escola, outros 2 pais; rota "Volta Tarde": escola -> casa -> casa (todos os dias da semana)
@@ -68,9 +72,10 @@ kid() { # kid TOKEN_PAI NOME RUA CEP BAIRRO NUM -> "id do aluno  id do endereco 
 contract() { # contract TOKEN_MOTORISTA LINK ESCOLA TOKEN_PAI ALUNO: chat pelo codigo do motorista, proposta e aceite
   local parentId; parentId=$(api GET /api/users/me "$4" | jq -r .id)
   local chat; chat=$(api POST /api/invite-code/redeem "$4" "{\"inviteCode\":\"$2\"}" | jq -r .)
-  # o PDF do contrato vai pro storage antes da proposta
+  # o PDF do contrato vai pro storage antes da proposta. No Docker o link vem com http://minio:9000, que so
+  # existe dentro da rede do Docker: passa pelo /storage do Nginx, que manda o mesmo Host da assinatura
   local up; up=$(api GET "/api/storage/presigned-url?fileName=contrato.pdf&contentType=application/pdf" "$1")
-  printf '%%PDF-1.4\nContrato de transporte escolar (demo)\n%%%%EOF\n' | curl -s -o /dev/null -X PUT -H 'Content-Type: application/pdf' --data-binary @- "$(echo "$up" | jq -r .uploadUrl)"
+  printf '%%PDF-1.4\nContrato de transporte escolar (demo)\n%%%%EOF\n' | curl -s -o /dev/null -X PUT -H 'Content-Type: application/pdf' --data-binary @- "$(echo "$up" | jq -r .uploadUrl | sed "s|^http://minio:9000|$BASE/storage|")"
   local c; c=$(api POST "/api/chats/$chat/contract" "$1" "{\"responsibleId\":\"$parentId\",\"studentId\":\"$5\",\"schoolId\":\"$3\",\"contract\":{\"periodicity\":\"MONTHLY\",\"value\":350.00,\"startDate\":\"$(TZ=America/Sao_Paulo date +%F)\",\"endDate\":\"$(TZ=America/Sao_Paulo date -d "+5 months -1 day" +%F)\"},\"document\":{\"url\":\"$(echo "$up" | jq -r .fileKey)\",\"type\":\"TRANSPORT_CONTRACT\"}}" | jq -r .contract.contractId)
   api PUT "/api/chats/$chat/contracts/$c/accept" "$4" >/dev/null
 }
