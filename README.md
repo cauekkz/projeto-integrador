@@ -485,8 +485,8 @@ Ou do zero:
 # backend: usa o banco vanroute_test (nunca o vanroute_db)
 cd backend && ./mvnw test        # Windows: mvnw.cmd test
 
-# frontend
-cd frontend && npx ng test --watch=false
+# frontend (precisa do npm install do passo 7 uma vez)
+cd frontend && npm install && npx ng test --watch=false
 ```
 
 ---
