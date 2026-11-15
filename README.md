@@ -176,7 +176,6 @@ projeto-integrador/
 ├── worker/              tarefas diárias em Go
 ├── docker/              script que cria o banco de testes
 ├── docker-compose.yml   Postgres, Redis, MinIO; com --profile app, também backend, front e worker
-├── scripts/run.bat      sobe tudo no Windows
 ├── docs/                fluxos, pendências e explicações (Docker, worker)
 └── .env.example         senhas e chaves do modo Docker (copie para .env)
 ```
@@ -454,7 +453,6 @@ npm start          # = ng serve, já com o proxy pro backend
 
 Abra http://localhost:4200.
 
-> **Atalho no Windows:** [`scripts/run.bat`](scripts/run.bat) faz os passos 3, 6 e 7 de uma vez (Docker + backend + frontend, cada um numa janela). Os passos 4 e 5 (chaves) continuam sendo feitos uma vez, à mão.
 
 ---
 
