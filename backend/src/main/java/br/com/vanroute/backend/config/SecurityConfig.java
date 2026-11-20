@@ -71,7 +71,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.PUT, "/api/payments/*/paid", "/api/payments/*/cancel").hasRole("DRIVER")
                 .requestMatchers(HttpMethod.POST, "/api/trip/start/*", "/api/trip/*/finish", "/api/trip/*/occurrences").hasRole("DRIVER")
                 .requestMatchers(HttpMethod.PUT, "/api/trip/*/student/**").hasRole("DRIVER")
-                .requestMatchers(HttpMethod.GET, "/api/trip/route/*/today").hasRole("DRIVER")
+                .requestMatchers(HttpMethod.GET, "/api/trip/route/*/today", "/api/trip/open").hasRole("DRIVER")
                 // so responsavel
                 .requestMatchers("/api/student/**", "/api/invite-code/**").hasRole("RESPONSIBLE")
                 .requestMatchers(HttpMethod.PUT, "/api/chats/*/contracts/*/accept", "/api/chats/*/contracts/*/reject").hasRole("RESPONSIBLE")

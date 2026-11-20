@@ -169,6 +169,12 @@ public class TripService {
         return toResponse(trip);
     }
 
+    // a viagem aberta hoje (iniciada, em andamento ou pausada) do motorista; vazio = nenhuma
+    public Optional<TripResponseDTO> openTrip(UUID driverId) {
+        return tripRepository.findFirstByDriver_UserIdAndDateAndStatusIn(driverId, LocalDate.now(ZONE), ACTIVE)
+                .map(this::toResponse);
+    }
+
     public TripResponseDTO getTrip(UUID tripId, UUID driverId) {
         return toResponse(ownTrip(tripId, driverId));
     }
