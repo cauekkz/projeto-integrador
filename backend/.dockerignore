@@ -1,0 +1,7 @@
+# fica fora da imagem: build local, segredos de desenvolvimento e saida dos testes
+target
+api-tests
+src/main/resources/application-local.properties
+.idea
+*.iml
+*.pdf

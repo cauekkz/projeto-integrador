@@ -1,76 +1,48 @@
 # Deploy: problemas conhecidos
 
-**O app ainda não foi publicado.** Nada aqui atrapalha o desenvolvimento local: são os pontos a resolver quando chegar a hora de publicar.
+**O app ainda não foi publicado.** Já dá pra subir tudo no Docker com um comando (README, seção "Rodar tudo no Docker"); aqui ficam os pontos a resolver quando chegar a hora de publicar num servidor de verdade.
 
 A lista geral de produção (perfil, segredos, login, fuso, worker) está em [`PENDENCIAS_E_ERROS.md`, seção 3](PENDENCIAS_E_ERROS.md). A preparação para produção é a issue #187.
 
 ---
 
-## 1. Front não fala com o backend no Docker
+## 1. Como as peças conversam no Docker
 
-**Situação:** o `frontend/Dockerfile` e o `frontend/nginx.conf` existem, mas ainda não são usados. O `docker-compose.yml` não tem o front nem o backend.
+Resolvido em 14/11 e testado de ponta a ponta (site, login, chat ao vivo, upload e download de foto e PDF, viagem com mapa, cadastro de motorista com OCR da CNH e CRLV):
 
-**O problema:** o navegador sempre pede `/api/...` para o mesmo endereço do site.
-- **No PC:** o `ng serve` recebe esse pedido e repassa ao backend, porque tem o `proxy.conf.json`.
-- **No Docker:** quem recebe é o Nginx, que hoje só entrega os arquivos do site. Um `GET /api/chats` volta com o `index.html` no lugar dos dados, e o app quebra.
+- **Um Dockerfile por serviço:** `backend/`, `frontend/` e `worker/`. O banco, o Redis e o MinIO usam imagens prontas.
+- **O Nginx do front é a única porta aberta.** Ele faz o mesmo que o `proxy.conf.json` do `ng serve` ([`frontend/nginx.conf`](../frontend/nginx.conf)):
+  - `/api/` → backend;
+  - `/ws/` → WebSockets do backend (sem log, porque o token vai na URL);
+  - `/storage/` → MinIO, com o mesmo `Host` da assinatura dos links;
+  - uploads até 11 MB, gzip e cache dos arquivos do site.
+- **Links do MinIO:** o backend assina com `http://minio:9000`, e a `urlDoStorage` do front troca por `/storage`. Assim a assinatura continua valendo, igual no desenvolvimento.
+- **Segredos:** só no `.env` (modelo: `.env.example`), fora do git, e nunca dentro da imagem (`backend/.dockerignore`).
+- **Sem `JWT_KEY`** (ou com menos de 32 caracteres), o backend se recusa a subir, com a mensagem no log.
 
-**Correção:** o Nginx faz o mesmo que o `proxy.conf.json`. Exemplo, ainda não testado (`backend` e `minio` são os nomes dos serviços no Docker):
+## 2. Ainda falta para um servidor de verdade
 
-```nginx
-client_max_body_size 11m;   # o padrão é 1 MB; a CNH e o CRLV sobem por aqui
-
-location /api/ {
-    proxy_pass http://backend:9090;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;   # o limite de login por IP usa isso
-    proxy_set_header X-Forwarded-Proto $scheme;
-}
-
-location /ws/ {
-    proxy_pass http://backend:9090/;          # a barra final tira o /ws
-    proxy_http_version 1.1;
-    proxy_set_header Upgrade $http_upgrade;
-    proxy_set_header Connection "upgrade";
-    proxy_read_timeout 1h;                    # sem isso, a conexão cai a cada 60 s
-    access_log off;                           # o token vai na URL: não pode ir pro log
-}
-
-location /storage/ {
-    proxy_pass http://minio:9000/;
-    client_max_body_size 11m;
-}
-```
-
-Fica pendente o item 2, porque o link assinado depende do endereço do MinIO.
+- **HTTPS na frente do Nginx** (Caddy, Traefik, Cloudflare Tunnel ou o HTTPS da hospedagem). Sem ele não tem GPS no celular (item 4).
+- **MinIO com domínio próprio (opcional):** se os arquivos forem servidos por outro endereço, defina o `MINIO_ENDPOINT` com ele e ajuste a `urlDoStorage` do front. Hoje tudo passa pelo `/storage` do mesmo site, o que é o mais simples.
+- **Backup** do volume do Postgres e do MinIO, **logs** e **monitoramento** (issue #187).
 
 ---
 
-## 2. Links de upload e download do MinIO
-
-**O problema:** o backend assina os links com o `MINIO_ENDPOINT` (hoje `http://localhost:9000`). A função `urlDoStorage` do front só troca esse endereço exato por `/storage`, e a assinatura só vale para o endereço com que foi gerada.
-
-**Em produção é preciso decidir:**
-- **MinIO com domínio próprio:** `MINIO_ENDPOINT` com o domínio público, HTTPS e CORS liberado para o site. A `urlDoStorage` passa a não trocar nada.
-- **MinIO atrás do mesmo Nginx:** o proxy precisa mandar o mesmo `Host` usado na assinatura. Ajustar a `urlDoStorage` para o endereço real.
-
----
-
-## 3. Mapa vetorial nunca carrega
+## 3. Mapa: fundo do CARTO
 
 **O que cada serviço faz:**
 
 | Serviço | Papel | Quem chama |
 |---|---|---|
 | **OpenRouteService** | geocodifica endereços e calcula o trajeto e o tempo (a linha azul e o "em 10 min") | o backend, com a chave |
-| **OpenFreeMap** | desenho do mapa (ruas e bairros), vetorial. É o escolhido | o navegador, sem chave |
-| **OpenStreetMap** | desenho do mapa, em imagens prontas. É o plano B | o navegador, sem chave |
+| **MapLibre** (biblioteca, dentro do front) | desenha o mapa na tela: fundo, linha, van e pinos | o front (`shared/mapcn`) |
+| **CARTO basemaps** | estilo e dados do fundo (ruas e bairros), claro e escuro | o navegador, sem chave |
 
-O OpenStreetMap e o OpenFreeMap não calculam rota: só desenham o fundo. A rota vem sempre do OpenRouteService, e só um dos dois fundos aparece por vez.
+O CARTO não calcula rota: só entrega o fundo. A rota vem sempre do OpenRouteService.
 
-**O problema:** a MapLibre 6 carrega um arquivo auxiliar (`maplibre-gl-worker.mjs`), e o build do Angular não o copia. O console mostra `Worker failed to load`, e o mapa cai sempre no plano B, tanto em desenvolvimento quanto no build de produção.
+**Situação (14/11):** o problema antigo do worker da MapLibre sumiu com a troca para o `mapcn`. O mapa carregou sem erro, em viagem, para o motorista e para o pai.
 
-**Por que importa:** o usuário não percebe, mas o servidor público do OpenStreetMap não é feito para uso pesado de um app em produção e pode bloquear.
-
-**Correção:** a receita testada está em [`FLUXO_FRONT.md`, seção 2.3](FLUXO_FRONT.md). Sem ela, não publique.
+**Antes de publicar:** os basemaps gratuitos do CARTO têm termos de uso próprios, com limite de uso e restrição para uso comercial. Confira os termos atuais no site do CARTO; se não servirem, troque o estilo em `shared/mapcn/map.tsx` por outro provedor.
 
 ---
 
@@ -84,10 +56,7 @@ O OpenStreetMap e o OpenFreeMap não calculam rota: só desenham o fundo. A rota
 
 ## 5. O que ainda não existe
 
-- `Dockerfile` do backend.
-- Front e backend no `docker-compose.yml` (ou um compose de produção).
-- HTTPS, backup do banco, logs e monitoramento.
-- Provedor de e-mail e plano de mapas, se o Gmail e o plano grátis não derem conta.
+- Provedor de e-mail e plano de mapas, se o Gmail (cerca de 500 e-mails por dia) e o plano grátis do OpenRouteService não derem conta.
 
 ---
 
@@ -101,8 +70,7 @@ O OpenStreetMap e o OpenFreeMap não calculam rota: só desenham o fundo. A rota
 
 ## Problemas do ambiente local
 
-Não são de deploy, mas já pararam o projeto em máquina de desenvolvimento:
-
-- **Porta 5432 ocupada:** se o PostgreSQL do sistema estiver ligado, o `vanroute-db` não sobe. Pare o do sistema com `sudo systemctl stop postgresql`.
-- **Fedora (SELinux):** com o volume do banco novo, o container não consegue ler `docker/postgres-init` e fica reiniciando (`Permission denied`). O mount precisa de `:z` no `docker-compose.yml`, que ainda não tem.
-- **`api-tests/demo/seed.sh`** não tem permissão de execução: rode com `bash api-tests/demo/seed.sh`.
+- **Porta 5432 ocupada:** se o PostgreSQL do sistema estiver ligado, o `vanroute-db` não sobe. Pare o do sistema (`sudo systemctl stop postgresql`).
+- **Fedora (SELinux):** resolvido com o `:z` no mount do `docker/postgres-init` no `docker-compose.yml`.
+- **`api-tests/demo/seed.sh`** não tem permissão de execução: rode com `bash backend/api-tests/demo/seed.sh`.
+- **`api-tests/run-api-tests.sh`** fala direto com o backend (porta 9090) e com o MinIO (porta 9000): rode com o backend fora do Docker, não pelo Nginx.

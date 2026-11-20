@@ -8,6 +8,35 @@ O projeto está alinhado à **ODS 11 – Cidades e Comunidades Sustentáveis** (
 
 ---
 
+# 🚀 Comece aqui
+
+Tem dois jeitos de rodar. Os dois usam **um único arquivo de configuração**, o `.env` na raiz do projeto, com as senhas e chaves (copiado do `.env.example`; ele nunca vai pro git).
+
+| Quero... | Jeito | Precisa instalar | Site em |
+|---|---|---|---|
+| **ver o app funcionando** | [Tudo no Docker](#-rodar-tudo-no-docker) | só o Docker | http://localhost:8080 |
+| **programar** (recarrega ao salvar) | [Na sua máquina](#️-como-rodar-o-projeto-na-sua-máquina) | Docker, Java 21 e Node 22 | http://localhost:4200 |
+
+O caminho completo, do zero:
+
+```bash
+git clone https://github.com/cauekkz/projeto-integrador && cd projeto-integrador
+cp .env.example .env               # e preencha: JWT_KEY, Gmail, OpenRouteService e senhas (tabela em "Rodar tudo no Docker")
+
+# A) tudo no Docker
+docker compose --profile app up -d --build                           # abre em http://localhost:8080
+BASE=http://localhost:8080 bash backend/api-tests/demo/seed.sh       # (opcional) contas e rota de exemplo
+
+# B) programando: banco/Redis/MinIO no Docker, backend e front na máquina
+docker compose up -d
+cd backend && ./mvnw spring-boot:run                                 # outro terminal: cd frontend && npm install && npm start
+bash backend/api-tests/demo/seed.sh                                  # (opcional) contas e rota de exemplo, da raiz do projeto
+```
+
+Onde pegar cada chave: [passo 4](#4-pegue-as-chaves). Problemas: as tabelas "Deu erro?" de cada seção.
+
+---
+
 # 🚐 Como o site funciona
 
 ## Os dois perfis
@@ -107,7 +136,6 @@ Os detalhes de cada fluxo, chamada por chamada, estão em [`docs/`](docs/):
 | [`FLUXO_PAGAMENTO.md`](docs/FLUXO_PAGAMENTO.md) | chave Pix e parcelas |
 | [`WORKER.md`](docs/WORKER.md) | as tarefas diárias |
 | [`FLUXO_FRONT.md`](docs/FLUXO_FRONT.md) | o que ainda falta no front |
-| [`DEPLOY.md`](docs/DEPLOY.md) | produção |
 
 ---
 
@@ -147,17 +175,112 @@ projeto-integrador/
 ├── frontend/            app Angular
 ├── worker/              tarefas diárias em Go
 ├── docker/              script que cria o banco de testes
-├── docker-compose.yml   Postgres, Redis, MinIO (e o worker)
-├── scripts/run.bat      sobe tudo no Windows
-├── docs/                fluxos, pendências e deploy
-└── .env.example         variáveis de produção
+├── docker-compose.yml   Postgres, Redis, MinIO; com --profile app, também backend, front e worker
+├── docs/                fluxos, pendências e explicações (Docker, worker)
+└── .env.example         senhas e chaves do modo Docker (copie para .env)
 ```
+
+---
+
+# 🐳 Rodar tudo no Docker
+
+O jeito mais rápido de ver o app funcionando: **não precisa instalar Java, Node nem Go**, só o Docker. Tudo sobe com um comando e o site abre em `http://localhost:8080`.
+
+## Como fica: um Dockerfile por serviço, o compose junta
+
+| Serviço | De onde vem | O que faz |
+|---|---|---|
+| `frontend` | [`frontend/Dockerfile`](frontend/Dockerfile) | Nginx com o Angular compilado. É a **única porta aberta** (`8080`). Repassa `/api` e `/ws` pro backend e `/storage` pro MinIO ([`frontend/nginx.conf`](frontend/nginx.conf)) |
+| `backend` | [`backend/Dockerfile`](backend/Dockerfile) | a API (Java 21), já com o Tesseract pro OCR da CNH |
+| `worker` | [`worker/Dockerfile`](worker/Dockerfile) | tarefas diárias, todo dia às `WORKER_RUN_AT` |
+| `db`, `redis`, `minio` | imagens prontas (Postgres 15, Redis 7, MinIO) | banco, cache/tempo real e arquivos |
+
+- Cada **Dockerfile** diz como montar a imagem de um serviço: de onde parte, o que copia, como compila e que comando roda. Cada serviço vira um container separado.
+- O [`docker-compose.yml`](docker-compose.yml) só diz **como rodar todos juntos** na sua máquina. O backend, o front e o worker ficam no perfil `app`, então o `docker compose up -d` normal continua subindo só o banco, o Redis e o MinIO pro desenvolvimento.
+
+## Passo a passo
+
+**1. Instale o Docker:** Docker Desktop no Windows/macOS (https://www.docker.com/products/docker-desktop), ou Docker Engine + Compose no Linux. Confira com `docker compose version`.
+
+**2. Clone o repositório:**
+
+```bash
+git clone https://github.com/cauekkz/projeto-integrador
+cd projeto-integrador
+```
+
+**3. Crie o `.env`** na raiz, a partir do modelo:
+
+```bash
+cp .env.example .env        # Windows (PowerShell): Copy-Item .env.example .env
+```
+
+**4. Preencha o `.env`.** **Todas as senhas e chaves ficam só nele**, e ele nunca vai pro git (está no `.gitignore`):
+
+| Variável | O que é | Onde pegar |
+|---|---|---|
+| `JWT_KEY` | texto que assina os logins, 32+ caracteres. **Sem ela o backend não sobe** | gere: `openssl rand -base64 48` (ou o comando do passo 4.3 de baixo) |
+| `SENDER_EMAIL`, `SENDER_PASSWORD` | Gmail que manda os códigos de verificação | passo **4.1** de baixo (senha de app, não a senha da conta) |
+| `ORS_API_KEY` | chave do OpenRouteService (endereço → coordenada, trajeto e tempo) | passo **4.2** de baixo |
+| `DATABASE_PASSWORD` | senha do Postgres (o container do banco e o backend usam a mesma) | você inventa |
+| `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY` | usuário e senha do MinIO (o MinIO e o backend usam os mesmos) | você inventa (a senha com 8+ caracteres) |
+| `APP_PORT` | porta do site | padrão `8080` |
+| `ALLOWED_ORIGINS` | endereço do site, que pode chamar a API | `http://localhost:8080` (troque junto se mudar o `APP_PORT`) |
+| `WORKER_RUN_AT` | horário das tarefas diárias (São Paulo) | padrão `00:05` |
+
+> As senhas do banco e do MinIO valem **quando o volume é criado**. Se você já tinha rodado o projeto antes com as senhas de desenvolvimento (`123456` / `vanroute123456`), ou usa as mesmas no `.env`, ou apaga os volumes antes (`docker compose --profile app down -v`, que **apaga os dados**).
+
+**5. Suba tudo:**
+
+```bash
+docker compose --profile app up -d --build
+```
+
+A primeira vez demora alguns minutos (baixa as imagens e compila o backend e o front). Depois abra **http://localhost:8080**. O banco, as tabelas e o bucket de arquivos são criados sozinhos.
+
+**Dia a dia:**
+
+```bash
+docker compose --profile app ps                 # tudo "running"?
+docker compose --profile app logs -f backend    # log da API (troque por frontend, worker, db...)
+docker compose --profile app up -d --build      # depois de um git pull: recompila o que mudou
+docker compose --profile app down               # para tudo (os dados ficam)
+docker compose --profile app down -v            # para e APAGA os dados (banco, arquivos, Redis)
+```
+
+**Deu erro?**
+
+| Sintoma | O que fazer |
+|---|---|
+| `vanroute-backend` reiniciando, log com `JWT_KEY ausente ou curta` | preencha o `JWT_KEY` no `.env` (32+ caracteres) e rode o `up` de novo |
+| Backend com `password authentication failed` | a senha do `.env` não é a do volume antigo do banco: veja a nota do passo 4 |
+| Código de verificação não chega / endereço não é encontrado | confira `SENDER_*` e `ORS_API_KEY` (passos 4.1 e 4.2) |
+| Porta 8080 ocupada | troque `APP_PORT` no `.env` e também o `ALLOWED_ORIGINS` |
+| Porta 5432 ocupada (PostgreSQL instalado no PC) | pare o do sistema (Linux: `sudo systemctl stop postgresql`) |
+
+## Dados de exemplo e primeira rota
+
+Pra entrar já como motorista e como responsável, com contrato, van e uma rota pronta pra iniciar:
+
+```bash
+BASE=http://localhost:8080 bash backend/api-tests/demo/seed.sh
+```
+
+Ele mostra no fim os CPFs (senha de todos: `Senha@123`) e salva em `backend/api-tests/out/demo.json`. Cria dois cenários: **Ida Manha** (1 motorista, 2 pais) e **Volta Tarde** (outro motorista, outros 2 pais).
+
+Pra testar a viagem:
+1. Entre como o motorista, aba **Rotas**, escolha a rota e **Iniciar rota** (permita a localização).
+2. Numa **janela anônima**, entre como um dos pais e toque em **Acompanhar**: a van aparece no mapa com o tempo de chegada.
+3. "Embarcou" e "Desceu" só funcionam com a van a até 1 km do ponto. No PC, simule o GPS: F12 → ⋮ → More tools → **Sensors** → Location (ex.: Rua Augusta, 500 ≈ `-23.5545, -46.6579`).
+
+> O cadastro dos pais manda um código por e-mail (o script pega o código direto do Redis). Com o Gmail de verdade no `.env`, esses e-mails vão pra endereços `@teste.local`, que não existem, e voltam. Não atrapalha nada.
+
 
 ---
 
 # ⚙️ Como rodar o projeto na sua máquina
 
-Este passo a passo é pra quem **nunca mexeu no projeto** e sabe pouco de programação. Ele foi escrito pensando no **Windows 10/11**; quem usa Mac ou Linux tem as diferenças anotadas em cada passo.
+Este passo a passo é pra quem vai **programar** ou **nunca mexeu no projeto** e sabe pouco de programação: cada parte roda na sua máquina, com recarga automática ao salvar. Só quer ver o app funcionando? Use a seção de cima (Docker). Ele foi escrito pensando no **Windows 10/11**; quem usa Mac ou Linux tem as diferenças anotadas em cada passo.
 
 Siga na ordem, sem pular. Na primeira vez leva de **1 a 2 horas** (a maior parte é esperar downloads). Da segunda vez em diante são uns 5 minutos (veja o [passo 11](#11-da-segunda-vez-em-diante)).
 
@@ -166,7 +289,7 @@ Siga na ordem, sem pular. Na primeira vez leva de **1 a 2 horas** (a maior parte
 - Um computador com **8 GB de RAM ou mais** e uns **15 GB livres** no disco.
 - Internet (vai baixar bastante coisa na primeira vez).
 - Uma **conta Google (Gmail)**: é dela que saem os e-mails com os códigos de cadastro.
-- Uma conta grátis no **OpenRouteService** (é o serviço de mapas; o passo 5 mostra como criar).
+- Uma conta grátis no **OpenRouteService** (é o serviço de mapas; o passo 4.2 mostra como criar).
 
 ## Como o projeto é montado (só pra entender)
 
@@ -242,9 +365,85 @@ Pronto: o projeto está em `Documentos\projeto-integrador`. **Todos os próximos
 
 ---
 
-## 4. Ligue o banco de dados (Docker)
+## 4. Pegue as chaves
 
-Com o **Docker Desktop aberto**, rode:
+O backend precisa de **3 segredos**. Abra o **Bloco de Notas** e vá anotando cada um conforme for pegando; no passo 5 você vai colar tudo num arquivo.
+
+### 4.1 E-mail e senha de app do Gmail
+
+O site manda um **código por e-mail** no cadastro e no "esqueci a senha". Quem envia é uma conta Gmail sua, usando uma **senha de app** (uma senha especial de 16 letras, **diferente** da senha normal da conta).
+
+1. Escolha a conta Gmail que vai enviar os e-mails (o recomendado é criar uma só pra isso).
+2. Entre em https://myaccount.google.com/security e ative a **Verificação em duas etapas** (o Google não deixa criar senha de app sem ela).
+3. Entre em https://myaccount.google.com/apppasswords, digite um nome qualquer (ex.: `VanRoute`) e clique em **Criar**.
+4. Vai aparecer uma senha de **16 letras**, tipo `abcd efgh ijkl mnop`. **Anote ela sem os espaços** (`abcdefghijklmnop`). Ela só aparece uma vez; se perder, crie outra.
+5. Anote também o endereço do Gmail.
+
+### 4.2 Chave do OpenRouteService (mapas)
+
+Serve pra achar no mapa os endereços digitados e traçar o caminho da van.
+
+1. Crie uma conta grátis em https://openrouteservice.org/dev/#/signup e confirme pelo e-mail que eles mandam.
+2. Entre no painel: https://openrouteservice.org/dev/#/home
+3. Em **Request a token**, deixe o tipo **Standard**, dê um nome qualquer e clique em **CREATE TOKEN**.
+4. Copie a chave que aparece (um texto comprido de letras e números) e anote.
+
+### 4.3 Chave do login (JWT)
+
+É um texto aleatório que você mesmo gera. Rode no terminal:
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
+```
+
+Ele imprime um texto comprido e embaralhado. **Copie a linha inteira** e anote.
+
+---
+
+## 5. Crie o arquivo `.env` (senhas e chaves)
+
+Tudo fica **num arquivo só**, o `.env` na pasta do projeto. Ele **só existe no seu computador** (nunca vai pro GitHub). É o mesmo arquivo do modo Docker: o Docker lê ele, e o backend rodando na sua máquina também. O projeto já traz um modelo; vamos copiar o modelo e abrir no Bloco de Notas.
+
+**Windows (PowerShell):**
+
+```powershell
+Copy-Item .env.example .env
+notepad .env
+```
+
+**Mac / Linux:**
+
+```bash
+cp .env.example .env
+open -e .env
+```
+
+O arquivo abre. Troque **só o que vem depois do `=`** nestas linhas, colando o que você anotou no passo 4:
+
+```properties
+SENDER_EMAIL=o-gmail-do-passo-4.1@gmail.com
+SENDER_PASSWORD=asenhade16letrassemespacos
+ORS_API_KEY=a-chave-do-passo-4.2
+JWT_KEY=o-texto-que-voce-gerou-no-passo-4.3
+DATABASE_PASSWORD=uma-senha-que-voce-inventa
+MINIO_SECRET_KEY=outra-senha-que-voce-inventa-com-8-ou-mais
+```
+
+**Não mexa** nas outras linhas: elas já vêm com os valores certos.
+
+Cuidados:
+
+- Não deixe espaço antes nem depois do `=`.
+- Não coloque aspas.
+- Salve com **Ctrl + S** e feche o Bloco de Notas.
+- O banco e o MinIO pegam as senhas do `.env` **na primeira vez** que sobem (passo 6). Trocar depois não muda a senha de um banco que já existe. Se você já tinha rodado o projeto antes com as senhas de desenvolvimento (`123456` e `vanroute123456`), use essas mesmas no `.env`.
+- Sem `JWT_KEY`, sem `DATABASE_PASSWORD` ou sem as chaves do MinIO, **o backend não sobe**.
+
+---
+
+## 6. Ligue o banco de dados (Docker)
+
+Com o **Docker Desktop aberto** e o `.env` já criado (passo 5), rode na pasta do projeto:
 
 ```powershell
 docker compose up -d
@@ -258,80 +457,7 @@ docker compose ps
 
 Tem que aparecer **3 linhas**, `vanroute-db`, `vanroute-redis` e `vanroute-minio`, com **Up** ou **running** na coluna de status.
 
-Isso já deixa pronto, sem você fazer mais nada: o banco `vanroute_db` (e o `vanroute_test`, dos testes automáticos), o Redis e o MinIO (onde ficam as fotos e PDFs). As **tabelas** do banco são criadas sozinhas pelo backend no passo 7.
-
----
-
-## 5. Pegue as 3 chaves
-
-O backend precisa de **3 segredos**. Abra o **Bloco de Notas** e vá anotando cada um conforme for pegando; no passo 6 você vai colar tudo num arquivo.
-
-### 5.1 E-mail e senha de app do Gmail
-
-O site manda um **código por e-mail** no cadastro e no "esqueci a senha". Quem envia é uma conta Gmail sua, usando uma **senha de app** (uma senha especial de 16 letras, **diferente** da senha normal da conta).
-
-1. Escolha a conta Gmail que vai enviar os e-mails (pode criar uma só pra isso).
-2. Entre em https://myaccount.google.com/security e ative a **Verificação em duas etapas** (o Google não deixa criar senha de app sem ela).
-3. Entre em https://myaccount.google.com/apppasswords, digite um nome qualquer (ex.: `VanRoute`) e clique em **Criar**.
-4. Vai aparecer uma senha de **16 letras**, tipo `abcd efgh ijkl mnop`. **Anote ela sem os espaços** (`abcdefghijklmnop`). Ela só aparece uma vez; se perder, crie outra.
-5. Anote também o endereço do Gmail.
-
-### 5.2 Chave do OpenRouteService (mapas)
-
-Serve pra achar no mapa os endereços digitados e traçar o caminho da van.
-
-1. Crie uma conta grátis em https://openrouteservice.org/dev/#/signup e confirme pelo e-mail que eles mandam.
-2. Entre no painel: https://openrouteservice.org/dev/#/home
-3. Em **Request a token**, deixe o tipo **Standard**, dê um nome qualquer e clique em **CREATE TOKEN**.
-4. Copie a chave que aparece (um texto comprido de letras e números) e anote.
-
-### 5.3 Chave do login (JWT)
-
-É um texto aleatório que você mesmo gera. Rode no terminal:
-
-```powershell
-node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
-```
-
-Ele imprime um texto comprido e embaralhado. **Copie a linha inteira** e anote.
-
----
-
-## 6. Crie o arquivo de configuração do backend
-
-As chaves ficam num arquivo chamado `application-local.properties`, que **só existe no seu computador** (ele nunca vai pro GitHub). O projeto já traz um modelo; vamos copiar o modelo e abrir no Bloco de Notas.
-
-**Windows (PowerShell):**
-
-```powershell
-Copy-Item backend/src/main/resources/application-local.properties.example backend/src/main/resources/application-local.properties
-notepad backend/src/main/resources/application-local.properties
-```
-
-**Mac / Linux:**
-
-```bash
-cp backend/src/main/resources/application-local.properties.example backend/src/main/resources/application-local.properties
-open -e backend/src/main/resources/application-local.properties
-```
-
-O arquivo abre. Troque **só o que vem depois do `=`** nestas 4 linhas, colando o que você anotou no passo 5:
-
-```properties
-spring.mail.username=o-gmail-do-passo-5.1@gmail.com
-spring.mail.password=asenhade16letrassemespacos
-openrouteservice.api-key=a-chave-do-passo-5.2
-spring.jwt.key=o-texto-que-voce-gerou-no-passo-5.3
-```
-
-**Não mexa** nas outras linhas (`spring.datasource.password=123456`, `...access-key=vanroute`, `...secret-key=vanroute123456`): elas já estão com os valores certos do Docker.
-
-Cuidados:
-
-- Não deixe espaço antes nem depois do `=`.
-- Não coloque aspas.
-- Salve com **Ctrl + S** e feche o Bloco de Notas.
-
+Isso já deixa pronto, sem você fazer mais nada: o banco `vanroute_db` (e o `vanroute_test`, dos testes automáticos), o Redis e o MinIO (onde ficam as fotos e PDFs). As **tabelas** do banco e a pasta de arquivos do MinIO são criadas sozinhas pelo backend no passo 7.
 ---
 
 ## 7. Ligue o backend (deixe essa janela aberta)
@@ -377,19 +503,19 @@ npm start
 
 Está pronto quando aparecer **`Local: http://localhost:4200/`**. **Não feche essa janela também.**
 
-> **Atalho no Windows:** depois que os passos 1 a 6 estiverem feitos, dá pra ligar Docker + backend + frontend de uma vez dando **dois cliques** no arquivo [`scripts/run.bat`](scripts/run.bat) (ele abre uma janela pra cada um). O `npm install` do passo 8 precisa ter sido feito pelo menos uma vez antes.
-
 ---
 
 ## 9. Use o site
 
 Abra o navegador (Chrome, Edge ou Firefox) em **http://localhost:4200**.
 
+> **Atalho:** com o backend no ar, rode `bash backend/api-tests/demo/seed.sh` (da pasta do projeto, no Git Bash) e ele cria contas, contrato, van e rota prontas pra iniciar. Veja "Dados de exemplo e primeira rota" na seção do Docker; aqui o site é o `http://localhost:4200`.
+
 **O jeito mais fácil de testar é como responsável:**
 
 1. Clique pra **criar conta** e escolha **Responsável**.
 2. Preencha os dados com um **e-mail seu de verdade** (é lá que chega o código).
-3. Abra o seu e-mail: vai chegar um código de **6 números** enviado pelo Gmail do passo 5.1. Olhe também a caixa de **spam**. Digite o código no site.
+3. Abra o seu e-mail: vai chegar um código de **6 números** enviado pelo Gmail do passo 4.1. Olhe também a caixa de **spam**. Digite o código no site.
 4. Pronto: você está dentro. Cadastre um filho, os endereços dele e navegue pelas telas.
 
 **Pra testar como motorista** você precisa da sua **CNH digital em PDF** (aquela baixada do app **Carteira Digital de Trânsito**, com assinatura digital). O sistema lê e confere esse documento de verdade, então foto ou PDF escaneado não passam. Pra cadastrar a van, o mesmo vale pro **CRLV digital**.
@@ -452,7 +578,6 @@ Não precisa repetir instalação, chaves nem `npm install`. É só:
 
 4. Abrir http://localhost:4200.
 
-No Windows, os passos 2 e 3 podem ser trocados por dois cliques no `scripts/run.bat`.
 
 Pra pegar a versão mais nova do projeto antes de ligar: `git pull` na pasta do projeto e depois `npm install` dentro de `frontend`.
 
@@ -467,11 +592,11 @@ Pra pegar a versão mais nova do projeto antes de ligar: `git pull` na pasta do 
 | `npm` dá erro de **"execução de scripts foi desabilitada"** | segurança padrão do PowerShell | rode `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`, responda `S` e abra outro terminal (ou use `npm.cmd` no lugar de `npm`) |
 | `docker compose up -d` dá erro de **"cannot connect"** / **"pipe"** | o Docker Desktop está fechado ou ainda ligando | abra o Docker Desktop, espere ficar verde e rode de novo |
 | `.\mvnw.cmd` **não é reconhecido** | você não está dentro da pasta `backend` | rode `cd ~/Documents/projeto-integrador/backend` e tente de novo |
-| Backend para com erro falando de `JWT_KEY`, `MINIO_ACCESS_KEY` ou `placeholder` | o `application-local.properties` não existe ou falta valor nele | refaça o passo 6 e confira se salvou o arquivo |
-| Backend para com `Connection refused` (porta 5432, 6379 ou 9000) | o Docker não está ligado | passo 4 |
+| Backend para com erro falando de `JWT_KEY`, `MINIO_ACCESS_KEY` ou `placeholder` | o `.env` não existe, não está na pasta do projeto ou falta valor nele | refaça o passo 5 e confira se salvou o arquivo |
+| Backend para com `Connection refused` (porta 5432, 6379 ou 9000) | o Docker não está ligado | passo 6 |
 | `Port 9090 was already in use` ou `Port 4200 is already in use` | já tem um backend/frontend aberto em outra janela | feche a outra janela (ou aperte Ctrl + C nela) e rode de novo |
-| O código de cadastro **não chega** | senha de app errada, com espaços, ou sem verificação em duas etapas | refaça o passo 5.1 e o 6, olhe o spam, e procure por `mail` ou `SMTP` na janela do backend |
-| Endereço **não é encontrado** e a rota não aparece no mapa | chave do OpenRouteService faltando ou o limite grátis do dia acabou | passo 5.2 (o limite volta no dia seguinte) |
+| O código de cadastro **não chega** | senha de app errada, com espaços, ou sem verificação em duas etapas | refaça o passo 4.1 e o 5, olhe o spam, e procure por `mail` ou `SMTP` na janela do backend |
+| Endereço **não é encontrado** e a rota não aparece no mapa | chave do OpenRouteService faltando ou o limite grátis do dia acabou | passo 4.2 (o limite volta no dia seguinte) |
 | O site abre, mas tudo dá erro | o backend está desligado ou ainda ligando | olhe a janela do backend e espere o `Started BackendApplication` |
 | O mapa fica em branco | o frontend foi ligado antes do `npm install` terminar | Ctrl + C no frontend e `npm start` de novo |
 | Testes do backend falham com **"database vanroute_test does not exist"** | o banco do Docker é de uma versão antiga do projeto | `docker exec vanroute-db createdb -U postgres vanroute_test` |
@@ -487,8 +612,9 @@ Pra pegar a versão mais nova do projeto antes de ligar: `git pull` na pasta do 
 cd backend
 .\mvnw.cmd test          # Mac/Linux: ./mvnw test
 
-# frontend
+# frontend (precisa do npm install do passo 8 uma vez)
 cd frontend
+npm install
 npx ng test --watch=false
 ```
 
@@ -505,11 +631,11 @@ Detalhes em [`docs/WORKER.md`](docs/WORKER.md).
 ### Outras informações
 
 - O front nunca chama o backend direto: o `ng serve` repassa `/api`, `/ws` (WebSocket) e `/storage` (MinIO) pelo [`frontend/proxy.conf.json`](frontend/proxy.conf.json).
-- Painel do MinIO (arquivos enviados): http://localhost:9001, usuário `vanroute`, senha `vanroute123456`.
-- Banco: PostgreSQL em `localhost:5432`, usuário `postgres`, senha `123456`, banco `vanroute_db`.
-- Pelo IntelliJ: abra a pasta `backend/` como projeto Maven, use o JDK 21 e rode a classe `BackendApplication`.
-- **Sem Docker?** Dá pra instalar o PostgreSQL 15, o [Memurai](https://www.memurai.com) (no lugar do Redis) e o MinIO direto na máquina, com as mesmas portas, usuários e senhas do [`docker-compose.yml`](docker-compose.yml). O Docker é bem mais simples.
-- O que cada arquivo de configuração faz está no [`backend/README.md`](backend/README.md). Mais documentação em [`docs/`](docs/).
+- Painel do MinIO (arquivos enviados): http://localhost:9001, usuário e senha = `MINIO_ACCESS_KEY` e `MINIO_SECRET_KEY` do `.env`.
+- Banco: PostgreSQL em `localhost:5432`, usuário `postgres`, senha = `DATABASE_PASSWORD` do `.env`, banco `vanroute_db`.
+- Pelo IntelliJ: abra a pasta `backend/` como projeto Maven, use o JDK 21 e rode a classe `BackendApplication` (ele também lê o `.env` da raiz).
+- **Sem Docker?** Dá pra instalar o PostgreSQL 15, o [Memurai](https://www.memurai.com) (no lugar do Redis) e o MinIO direto na máquina, com as mesmas portas do [`docker-compose.yml`](docker-compose.yml) e as senhas do `.env`. O Docker é bem mais simples.
+- O que cada arquivo de configuração faz está no [`backend/README.md`](backend/README.md). Mais documentação em [`docs/`](docs/): fluxos de rota, viagem, contrato e pagamento e pendências.
 
 ---
 

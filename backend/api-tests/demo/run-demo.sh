@@ -6,7 +6,7 @@
 #
 # - o banco normal (vanroute_db) com dados ficticios, Redis e MinIO do docker compose; zere com docker compose down -v
 # - e-mail falso (stubs.py): o cadastro dos pais funciona sem mandar e-mail de verdade
-# - mapas: com a chave em application-local.properties usa o OpenRouteService real; sem ela, o simulador
+# - mapas: com a ORS_API_KEY no .env da raiz usa o OpenRouteService real; sem ela, o simulador
 # - cria o cenario (seed.sh) e serve a pagina (serve.py)
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/../../.." && pwd)
@@ -37,10 +37,10 @@ trap cleanup EXIT INT TERM
 python3 -I "$BACK/api-tests/stubs.py" > "$OUT/stubs.log" 2>&1 & pids+=($!)
 
 maps=()
-if [ "${DEMO_MAPS:-}" != sim ] && grep -q '^openrouteservice.api-key=.\+' "$BACK/src/main/resources/application-local.properties" 2>/dev/null; then
+if [ "${DEMO_MAPS:-}" != sim ] && grep -q '^ORS_API_KEY=.\+' "$BACK/../.env" 2>/dev/null; then
   echo "mapas: OpenRouteService real (sua chave)"
 else
-  echo "mapas: simulador (DEMO_MAPS=sim ou sem chave em application-local.properties)"
+  echo "mapas: simulador (DEMO_MAPS=sim ou sem ORS_API_KEY no .env)"
   maps=(ORS_GEOCODE_URL=http://127.0.0.1:8089/pelias/v1/search ORS_DIRECTIONS_URL=http://127.0.0.1:8089/v2/directions/driving-car)
 fi
 

@@ -454,7 +454,7 @@ Esse comando faz tudo sozinho:
 2. Recompila o backend se o código mudou.
 3. Sobe um **e-mail falso** (`stubs.py`), pro cadastro dos pais funcionar sem mandar e-mail de verdade.
 4. Sobe o backend na 9090:
-   - com a sua chave do OpenRouteService no `application-local.properties`, usa **mapas e endereços reais**;
+   - com a sua chave do OpenRouteService no `.env` (`ORS_API_KEY`), usa **mapas e endereços reais**;
    - sem a chave, ou com `DEMO_MAPS=sim`, usa um simulador. Ele põe cada endereço num ponto diferente perto da Praça da Sé e desenha a linha reta entre os pontos;
    - a chave grátis tem cota diária (o total passa de 8.000 requisições; o limite de cada serviço aparece no painel da conta). Acabou a de endereço, o cadastro responde **503** "Busca de endereços indisponível agora" até o dia seguinte;
    - recalcula o tempo a cada 2 min (no app, 5 min), pra dar pra ver mudando sem gastar a cota da chave.

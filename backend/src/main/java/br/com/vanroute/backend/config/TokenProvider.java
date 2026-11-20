@@ -1,6 +1,7 @@
 package br.com.vanroute.backend.config;
 
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import io.jsonwebtoken.Claims;
@@ -20,6 +21,14 @@ public class TokenProvider {
     private Long expirationTime;
     @Value("${spring.jwt.key}")
     private String key;
+
+    // sem a chave (ou curta demais) o backend nem sobe: o erro aparece na hora, e nao no primeiro login
+    @PostConstruct
+    void conferirChave() {
+        if (key == null || key.getBytes().length < 32) {
+            throw new IllegalStateException("JWT_KEY ausente ou curta: defina um texto aleatorio com 32 caracteres ou mais");
+        }
+    }
 
     public String generateToken(Authentication authentication){
         return generateToken((UserDetails) authentication.getPrincipal());

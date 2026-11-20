@@ -69,11 +69,11 @@ class CnhParserTest {
         // vencida
         assertThrows(InvalidDocumentException.class,
                 () -> CnhParser.check(CnhParser.parse(ocr("D", name, mrzDates("900514", "260101"))), TODAY));
-        // 17 anos
+        // 20 anos
         assertThrows(InvalidDocumentException.class,
-                () -> CnhParser.check(CnhParser.parse(ocr("D", name, mrzDates("090514", "330101"))), TODAY));
-        // 18 anos ja pode
-        assertDoesNotThrow(() -> CnhParser.check(CnhParser.parse(ocr("D", name, mrzDates("080514", "330101"))), TODAY));
+                () -> CnhParser.check(CnhParser.parse(ocr("D", name, mrzDates("060514", "330101"))), TODAY));
+        // 21 anos ja pode (CTB art. 138)
+        assertDoesNotThrow(() -> CnhParser.check(CnhParser.parse(ocr("D", name, mrzDates("050514", "330101"))), TODAY));
         // categoria B
         assertThrows(InvalidDocumentException.class,
                 () -> CnhParser.check(CnhParser.parse(ocr("AB", name, mrzDates("900514", "330101"))), TODAY));
