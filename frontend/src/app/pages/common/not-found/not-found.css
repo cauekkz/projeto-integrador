@@ -1,30 +1,360 @@
-.not-found {
+/* 404: estrada na tela inteira. As camadas correm com transform (sem layout/paint por frame):
+   cada .faixa e mais larga que a tela um "azulejo" e anda exatamente um azulejo por ciclo, entao o loop nao emenda */
+:host {
+  display: block;
+  --estrada: clamp(104px, 19vh, 168px);
+  --van: clamp(240px, 56vw, 460px);
+  --chao-cor: #4c9a5a;
+  --asfalto: #2b2f36;
+  --silhueta: rgb(12 38 74 / 0.3);
+  --predio: rgb(12 38 74 / 0.42);
+  --janela: rgb(255 255 255 / 0.22);
+  --poste: #64748b;
+}
+
+.nf {
+  position: relative;
   min-height: 100dvh;
-  padding: 40px 16px;
+  overflow: hidden;
+  isolation: isolate;
+  /* fundo da noite (de dia/tarde o ceu cobre por cima) */
+  background: linear-gradient(180deg, #071a33 0%, #10305a 60%, #1b4677 100%);
+  color: #ffffff;
+}
+
+.nf.noite {
+  --chao-cor: #1d4a2c;
+  --asfalto: #1d2026;
+  --predio: rgb(4 14 30 / 0.7);
+  --silhueta: rgb(4 14 30 / 0.5);
+  --janela: #ffe39a;
+}
+
+:host-context([data-theme='dark']) {
+  --chao-cor: #2f6a3d;
+  --asfalto: #1f2228;
+}
+
+/* ---------- texto ---------- */
+.texto {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: clamp(48px, 11vh, 112px) 16px 0;
   text-align: center;
+  text-shadow: 0 1px 10px rgb(0 0 0 / 0.22);
+  animation: subir-entrar var(--dur-media) var(--ease-suave) both;
 }
 
+/* o "Erro 404" e o destaque da tela: grande, com uma sombra mais funda pra descolar do ceu */
 .codigo {
-  font-size: 64px;
-  font-weight: 600;
+  margin: 0 0 12px;
+  font-size: clamp(44px, 12vw, 84px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 4px 24px rgb(0 0 0 / 0.3);
 }
 
-.mensagem {
-  font-size: 20px;
+h1 {
+  margin: 0 0 8px;
+  font-size: clamp(24px, 6vw, 34px);
   font-weight: 600;
+  line-height: 1.2;
 }
 
 .descricao {
-  color: var(--cor-texto-3);
-  margin-bottom: 24px;
+  margin: 0 0 24px;
+  font-size: 16px;
+  line-height: 1.5;
+  opacity: 0.92;
 }
 
-app-button {
+/* "Voltar para a rota": vidro da Glisse no maximo (padrao: bend .45, dispersao .4, blur 3px) */
+.btn-vidro {
+  position: relative;
   width: 100%;
-  max-width: 400px;
+  max-width: 320px;
+  min-height: 52px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 26px;
+  background: rgb(255 255 255 / 0.04);
+  color: #ffffff;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.35), 0 10px 28px rgb(0 0 0 / 0.22);
+  transition: background-color var(--dur-media) var(--ease-suave), transform var(--dur-rapida) ease;
+}
+
+.btn-vidro app-glisse-vidro {
+  --lg-glass: rgb(255 255 255 / 0.1);
+  --lg-glass-bend: 1.4;
+  --lg-glass-dispersion: 1.6;
+  --lg-blur: 14px;
+  --lg-rim-shine: 0.8;
+  --glisse-vidro-sombra: none;
+}
+
+.btn-vidro > span {
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.3);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-vidro:hover {
+    background: rgb(255 255 255 / 0.14);
+  }
+}
+
+.btn-vidro:active {
+  transform: scale(0.98);
+}
+
+.btn-vidro:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+/* ---------- paisagem ---------- */
+.paisagem {
+  position: absolute;
+  inset: auto 0 0;
+  height: calc(var(--estrada) + 170px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.faixa {
+  position: absolute;
+  left: 0;
+  display: block;
+  will-change: transform;
+  animation: correr linear infinite;
+}
+
+@keyframes correr {
+  to { transform: translateX(calc(-1 * var(--azulejo))); }
+}
+
+.morros {
+  --azulejo: 800px;
+  bottom: calc(var(--estrada) + 14px);
+  width: calc(100% + 800px);
+  height: 160px;
+  animation-duration: 20s;
+}
+
+.morros path { fill: var(--silhueta); }
+
+.predios {
+  --azulejo: 600px;
+  bottom: calc(var(--estrada) + 14px);
+  width: calc(100% + 600px);
+  height: 120px;
+  animation-duration: 7.5s;
+}
+
+.predio rect { fill: var(--predio); }
+.janela rect { fill: var(--janela); }
+
+.grama {
+  position: absolute;
+  inset: auto 0 var(--estrada);
+  height: 16px;
+  background: var(--chao-cor);
+}
+
+/* postes, tracos e placa andam juntos (mesmo chao): 250px/s */
+.postes {
+  --azulejo: 320px;
+  bottom: var(--estrada);
+  width: calc(100% + 320px);
+  height: 150px;
+  animation-duration: 1.28s;
+}
+
+.poste { fill: var(--poste); }
+.lampada { fill: #cbd5e1; }
+.poste-luz { opacity: 0; }
+
+.noite .lampada { fill: #ffe9a8; }
+.noite .poste-luz { opacity: 1; }
+
+.estrada {
+  position: absolute;
+  inset: auto 0 0;
+  height: var(--estrada);
+  overflow: hidden;
+  background: var(--asfalto);
+  /* meio-fio claro em cima e um degrade bem leve dando a curvatura do asfalto */
+  box-shadow: inset 0 5px 0 #cbd5e1, inset 0 -18px 24px -16px rgb(0 0 0 / 0.35);
+}
+
+.tracos {
+  --azulejo: 96px;
+  top: 44%;
+  width: calc(100% + 96px);
+  height: 6px;
+  animation-duration: 0.384s;
+}
+
+.tracos pattern rect { fill: rgb(255 255 255 / 0.85); }
+
+/* placa: anda 3000px em 12s (250px/s, igual ao chao); fica visivel so no comeco do trajeto */
+.placa {
+  position: absolute;
+  left: 0;
+  bottom: calc(var(--estrada) - 2px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translateX(100vw);
+  animation: placa-passando 12s linear 1.5s infinite;
+}
+
+@keyframes placa-passando {
+  from { transform: translateX(100vw); }
+  to { transform: translateX(calc(100vw - 3000px)); }
+}
+
+.placa-chapa {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 16px 10px;
+  border-radius: 10px;
+  background: #1f7a4d;
+  color: #ffffff;
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.85), 0 6px 14px rgb(0 0 0 / 0.25);
+}
+
+.placa-chapa strong {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.placa-chapa span {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.placa-haste {
+  width: 6px;
+  height: 64px;
+  background: var(--poste);
+}
+
+/* ---------- van ---------- */
+.van-grande {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--estrada) * 0.16);
+  width: var(--van);
+  aspect-ratio: 96 / 44;
+  translate: -56% 0;
+  z-index: 1;
+}
+
+.van {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 10px 8px rgb(0 0 0 / 0.28));
+  animation: balanco 0.9s ease-in-out infinite;
+}
+
+@keyframes balanco {
+  50% { transform: translateY(-2px); }
+}
+
+.van-lataria { fill: #ffffff; }
+.van-vidro { fill: var(--cor-primaria-hover); }
+.van-faixa { fill: var(--cor-primaria); }
+.van-farol { fill: #fff6c9; }
+.van-lanterna { fill: var(--cor-perigo); }
+.van-pneu { fill: #1e293b; }
+.van-calota { fill: #cbd5e1; }
+.van-raio { fill: #64748b; }
+.van-escape { fill: #475569; }
+
+.van-roda { animation: girar 0.45s linear infinite; }
+
+@keyframes girar {
+  to { transform: rotate(360deg); }
+}
+
+/* fumaca do escapamento (canto de tras, embaixo) */
+.fumaca {
+  position: absolute;
+  left: 2%;
+  bottom: 26%;
+}
+
+.fumaca i {
+  position: absolute;
+  left: -10px;
+  top: -10px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.5);
+  opacity: 0;
+  animation: fumaca 1.2s ease-out infinite;
+}
+
+.fumaca i:nth-child(2) { animation-delay: 0.4s; }
+.fumaca i:nth-child(3) { animation-delay: 0.8s; }
+
+@keyframes fumaca {
+  0% { opacity: 0.7; transform: translate(0, 0) scale(0.4); }
+  100% { opacity: 0; transform: translate(-70px, -16px) scale(2); }
+}
+
+/* facho do farol (so de noite): sai da lampada e abre ate o asfalto */
+.facho {
+  display: none;
+  position: absolute;
+  left: 92%;
+  bottom: -14%;
+  width: 90%;
+  height: 62%;
+  background: linear-gradient(90deg, rgb(255 240 190 / 0.6), rgb(255 240 190 / 0));
+  clip-path: polygon(0 18%, 0 32%, 100% 100%, 100% 30%);
+  filter: blur(3px);
+}
+
+.noite .facho { display: block; }
+
+.noite .van-farol {
+  fill: #fffbe6;
+  filter: drop-shadow(0 0 3px #fff3b0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faixa,
+  .van,
+  .van-roda,
+  .fumaca i,
+  .texto {
+    animation: none;
+  }
+
+  .placa {
+    animation: none;
+    transform: translateX(16px);
+  }
 }
