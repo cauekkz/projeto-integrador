@@ -51,8 +51,16 @@ public class UserService {
     }
 
     public User createUser(UserCreateDTO userCreateDTO) {
+        // conferido antes de salvar pra dizer qual dado ja existe (no banco viraria um "registro duplicado" generico)
         if (findByCpf(userCreateDTO.getCpf()).isPresent()) {
-            throw new UserOrDriverOrResponsibleAlreadyRegisteredException("Usuario ja cadastrado");
+            throw new UserOrDriverOrResponsibleAlreadyRegisteredException(
+                    "Já existe uma conta com este CPF. Entre com ele ou use o \"Esqueci minha senha\".");
+        }
+        if (userCreateDTO.getEmail() != null && userRepository.existsByEmail(userCreateDTO.getEmail())) {
+            throw new UserOrDriverOrResponsibleAlreadyRegisteredException("Este e-mail já está em uso em outra conta.");
+        }
+        if (userCreateDTO.getPhone() != null && userRepository.existsByPhone(userCreateDTO.getPhone())) {
+            throw new UserOrDriverOrResponsibleAlreadyRegisteredException("Este telefone já está em uso em outra conta.");
         }
 
         RoleTypeEnum role = userCreateDTO.getRole() != null ? userCreateDTO.getRole() : RoleTypeEnum.ROLE_RESPONSIBLE;

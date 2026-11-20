@@ -22,6 +22,14 @@ import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.util.Date;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @ControllerAdvice
 @RestController
@@ -89,6 +97,41 @@ public class CustomEntityResponseHandler extends ResponseEntityExceptionHandler 
     @ExceptionHandler(AccessDeniedException.class)
     public final ResponseEntity<ExceptionResponse> handleAccessDeniedException(Exception ex, WebRequest request){
         return build(ex, request, HttpStatus.FORBIDDEN);
+    }
+
+    // @Valid: em vez do "Invalid request content." do Spring, as mensagens dos proprios campos (ja em portugues),
+    // sem repetir e no maximo 3 de uma vez (ex.: "E-mail inválido. A senha é obrigatória.")
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers,
+                                                                  HttpStatusCode status, WebRequest request) {
+        String message = ex.getBindingResult().getAllErrors().stream()
+                .map(ObjectError::getDefaultMessage)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .map(m -> m.endsWith(".") ? m : m + ".")
+                .distinct()
+                .limit(3)
+                .collect(Collectors.joining(" "));
+        if (message.isBlank()) {
+            message = "Confira os dados preenchidos e tente de novo.";
+        }
+        return ResponseEntity.badRequest().body(new ExceptionResponse(new Date(), message, request.getDescription(false)));
+    }
+
+    // JSON quebrado ou campo num formato que nao converte (data, numero...)
+    @Override
+    protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers,
+                                                                  HttpStatusCode status, WebRequest request) {
+        return ResponseEntity.badRequest().body(new ExceptionResponse(new Date(),
+                "Alguns dados vieram num formato inválido. Confira e tente de novo.", request.getDescription(false)));
+    }
+
+    // arquivo acima do limite (ex.: PDF da CNH no cadastro do motorista)
+    @Override
+    protected ResponseEntity<Object> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex, HttpHeaders headers,
+                                                                          HttpStatusCode status, WebRequest request) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(new ExceptionResponse(new Date(),
+                "O arquivo é grande demais. Envie um arquivo menor.", request.getDescription(false)));
     }
 
     private ResponseEntity<ExceptionResponse> build(Exception ex, WebRequest request, HttpStatus status){

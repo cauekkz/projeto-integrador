@@ -75,7 +75,7 @@ public class EmailVerificationService {
         redisTemplate.opsForValue().set(redisKey, code, CODE_TTL);
         redisTemplate.opsForValue().set(redisKey + ":email", email, CODE_TTL);
         redisTemplate.delete(redisKey + ":attempts");
-        emailService.sendEmail(email, "Código de verificação - VanRoute", text + code);
+        emailService.sendEmailAsync(email, "Código de verificação - VanRoute", text + code);
         return code;
     }
 }
