@@ -1,7 +1,114 @@
-<div class="not-found">
-  <h1 class="codigo">404</h1>
-  <p class="mensagem">Página não encontrada</p>
-  <p class="descricao">O endereço que você tentou acessar não existe.</p>
+<main class="nf" [class.noite]="periodo === 'noite'">
+  <app-ceu-em-rota aria-hidden="true" [periodo]="periodo" [progresso]="progresso" />
 
-  <app-button texto="Voltar ao início" tipo="primary" (clickEvent)="voltarInicio()"></app-button>
-</div>
+  <section class="texto" aria-labelledby="nf-titulo">
+    <p class="codigo">Erro 404</p>
+    <h1 id="nf-titulo">Não achamos essa página</h1>
+    <p class="descricao">A van rodou o bairro inteiro e esse endereço não apareceu. Volte para a rota e siga viagem.</p>
+    <!-- botao de vidro (Glisse) bem fosco e distorcido: o ceu e a paisagem aparecem tortos e embacados atras -->
+    <button type="button" class="btn-vidro" (click)="voltarInicio()">
+      <app-glisse-vidro />
+      <span>Voltar para a rota</span>
+    </button>
+  </section>
+
+  <!-- a paisagem em camadas: cada uma corre numa velocidade (as de tras mais devagar), o que da a profundidade -->
+  <div class="paisagem" aria-hidden="true">
+    <svg class="faixa morros">
+      <defs>
+        <pattern id="nf-morros" width="800" height="160" patternUnits="userSpaceOnUse">
+          <path d="M0 160 V96 C120 40 220 44 320 84 S540 124 640 70 S760 62 800 96 V160 Z" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#nf-morros)" />
+    </svg>
+
+    <svg class="faixa predios">
+      <defs>
+        <pattern id="nf-predios" width="600" height="120" patternUnits="userSpaceOnUse">
+          <g class="predio">
+            <rect x="20" y="50" width="54" height="70" rx="3" />
+            <rect x="84" y="20" width="40" height="100" rx="3" />
+            <rect x="134" y="66" width="70" height="54" rx="3" />
+            <rect x="250" y="36" width="46" height="84" rx="3" />
+            <rect x="306" y="74" width="60" height="46" rx="3" />
+            <rect x="420" y="28" width="52" height="92" rx="3" />
+            <rect x="482" y="60" width="44" height="60" rx="3" />
+          </g>
+          <g class="janela">
+            <rect x="30" y="62" width="8" height="8" /><rect x="52" y="62" width="8" height="8" /><rect x="30" y="82" width="8" height="8" />
+            <rect x="94" y="32" width="7" height="8" /><rect x="108" y="48" width="7" height="8" /><rect x="94" y="72" width="7" height="8" />
+            <rect x="148" y="78" width="9" height="8" /><rect x="176" y="78" width="9" height="8" />
+            <rect x="260" y="48" width="8" height="8" /><rect x="278" y="66" width="8" height="8" />
+            <rect x="318" y="86" width="9" height="8" /><rect x="430" y="40" width="8" height="8" /><rect x="450" y="60" width="8" height="8" />
+            <rect x="492" y="72" width="8" height="8" />
+          </g>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#nf-predios)" />
+    </svg>
+
+    <div class="grama"></div>
+
+    <svg class="faixa postes">
+      <defs>
+        <radialGradient id="nf-luz">
+          <stop offset="0" stop-color="#ffe7a3" stop-opacity="0.55" />
+          <stop offset="1" stop-color="#ffe7a3" stop-opacity="0" />
+        </radialGradient>
+        <pattern id="nf-postes" width="320" height="150" patternUnits="userSpaceOnUse">
+          <circle class="poste-luz" cx="136" cy="24" r="40" fill="url(#nf-luz)" />
+          <path class="poste" d="M157 150 V18 Q157 10 149 10 H128 V15 H149 Q151 15 151 18 V150 Z" />
+          <rect class="lampada" x="124" y="14" width="16" height="5" rx="2.5" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#nf-postes)" />
+    </svg>
+
+    <!-- a placa da estrada que passa de tempos em tempos -->
+    <div class="placa">
+      <div class="placa-chapa">
+        <strong>404</strong>
+        <span>Página não encontrada</span>
+      </div>
+      <i class="placa-haste"></i>
+    </div>
+
+    <div class="estrada">
+      <svg class="faixa tracos">
+        <defs>
+          <pattern id="nf-tracos" width="96" height="6" patternUnits="userSpaceOnUse">
+            <rect width="48" height="6" rx="3" />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#nf-tracos)" />
+      </svg>
+    </div>
+
+    <div class="van-grande">
+      <span class="fumaca"><i></i><i></i><i></i></span>
+      <span class="facho"></span>
+      <svg class="van" viewBox="0 0 96 44">
+        <path class="van-lataria" d="M6 10 Q6 4 12 4 L62 4 Q68 4 72 8 L84 20 Q90 21 90 27 L90 32 Q90 35 87 35 L9 35 Q6 35 6 32 Z" />
+        <rect class="van-vidro" x="12" y="9" width="14" height="10" rx="2" />
+        <rect class="van-vidro" x="30" y="9" width="14" height="10" rx="2" />
+        <rect class="van-vidro" x="48" y="9" width="12" height="10" rx="2" />
+        <path class="van-vidro" d="M64 9 L69 9 Q70.5 9 71.5 10 L79.5 19 L64 19 Z" />
+        <rect class="van-faixa" x="6" y="24" width="84" height="3" />
+        <rect class="van-farol" x="85" y="22" width="4" height="3" rx="1.2" />
+        <rect class="van-lanterna" x="6" y="21" width="2.5" height="5" rx="1" />
+        <rect class="van-escape" x="1.5" y="31" width="6" height="2.4" rx="1.2" />
+        <g class="van-roda" style="transform-origin: 24px 35px">
+          <circle cx="24" cy="35" r="7" class="van-pneu" />
+          <circle cx="24" cy="35" r="3" class="van-calota" />
+          <rect x="23.2" y="29.5" width="1.6" height="11" rx="0.8" class="van-raio" />
+        </g>
+        <g class="van-roda" style="transform-origin: 72px 35px">
+          <circle cx="72" cy="35" r="7" class="van-pneu" />
+          <circle cx="72" cy="35" r="3" class="van-calota" />
+          <rect x="71.2" y="29.5" width="1.6" height="11" rx="0.8" class="van-raio" />
+        </g>
+      </svg>
+    </div>
+  </div>
+</main>

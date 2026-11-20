@@ -13,5 +13,8 @@ public interface TripRepository extends JpaRepository<Trip, UUID> {
     // trip do dia que ainda vale (nao cancelada)
     Optional<Trip> findFirstByRouteIdAndDateAndStatusNot(UUID routeId, LocalDate date, TripStatus status);
 
+    // a viagem do dia de um motorista (pelo id do usuario dele) num dos status
+    Optional<Trip> findFirstByDriver_UserIdAndDateAndStatusIn(UUID driverUserId, LocalDate date, Collection<TripStatus> statuses);
+
     Optional<Trip> findFirstByRouteIdAndDateAndStatusIn(UUID routeId, LocalDate date, Collection<TripStatus> statuses);
 }

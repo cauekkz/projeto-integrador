@@ -430,4 +430,27 @@ class TripServiceTest {
 
         assertEquals("A rota tem alunos sem embarque ou desembarque em algum dia: Lucas Pereira sem embarque (segunda e sexta)", e.getMessage());
     }
+
+    @Test
+    void openTripIsTheDriversActiveTripOfToday() {
+        Trip trip = new Trip();
+        trip.setId(UUID.randomUUID());
+        trip.setRoute(route);
+        trip.setDriver(driver);
+        trip.setStatus(TripStatus.IN_PROGRESS);
+        when(tripRepository.findFirstByDriver_UserIdAndDateAndStatusIn(eq(driver.getUserId()), eq(today), any()))
+                .thenReturn(Optional.of(trip));
+
+        TripResponseDTO open = tripService.openTrip(driver.getUserId()).orElseThrow();
+        assertEquals(route.getId(), open.routeId());
+        assertEquals("Ida", open.routeName());
+    }
+
+    @Test
+    void openTripIsEmptyWhenTheDriverHasNoTripOpenToday() {
+        when(tripRepository.findFirstByDriver_UserIdAndDateAndStatusIn(eq(driver.getUserId()), eq(today), any()))
+                .thenReturn(Optional.empty());
+
+        assertTrue(tripService.openTrip(driver.getUserId()).isEmpty());
+    }
 }

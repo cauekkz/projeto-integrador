@@ -1,11 +1,10 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
-import { Observable, Subject, catchError, forkJoin, map, of, switchMap } from 'rxjs';
+import { Observable, Subject, catchError, map, of } from 'rxjs';
 import { SKIP_ERROR_POPUP } from '../interceptor/http-context';
 import { AuthService } from './auth.service';
 import { API_URL, wsUrl } from './api';
 import { OccurrenceType, tripResponse, tripStudent, tripUpdate, viagemAtiva } from './dto/trip/trip.dto';
-import { RouteService } from './route.service';
 import { Page } from './dto/page.dto';
 import { tripHistoryFilter, tripHistoryItem, tripOccurrence } from './dto/group/group.dto';
 
@@ -84,7 +83,6 @@ export class TripService {
   private apiUrl = `${API_URL}/trip`;
   private http = inject(HttpClient);
   private auth = inject(AuthService);
-  private routeService = inject(RouteService);
 
   // 404 = ainda nao tem viagem hoje (a tela trata, sem popup)
   getToday(routeId: string) {
@@ -147,26 +145,16 @@ export class TripService {
     return this.http.post(`${this.apiUrl}/${tripId}/occurrences`, { type, description });
   }
 
-  // a rota com viagem aberta hoje (o back nao tem essa chamada: olha o "today" de cada rota ativa). null = nenhuma
+  // a rota com viagem aberta hoje (GET /open); null = nenhuma
   rotaComViagemAberta(): Observable<string | null> {
     return this.viagemAberta().pipe(map((v) => v?.routeId ?? null));
   }
 
-  // a rota (id e nome) que tem viagem rodando hoje; null se nenhuma
+  // a rota (id e nome) que tem viagem rodando hoje; null se nenhuma.
+  // o back responde 204 (corpo vazio) quando nao tem: sem 404 no console
   viagemAberta(): Observable<{ routeId: string; nome: string } | null> {
-    return this.routeService.getMyRoutes({ active: true, size: 50 }).pipe(
-      switchMap((pagina) => {
-        const rotas = pagina.content ?? [];
-        if (!rotas.length) return of(null);
-        return forkJoin(
-          rotas.map((r) =>
-            this.getToday(r.id).pipe(
-              map((trip) => (viagemAtiva(trip?.status) ? { routeId: r.id, nome: r.name } : null)),
-              catchError(() => of(null)),
-            ),
-          ),
-        ).pipe(map((abertas) => abertas.find((v) => !!v) ?? null));
-      }),
+    return this.http.get<tripResponse | null>(`${this.apiUrl}/open`, { context: new HttpContext().set(SKIP_ERROR_POPUP, true) }).pipe(
+      map((trip) => (trip && viagemAtiva(trip.status) ? { routeId: trip.routeId, nome: trip.routeName } : null)),
       catchError(() => of(null)),
     );
   }

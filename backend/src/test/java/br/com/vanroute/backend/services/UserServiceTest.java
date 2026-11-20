@@ -131,10 +131,34 @@ class UserServiceTest {
                         () -> userService.createUser(defaultUserCreateDTO)
                 );
 
-        assertEquals("Usuario ja cadastrado", exception.getMessage());
+        assertTrue(exception.getMessage().contains("CPF"));
 
         verify(userRepository, never()).save(any(User.class));
         verify(passwordEncoder, never()).encode(anyString());
+    }
+
+    @Test
+    void shouldSayTheEmailIsTakenWhenAnotherAccountUsesIt() {
+        when(userRepository.findByCpf("12345678901")).thenReturn(Optional.empty());
+        when(userRepository.existsByEmail("mbappe@teste.com")).thenReturn(true);
+
+        UserOrDriverOrResponsibleAlreadyRegisteredException exception = assertThrows(
+                UserOrDriverOrResponsibleAlreadyRegisteredException.class, () -> userService.createUser(defaultUserCreateDTO));
+
+        assertEquals("Este e-mail já está em uso em outra conta.", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void shouldSayThePhoneIsTakenWhenAnotherAccountUsesIt() {
+        when(userRepository.findByCpf("12345678901")).thenReturn(Optional.empty());
+        when(userRepository.existsByPhone(defaultUserCreateDTO.getPhone())).thenReturn(true);
+
+        UserOrDriverOrResponsibleAlreadyRegisteredException exception = assertThrows(
+                UserOrDriverOrResponsibleAlreadyRegisteredException.class, () -> userService.createUser(defaultUserCreateDTO));
+
+        assertEquals("Este telefone já está em uso em outra conta.", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test

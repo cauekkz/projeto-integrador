@@ -86,21 +86,18 @@ describe('Rotas do motorista', () => {
   });
 
   describe('lista /driver-routes', () => {
-    // a home pede as rotas 2 vezes: a lista e a procura da viagem rodando (card "Em rota")
+    // a home pede a lista das rotas e a viagem aberta do motorista (GET /api/trip/open, 204 = nenhuma) pro card "Em rota"
     function criar(rotas: object[], viagemHoje: object | null = null) {
       configurar();
       const fixture = TestBed.createComponent(DriverRoutes);
       fixture.detectChanges();
-      const reqs = http.match((r) => r.url === '/api/route/get-all-routes-and-stops');
-      expect(reqs.length).toBe(2);
-      for (const req of reqs) {
-        expect(req.request.params.get('active')).toBe('true');
-        req.flush({ content: rotas, last: true });
-      }
-      for (const req of http.match((r) => r.url.startsWith('/api/trip/route/'))) {
-        if (viagemHoje) req.flush(viagemHoje);
-        else req.flush({}, { status: 404, statusText: 'Not Found' });
-      }
+      const req = http.expectOne((r) => r.url === '/api/route/get-all-routes-and-stops');
+      expect(req.request.params.get('active')).toBe('true');
+      req.flush({ content: rotas, last: true });
+      const aberta = http.expectOne('/api/trip/open');
+      const rota = rotas[0] as { id?: string; name?: string } | undefined;
+      if (viagemHoje) aberta.flush({ routeId: rota?.id, routeName: rota?.name, ...viagemHoje });
+      else aberta.flush(null, { status: 204, statusText: 'No Content' });
       fixture.detectChanges();
       return fixture;
     }
@@ -370,13 +367,11 @@ describe('Rotas do motorista', () => {
     const navegar = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     // sem viagem aberta: escolher a rota
     fixture.componentInstance.selecionarAba('meio');
-    http.expectOne((r) => r.url === '/api/route/get-all-routes-and-stops').flush({ content: [{ id: 'r-1', name: 'Ida', stops: [] }], last: true });
-    http.expectOne('/api/trip/route/r-1/today').flush({}, { status: 404, statusText: 'Not Found' });
+    http.expectOne('/api/trip/open').flush(null, { status: 204, statusText: 'No Content' });
     expect(navegar).toHaveBeenCalledWith(['/driver-routes']);
     // com viagem aberta: direto pro mapa da viagem
     fixture.componentInstance.selecionarAba('meio');
-    http.expectOne((r) => r.url === '/api/route/get-all-routes-and-stops').flush({ content: [{ id: 'r-1', name: 'Ida', stops: [] }], last: true });
-    http.expectOne('/api/trip/route/r-1/today').flush({ id: 't-1', status: 'IN_PROGRESS' });
+    http.expectOne('/api/trip/open').flush({ id: 't-1', status: 'IN_PROGRESS', routeId: 'r-1', routeName: 'Ida' });
     expect(navegar).toHaveBeenCalledWith(['/driver-route', 'r-1'], { queryParams: { continuar: 1 } });
     // o rodape do motorista e a TabBar da Glisse: o React carrega depois, entao espera ela aparecer
     await vi.waitFor(() => expect(fixture.nativeElement.querySelector('.glisse-tab-bar .icone-rota')).not.toBeNull(), { timeout: 8000 });

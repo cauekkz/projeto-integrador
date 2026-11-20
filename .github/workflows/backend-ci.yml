@@ -66,6 +66,8 @@ jobs:
           SENDER_PASSWORD: stub
           SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: false
           ORS_GEOCODE_URL: http://127.0.0.1:8089/pelias/v1/search
+          # vazio desliga a busca real por CEP (AwesomeAPI): os enderecos vao so pro simulador
+          CEP_GEOCODE_URL: ""
           ORS_DIRECTIONS_URL: http://127.0.0.1:8089/v2/directions/driving-car
           TRIP_ETA_REFRESH_SECONDS: 3
           TRIP_OFF_ROUTE_MIN_SECONDS: 0

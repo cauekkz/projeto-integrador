@@ -10,7 +10,10 @@ import java.util.stream.Stream;
 
 import br.com.vanroute.backend.models.address.Address;
 
+import br.com.vanroute.backend.dtos.geocode.CepResponse;
 import br.com.vanroute.backend.dtos.geocode.Coordenadas;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import br.com.vanroute.backend.exceptions.BadRequestException;
 import org.springframework.web.util.UriComponentsBuilder;
 import br.com.vanroute.backend.dtos.geocode.GeocodeResponse;
@@ -44,6 +47,13 @@ public class MapService {
     // sem limite de tempo uma conexao velha (o servidor ja fechou) deixava o "iniciar rota" preso ~2 min
     // dentro da transacao: agora desiste rapido e a trip segue sem trajeto ate o proximo calculo
     private static final Duration TIMEOUT = Duration.ofSeconds(15);
+    // o CEP e so a 1a tentativa: se demorar, desiste logo e vai pra OpenRouteService
+    private static final Duration CEP_TIMEOUT = Duration.ofSeconds(5);
+
+    private static final Logger log = LoggerFactory.getLogger(MapService.class);
+
+    @Value("${cep.geocode-url:https://cep.awesomeapi.com.br/json}")
+    private String cepGeocodeUrl;
 
     public MapService(WebClient.Builder webClientBuilder) {
         HttpClient httpClient = HttpClient.create(ConnectionProvider.builder("openrouteservice")
@@ -59,10 +69,58 @@ public class MapService {
     // resultado que so acha a cidade/regiao nao serve como ponto da van
     private static final Set<String> PRECISE_LAYERS = Set.of("address", "street", "venue");
 
-    // monta o texto sem campo vazio (antes um bairro nulo virava "null" no texto e caia em outro pais)
+    // 1o pelo CEP (AwesomeAPI): a OpenRouteService conhece pouco os enderecos do Brasil e nao achava nem ruas
+    // conhecidas. Se o CEP nao servir (fora do ar, nao achou, CEP unico da cidade ou de outra cidade), busca pelo texto
     public Coordenadas searchCoord(Address address) {
-        return searchCoord(addressText(address));
+        Coordenadas byCep = searchByCep(address);
+        return byCep != null ? byCep : searchCoord(addressText(address));
     }
+
+    // null = sem resultado confiavel pelo CEP (quem chamou tenta a OpenRouteService). cep.geocode-url vazio desliga
+    // (os testes de API usam so o simulador)
+    private Coordenadas searchByCep(Address address) {
+        String zip = address.getZipCode() == null ? "" : address.getZipCode().replaceAll("\\D", "");
+        if (cepGeocodeUrl == null || cepGeocodeUrl.isBlank() || zip.length() != 8) {
+            return null;
+        }
+        try {
+            CepResponse response = webClient.get()
+                    .uri(cepGeocodeUrl + "/" + zip)
+                    .retrieve()
+                    .bodyToMono(CepResponse.class)
+                    .block(CEP_TIMEOUT);
+            Coordenadas coords = fromCep(response, address.getCity());
+            if (coords == null) {
+                log.info("CEP sem coordenada confiavel na AwesomeAPI, buscando pela OpenRouteService");
+            }
+            return coords;
+        } catch (Exception e) {
+            log.warn("Busca por CEP indisponivel ({}), buscando pela OpenRouteService", e.getMessage());
+            return null;
+        }
+    }
+
+    // so aceita CEP de rua (no CEP unico da cidade o address vem vazio e o ponto e o centro da cidade) e da mesma
+    // cidade que a pessoa digitou (CEP errado nao pode jogar o ponto em outra cidade)
+    static Coordenadas fromCep(CepResponse response, String city) {
+        if (response == null || isBlank(response.address()) || isBlank(response.lat()) || isBlank(response.lng())) {
+            return null;
+        }
+        if (!isBlank(city) && !AddressService.normalize(city).equals(AddressService.normalize(response.city()))) {
+            return null;
+        }
+        try {
+            return new Coordenadas(Double.parseDouble(response.lat()), Double.parseDouble(response.lng()));
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static boolean isBlank(String text) {
+        return text == null || text.isBlank();
+    }
+
+    // monta o texto sem campo vazio (antes um bairro nulo virava "null" no texto e caia em outro pais)
 
     static String addressText(Address address) {
         return Stream.of(address.getStreet(), address.getNumber(), address.getNeighborhood(),

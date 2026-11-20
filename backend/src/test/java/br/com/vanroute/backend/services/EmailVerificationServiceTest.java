@@ -61,7 +61,7 @@ class EmailVerificationServiceTest {
         assertEquals(Duration.ofMinutes(15), ttlCaptor.getValue());
         // o e-mail fica ao lado, pra mandar um codigo novo se errarem 5 vezes
         verify(valueOperations).set(eq(REDIS_KEY + ":email"), eq(EMAIL), any(Duration.class));
-        verify(emailService).sendEmail(eq(EMAIL), eq("Código de verificação - VanRoute"), contains(code));
+        verify(emailService).sendEmailAsync(eq(EMAIL), eq("Código de verificação - VanRoute"), contains(code));
     }
 
     @Test
@@ -74,7 +74,7 @@ class EmailVerificationServiceTest {
 
         assertEquals(HttpStatus.TOO_MANY_REQUESTS, ex.getStatusCode());
         assertTrue(ex.getReason().contains("42 segundos"));
-        verify(emailService, never()).sendEmail(anyString(), anyString(), anyString());
+        verify(emailService, never()).sendEmailAsync(anyString(), anyString(), anyString());
     }
 
     @Test
@@ -85,7 +85,7 @@ class EmailVerificationServiceTest {
         String code = emailVerificationService.sendCodeAfterSignup(REDIS_KEY, EMAIL);
 
         verify(valueOperations).set(eq(REDIS_KEY + ":cooldown"), eq("1"), eq(Duration.ofMinutes(1)));
-        verify(emailService).sendEmail(eq(EMAIL), anyString(), contains(code));
+        verify(emailService).sendEmailAsync(eq(EMAIL), anyString(), contains(code));
     }
 
     @Test
@@ -122,7 +122,7 @@ class EmailVerificationServiceTest {
         assertTrue(ex.getReason().contains("novo código"));
         // codigo novo gravado (substitui o velho) e enviado, sem passar pela trava de 1 minuto
         verify(valueOperations).set(eq(REDIS_KEY), argThat(code -> code.matches("\\d{6}")), any(Duration.class));
-        verify(emailService).sendEmail(eq(EMAIL), anyString(), contains("trocado"));
+        verify(emailService).sendEmailAsync(eq(EMAIL), anyString(), contains("trocado"));
         verify(valueOperations, never()).setIfAbsent(eq(REDIS_KEY + ":cooldown"), anyString(), any(Duration.class));
     }
 
