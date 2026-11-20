@@ -8,9 +8,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.core.io.ClassPathResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mail.MailPreparationException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.HtmlUtils;
 
@@ -25,6 +28,8 @@ public class EmailService {
     private static final Pattern TEXTO_E_CODIGO = Pattern.compile("^(.*?)[\\s:]*(\\d{6})\\s*$", Pattern.DOTALL);
     private static final Pattern CHAMADA_DO_CODIGO = Pattern.compile("\\s*Seu (novo )?código( de verificação)? é\\s*:?\\s*$");
     private static final String TEXTO_PADRAO = "Use o código abaixo para continuar no VanRoute.";
+
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     private final JavaMailSender mailSender;
     private String modelo;
@@ -45,6 +50,17 @@ public class EmailService {
             mailSender.send(message);
         } catch (MessagingException e) {
             throw new MailPreparationException("Não foi possível montar o e-mail", e);
+        }
+    }
+
+    // mesmo e-mail, mas sem segurar quem pediu: roda no emailExecutor (AsyncConfig). Se o SMTP falhar fica no log;
+    // a pessoa pode pedir outro codigo pelo "reenviar"
+    @Async("emailExecutor")
+    public void sendEmailAsync(String to, String subject, String body) {
+        try {
+            sendEmail(to, subject, body);
+        } catch (RuntimeException e) {
+            log.error("Falha ao enviar e-mail para {}", to, e);
         }
     }
 

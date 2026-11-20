@@ -1,0 +1,183 @@
+/* ceu atras do card "Em rota agora". So opacidade e transform animam (nada de layout/paint por frame) */
+:host {
+  --troca: 1.4s cubic-bezier(0.33, 0, 0.2, 1);
+  /* no tema escuro o ceu entra mais apagado, misturado com a superficie escura do card */
+  --forca-ceu: 1;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+:host-context([data-theme='dark']) {
+  --forca-ceu: 0.68;
+}
+
+.ceu,
+.sol,
+.estrelas,
+.lua {
+  position: absolute;
+  opacity: 0;
+  transition: opacity var(--troca), transform var(--troca);
+}
+
+.ceu {
+  inset: 0;
+}
+
+/* dia: azul limpo, mais fechado em cima (onde fica o texto branco) e clareando no horizonte */
+.ceu-dia {
+  background: linear-gradient(180deg, #3f8ad4 0%, #64abe7 45%, #a0d3f3 80%, #c6e7f9 100%);
+}
+
+/* por do sol: azul de cima descendo pra um rose apagado, laranja e o amarelo queimado na linha do horizonte */
+.ceu-tarde {
+  background:
+    radial-gradient(120% 70% at 82% 78%, rgb(255 196 120 / 0.55), transparent 60%),
+    linear-gradient(180deg, #27406f 0%, #5a5277 24%, #b0606a 48%, #e57f4b 70%, #f6aa58 86%, #fcd08a 100%);
+}
+
+.ceu-anoitecendo {
+  background: linear-gradient(180deg, #16203f 0%, rgb(22 32 63 / 0.6) 45%, rgb(22 32 63 / 0) 85%);
+}
+
+:host([data-periodo='dia']) .ceu-dia,
+:host([data-periodo='por-do-sol']) .ceu-tarde {
+  opacity: var(--forca-ceu);
+}
+
+/* escurece aos poucos: cada minuto o --p sobe um pouco e a transicao de 60s emenda um minuto no outro */
+:host([data-periodo='por-do-sol']) .ceu-anoitecendo {
+  opacity: calc(var(--p) * 0.55 * var(--forca-ceu));
+  transition: opacity 60s linear;
+}
+
+/* ---------- sol ---------- */
+.sol {
+  width: 0;
+  height: 0;
+}
+
+.sol-disco,
+.sol-brilho {
+  position: absolute;
+  border-radius: 50%;
+  translate: -50% -50%;
+}
+
+/* dia: alto no canto, branco quente no miolo */
+.sol-dia {
+  top: 28px;
+  right: 32px;
+  transform: translateY(10px);
+}
+
+.sol-dia .sol-disco {
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle at 45% 42%, #ffffff 0%, #fff8dc 40%, #ffe59a 100%);
+  box-shadow: 0 0 10px 2px rgb(255 247 210 / 0.8);
+}
+
+.sol-dia .sol-brilho {
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(closest-side, rgb(255 250 225 / 0.55), rgb(255 245 205 / 0.18) 45%, transparent);
+  animation: calor 9s ease-in-out infinite;
+}
+
+/* fim de tarde: maior, laranja avermelhado, e desce do canto ate perto da estrada */
+.sol-tarde {
+  top: 24px;
+  right: 48px;
+  transform: translateY(calc(var(--p) * 78px));
+}
+
+.sol-tarde .sol-disco {
+  width: 38px;
+  height: 38px;
+  background: radial-gradient(circle at 50% 45%, #fff1cf 0%, #ffcb72 38%, #ff9443 74%, #f2683a 100%);
+  box-shadow: 0 0 14px 3px rgb(255 160 80 / 0.65);
+}
+
+.sol-tarde .sol-brilho {
+  width: 190px;
+  height: 140px;
+  background: radial-gradient(closest-side, rgb(255 190 110 / 0.6), rgb(255 140 70 / 0.22) 50%, transparent);
+  animation: calor 11s ease-in-out infinite;
+}
+
+:host([data-periodo='dia']) .sol-dia,
+:host([data-periodo='por-do-sol']) .sol-tarde {
+  opacity: 1;
+}
+
+:host([data-periodo='dia']) .sol-dia {
+  transform: none;
+}
+
+:host([data-periodo='por-do-sol']) .sol-tarde {
+  transition: opacity var(--troca), transform 60s linear;
+}
+
+/* o ar quente tremendo em volta do sol: bem lento e pequeno, pra nao virar um brilho pulsando */
+@keyframes calor {
+  50% {
+    transform: scale(1.04);
+    opacity: 0.85;
+  }
+}
+
+/* ---------- noite ---------- */
+.estrelas {
+  inset: 0;
+}
+
+.estrelas i {
+  position: absolute;
+  border-radius: 50%;
+  background: #fffdf2;
+  box-shadow: 0 0 3px rgb(255 253 242 / 0.8);
+  animation: piscar ease-in-out infinite;
+}
+
+@keyframes piscar {
+  50% {
+    opacity: 0.25;
+    transform: scale(0.6);
+  }
+}
+
+.lua {
+  top: 10px;
+  right: 12px;
+  overflow: visible;
+  filter: drop-shadow(0 0 7px rgb(255 248 220 / 0.45));
+  transform: translateY(8px);
+}
+
+.lua .lua-cratera {
+  fill: rgb(180 165 120 / 0.35);
+}
+
+:host([data-periodo='noite']) .estrelas,
+:host([data-periodo='noite']) .lua {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ceu,
+  .sol,
+  .estrelas,
+  .lua {
+    transition: opacity 0.2s linear;
+  }
+
+  .sol-brilho,
+  .estrelas i {
+    animation: none;
+  }
+}

@@ -50,6 +50,15 @@ public class TripController {
         return tripService.todayTrip(routeId, AuthenticatedUser.id(authentication));
     }
 
+    // a viagem aberta hoje do motorista logado (card "Em rota agora" e rodape). 204 quando nao tem:
+    // o front pergunta uma vez so, em vez do "today" de cada rota (que da 404 nas rotas sem viagem)
+    @GetMapping("/open")
+    public ResponseEntity<TripResponseDTO> openTrip(Authentication authentication) {
+        return tripService.openTrip(AuthenticatedUser.id(authentication))
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
     // historico por aluno (responsavel: dos filhos; motorista: das viagens dele). Filtros opcionais:
     // studentId, driverId, routeId, date (um dia) ou from/to (periodo, AAAA-MM-DD)
     @GetMapping("/history")

@@ -168,45 +168,13 @@
   }
 }
 
-/* lua (de noite) no canto de cima do card; a hora decide, nao o tema.
-   cores quentes/claras que funcionam no card azul (claro) e na superficie escura */
-.em-rota-astro {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  overflow: visible;
-}
-
-/* lua: crescente marfim com brilho frio, crateras discretas e estrelinhas piscando */
-.em-rota-lua {
-  filter: drop-shadow(0 0 7px rgb(255 248 220 / 0.45));
-}
-
-.em-rota-lua .lua-cratera {
-  fill: rgb(180 165 120 / 0.35);
-}
-
-.em-rota-lua .lua-estrela {
-  fill: #fffdf2;
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: estrela-piscando 3s ease-in-out infinite;
-}
-
-.em-rota-lua .lua-estrela-2 {
-  animation-delay: 1.5s;
-}
-
-@keyframes estrela-piscando {
-  50% {
-    opacity: 0.3;
-    transform: scale(0.7);
-  }
+/* o ceu (app-ceu-em-rota) fica no fundo do card; o resto vem por cima dele */
+.em-rota > :not(app-ceu-em-rota) {
+  position: relative;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ao-vivo::after,
-  .em-rota-lua .lua-estrela {
+  .ao-vivo::after {
     animation: none;
   }
 }
@@ -224,31 +192,43 @@
   color: #86efac;
 }
 
-:host-context([data-theme='dark']) .em-rota-abrir {
-  background: var(--cor-primaria);
-  color: var(--cor-sobre-primaria);
-}
-
-@media (hover: hover) and (pointer: fine) {
-  :host-context([data-theme='dark']) .em-rota-abrir:hover {
-    background: var(--cor-primaria-hover);
-  }
-}
-
+/* "Abrir mapa" de vidro (Glisse): branco translucido no claro, escuro translucido no escuro; o ceu passa por tras */
 .em-rota-abrir {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   border: none;
-  background: var(--cor-superficie);
+  background: rgb(255 255 255 / 0.55);
   color: var(--cor-primaria-texto-forte);
   font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.45), 0 2px 8px rgb(var(--sombra-rgb) / calc(0.18 * var(--sombra-forca)));
+}
+
+.em-rota-abrir app-glisse-vidro {
+  --lg-glass: transparent;
+  --glisse-vidro-sombra: none;
+}
+
+.em-rota-abrir > i,
+.em-rota-abrir > span {
+  position: relative;
+  z-index: 1;
+}
+
+:host-context([data-theme='dark']) .em-rota-abrir {
+  background: rgb(30 30 32 / 0.55);
+  color: #f1f1f1;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12), 0 2px 10px rgb(0 0 0 / 0.4);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .em-rota-abrir:hover {
-    background: var(--cor-primaria-suave);
+    background: rgb(255 255 255 / 0.72);
+  }
+
+  :host-context([data-theme='dark']) .em-rota-abrir:hover {
+    background: rgb(30 30 32 / 0.72);
   }
 }
 

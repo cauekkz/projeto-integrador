@@ -21,14 +21,14 @@ public class ResponsibleRequestDTO {
     @Size(min = 8, message = "A senha deve ter no mínimo 8 caracteres")
     @Pattern(
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&]).{8,}$",
-            message = "A senha deve conter letra maiúscula, minúscula, número e caractere especial"
+            message = "A senha precisa ter letra maiúscula, letra minúscula, número e um destes símbolos: @ $ ! % * ? &"
     )
     private String password;
 
     @NotBlank(message = "A confirmação de senha é obrigatória")
     private String confirmPassword;
-    @CPF(message = "CPF invalido")
-    @NotBlank(message = "CPF é obrigatório")
+    @CPF(message = "CPF inválido. Confira os números digitados")
+    @NotBlank(message = "O CPF é obrigatório")
     private String cpf;
 
     @NotBlank(message = "O telefone é obrigatório")

@@ -1,7 +1,8 @@
 import { Skeleton } from '../../../shared/skeleton/skeleton';
 import { Component, DestroyRef, ElementRef, OnInit, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, NavigationCancel, NavigationEnd, NavigationError, NavigationStart, Router } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ProfileSelect } from '../../../components/common/profile-select/profile-select';
 import { AuthService } from '../../../services/auth.service';
 import { NotificationService } from '../../../services/notification.service';
@@ -15,6 +16,8 @@ import { routeWithStops, ruaENumero } from '../../../services/dto/route/route.dt
 import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 import { CenaChegada } from '../../../components/driver/cena-chegada/cena-chegada';
 import { CenaEmRota } from '../../../components/driver/cena-em-rota/cena-em-rota';
+import { CeuEmRota, PeriodoDoDia } from '../../../components/driver/ceu-em-rota/ceu-em-rota';
+import { GlisseVidro } from '../../../shared/glisse-vidro/glisse-vidro';
 const TAMANHO_PAGINA = 10;
 
 // home do motorista (/driver-home): a lista das rotas (Ativas/Todas), sem rotas e a folha "Nova rota" (Figma "Rotas · Motorista"),
@@ -22,7 +25,7 @@ const TAMANHO_PAGINA = 10;
 @Component({
   selector: 'app-driver-routes',
   standalone: true,
-  imports: [BotaoCarregandoDirective, Skeleton, Footer, FormsModule, ProfileSelect, CenaEmRota, CenaChegada],
+  imports: [BotaoCarregandoDirective, Skeleton, Footer, FormsModule, ProfileSelect, CenaEmRota, CenaChegada, CeuEmRota, GlisseVidro],
   templateUrl: './driver-routes.html',
   styleUrls: ['../../../shared/folha.css', '../../../shared/rota.css', './driver-routes.css'],
 })
@@ -40,10 +43,18 @@ export class DriverRoutes implements OnInit {
   protected usuarioLogado = signal<UserMe | null>(null);
   private destroyRef = inject(DestroyRef);
 
-  // de noite (das 18h as 6h) os postes e o farol do card "Em rota agora" acendem; e aparece a lua no canto.
-  // confere o relogio a cada minuto e na hora em que a aba volta a aparecer (ex.: mudou a hora do PC e voltou pro app)
-  protected noite = signal(DriverRoutes.ehNoite());
-  private conferirHora = () => this.noite.set(DriverRoutes.ehNoite());
+  // o ceu do card "Em rota agora" segue a hora: dia ate 16h, por do sol das 16h01 as 17h59 e noite das 18h as 5h59.
+  // de noite os postes e o farol acendem. Confere o relogio a cada minuto e quando a aba volta a aparecer
+  private agora = signal(new Date());
+  protected periodo = computed(() => DriverRoutes.periodoDoDia(this.agora()));
+  protected noite = computed(() => this.periodo() === 'noite');
+  // 0 em 16h01 e 1 em 17h59: o quanto o sol ja desceu
+  protected progressoTarde = computed(() => {
+    const a = this.agora();
+    const minuto = a.getHours() * 60 + a.getMinutes();
+    return Math.min(1, Math.max(0, (minuto - 961) / (1079 - 961)));
+  });
+  private conferirHora = () => this.agora.set(new Date());
   private relogio = setInterval(this.conferirHora, 60_000);
   private ouvirAba = (document.addEventListener('visibilitychange', this.conferirHora), window.addEventListener('focus', this.conferirHora));
   private pararRelogio = this.destroyRef.onDestroy(() => {
@@ -52,9 +63,10 @@ export class DriverRoutes implements OnInit {
     window.removeEventListener('focus', this.conferirHora);
   });
 
-  private static ehNoite(agora = new Date()): boolean {
+  private static periodoDoDia(agora: Date): PeriodoDoDia {
     const hora = agora.getHours();
-    return hora >= 18 || hora < 6;
+    if (hora >= 18 || hora < 6) return 'noite';
+    return hora * 60 + agora.getMinutes() <= 16 * 60 ? 'dia' : 'por-do-sol';
   }
 
   // "Ativas" = so as rotas em que ele esta hoje; "Todas" inclui as que ele deixou
@@ -140,6 +152,17 @@ export class DriverRoutes implements OnInit {
       clearTimeout(t2);
     });
   }
+
+  // o card "Em rota" so faz a animacao de sumir (1,2s) quando a viagem e finalizada; indo pra outra tela
+  // (Abrir mapa, rodape...) ele sai junto com a tela, sem segurar a troca
+  protected saindoDaTela = signal(false);
+  private ouvirNavegacao = this.router.events
+    .pipe(takeUntilDestroyed())
+    // se a navegacao nao sair daqui (cancelou, so mudou a query...), a tela continua: volta a animar o fim da viagem
+    .subscribe((e) => {
+      if (e instanceof NavigationStart) this.saindoDaTela.set(true);
+      else if (e instanceof NavigationEnd || e instanceof NavigationCancel || e instanceof NavigationError) this.saindoDaTela.set(false);
+    });
 
   abrirViagem() {
     const v = this.emRota();

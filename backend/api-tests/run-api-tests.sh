@@ -6,7 +6,7 @@
 #   python3 -I backend/api-tests/stubs.py &                                          # SMTP + geocoder locais
 #   backend iniciado no banco normal (vanroute_db, que voce zera com docker compose down -v), SPRING_MAIL_HOST=127.0.0.1, SPRING_MAIL_PORT=2525,
 #   SPRING_MAIL_USERNAME/PASSWORD=stub, SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=false,
-#   ORS_GEOCODE_URL=http://127.0.0.1:8089/pelias/v1/search
+#   ORS_GEOCODE_URL=http://127.0.0.1:8089/pelias/v1/search, CEP_GEOCODE_URL= (vazio: sem a busca real por CEP)
 #   e, pra trip: ORS_DIRECTIONS_URL=http://127.0.0.1:8089/v2/directions/driving-car, TRIP_ETA_REFRESH_SECONDS=3,
 #   TRIP_OFF_ROUTE_MIN_SECONDS=0
 #

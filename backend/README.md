@@ -554,7 +554,7 @@ cd backend && \
   SPRING_MAIL_HOST=127.0.0.1 SPRING_MAIL_PORT=2525 SPRING_MAIL_USERNAME=stub SPRING_MAIL_PASSWORD=stub \
   SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=false \
   ORS_GEOCODE_URL=http://127.0.0.1:8089/pelias/v1/search ORS_DIRECTIONS_URL=http://127.0.0.1:8089/v2/directions/driving-car \
-  TRIP_ETA_REFRESH_SECONDS=3 TRIP_OFF_ROUTE_MIN_SECONDS=0 java -jar target/backend-0.0.1-SNAPSHOT.jar &
+  CEP_GEOCODE_URL= TRIP_ETA_REFRESH_SECONDS=3 TRIP_OFF_ROUTE_MIN_SECONDS=0 java -jar target/backend-0.0.1-SNAPSHOT.jar &
 ./api-tests/run-api-tests.sh   # usa node >= 22 nos testes de WebSocket
 ```
 - Cada execução cria dados fictícios novos (CPFs válidos aleatórios), então pode ser repetida. Os dados ficam no `vanroute_db`.
