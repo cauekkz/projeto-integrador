@@ -225,7 +225,7 @@ cp .env.example .env        # Windows (PowerShell): Copy-Item .env.example .env
 | `DATABASE_PASSWORD` | senha do Postgres (o container do banco e o backend usam a mesma) | você inventa |
 | `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY` | usuário e senha do MinIO (o MinIO e o backend usam os mesmos) | você inventa (a senha com 8+ caracteres) |
 | `APP_PORT` | porta do site | padrão `8080` |
-| `ALLOWED_ORIGINS` | endereço do site, que pode chamar a API | `http://localhost:8080` (troque junto se mudar o `APP_PORT`) |
+| `ALLOWED_ORIGINS` | endereços do site que podem chamar a API, separados por vírgula | `http://localhost:8080,http://localhost:4200` (o `4200` é o front rodando na máquina; troque o `8080` junto se mudar o `APP_PORT`) |
 | `WORKER_RUN_AT` | horário das tarefas diárias (São Paulo) | padrão `00:05` |
 
 > As senhas do banco e do MinIO valem **quando o volume é criado**. Se você já tinha rodado o projeto antes com as senhas de desenvolvimento (`123456` / `vanroute123456`), ou usa as mesmas no `.env`, ou apaga os volumes antes (`docker compose --profile app down -v`, que **apaga os dados**).
@@ -598,6 +598,7 @@ Pra pegar a versão mais nova do projeto antes de ligar: `git pull` na pasta do 
 | O código de cadastro **não chega** | senha de app errada, com espaços, ou sem verificação em duas etapas | refaça o passo 4.1 e o 5, olhe o spam, e procure por `mail` ou `SMTP` na janela do backend |
 | Endereço **não é encontrado** e a rota não aparece no mapa | chave do OpenRouteService faltando ou o limite grátis do dia acabou | passo 4.2 (o limite volta no dia seguinte) |
 | O site abre, mas tudo dá erro | o backend está desligado ou ainda ligando | olhe a janela do backend e espere o `Started BackendApplication` |
+| O backend está ligado, mas o login e as outras chamadas dão erro **403** (ou `Invalid CORS request`) | o `ALLOWED_ORIGINS` do `.env` não tem o `http://localhost:4200` (um `.env` copiado antes dessa correção só tinha o `8080`) | deixe a linha como `ALLOWED_ORIGINS=http://localhost:8080,http://localhost:4200` e ligue o backend de novo |
 | O mapa fica em branco | o frontend foi ligado antes do `npm install` terminar | Ctrl + C no frontend e `npm start` de novo |
 | Testes do backend falham com **"database vanroute_test does not exist"** | o banco do Docker é de uma versão antiga do projeto | `docker exec vanroute-db createdb -U postgres vanroute_test` |
 
