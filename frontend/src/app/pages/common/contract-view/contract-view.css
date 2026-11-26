@@ -144,6 +144,12 @@
   font-weight: 600;
 }
 
+/* com foto: o mesmo circulo das iniciais, preenchido pela imagem */
+.iniciais.foto {
+  object-fit: cover;
+  padding: 0;
+}
+
 /* Contrato em PDF: caixa cinza com "Abrir" a direita */
 .pdf {
   display: flex;

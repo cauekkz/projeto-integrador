@@ -130,6 +130,26 @@ describe('ContractView (detalhe do contrato)', () => {
     expect(texto).not.toContain('Renovar');
   });
 
+  it('mostra a foto da outra parte e do aluno; sem foto ficam as iniciais', () => {
+    const fixture = criar(true, {
+      ...CONTRATO,
+      responsiblePhotoKey: 'profile/resp-1/eu.jpeg',
+      driverPhotoKey: 'profile/driver-1/eu.jpeg',
+      studentPhotoKey: null,
+    });
+    // motorista ve a foto do responsavel (nao a propria)
+    const req = http.expectOne((r) => r.url.includes('/storage/download-url'));
+    expect(req.request.params.get('fileKey')).toBe('profile/resp-1/eu.jpeg');
+    req.flush({ downloadUrl: 'http://minio:9000/vanroute-storage/profile/resp-1/eu.jpeg', fileKey: 'x' });
+    fixture.detectChanges();
+
+    const fotos = fixture.nativeElement.querySelectorAll('img.foto');
+    expect(fotos).toHaveLength(1);
+    expect(fotos[0].getAttribute('src')).toContain('profile/resp-1/eu.jpeg');
+    // aluno sem foto: iniciais
+    expect(fixture.nativeElement.textContent).toContain('LP');
+  });
+
   it('agendado mostra "Agendado — começa em"', () => {
     const fixture = criar(false, { ...CONTRATO, status: 'SCHEDULED', startDate: '2026-02-01' });
     expect(fixture.nativeElement.textContent).toContain('Agendado — começa em 01/02.');
