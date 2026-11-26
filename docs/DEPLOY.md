@@ -26,6 +26,39 @@ Resolvido em 14/11 e testado de ponta a ponta (site, login, chat ao vivo, upload
 - **MinIO com domínio próprio (opcional):** se os arquivos forem servidos por outro endereço, defina o `MINIO_ENDPOINT` com ele e ajuste a `urlDoStorage` do front. Hoje tudo passa pelo `/storage` do mesmo site, o que é o mais simples.
 - **Backup** do volume do Postgres e do MinIO, **logs** e **monitoramento** (issue #187).
 
+### Imagem pronta do site (sem `npm build` no servidor)
+
+O `npm build` do Angular é a parte mais lenta e pesada do `--build`, e trava em servidor pequeno. Por isso o site pode ir como **imagem pronta**: você gera na sua máquina, manda pro Docker Hub, e o servidor só baixa. O backend e o worker continuam sendo construídos no servidor.
+
+**Na sua máquina** (a cada versão nova do front):
+
+```bash
+docker login                                                        # uma vez, com a conta do Docker Hub
+bash scripts/publicar-front.sh seu-usuario/vanroute-frontend        # gera e manda (tag latest)
+bash scripts/publicar-front.sh seu-usuario/vanroute-frontend v1.2   # ou com versão (v1.2 e latest)
+```
+
+- Gera para `linux/amd64` e `linux/arm64` (Oracle Ampere, por exemplo). O `npm build` roda uma vez só, na sua máquina: o HTML/JS é o mesmo, só o Nginx muda de arquitetura.
+- A imagem não tem segredo nenhum: as chaves ficam no backend e no `.env`. O Nginx acha o backend e o MinIO pelo nome do serviço (`backend`, `minio`), então a mesma imagem serve pra qualquer servidor.
+- No Docker Hub a imagem nasce **pública**. Se deixar privada, rode `docker login` também no servidor.
+
+**No servidor**, no `.env`:
+
+```
+FRONTEND_IMAGE=seu-usuario/vanroute-frontend:latest
+COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
+```
+
+e suba como sempre:
+
+```bash
+docker compose --profile app up -d --build
+```
+
+O [`docker-compose.prod.yml`](../docker-compose.prod.yml) troca o `build: ./frontend` pela imagem do `FRONTEND_IMAGE` e baixa a versão mais nova a cada `up`. Sem o `FRONTEND_IMAGE`, o compose avisa e não sobe. Na sua máquina nada muda: sem o `COMPOSE_FILE`, o front continua sendo compilado do código.
+
+**Atualizar o site:** rode o `publicar-front.sh` de novo na sua máquina e, no servidor, `docker compose --profile app up -d frontend`.
+
 ---
 
 ## 3. Mapa: fundo do CARTO

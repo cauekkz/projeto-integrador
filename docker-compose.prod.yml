@@ -1,0 +1,14 @@
+# Servidor: o site usa a imagem pronta (gerada por scripts/publicar-front.sh), sem rodar o npm build aqui.
+# O backend e o worker continuam sendo construidos no servidor, como no docker-compose.yml.
+#
+# Uso (no servidor, com FRONTEND_IMAGE no .env):
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile app up -d --build
+# ou ponha no .env do servidor COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
+# e rode so: docker compose --profile app up -d --build
+services:
+  frontend:
+    image: "${FRONTEND_IMAGE:?defina FRONTEND_IMAGE no .env, por exemplo seu-usuario/vanroute-frontend:latest}"
+    # tira o "build: ./frontend" do compose principal: o --build nao compila o front aqui
+    build: !reset null
+    # sempre baixa a versao mais nova da imagem ao subir
+    pull_policy: always
