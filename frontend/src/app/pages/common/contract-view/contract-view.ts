@@ -1,5 +1,5 @@
 import { Skeleton } from '../../../shared/skeleton/skeleton';
-import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, OnInit, WritableSignal, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -23,7 +23,7 @@ import {
   valorEmReais,
 } from '../../../services/dto/contract/contract.dto';
 import { ConfirmacaoService } from '../../../shared/confirmacao/confirmacao.service';
-import { iniciaisDe } from '../../../shared/iniciais/iniciais';
+import { fotosQuebradas, iniciaisDe } from '../../../shared/iniciais/iniciais';
 
 import { BotaoCarregandoDirective } from '../../../shared/botao-carregando/botao-carregando.directive';
 // mesmos selos da lista /contracts (Figma 1036:698)
@@ -68,6 +68,10 @@ export class ContractView implements OnInit {
   protected carregando = signal(true);
   protected erroCarregar = signal(false);
   protected linkPdf = signal<string | null>(null);
+  // fotos da outra parte e do aluno (sem foto, ou link que nao carregou: ficam as iniciais)
+  protected fotoOutro = signal<string | null>(null);
+  protected fotoAluno = signal<string | null>(null);
+  protected fotos = fotosQuebradas();
   protected carregandoPdf = signal(false);
 
   // renovacao: so com ACTIVE e sem outro contrato pendente/agendado pro mesmo aluno
@@ -126,6 +130,7 @@ export class ContractView implements OnInit {
         this.contrato.set(contrato);
         this.carregando.set(false);
         if (contrato.documentFileKey && !this.linkPdf()) this.carregarPdf(contrato.documentFileKey);
+        this.carregarFotos(contrato);
         if (avisarPedido) this.avisarPedidoPendente();
         this.verificarRenovacao(contrato);
       },
@@ -146,6 +151,22 @@ export class ContractView implements OnInit {
         this.carregandoPdf.set(false);
       },
       error: () => this.carregandoPdf.set(false),
+    });
+  }
+
+  private carregarFotos(c: contractDetailsResponse) {
+    this.carregarFoto(this.ehMotorista ? c.responsiblePhotoKey : c.driverPhotoKey, this.fotoOutro);
+    this.carregarFoto(c.studentPhotoKey, this.fotoAluno);
+  }
+
+  private carregarFoto(fileKey: string | null | undefined, destino: WritableSignal<string | null>) {
+    if (!fileKey) {
+      destino.set(null);
+      return;
+    }
+    this.storageService.getDownloadUrl(fileKey).subscribe({
+      next: (url) => destino.set(url),
+      error: () => destino.set(null),
     });
   }
 

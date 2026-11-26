@@ -117,6 +117,7 @@ botões "ver contrato", "aceitar" e "recusar"), não como balão de texto.
 - `studentId` e `studentName`;
 - `schoolId`, `schoolName` e `schoolAddress`;
 - `driverId` e `driverName`, `responsibleId` e `responsibleName`;
+- as fotos `studentPhotoKey`, `driverPhotoKey` e `responsiblePhotoKey` (`null` sem foto; exibir pelo `download-url`);
 - `documentFileKey` e `documentType`.
 
 Pra baixar o PDF: `GET /api/storage/download-url?fileKey=<documentFileKey>`, que devolve `{downloadUrl}`. Aí é só abrir essa URL

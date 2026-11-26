@@ -375,6 +375,7 @@ public class ContractService {
                 contract.getEndDate(),
                 udc.getStudent().getId(),
                 udc.getStudent().getName(),
+                udc.getStudent().getPhotoKey(),
                 school.getId(),
                 school.getName(),
                 address == null ? null : new AddressResponseDTO(
@@ -390,8 +391,10 @@ public class ContractService {
                 ),
                 udc.getDriver().getUserId(),
                 udc.getDriver().getUser().getName(),
+                udc.getDriver().getUser().getPhotoKey(),
                 udc.getResponsible().getUserId(),
                 udc.getResponsible().getUser().getName(),
+                udc.getResponsible().getUser().getPhotoKey(),
                 document == null ? null : document.getUrl(),
                 document == null ? null : document.getType(),
                 document == null ? null : document.getStatus(),

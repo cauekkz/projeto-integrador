@@ -25,13 +25,17 @@ public record ContractDetailsResponseDTO(
         LocalDate endDate,
         UUID studentId,
         String studentName,
+        // fotos (null sem foto); exibir via GET /api/storage/download-url
+        String studentPhotoKey,
         UUID schoolId,
         String schoolName,
         AddressResponseDTO schoolAddress,
         UUID driverId,
         String driverName,
+        String driverPhotoKey,
         UUID responsibleId,
         String responsibleName,
+        String responsiblePhotoKey,
         // fileKey no MinIO; baixar via GET /api/storage/download-url
         String documentFileKey,
         DocumentType documentType,

@@ -36,7 +36,7 @@ Todo endereço novo (do pai, do aluno ou da escola) passa por `AddressService.fi
 |---|---|
 | já existe um endereço com **o mesmo CEP e o mesmo número** | **só liga nele**: não cria outro e não chama a API de mapas |
 | CEP termina em `000` (pode ser o CEP único de uma cidade pequena) | também compara **a rua e a cidade**, pra não juntar casas de ruas diferentes |
-| não existe | cria e busca a coordenada **uma vez** na API de mapas |
+| não existe | cria e busca a coordenada **uma vez**: primeiro pelo CEP (AwesomeAPI) e, se não der, pelo texto no OpenRouteService |
 
 - O jeito de escrever a rua não importa: "Avenida Paulista" e "AV. PAULISTA", com o mesmo CEP e número, são o mesmo endereço.
 - A **coordenada que vier do app é ignorada**: quem define é a busca (não dá pra mandar uma coordenada falsa).

@@ -63,6 +63,7 @@ Feito no backend:
 Falta:
 - Identificar o controlador (razão social/CNPJ) e o encarregado quando houver empresa. Hoje o contato é `cauevaccari2007@gmail.com`.
 - Prazo de retenção do histórico (contratos, viagens, mensagens): hoje fica enquanto a outra parte tiver conta.
+- **Termos desatualizados:** desde a busca de coordenada pelo CEP, os CEPs dos endereços vão também pra **AwesomeAPI** (Brasil), que não está na lista de operadores dos termos v3 (item 7, só OpenRouteService e Gmail). Precisa de uma **v4** dos termos incluindo ela (e todo mundo aceita de novo), ou desligar a busca pelo CEP (`CEP_GEOCODE_URL` vazio). A decidir.
 
 ---
 

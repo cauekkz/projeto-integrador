@@ -72,5 +72,4 @@ O CARTO não calcula rota: só entrega o fundo. A rota vem sempre do OpenRouteSe
 
 - **Porta 5432 ocupada:** se o PostgreSQL do sistema estiver ligado, o `vanroute-db` não sobe. Pare o do sistema (`sudo systemctl stop postgresql`).
 - **Fedora (SELinux):** resolvido com o `:z` no mount do `docker/postgres-init` no `docker-compose.yml`.
-- **`api-tests/demo/seed.sh`** não tem permissão de execução: rode com `bash backend/api-tests/demo/seed.sh`.
 - **`api-tests/run-api-tests.sh`** fala direto com o backend (porta 9090) e com o MinIO (porta 9000): rode com o backend fora do Docker, não pelo Nginx.
