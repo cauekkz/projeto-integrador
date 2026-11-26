@@ -111,7 +111,7 @@ Gravar no Redis não avisa ninguém sozinho: o código **publica** logo depois. 
 
 **Onde fica a van padrão?** Em `routes.vehicle_id`, definida por `PUT /api/route/{routeId}/set-vehicle/{vehicleId}`. No `start`, o `vehicleId` é opcional: sem ele, usa a padrão. Sem nenhuma das duas, dá 400.
 
-**De onde vêm a latitude e a longitude?** Do GPS do celular: `navigator.geolocation.getCurrentPosition` pro start e `watchPosition` pra ir mandando. No Expo é o `expo-location`.
+**De onde vêm a latitude e a longitude?** Do GPS do celular: `navigator.geolocation.getCurrentPosition` pro start e `watchPosition` pra ir mandando.
 
 **Como o backend sabe que o pai só vê os filhos dele?** Quando o pai conecta, o backend vê **quais alunos da trip são filhos desse usuário** (pela tabela de responsáveis) e guarda isso na conexão. A cada atualização, monta a versão desse pai só com esses filhos. Quem não tem filho na trip é desconectado (código 1003). Só o motorista da trip consegue mandar posição.
 
@@ -192,6 +192,8 @@ Erros:
 ### 4.2 `GET /api/trip/route/{routeId}/today` (motorista)
 **200** com a trip (o JSON acima), ou **404** se não existe. Trip cancelada não conta.
 
+**`GET /api/trip/open`** (motorista): a viagem **aberta hoje** dele, de qualquer rota, no mesmo JSON; **204** se não tem nenhuma. O card "Em rota agora" e o rodapé perguntam uma vez só, em vez de chamar o `today` de cada rota.
+
 ### 4.3 `GET /api/trip/{tripId}` (motorista dono)
 O mesmo JSON. **403**: é de outro motorista. **404**: não existe.
 
@@ -269,7 +271,7 @@ O `POST` dá erro nestes casos:
 | `POST /api/auth/logout` | `{"refreshToken"}` | **204** (apaga o refreshToken) |
 
 O que o front faz:
-1. Guarda o `token` e o `refreshToken` no celular (no Expo, `expo-secure-store`).
+1. Guarda o `token` e o `refreshToken` no navegador (`localStorage`, no `auth.service.ts`).
 2. Manda o `token` em toda chamada (`Authorization: Bearer`) e no `?token=` dos WebSockets.
 3. Chamada deu **401**: chama o `/refresh` uma vez, guarda o par novo e repete a chamada. Se o WebSocket cair, reconecta com o token novo.
 4. O `/refresh` também deu 401 (30 dias sem abrir o app, ou logout): vai pra tela de login.
@@ -312,7 +314,7 @@ Se outra pessoa mandar, recebe `{"type":"error","message":"Só o motorista envia
 Cada ponto traz o endereço (`street`, `number`, `neighborhood`) e o nome das escolas (`schoolNames`). Cada aluno traz o `addressLabel` ("Casa"). Com isso, o pai monta "Próxima parada de Lucas: Casa · R. Libertadores, 2026" e o pino "Fatec Ipiranga" sem outra chamada.
 - `positionAt`: quando a posição chegou (ms desde 1970).
 - `targetStopId` e `etaSeconds`: o próximo ponto e os segundos até ele.
-- `path`: a linha até o fim. No mapa, inverta pra `[latitude, longitude]` (Leaflet).
+- `path`: a linha até o fim, já no formato `[longitude, latitude]` que o MapLibre usa.
 - `stops`: todos os pontos, com o `etaSeconds` de cada um.
 
 **Versão do pai, quando o próximo ponto é do filho:**
@@ -495,12 +497,12 @@ O que muda em relação ao app real: o banco é o de teste, os cadastros são fi
 |---|---|
 | `run-demo.sh` | sobe tudo e desliga tudo no Ctrl+C |
 | `seed.sh` | cria o cenário e grava os logins em `api-tests/out/demo.json` (fora do git) |
-| `serve.py` | entrega a página e repassa `/api/*` pro backend (o backend não tem CORS, então a página não pode chamar a 9090 direto) |
+| `serve.py` | entrega a página e repassa `/api/*` pro backend, pra página não depender do `ALLOWED_ORIGINS` (o `.env` libera só a 8080 e a 4200, e a página fica na 8090) |
 | `index.html` | a página (HTML, CSS e JS puro, mapa Leaflet + OpenStreetMap). O WebSocket vai direto na 9090 |
 
 ---
 
 ## 10. O que ainda não existe
-- **Push com o app fechado** (Firebase Cloud Messaging ou Expo Push). Hoje, com o app fechado, a notificação fica guardada e aparece ao abrir. O celular não toca.
+- **Push com o app fechado** (Firebase Cloud Messaging / Web Push). Hoje, com o app fechado, a notificação fica guardada e aparece ao abrir. O celular não toca.
 - **Trânsito ao vivo** no tempo de chegada: só com API paga.
 - Viagem esquecida aberta: o worker fecha como `FINISHED`, sem `endTime`, depois de **20 horas** do início (a que passa da meia-noite continua). Ver `docs/WORKER.md`.

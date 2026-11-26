@@ -41,7 +41,7 @@ Base: `http://localhost:9090`. Todos os endpoints abaixo exigem `Authorization: 
 | Perfil | Rotas |
 |---|---|
 | sem login | `POST /api/auth/**` (login, refresh, logout, verificar e-mail, reenviar código, esqueci a senha), `POST /api/responsible/auth/signup`, `POST /api/driver/auth/**` |
-| só motorista | `/api/route/**`, `/api/school/**`, `/api/vehicle/**`, `/api/driver/groups/**`, `/api/driver/link-code`, `/api/driver/pix-key`, `GET /api/chats/{id}/students`, `POST /api/chats/{id}/contract`, `PUT .../contracts/{id}/withdraw`, `PUT /api/payments/{id}/paid` e `/cancel`, `POST /api/trip/start/{id}`, `/finish`, `POST .../occurrences`, `PUT /api/trip/{id}/student/**`, `GET /api/trip/route/{id}/today` |
+| só motorista | `/api/route/**`, `/api/school/**`, `/api/vehicle/**`, `/api/driver/groups/**`, `/api/driver/link-code`, `/api/driver/pix-key`, `GET /api/chats/{id}/students`, `POST /api/chats/{id}/contract`, `PUT .../contracts/{id}/withdraw`, `PUT /api/payments/{id}/paid` e `/cancel`, `POST /api/trip/start/{id}`, `/finish`, `POST .../occurrences`, `PUT /api/trip/{id}/student/**`, `GET /api/trip/route/{id}/today`, `GET /api/trip/open` |
 | só responsável | `/api/student/**`, `/api/invite-code/**`, `PUT .../contracts/{id}/accept` e `/reject`, `PUT`/`DELETE /api/driver/{id}/rating` |
 | os dois (logados) | o resto: chat, contrato e cancelamento, notificações, `GET /api/payments`, arquivos, histórico e ocorrências da viagem, perfil do motorista, perfil do responsável (o motorista dele ou ele mesmo), `/api/users/**`. Nessas, o service confere se a pessoa é parte daquele contrato, chat ou viagem |
 
@@ -150,7 +150,7 @@ O ponto da rota **não tem endereço digitado**: ele usa o mesmo endereço do al
 
 **Endereço sem repetição:** todo endereço novo passa pelo mesmo lugar (`AddressService.findOrCreate`). O endereço é o mesmo quando tem **o mesmo CEP e o mesmo número**; o jeito de escrever a rua não importa. Se o CEP termina em `000` (pode ser o CEP único de uma cidade pequena), ele compara também a rua e a cidade. Então:
 - se **já existe** um endereço com essa chave, **só liga nele** (não cria outro e não chama a API de mapas);
-- se não existe, cria e busca a coordenada uma vez.
+- se não existe, cria e busca a coordenada uma vez: primeiro **pelo CEP** (AwesomeAPI, `CEP_GEOCODE_URL`; até 5 s) e, se o CEP não servir (fora do ar, não achou, CEP único da cidade ou de outra cidade), pelo texto do endereço no OpenRouteService. `CEP_GEOCODE_URL` vazio desliga a busca pelo CEP (os testes de API fazem isso).
 
 "Avenida Paulista, 1000, 01310-100" e "AV. PAULISTA, 1000, 01310100" são o mesmo endereço. A coordenada que vier do app é ignorada: quem define é a busca. Como o endereço é compartilhado, ele **nunca é editado**; mudou o endereço, liga num novo.
 
@@ -279,6 +279,7 @@ A **trip** é a viagem de uma rota num dia. Cada aluno do dia vira um **boarding
 
 | Endpoint | Quem | O que faz |
 |---|---|---|
+| `GET /api/trip/open` | motorista | a viagem **aberta hoje** do motorista logado (qualquer rota), no mesmo formato do `GET /api/trip/{tripId}`; `204` se não tem. Serve pro card "Em rota agora" sem perguntar rota por rota |
 | `GET /api/trip/{tripId}` | motorista | trip com os pontos do dia (alunos, status, `done`) e o trajeto |
 | `PUT /api/trip/{tripId}/student/{studentId}/board` | motorista | `PENDING` → `BOARDED` (hora do embarque); a trip vira `IN_PROGRESS` |
 | `PUT /api/trip/{tripId}/student/{studentId}/alight` | motorista | `BOARDED` → `DELIVERED` (hora do desembarque) |
@@ -316,7 +317,7 @@ Mensagem (`type: "trip-update"`):
 - **`path`:** a linha do mapa (`[longitude, latitude]`). Para o pai, ela vai só até o ponto do filho.
 - **`stops`:** só para o motorista, com todos os pontos e o `etaSeconds` de cada um.
 
-**Trajeto e tempo:** a linha vem da API de rotas como uma lista de pontos (centenas, em ruas com curvas). O front desenha com Leaflet + OpenStreetMap e move o ícone da van. A API de rotas é chamada:
+**Trajeto e tempo:** a linha vem da API de rotas como uma lista de pontos (centenas, em ruas com curvas). O front desenha com MapLibre (componente `shared/mapcn`), sobre o fundo de mapa do CARTO, e move o ícone da van. A API de rotas é chamada:
 - ao iniciar;
 - quando um aluno sai da trip;
 - com o GPS chegando, a cada **5 min** (`TRIP_ETA_REFRESH_SECONDS`), ou na hora se a van sair da linha (mais de 150 m, `TRIP_OFF_ROUTE_METERS`). A cota da chave é de 200 rotas por dia.
@@ -404,7 +405,7 @@ O aviso **não gera falta** nem mexe na rota: é só uma mensagem. Chega na hora
 | Endpoint | Quem | O que faz |
 |---|---|---|
 | `GET /api/driver/{driverId}/profile` | o próprio motorista, ou um responsável que **já conversa** (chat) ou **tem contrato** com ele | perfil (abaixo); os outros recebem `403` |
-| `PUT /api/driver/{driverId}/rating` `{ score, comment? }` | responsável que **tem ou já teve contrato** com ele (`ACTIVE`, `INACTIVE`, `SUSPENDED` ou `OVERDUE`; proposta pendente ou recusada não conta) | cria ou **troca** a nota dele (uma por responsável por motorista). `score` de 1 a 5; `comment` até 500 |
+| `PUT /api/driver/{driverId}/rating` `{ score, comment? }` | responsável que **tem ou já teve contrato** com ele (`ACTIVE` ou `INACTIVE`; proposta pendente, recusada ou cancelada e contrato só agendado não contam) | cria ou **troca** a nota dele (uma por responsável por motorista). `score` de 1 a 5; `comment` até 500 |
 | `DELETE /api/driver/{driverId}/rating` | o responsável que avaliou | apaga a avaliação dele |
 
 ```json
@@ -534,10 +535,11 @@ As migrations ficam em `src/main/resources/db/migration` e o Flyway aplica sozin
 | alunos | `students`, `student_responsibles` (vínculo e tipo), `student_addresses` (endereços de busca, com apelido) |
 | endereços | `addresses` (cada lugar uma vez: mesmo CEP + número = mesmo endereço) |
 | escola e van | `schools`, `driver_schools`, `vehicles`, `driver_vehicles` |
-| contrato | `contracts`, `user_driver_contracts` (motorista + responsável + aluno + escola), `payments` (parcelas), `documents`, `signatures` |
+| contrato | `contracts`, `user_driver_contracts` (motorista + responsável + aluno + escola), `payments` (parcelas), `documents`, `signatures`, `contract_cancellations` (pedidos de cancelamento com aviso prévio) |
 | rota | `routes`, `route_drivers`, `route_stops`, `student_stops`, `school_stops` |
 | viagem | `trips`, `boardings`, `student_absences`, `occurrences` |
 | grupos | `driver_groups`, `driver_group_students` |
+| termos (LGPD) | `terms_acceptances` (quem aceitou qual versão dos termos e quando) |
 | outros | `chats`, `chat_messages`, `notifications`, `ratings` |
 
 ## 7. Rodar e testar

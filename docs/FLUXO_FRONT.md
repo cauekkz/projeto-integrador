@@ -41,23 +41,14 @@ Toda tela nova segue estes padrões:
 
 ## 2. O que falta fazer
 
-### 2.1 Notificações: parar de reconectar quando o backend fecha de propósito
-`services/notification.service.ts` reconecta a cada 5 s em qualquer queda, inclusive depois de a conta ser excluída: no teste, foram 3 conexões novas em 13 s. Não reconectar quando o código de fechamento for **1003** (sem acesso) ou **1008** (conta excluída). O chat e a viagem já fazem certo; siga o `chat.service.ts`.
-
-### 2.2 Bolinha de não lidas na aba "Conversas"
+### 2.1 Bolinha de não lidas na aba "Conversas"
 A lista de conversas mostra o número, mas a aba "Conversas" da barra de baixo não. Hoje as mensagens não lidas só somam no sino. Some os `unreadCount` de `GET /api/chats` e mostre na aba (`shared/glisse-tab-bar`).
-
-### 2.3 Fotos no detalhe do contrato
-Em `/contract/:id`, a foto do aluno aparece, mas o motorista e o responsável continuam só com as iniciais. Use o `otherUserPhotoKey` do chat ou o `photoKey` do perfil.
-
-### 2.4 Rolagem lateral em `/contracts/aluno/:id`
-Passa **4 px** da largura em 320 e em 390 px (motorista e pai). Achar o elemento que estoura e dar `min-width: 0` / `flex-wrap`.
 
 ---
 
 ## 3. Responsividade
 
-**O app é responsivo no celular.** Em 14/11, 49 telas medidas em 390 e 320 px: só `/contracts/aluno/:id` passa da largura (item 2.4). Os problemas antigos (`/driver-home` em 320 px e o aviso do Pix cobrindo os botões) foram resolvidos.
+**O app é responsivo no celular.** Em 14/11, 49 telas medidas em 390 e 320 px. Os problemas antigos (`/driver-home` em 320 px e o aviso do Pix cobrindo os botões) foram resolvidos.
 
 **Tablet:** não foi medido de novo. Na última medição (06/11) não quebrava, mas a maioria das telas é uma coluna de 480 px com faixas vazias dos lados. Melhorar é opcional: uma coluna centralizada para todas as telas e, a partir de 768 px, coluna mais larga com listas em duas colunas.
 
