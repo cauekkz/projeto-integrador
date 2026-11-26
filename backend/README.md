@@ -357,8 +357,10 @@ Detalhes do contrato:
 ```json
 { "contractId": "...", "userDriverContractId": "...", "status": "PENDING", "periodicity": "MONTHLY",
   "value": 350.00, "startDate": "...", "endDate": "...",
-  "studentId": "...", "studentName": "...", "schoolId": "...", "schoolName": "...", "schoolAddress": { ... },
-  "driverId": "...", "driverName": "...", "responsibleId": "...", "responsibleName": "...",
+  "studentId": "...", "studentName": "...", "studentPhotoKey": "students/... ou null",
+  "schoolId": "...", "schoolName": "...", "schoolAddress": { ... },
+  "driverId": "...", "driverName": "...", "driverPhotoKey": "profile/... ou null",
+  "responsibleId": "...", "responsibleName": "...", "responsiblePhotoKey": "profile/... ou null",
   "documentFileKey": "...", "documentType": "TRANSPORT_CONTRACT",
   "documentStatus": "SIGNED",
   "signatures": [ { "userId": "...", "name": "Carlos", "signedAt": "2027-01-20T10:00:00", "valid": true },
@@ -493,7 +495,7 @@ Quem pode baixar:
    DELETE /api/student/{studentId}/photo   → 204 (tira a foto)
 ```
 - Só aceita chave da pasta desse aluno e que já exista no bucket (até 10 MB); a foto antiga é apagada.
-- O `photoKey` do aluno vem em `my-children`, `GET /api/chats/{id}/students`, perfil do responsável, membros do grupo e alunos da viagem. O contrato traz só o `studentId`: a foto sai dessas listas.
+- O `photoKey` do aluno vem em `my-children`, `GET /api/chats/{id}/students`, perfil do responsável, membros do grupo, alunos da viagem e no detalhe do contrato (`studentPhotoKey`).
 - Se o aluno fica sem nenhum responsável (exclusão de conta), a foto é apagada.
 
 ---
