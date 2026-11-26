@@ -5,7 +5,7 @@ server:
 
 #openrouteservice:
 #  api-key: ${OPENROUTESERVICE_API_KEY}
-#  base-url: https://api.openrouteservice.org
+#  base-url: https://api.heigit.org/openrouteservice
 
 spring:
   application:

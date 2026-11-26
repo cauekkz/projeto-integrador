@@ -38,10 +38,10 @@ public class MapService {
     @Value("${openrouteservice.api-key}")
     private String apiKey;
 
-    @Value("${openrouteservice.geocode-url:https://api.openrouteservice.org/geocode/search}")
+    @Value("${openrouteservice.geocode-url:https://api.heigit.org/pelias/v1/search}")
     private String geocodeUrl;
 
-    @Value("${openrouteservice.url:https://api.openrouteservice.org/v2/directions/driving-car}")
+    @Value("${openrouteservice.url:https://api.heigit.org/openrouteservice/v2/directions/driving-car}")
     private String directionsUrl;
 
     // sem limite de tempo uma conexao velha (o servidor ja fechou) deixava o "iniciar rota" preso ~2 min
