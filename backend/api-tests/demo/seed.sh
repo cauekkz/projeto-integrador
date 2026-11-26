@@ -47,6 +47,12 @@ parent() { # parent NOME RUA CEP BAIRRO NUM -> "cpf token"
 }
 
 # versao atual dos Termos de Uso: cadastro e motoristas inseridos por SQL ja vem com o aceite
+# espera o backend: logo depois do "docker compose up" ele ainda leva uns 20 s pra subir
+for _ in $(seq 1 60); do
+  curl -sf "$BASE/api/terms" >/dev/null 2>&1 && break
+  echo "esperando o backend em $BASE..."; sleep 3
+done
+curl -sf "$BASE/api/terms" >/dev/null 2>&1 || { echo "o backend nao respondeu em $BASE. Ele esta no ar? (docker compose --profile app ps)" >&2; exit 1; }
 TERMS_V=$(curl -s "$BASE/api/terms" | jq -r .version)
 HASH=""
 driver() { # driver NOME -> "cpf token linkCode vanId placa" (motorista e van por SQL, ja aprovados)
