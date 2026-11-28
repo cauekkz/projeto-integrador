@@ -10,6 +10,7 @@ LINK FIGMA: https://www.figma.com/design/iOYNmhtFkMavdgog7NnGXM/VANROUTE?node-id
 | [FLUXO_ROTA.md](FLUXO_ROTA.md) | endereços do aluno, pontos e montagem da rota |
 | [FLUXO_TRIP.md](FLUXO_TRIP.md) | execução da viagem, WebSocket, notificações e histórico |
 | [FLUXO_FRONT.md](FLUXO_FRONT.md) | o que ainda falta no front e a situação da responsividade |
+| [REVISAO_FRONT.md](REVISAO_FRONT.md) | revisão geral do front (27/11): testes no Chrome, modo escuro, correções e pontos de atenção |
 | [DOCKER.md](DOCKER.md) | cada Dockerfile e o docker-compose explicados, e como o `.env` chega nos containers |
 | [DEPLOY.md](DEPLOY.md) | problemas conhecidos para publicar o app (Nginx, MinIO, mapa, HTTPS) |
 | [WORKER.md](WORKER.md) | worker diário em Go: contratos encerrados, propostas expiradas, parcelas atrasadas e limpeza |
