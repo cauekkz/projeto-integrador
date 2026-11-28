@@ -384,8 +384,8 @@ O site manda um **código por e-mail** no cadastro e no "esqueci a senha". Quem 
 
 Serve pra achar no mapa os endereços digitados e traçar o caminho da van.
 
-1. Crie uma conta grátis em https://openrouteservice.org/dev/#/signup e confirme pelo e-mail que eles mandam.
-2. Entre no painel: https://openrouteservice.org/dev/#/home
+1. Crie uma conta grátis em https://account.heigit.org/signup e confirme pelo e-mail que eles mandam.
+2. Entre no painel: https://account.heigit.org/manage/key
 3. Em **Request a token**, deixe o tipo **Standard**, dê um nome qualquer e clique em **CREATE TOKEN**.
 4. Copie a chave que aparece (um texto comprido de letras e números) e anote.
 
