@@ -9,16 +9,17 @@
       }
     </div>
 
-    <div class="user-name" (click)="perfil.emit()">
+    <div class="user-name" role="button" tabindex="0" (click)="perfil.emit()" (keydown.enter)="perfil.emit()">
       <img [src]="usuario()?.photoUrl || '/avatar-padrao.svg'" alt="Foto do usuário" />
       <span [title]="usuario()?.name || ''">{{ usuario()?.name || '' }}</span>
     </div>
   </div>
 
-  <div class="role-info" (click)="abrirFluxoDependente()">
+  <div class="role-info" role="button" tabindex="0" [attr.aria-label]="filhos().length ? rotuloDependentes() : 'Adicionar dependente'" (click)="abrirFluxoDependente()" (keydown.enter)="abrirFluxoDependente()">
     @if (filhos().length === 0) {
       <div class="avatar avatar1">
-        <img src="/addStudent.svg" alt="Adicionar estudante" />
+        <!-- icone do Figma (public/addStudent.svg) como mascara: segue a cor do tema (escuro no claro, claro no escuro) -->
+        <span class="icone-add-dependente" aria-hidden="true"></span>
       </div>
     } @else {
       <!-- com dependentes: as fotos deles empilhadas no lugar do icone de adicionar -->

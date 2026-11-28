@@ -140,6 +140,22 @@
   object-fit: contain;
 }
 
+/* icone de adicionar dependente (public/addStudent.svg) como mascara: no claro a mesma cor do SVG (#343941),
+   no escuro a cor de texto do tema (antes ficava escuro sobre o fundo escuro) */
+.icone-add-dependente {
+  display: block;
+  width: 30px;
+  height: 30px;
+  color: #343941;
+  background-color: currentColor;
+  -webkit-mask: url('/addStudent.svg') center / contain no-repeat;
+  mask: url('/addStudent.svg') center / contain no-repeat;
+}
+
+:host-context([data-theme='dark']) .icone-add-dependente {
+  color: var(--cor-texto-2);
+}
+
 .role {
   font-size: 16px;
   font-weight: 600;
@@ -249,7 +265,8 @@
 
   }
 
-  .avatar1 img {
+  .avatar1 img,
+  .icone-add-dependente {
     width: 27px;
     height: 27px;
   }
