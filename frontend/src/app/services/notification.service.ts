@@ -38,6 +38,10 @@ type NotificationSocketMessage =
 // conversa vira notificacao aqui no front, e "lida" = a conversa foi aberta depois dela (guardado neste navegador)
 const PREFIXO_CHAT_VISTO = 'vanroute.chatVisto.';
 
+// codigos com que o backend fecha o /notifications de proposito (NotificationWebSocketHandler e
+// WebSocketSessionRegistry): 1003 = token invalido, 1008 = conta excluida
+const FECHADO_DE_PROPOSITO = [1003, 1008];
+
 // contador de notificacoes nao lidas, compartilhado por todos os sinos do app
 @Injectable({
   providedIn: 'root',
@@ -191,10 +195,11 @@ export class NotificationService {
           }
         };
 
-        // caiu (backend reiniciou, rede): tenta de novo enquanto o usuario estiver logado
-        this.socket.onclose = () => {
+        // caiu (backend reiniciou, rede): tenta de novo enquanto o usuario estiver logado.
+        // 1003 (sem acesso) e 1008 (conta excluida) o backend fecha de proposito: nao reconecta
+        this.socket.onclose = (evento: CloseEvent) => {
           this.socket = undefined;
-          if (!this.authService.getToken()) {
+          if (!this.authService.getToken() || FECHADO_DE_PROPOSITO.includes(evento.code)) {
             this.doBackend.set(0);
             this.mensagensNaoLidas.set(0);
             return;

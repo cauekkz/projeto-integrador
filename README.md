@@ -115,7 +115,8 @@ Navegador / celular (Angular)
 Backend Spring Boot ──── PostgreSQL   contas, filhos, rotas, contratos, viagens, parcelas, notificações
    │                ├─── Redis        posição da van ao vivo, chat, códigos de e-mail, refresh token
    │                ├─── MinIO (S3)   fotos, CNH, CRLV e PDFs dos contratos
-   │                └─── OpenRouteService   endereço → coordenada, trajeto e tempo de chegada
+   │                ├─── AwesomeAPI (CEP)   endereço → coordenada (1ª tentativa)
+   │                └─── OpenRouteService   endereço → coordenada (reserva), trajeto e tempo de chegada
    ▼
 Worker Go (1x por dia) ── PostgreSQL
 ```

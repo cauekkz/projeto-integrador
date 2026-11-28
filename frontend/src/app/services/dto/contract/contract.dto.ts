@@ -103,13 +103,17 @@ export interface contractDetailsResponse {
   endDate: string; // AAAA-MM-DD
   studentId: string;
   studentName: string;
+  // fotos (null sem foto); link via GET /api/storage/download-url
+  studentPhotoKey: string | null;
   schoolId: string;
   schoolName: string;
   schoolAddress: contractSchoolAddress | null;
   driverId: string;
   driverName: string;
+  driverPhotoKey: string | null;
   responsibleId: string;
   responsibleName: string;
+  responsiblePhotoKey: string | null;
   // fileKey do PDF no MinIO (null sem anexo); link via GET /api/storage/download-url
   documentFileKey: string | null;
   documentType: string | null;
