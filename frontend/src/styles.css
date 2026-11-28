@@ -181,11 +181,6 @@ select:-webkit-autofill {
   caret-color: var(--cor-texto);
 }
 
-/* foto do mapa (placeholder) um pouco mais apagada no escuro; avatares e fotos nao mudam */
-:root[data-theme='dark'] .mapa-img {
-  filter: brightness(0.8) contrast(1.05);
-}
-
 /* sem o cursor de digitar piscando ao clicar em texto comum (ex.: navegacao por cursor do Chrome, tecla F7); nos campos ele continua */
 html {
   caret-color: transparent;
@@ -375,9 +370,13 @@ label,
   touch-action: manipulation;
 }
 
-button {
+/* o que e clicavel mas nao e <button> (chip do nome, dependentes, sino, cartoes) tambem nao seleciona texto:
+   no Chrome do celular, tocar em texto selecionavel abre a pesquisa do Google ("Toque para pesquisar") */
+button,
+:is([role='button'], [role='link'], .user-info, .user-name, .role-info, .sino-clicavel, .chat-user-info, .upload-card, .pessoa.clicavel) {
   -webkit-user-select: none;
   user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* apertar responde na hora: o botao afunda de leve (usa `scale`, que nao briga com o transform de cada tela).
